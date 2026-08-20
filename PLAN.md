@@ -11,15 +11,40 @@ not estimated.
 
 ## 1. Why this exists
 
-The CVE Program's **Policy and Procedure for RBPs** is arithmetic, not vibes:
+### Two rules, two clocks — do not conflate them
 
-- RBP % > **5%** of the CVE IDs a CNA made public in the past 12 months → the CNA must
-  publish RBP records before receiving new IDs; while over the line it gets one new
-  reserved ID per RBP published.
-- RBP % > **50% for more than three months** → limited to **25%** of normal yearly ID
-  output for a year (or until the parent CNA is satisfied, whichever is longer).
+**Per CVE — the 72-hour clock.** From the *CNA Operational Rules*, not the RBP policy:
+a CVE Record is due within **72 hours** of public disclosure — §4.5.1.4 as a **MUST**
+where the assigning CNA itself disclosed, §4.5.1.6 as a **SHOULD** where a third party
+(e.g. a distro) did. §4.5.1.3 sets a 24-hour SHOULD. This is what makes an individual
+row late, and it is what `/cves` measures.
 
-Every input to those thresholds is invisible outside the Secretariat. The site makes the
+**Per CNA — the portfolio thresholds.** From the *Policy and Procedure for RBPs*, whose
+formula is stated verbatim as:
+
+```
+Total Reserved but Public CVE IDs
+--------------------------------- > 5%
+Public CVE IDs in the past 12 months
+```
+
+Over 5% the CNA must publish RBP records before receiving new IDs, and gets only one new
+reserved ID per RBP it publishes. Over **50% for more than three months** it is cut to
+**25%** of normal yearly ID output for a year (or until its parent CNA is satisfied,
+whichever is longer). This is what `/cnas` measures.
+
+Note what the formula does *not* contain: the RBP policy has **no grace period at all**.
+Its full text carries no 24- or 72-hour language — the only time references are the
+12-month denominator window and the 3-month penalty persistence. An ID is RBP the moment
+it is reserved and publicly referenced. Note also the asymmetry: the numerator is
+**total** RBP IDs regardless of age, against a **trailing-12-month** denominator.
+
+Implementation consequence for phase 3: compute the numerator as all observed RBP IDs,
+not the 14-day-buffered reportable set. Reporting only buffered rows would understate the
+policy's own metric — which is fine for a floor, but say so explicitly rather than
+quietly applying a grace period the policy does not grant.
+
+Every input to both rules is invisible outside the Secretariat. The site makes the
 observable half public and reconstructs the redacted half with a graded method.
 
 ---
@@ -122,7 +147,7 @@ Watch the small-N trap (OpenVPN is 4/14) — see R6.
 |---|---|---|
 | This ID is Reserved and publicly referenced, for N days | API state + dated advisory, re-verified every run | fact |
 | This is the CNA that reserved it | k=3 block inference, precision re-measured every build | inference, graded |
-| This CNA is above the program's own 5% threshold | floor RBP% vs published-12mo, min-denominator guard | derived, floor |
+| This CNA is above the program's own 5% threshold | total observed RBP / published-12mo, min-denominator guard | derived, floor |
 
 Plus the front-page claim, which costs nothing and is unambiguous: **the public cannot
 audit this policy because the program redacts the field required to audit it.**
@@ -175,8 +200,8 @@ Same tokens, same dark-mode toggle, same card/stat-grid grammar. Do not redesign
 | route | purpose | must nail |
 |---|---|---|
 | `/`            | headline count, aging distribution, live precision, WoW movement | the redaction thesis in one sentence above the fold |
-| `/cves`        | full table: ID, package, days RBP, sources, owner, advisory link | sortable by days RBP, deep-linkable filters — this is the page people cite |
-| `/cnas`        | scoreboard: floor RBP%, count, oldest outstanding, threshold flags | "floor" labelled on every percentage; min-denominator guard visible |
+| `/cves`        | full table: ID, package, days RBP, sources, owner, advisory link | measures the **72h per-record rule**; sortable by days RBP, deep-linkable filters — this is the page people cite |
+| `/cnas`        | scoreboard: floor RBP%, count, oldest outstanding, threshold flags | measures the **5%/50% portfolio rule** — a different rule from `/cves`, and the page must say so; "floor" labelled on every percentage; min-denominator guard visible |
 | `/cna/<name>`  | per-CNA detail, full rows, time-to-publish history | the page a CNA lands on — make it fair and complete |
 | `/method`      | definitions, k=3 gate, live precision, feed inventory, limits | every number on the site links here |
 | `/policy`      | the RBP policy quoted + the redaction demonstrated live | show the actual API response |

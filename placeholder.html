@@ -20,10 +20,17 @@ a{color:var(--acc)}
 </style>
 <main>
   <h1>Every reserved CVE<br>the List <span>won't show you.</span></h1>
-  <p>The CVE Program's RBP policy sets hard thresholds — 5% and 50% — on CVE IDs that are
-  reserved, publicly referenced, and never published.</p>
-  <p>It also redacts the one field that would let anyone outside the Secretariat check
-  them. Query any reserved ID and the owning CNA comes back <code>[REDACTED]</code>.</p>
+  <p>A <em>Reserved but Public</em> CVE ID is one a CNA has reserved and that appears in a
+  public advisory, while the CVE Record itself is still unpublished. Anyone pulling the
+  CVE List sees nothing; the world already knows.</p>
+  <p>Two CVE Program rules govern this. Each record is due <strong>within 72 hours</strong>
+  of public disclosure. And across a CNA's whole portfolio, total RBP IDs divided by CVE
+  IDs made public in the past 12&nbsp;months must stay under <strong>5%</strong> — above
+  <strong>50%</strong> for three months, the CNA is cut to a quarter of its yearly ID
+  allocation.</p>
+  <p>Neither is checkable from outside. Ask the CVE Services API about a reserved ID and
+  it will tell you the state, then redact the CNA that reserved it:
+  <code>"owning_cna": "[REDACTED]"</code>.</p>
   <p>This site is being built to publish the outside view.</p>
   <footer>rbptracker.org — soon · <a href="https://github.com/RogoLabs/RBP">RogoLabs/RBP</a></footer>
 </main>
