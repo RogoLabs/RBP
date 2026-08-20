@@ -7,3 +7,4 @@ __pycache__/
 .venv/
 .api_cache.json
 .DS_Store
+.pytest_cache/
