@@ -37,14 +37,13 @@ jobs:
           restore-keys: cve-corpus-v1-
 
       - name: Install dependencies
-        if: hashFiles('requirements.txt') != ''
         run: pip install -r requirements.txt
 
       # Until the engine lands (PLAN.md phases 0-4) this emits a holding page,
       # so the domain resolves and the deploy path is proven end to end.
       - name: Build site
         run: |
-          if [ -d rbp ]; then
+          if [ -f rbp/site.py ]; then
             python -m rbp.cli build --out site
           else
             mkdir -p site && cp placeholder.html site/index.html

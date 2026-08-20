@@ -1,0 +1,1830 @@
+{
+ "probe_date": "2026-08-20",
+ "source": "GET /api/cve-id/{id}",
+ "results": {
+  "CVE-2026-6071": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-30083": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-30081": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-23390": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-41419": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-9141": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-11058": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-11059": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-61620": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2025-65852": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-26080": {
+   "state": "PUBLISHED",
+   "owning_cna": "mitre"
+  },
+  "CVE-2026-26081": {
+   "state": "PUBLISHED",
+   "owning_cna": "mitre"
+  },
+  "CVE-2026-2574": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-3836": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-3312": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-2046": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54685": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-4981": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-30762": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-3865": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-58387": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-58388": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-58383": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-58386": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-58382": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-58385": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-6856": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-25250": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-32179": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54333": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54334": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-5761": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-3890": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-5763": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-22020": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-5744": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-5056": {
+   "state": "PUBLISHED",
+   "owning_cna": "zdi"
+  },
+  "CVE-2026-6502": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-43961": {
+   "state": "PUBLISHED",
+   "owning_cna": "redhat"
+  },
+  "CVE-2026-45270": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45139": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46415": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46412": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46410": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45713": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45712": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45711": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45709": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46701": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46681": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46678": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46671": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46556": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46403": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46715": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46670": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-44210": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-43947": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-43946": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-43945": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48048": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48047": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-57964": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45309": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45725": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47717": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47243": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45618": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-44741": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-44605": {
+   "state": "PUBLISHED",
+   "owning_cna": "redhat"
+  },
+  "CVE-2026-47718": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47144": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47128": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46439": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46405": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46380": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46358": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46345": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45808": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45774": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47416": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47409": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47414": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47406": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47410": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47405": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47399": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47407": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47408": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48169": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47397": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47391": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47394": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47392": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47395": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47393": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47396": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47390": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47398": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47233": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47234": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47232": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47231": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47230": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47229": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47228": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47227": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47226": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47211": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47695": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47122": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47121": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47255": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-38739": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45742": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45741": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-44829": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-8341": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-41438": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-41435": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-41437": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-41440": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-41436": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-41439": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-49390": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47191": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47412": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47415": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47413": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47411": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47417": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47418": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47425": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-11053": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-11099": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-52793": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-43980": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47192": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47708": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48013": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48012": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-8462": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47671": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47215": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45730": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45057": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45056": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44476": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-53954": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47743": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47731": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52878": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52880": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52879": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49343": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47680": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47670": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47419": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47669": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47668": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47249": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45726": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45723": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45720": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-53472": {
+   "state": "PUBLISHED",
+   "owning_cna": "redhat"
+  },
+  "CVE-2026-47735": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47726": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47725": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47724": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47723": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47722": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47721": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47720": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47719": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47252": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48030": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52903": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47753": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47768": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47764": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47763": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48063": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48061": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48060": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48058": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48025": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47701": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47253": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48031": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48051": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48037": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48036": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48035": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48034": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48033": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48032": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48099": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48053": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48050": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48039": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48054": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48007": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47781": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47780": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-12893": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54697": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54700": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-46371": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-46370": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-53999": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48154": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-28975": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-28980": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-43671": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-28970": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48121": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48113": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46655": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55226": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55225": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55636": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-24791": {
+   "state": "PUBLISHED",
+   "owning_cna": "Gitea"
+  },
+  "CVE-2026-55591": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57496": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54683": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55093": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54711": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55701": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47256": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57441": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57147": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57144": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57132": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57143": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57148": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57145": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57146": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57142": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57133": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57137": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57139": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57140": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57141": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57136": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57138": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57135": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57134": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57130": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57113": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57209": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57210": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56839": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57124": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57122": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57121": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57116": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57118": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57114": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57131": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57129": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57127": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57126": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57125": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57119": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57123": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57120": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57115": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57117": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56838": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56840": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56837": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56834": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56835": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56836": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57112": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56833": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-56832": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57128": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55617": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55887": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-50538": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-39043": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-39044": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57168": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-57442": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55866": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55776": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55775": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55774": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55770": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55692": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55650": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55185": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55847": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55846": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55837": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55828": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55795": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55691": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55690": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55091": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55832": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55414": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55375": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55374": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54051": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-53613": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-53614": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-53612": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47178": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-36849": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-53615": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44517": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48170": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46495": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-46488": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44793": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44778": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44585": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-44584": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-44583": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-44203": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44202": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44179": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-41573": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55519": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55483": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55482": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-50550": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49976": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49870": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48496": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55863": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54134": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45049": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45048": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-35163": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-53541": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45052": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45051": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48702": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55556": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-13324": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-55166": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55165": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55164": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55163": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55162": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48722": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48508": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46560": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-46498": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45794": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48785": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48749": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48750": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48751": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48752": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48753": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48754": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48755": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48756": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48769": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-50029": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49349": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49262": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49258": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48813": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48804": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48802": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48809": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48790": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-41262": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-46623": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-46619": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44163": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-44162": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-13606": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48717": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47426": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47424": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-49478": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49835": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-55219": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48796": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49820": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48791": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49473": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47198": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-63430": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48978": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-50162": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48003": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48002": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-6425": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48004": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-48915": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-8343": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-50143": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-50139": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-50138": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48824": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49457": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49989": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49826": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49986": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49864": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49857": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49856": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-46487": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-39379": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47251": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-45382": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47247": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-50142": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47709": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-54240": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-47254": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-47714": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-48029": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-54241": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-45383": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49360": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-49292": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-54617": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-52792": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52834": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49289": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52829": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49283": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52817": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52734": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52733": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52739": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52738": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52737": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52735": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52736": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52732": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-52731": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49255": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49254": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-49253": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-49250": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-49245": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-49244": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-50290": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-50288": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-52854": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-50192": {
+   "state": "RESERVED",
+   "owning_cna": "[REDACTED]"
+  },
+  "CVE-2026-50149": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-50027": {
+   "state": "PUBLISHED",
+   "owning_cna": "GitHub_M"
+  },
+  "CVE-2026-13117": {
+   "state": "PUBLISHED",
+   "owning_cna": "OpenVPN"
+  },
+  "CVE-2026-12996": {
+   "state": "PUBLISHED",
+   "owning_cna": "OpenVPN"
+  },
+  "CVE-2026-12932": {
+   "state": "PUBLISHED",
+   "owning_cna": "OpenVPN"
+  },
+  "CVE-2026-11771": {
+   "state": "PUBLISHED",
+   "owning_cna": "OpenVPN"
+  }
+ }
+}

@@ -1,0 +1,30 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      - run: pip install -r requirements.txt pytest
+
+      # Frozen fixtures only — deterministic, no network.
+      - name: Unit + acceptance tests
+        run: python -m pytest tests/ -q
+
+      # Hits cveawg.mitre.org. Asserts drift-proof invariants, not snapshot
+      # counts. Non-blocking on PRs from forks, blocking on main.
+      - name: Live oracle tests
+        if: github.event_name != 'pull_request'
+        env:
+          RBP_LIVE_TESTS: '1'
+        run: python -m pytest tests/ -q
