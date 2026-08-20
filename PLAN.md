@@ -295,18 +295,25 @@ instrument, and the closures prove the open rows are real.
   former's.** Also decided by measurement: the product→CNA map never names a CNA alone
   (85% precision as a fallback) and REJECTED records are not used as neighbours
   (too rare to matter).
-- **Phase 2.5, prove the pipeline in CI** (half a day). Three gaps found 2026-08-20 that
-  block everything downstream. The Actions cache path does not match what the code writes
-  (`data/corpus` vs `data/index`), so nothing persists between runs. Delta-zip incremental
-  corpus update is referenced by the plan and the workflow but not implemented, and
-  `download_baseline` keys freshness on the release tag, which rotates hourly, so a
-  6-hourly schedule re-pulls the same 583 MB up to four times a day. And the grader ledger
-  lives only in the cache, which is evictable, so the self-grading claim would silently
-  reset. Fix the paths, implement delta application, move the ledger and snapshots to a
-  durable `data` branch.
-  *Done when* one cold run and one warm run both complete in Actions, the warm run costs
-  ~4 MB rather than 583 MB, and `precision.json` survives across runs with a non-zero
-  graded count.
+- **Phase 2.5, prove the pipeline in CI** (half a day). DONE 2026-08-20. Cold run 16 min,
+  warm run 9 min, both green. Warm run took the delta path (1 day, 2,100 records, corpus
+  380,846 to 381,167) instead of the 583 MB baseline. Ledger round trip proven: restored
+  360 outstanding, grew to 367, snapshots now persisting to the `data` branch.
+  Four defects fixed, three of which only a real run would have surfaced:
+  baseline freshness keyed on the hourly release tag rather than the daily asset date;
+  no incremental path at all; the Actions cache pointed at a path nothing writes, which
+  also reset the grader ledger every run; and OSV npm had never been ingested, because a
+  220 MB archive read through a 100 MB in-memory cap truncates into an invalid zip while
+  the build reports success. Streaming archives to disk recovered npm and Hex, worth
+  ~1,650 referenced IDs. Feed health now prints a DEGRADED banner rather than letting a
+  broken feed read as improvement.
+  Two branch-hygiene bugs worth remembering: `rm -rf ./*` does not match dotfiles, so the
+  orphan `data` branch was created carrying `.github/` and `.gitignore`, and the inherited
+  ignore file listed `snapshots/`, so the first state commit silently dropped every
+  snapshot while reporting success.
+  *Outstanding:* a non-zero graded count. The ledger persists correctly, but nothing has
+  been graded yet because no predicted ID published in the 15 minutes between the two
+  runs. It resolves on its own within a day or two.
 - **Phase 3, the 72-hour clock** (1 day). Per-row hours since first public reference
   against the 72h expectation; `self_disclosed` splitting 4.5.1.4 (MUST) from 4.5.1.6
   (SHOULD); per-CNA aggregation, outstanding count, oldest, time-to-publish distribution
