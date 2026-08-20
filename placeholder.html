@@ -29,8 +29,12 @@ a{color:var(--acc)}
   caps, intervention, formal review, each of which <em>may</em> be applied.</p>
   <p>Discretion exercised in private is indistinguishable from no enforcement at all.
   There is no public list of RBPs, no public notification record, no public enforcement
-  log. The Program's own RBP metrics page still promises figures &ldquo;from 2017 to
-  present&rdquo; and stops in Q3&nbsp;2021.</p>
+  log. The Program used to publish an RBP figure: a quarterly table appeared on the
+  <a href="https://www.cve.org/About/Metrics">CVE Metrics page</a> in February 2021, and
+  was <a href="https://github.com/CVEProject/cve-website/blob/main/src/views/About/Metrics.vue">commented
+  out of the page</a> on 7 February 2022. The block is still sitting in the site source,
+  frozen, its last column Q3&nbsp;2021. The Metrics page today reports published records
+  and reserved IDs, and nothing at all on the overlap between them.</p>
   <p>And the accountability field is withheld. Ask the CVE Services API about a reserved
   ID and it returns the state, then redacts the CNA that reserved it:
   <code>"owning_cna": "[REDACTED]"</code>, though CNA Rule 4.5.1.7 lets the

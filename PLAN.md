@@ -51,8 +51,13 @@ from no enforcement at all, and right now there is:
 - no public enforcement log,
 - no public attribution: `owning_cna` is redacted for exactly the reserved population,
   despite §4.5.1.7 expressly permitting the Secretariat to name it after 24 hours,
-- and a Program RBP metrics page that still promises figures *"from 2017 to present"* and
-  stops at **Q3 2021**.
+- and no Program RBP metric at all. One existed: a quarterly RBP table went live on the
+  CVE Metrics page in **February 2021** and was **commented out on 2022-02-07**, after
+  about a year public. The block is still in `src/views/About/Metrics.vue` on `main`,
+  frozen, its last column Q3 2021, and `metrics.json` carries no RBP series. The live page
+  reports published records and reserved IDs and nothing on the overlap. Verified in the
+  rendered DOM, not just the source: the string "Reserved but Public" does not appear on
+  cve.org/About/Metrics.
 
 The site publishes the observable half and reconstructs the redacted half with a graded
 method.
@@ -154,10 +159,17 @@ Consequences, all of which are already applied below:
 - A normalised rate is still worth showing so a large CNA with 200 RBPs is not compared
   naively against a five-person CNA with two, but it carries no threshold and no verdict.
 
-The CVE Program's own public RBP metric ends at **Q3 2021** (4,326 in 2017 Q1 falling to
-~350–550 by 2021) on a page that says "to present". Since v2.0.0 names "Program metrics
-and audits" as an RBP identification channel, the public face of that channel is five
-years stale.
+The CVE Program has no public RBP metric. It had one: a quarterly table (4,326 in 2017 Q1
+falling to ~350-550 by 2021) that went live in February 2021 and was commented out of the
+Metrics page on **2022-02-07**. The markup survives in `main`; the data file has no RBP
+series; the rendered page contains no "Reserved but Public" string. Since v2.0.0 names
+"Program metrics and audits" as an RBP identification channel, the public face of that
+channel has been switched off for four and a half years.
+
+Correction worth recording: an earlier draft of this claimed the page "still promises
+figures from 2017 to present and stops at Q3 2021." That came from reading the repo source
+rather than the live DOM, and the section is commented out. Read the rendered page before
+asserting what a site says.
 
 ---
 
