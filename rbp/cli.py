@@ -34,12 +34,10 @@ BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 
 
 def ensure_corpus(force=False):
-    os.makedirs(INDEX, exist_ok=True)
-    if force or not os.path.exists(os.path.join(INDEX, "corpus.parquet")):
-        cvelist.download_baseline(BASELINE)
-        print("indexing corpus (one pass)...")
-        cvelist.build_index(BASELINE, INDEX)
-    return cvelist.load_index(INDEX)
+    """Bring the corpus current. Cheap within a day, cheap across a few days,
+    and only re-pulls the 583 MB baseline when the delta chain cannot cover the
+    gap. See cvelist.refresh_corpus."""
+    return cvelist.refresh_corpus(BASELINE, INDEX, force=force)
 
 
 def cmd_index(args):

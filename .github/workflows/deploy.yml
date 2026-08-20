@@ -6,9 +6,19 @@ on:
   schedule:
     - cron: '0 */6 * * *'
   workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Feed profile'
+        type: choice
+        options: [weekly, deep]
+        default: weekly
+      force_reindex:
+        description: 'Force a full 583 MB baseline rebuild'
+        type: boolean
+        default: false
 
 permissions:
-  contents: read
+  contents: write      # pushes the grader ledger to the data branch
   pages: write
   id-token: write
 
@@ -27,20 +37,53 @@ jobs:
           python-version: '3.13'
           cache: pip
 
-      # The CVE List baseline is ~583 MB. It NEVER enters the repo (1 GB repo ceiling).
-      # 6-hourly runs keep this cache warm, so the 7-day idle eviction never fires.
-      - name: Restore CVE List corpus
+      # Durable state, NOT a cache. The grader ledger is the site's
+      # accountability record: every owner prediction and its later verdict.
+      # Actions caches are evictable, so keeping it there would silently reset
+      # the accuracy figure the site publishes.
+      - name: Restore durable state
+        uses: actions/checkout@v4
+        with:
+          ref: data
+          path: .state
+
+      # The corpus index is derived and reproducible, so a cache is the right
+      # home. Only the parquets and the reservation-state cache are cached
+      # (roughly 6 MB): the 583 MB baseline zip is deliberately left ephemeral,
+      # because caching it would cost more to save and restore than to re-fetch
+      # on the rare full rebuild.
+      - name: Cache corpus index
         uses: actions/cache@v4
         with:
-          path: data/corpus
-          key: cve-corpus-v1-${{ github.run_id }}
-          restore-keys: cve-corpus-v1-
+          path: |
+            data/index
+            data/.api_cache.json
+          key: corpus-index-v2-${{ github.run_id }}
+          restore-keys: corpus-index-v2-
 
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # Until the engine lands (PLAN.md phases 0-4) this emits a holding page,
-      # so the domain resolves and the deploy path is proven end to end.
+      - name: Seed ledger from durable state
+        run: |
+          mkdir -p data
+          if [ -f .state/precision.json ]; then
+            cp .state/precision.json data/precision.json
+            python -c "import json;d=json.load(open('data/precision.json'));print('ledger restored:',len(d.get('graded',[])),'graded,',len(d.get('predictions',{})),'outstanding')"
+          else
+            echo "no ledger yet, starting fresh"
+          fi
+          if [ -d .state/snapshots ]; then
+            mkdir -p snapshots && cp -r .state/snapshots/. snapshots/
+            echo "restored $(ls snapshots | wc -l) snapshot(s) for the week-over-week diff"
+          fi
+
+      - name: Run pipeline
+        run: |
+          python -m rbp.cli run \
+            --profile "${{ inputs.profile || 'weekly' }}" \
+            ${{ inputs.force_reindex == true && '--reindex' || '' }}
+
       - name: Build site
         run: |
           if [ -f rbp/site.py ]; then
@@ -48,9 +91,18 @@ jobs:
           else
             mkdir -p site && cp placeholder.html site/index.html
           fi
+          cp CNAME site/CNAME
 
-      - name: Add custom domain
-        run: cp CNAME site/CNAME
+      - name: Persist durable state
+        run: |
+          cp data/precision.json .state/ 2>/dev/null || true
+          mkdir -p .state/snapshots && cp -r snapshots/. .state/snapshots/ 2>/dev/null || true
+          cd .state
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --staged --quiet || git commit -q -m "state: run $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q origin HEAD:data
 
       - uses: actions/upload-pages-artifact@v3
         with:
