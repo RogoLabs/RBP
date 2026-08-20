@@ -320,13 +320,21 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     L.append("- Every RBP is a record a consumer pulling the CVE List cannot see — no CVSS, CWE, "
              "CPE, or references to key on — so any enrichment or scanning that sources from the "
              "CVE List silently skips it until the record lands.")
-    L.append("- Rule context — CNA Operational Rules v4.0 (verify subsection text against the "
-             "canonical document before external use): a CVE Record is expected to be published "
-             "**within 72h**. §4.5.1.4 states this as a **MUST** *when the assigning CNA itself "
-             "publicly discloses*; §4.5.1.6 as a **SHOULD** when a **third party** (e.g. a distro) "
-             "discloses — the usual RBP case. This tool observes only that a downstream source "
-             "referenced the ID; it **cannot establish who disclosed**, so aged RBPs indicate a "
-             "likely §4.5.1.6 SHOULD gap, **not** a proven MUST breach.\n")
+    L.append("- Rule context — **RBP Policy v2.0.0** (CVE Board approved 2026-08-13) and **CNA "
+             "Operational Rules v4.1.0** (approved 2025-05-14); both are pinned verbatim in "
+             "tests/fixtures and CI fails if either moves. A CVE Record should be published "
+             "**within 72h** of disclosure by the CNA or of the CNA becoming aware of a "
+             "third-party disclosure. §4.5.1.4 states this as a **MUST** *when the assigning CNA "
+             "itself publicly discloses*; §4.5.1.6 as a **SHOULD** when a **third party** (e.g. a "
+             "distro) discloses — the usual RBP case. This tool observes only that a downstream "
+             "source referenced the ID; it **cannot establish who disclosed**, so aged RBPs "
+             "indicate a likely §4.5.1.6 SHOULD gap, **not** a proven MUST breach.\n")
+    L.append("- **v2.0.0 sets no numeric threshold.** Enforcement is four discretionary levers "
+             "(Warning, Reservation Caps, Intervention, Formal Review) that the Program *may* "
+             "apply, with remediation deadlines set case by case by a TL-Root or Root. The "
+             "withdrawn v1.0 policy had an automatic trigger at 5% of trailing-12-month public "
+             "IDs; **do not cite it** — third parties still host that PDF. Nothing here should be "
+             "read as a CNA being over a threshold, because there is no longer a threshold.\n")
 
     L.append("## Methodology & caveats\n")
     L.append("- **CNA** = CVE Numbering Authority. Source of truth: official CVE List v5 baseline, "

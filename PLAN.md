@@ -11,43 +11,56 @@ not estimated.
 
 ## 1. Why this exists
 
-### Two rules, two clocks — do not conflate them
+### The rule, and the hole where enforcement should be
 
-**Per CVE — the 72-hour clock.** From the *CNA Operational Rules*, not the RBP policy:
-a CVE Record is due within **72 hours** of public disclosure — §4.5.1.4 as a **MUST**
-where the assigning CNA itself disclosed, §4.5.1.6 as a **SHOULD** where a third party
-(e.g. a distro) did. §4.5.1.3 sets a 24-hour SHOULD. This is what makes an individual
-row late, and it is what `/cves` measures.
+**RBP Policy v2.0.0**, approved by the CVE Board on **2026-08-13**, is the policy in
+force. It states the expectation plainly:
 
-**Per CNA — the portfolio thresholds.** From the *Policy and Procedure for RBPs*, whose
-formula is stated verbatim as:
+> A CVE Record should be published within 72 hours of either (a) disclosure by the CNA or
+> (b) the CNA becoming aware of a third-party disclosure, as applicable.
 
-```
-Total Reserved but Public CVE IDs
---------------------------------- > 5%
-Public CVE IDs in the past 12 months
-```
+and aligns itself explicitly to the CNA Operational Rules (v4.1.0, approved 2025-05-14):
 
-Over 5% the CNA must publish RBP records before receiving new IDs, and gets only one new
-reserved ID per RBP it publishes. Over **50% for more than three months** it is cut to
-**25%** of normal yearly ID output for a year (or until its parent CNA is satisfied,
-whichever is longer). This is what `/cnas` measures.
+- **§4.5.1.4** — CNAs **MUST** publish within 72 hours of *the CNA itself* publicly
+  disclosing. Past that, the CNA's Root **MAY** direct a CNA-LR to publish.
+- **§4.5.1.6** — CNAs **SHOULD** publish within 72 hours of becoming aware a third party
+  disclosed. This is the usual distro/RBP case.
+- **§4.5.1.7** — the Secretariat **MAY publicly identify the CNA who reserved the CVE ID
+  24 hours after** public disclosure.
+- **§4.5.3.5** — CNAs **MUST reject unused or unpublished CVE IDs**, so a long-lived
+  reservation is not a neutral state under the rules.
 
-Note what the formula does *not* contain: the RBP policy has **no grace period at all**.
-Its full text carries no 24- or 72-hour language — the only time references are the
-12-month denominator window and the 3-month penalty persistence. An ID is RBP the moment
-it is reserved and publicly referenced. Note also the asymmetry: the numerator is
-**total** RBP IDs regardless of age, against a **trailing-12-month** denominator.
+Then enforcement. The entire mechanism is four discretionary levers — **Warning,
+Reservation Caps, Intervention, Formal Review** — which the Program *"may take"* and
+which *"may be applied individually or combined."* Remediation deadlines are whatever a
+TL-Root or Root decides case by case. There is no condition that triggers anything by
+itself.
 
-Implementation consequence for phase 3: compute the numerator as all observed RBP IDs,
-not the 14-day-buffered reportable set. Reporting only buffered rows would understate the
-policy's own metric — which is fine for a floor, but say so explicitly rather than
-quietly applying a grace period the policy does not grant.
+**This is the change that motivates the site.** The previous policy (v1.0, *"CVE Program
+Policy and Procedure for RBPs"*) had an automatic arithmetic trigger: RBP IDs above 5% of
+the CVE IDs a CNA made public in the trailing 12 months and it stopped receiving new ID
+blocks; above 50% for three months and it was cut to 25% of yearly output. Anyone with
+the data could compute whether a CNA was over the line. **v2.0.0 removes every numeric
+threshold.** There is now no line to be over.
 
-Every input to both rules is invisible outside the Secretariat. The site makes the
-observable half public and reconstructs the redacted half with a graded method.
+Discretion is defensible. Discretion exercised entirely in private is not distinguishable
+from no enforcement at all, and right now there is:
 
----
+- no public list of RBPs,
+- no public record that a CNA was notified,
+- no public enforcement log,
+- no public attribution — `owning_cna` is redacted for exactly the reserved population,
+  despite §4.5.1.7 expressly permitting the Secretariat to name it after 24 hours,
+- and a Program RBP metrics page that still promises figures *"from 2017 to present"* and
+  stops at **Q3 2021**.
+
+The site publishes the observable half and reconstructs the redacted half with a graded
+method.
+
+> **Do not cite the 5%/50% thresholds.** They are withdrawn. The v1.0 PDF is still hosted
+> by third-party CNAs and still ranks well in search — it is how this project picked them
+> up in the first place. `tests/test_policy.py` pins the current text and fails the build
+> if either canonical source moves.
 
 ## 2. Verified findings (2026-08-20)
 
@@ -124,20 +137,27 @@ now  PUBLISHED   224   (self-healed — proves these were real)
 Of the 224 resolved, **213 were GitHub_M** vs. the old engine's inference of 70 — current
 attribution under-calls by ~3x.
 
-### F7 — the policy's own 5% metric is computable, as a floor
-Denominator from the corpus (384 CNAs published in the trailing 12 months). Sanity check
-on the resolved-owner subset only:
+### F7 — the policy's numeric thresholds no longer exist (correction)
+An earlier draft of this plan built a per-CNA scoreboard around RBP% against a 5%
+threshold, sourced from a PDF hosted by INCIBE. That document is **RBP Policy v1.0 and is
+superseded.** The canonical policy at `cve.org/Resources/General/Policies/RBP-CVE-IDs-Policy.pdf`
+is **v2.0.0, approved 2026-08-13**, and contains no percentage anywhere in its text —
+verified by regex over the full document, and pinned in `tests/fixtures/rbp_policy_v2.json`.
 
-| CNA | observed RBP | published 12mo | floor RBP% | |
-|---|---:|---:|---:|---|
-| OpenVPN  | 4   | 14    | 28.57% | **over 5%** |
-| GitHub_M | 213 | 8,856 | 2.41%  | |
-| Gitea    | 1   | 49    | 2.04%  | |
-| redhat   | 3   | 523   | 0.57%  | |
+Consequences, all of which are already applied below:
 
-Our numerator only counts feed-visible RBPs, so every percentage is a **lower bound**.
-That is a strength: if a CNA's floor already exceeds 5%, the breach is unarguable.
-Watch the small-N trap (OpenVPN is 4/14) — see R6.
+- There is no policy threshold for the site to test a CNA against. `/cnas` becomes
+  **descriptive**, not judgmental: counts, ages, and a normalised rate labelled explicitly
+  as *this site's own statistic*, never as a program limit. No "over the line" flags.
+- The judgment moves to `/cves`, where it is properly anchored: **72 hours**, from a rule
+  that is current and quoted verbatim.
+- A normalised rate is still worth showing so a large CNA with 200 RBPs is not compared
+  naively against a five-person CNA with two — but it carries no threshold and no verdict.
+
+The CVE Program's own public RBP metric ends at **Q3 2021** (4,326 in 2017 Q1 falling to
+~350–550 by 2021) on a page that says "to present". Since v2.0.0 names "Program metrics
+and audits" as an RBP identification channel, the public face of that channel is five
+years stale.
 
 ---
 
@@ -147,10 +167,12 @@ Watch the small-N trap (OpenVPN is 4/14) — see R6.
 |---|---|---|
 | This ID is Reserved and publicly referenced, for N days | API state + dated advisory, re-verified every run | fact |
 | This is the CNA that reserved it | k=3 block inference, precision re-measured every build | inference, graded |
-| This CNA is above the program's own 5% threshold | total observed RBP / published-12mo, min-denominator guard | derived, floor |
+| This ID has been RBP for N days, past the 72-hour rule | dated advisory + confirmed RESERVED state | fact |
+| This CNA has X RBPs outstanding, oldest N days | aggregation of the above over named rows | derived, floor |
 
-Plus the front-page claim, which costs nothing and is unambiguous: **the public cannot
-audit this policy because the program redacts the field required to audit it.**
+Plus the front-page claim, which costs nothing and is unambiguous: **the policy's only
+enforcement is discretionary and exercised in private, and the field required to audit it
+is redacted.**
 
 ### Never say
 - "This CNA violated the rules." Say: over the threshold the program itself set.
@@ -171,7 +193,7 @@ All in Actions; Pages serves static files. No server, no DB, no secrets beyond `
 | **gather**    | port the 10 adapters from `rbp/feeds.py`; collect referenced IDs + earliest reference date | OSV all.zip 1.51 GB/20s, Debian 86 MB/1.5s, Arch 0.9 MB, Alpine 81 KB/branch |
 | **resolve**   | for every referenced ID absent from corpus, call `/api/cve-id/` at 24 threads; partition RESERVED / PUBLISHED / REJECTED / UNKNOWN | 94 req/s, 456 IDs in 4.9s, limit 25,000/min |
 | **attribute** | k=3 gate against corpus; re-grade last run's inferences against newly-published truth; emit live precision | local |
-| **score**     | trailing-12mo published per CNA; floor RBP%; 5%/50% flags; 3-month persistence | local |
+| **score**     | hours-since-public vs the 72h expectation; MUST/SHOULD split; per-CNA outstanding, oldest, time-to-publish | local |
 | **render**    | Jinja2 → HTML + `rbp.json` / `rbp.csv` / per-CNA endpoints; client-side sort+filter on preloaded JSON | est. 3–8 MB payload |
 | **deploy**    | `upload-pages-artifact` → `deploy-pages`; history to a `data` branch, never `main` | deploys >10 min time out |
 
@@ -201,10 +223,10 @@ Same tokens, same dark-mode toggle, same card/stat-grid grammar. Do not redesign
 |---|---|---|
 | `/`            | headline count, aging distribution, live precision, WoW movement | the redaction thesis in one sentence above the fold |
 | `/cves`        | full table: ID, package, days RBP, sources, owner, advisory link | measures the **72h per-record rule**; sortable by days RBP, deep-linkable filters — this is the page people cite |
-| `/cnas`        | scoreboard: floor RBP%, count, oldest outstanding, threshold flags | measures the **5%/50% portfolio rule** — a different rule from `/cves`, and the page must say so; "floor" labelled on every percentage; min-denominator guard visible |
+| `/cnas`        | descriptive: RBP count, oldest outstanding, time-to-publish distribution, normalised rate | **no threshold flags — v2.0.0 has no threshold.** Every rate labelled as this site's statistic, not a program limit; min-denominator guard visible |
 | `/cna/<name>`  | per-CNA detail, full rows, time-to-publish history | the page a CNA lands on — make it fair and complete |
 | `/method`      | definitions, k=3 gate, live precision, feed inventory, limits | every number on the site links here |
-| `/policy`      | the RBP policy quoted + the redaction demonstrated live | show the actual API response |
+| `/policy`      | v2.0.0 quoted, the v1.0→v2.0.0 change shown side by side, the redaction demonstrated live | the withdrawal of the arithmetic trigger is the story; show the actual API response |
 | `/data`        | JSON, CSV, per-CNA endpoints, schema, licence | stable URLs — others building on this is the win condition |
 | `/changes`     | new / resolved / still-open since last run | resolutions as prominent as additions |
 
@@ -238,9 +260,14 @@ instrument, and the closures prove the open rows are real.
   former's.** Also decided by measurement: the product→CNA map never names a CNA alone
   (85% precision as a fallback) and REJECTED records are not used as neighbours
   (too rare to matter).
-- **Phase 3 — policy scoring** (1 day). Trailing-12mo denominators, floor RBP%, 5%/50%
-  flags, 3-month persistence. Min-denominator guard + Wilson interval on every rate.
-  *Done when* the scoreboard reproduces F7 and no sub-floor CNA shows a percentage.
+- **Phase 3 — the 72-hour clock** (1 day). Per-row hours since first public reference
+  against the 72h expectation; `self_disclosed` splitting 4.5.1.4 (MUST) from 4.5.1.6
+  (SHOULD); per-CNA aggregation — outstanding count, oldest, time-to-publish distribution
+  from resolved RBPs. Normalised rate for scale context only: min-denominator guard,
+  Wilson interval, labelled as this site's statistic. **No threshold flags — v2.0.0 has
+  no threshold.**
+  *Done when* no page renders a percentage beside a pass/fail verdict, and the MUST/SHOULD
+  split shows on every row.
 - **Phase 4 — site build** (2 days). Port cve.icu CSS + base template. Eight routes.
   Client-side sort/filter with deep-linkable query state. JSON/CSV with documented schema.
   *Done when* cold build <20 min and Lighthouse ≥95 perf + a11y.
@@ -278,9 +305,13 @@ instrument, and the closures prove the open rows are real.
   the Secretariat to name; it doesn't prohibit anyone else from computing. But win on frame,
   not technicality: *we would rather not be doing this — unredact the field and we'll point
   at yours instead.* Footer of every page. It's a standing offer, and it's true.
-- **R6 (medium) — small-denominator CNAs pilloried by arithmetic.** OpenVPN 28.57% is 4/14.
-  *Mitigate:* suppress the percentage below a denominator floor (start at 20 published/12mo)
-  and show raw count; Wilson lower bound for ranking; default sort by absolute count.
+- **R6 (medium) — small-denominator CNAs pilloried by arithmetic.** A five-person CNA with
+  4 RBPs against 14 published reads as 28.6% and tops a leaderboard above Microsoft. Worse
+  now that no policy threshold exists to justify the ranking at all.
+  *Mitigate:* rank by absolute count, not rate. Suppress the rate below a denominator floor
+  (start at 20 published/12mo) and show the raw count instead; Wilson lower bound where a
+  rate is shown; label every rate as this site's descriptive statistic. No verdict attaches
+  to a rate anywhere on the site.
 - **R7 (medium) — launch traffic exceeds 100 GB/mo.** *Mitigate:* paginate JSON — small
   summary for first paint, detail lazy-loaded; gzip at build; content-hashed filenames;
   raw dumps as separate downloads, not page dependencies.

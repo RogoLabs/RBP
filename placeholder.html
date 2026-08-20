@@ -23,14 +23,19 @@ a{color:var(--acc)}
   <p>A <em>Reserved but Public</em> CVE ID is one a CNA has reserved and that appears in a
   public advisory, while the CVE Record itself is still unpublished. Anyone pulling the
   CVE List sees nothing; the world already knows.</p>
-  <p>Two CVE Program rules govern this. Each record is due <strong>within 72 hours</strong>
-  of public disclosure. And across a CNA's whole portfolio, total RBP IDs divided by CVE
-  IDs made public in the past 12&nbsp;months must stay under <strong>5%</strong> — above
-  <strong>50%</strong> for three months, the CNA is cut to a quarter of its yearly ID
-  allocation.</p>
-  <p>Neither is checkable from outside. Ask the CVE Services API about a reserved ID and
-  it will tell you the state, then redact the CNA that reserved it:
-  <code>"owning_cna": "[REDACTED]"</code>.</p>
+  <p>On 13 August 2026 the CVE Board approved <strong>RBP Policy v2.0.0</strong>. It sets a
+  clear expectation — a record should be published <strong>within 72 hours</strong> of
+  disclosure — and then hands enforcement entirely to discretion: warnings, reservation
+  caps, intervention, formal review, each of which <em>may</em> be applied. The previous
+  policy had an automatic arithmetic trigger. This one has no threshold to cross.</p>
+  <p>Discretion exercised in private is indistinguishable from no enforcement at all.
+  There is no public list of RBPs, no public notification record, no public enforcement
+  log. The Program's own RBP metrics page still promises figures &ldquo;from 2017 to
+  present&rdquo; and stops in Q3&nbsp;2021.</p>
+  <p>And the accountability field is withheld. Ask the CVE Services API about a reserved
+  ID and it returns the state, then redacts the CNA that reserved it:
+  <code>"owning_cna": "[REDACTED]"</code> &mdash; though CNA Rule 4.5.1.7 lets the
+  Secretariat name that CNA 24 hours after public disclosure.</p>
   <p>This site is being built to publish the outside view.</p>
   <footer>rbptracker.org — soon · <a href="https://github.com/RogoLabs/RBP">RogoLabs/RBP</a></footer>
 </main>
