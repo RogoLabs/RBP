@@ -16,12 +16,65 @@ import socket
 import subprocess
 import sys
 import time
+import zipfile
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
 UA = {"User-Agent": "rbp-cves/1.0 (CVE quality research)"}
 MAX_BYTES = 100_000_000     # cap on a single _get body (Debian tracker ~30MB is the largest)
+
+# Bulk archives are streamed to disk, not held in memory, so they get their own
+# much larger ceiling. Reading a 220MB zip through the MAX_BYTES cap silently
+# truncated it into an invalid archive, which is how the OSV npm ecosystem, one
+# of the largest, was dropped from every run while the build reported success.
+MAX_ARCHIVE_BYTES = 900_000_000
+_CHUNK = 1 << 20
+
+# Per-feed health for this process. A feed that fails must not simply yield
+# fewer rows: counts are a floor, and a silent shrink reads as improvement.
+FEED_HEALTH = {}
+
+
+def record_feed(name, ok, detail=""):
+    FEED_HEALTH.setdefault(name, []).append({"ok": ok, "detail": detail})
+
+
+def health_summary():
+    """(failures, total) across every feed attempt this run."""
+    attempts = [a for lst in FEED_HEALTH.values() for a in lst]
+    return [f"{k}: {a['detail']}" for k, lst in FEED_HEALTH.items()
+            for a in lst if not a["ok"]], len(attempts)
+
+
+def _stream_zip(url):
+    """Download a bulk archive to a temp file and open it. Streaming keeps peak
+    memory at one chunk while still enforcing a hard ceiling, so a large archive
+    is handled rather than quietly mangled."""
+    import tempfile
+    total = 0
+    tmp = tempfile.NamedTemporaryFile(suffix=".zip", delete=False)
+    try:
+        with _OPENER.open(urllib.request.Request(url, headers=UA), timeout=300) as r:
+            while True:
+                chunk = r.read(_CHUNK)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_ARCHIVE_BYTES:
+                    raise RuntimeError(
+                        f"archive exceeded {MAX_ARCHIVE_BYTES:,} byte ceiling; "
+                        "refusing to truncate it into an invalid zip")
+                tmp.write(chunk)
+        tmp.close()
+        return zipfile.ZipFile(tmp.name), tmp.name, total
+    except Exception:
+        tmp.close()
+        try:
+            os.unlink(tmp.name)
+        except OSError:
+            pass
+        raise
 
 
 def _public_ips(host):
@@ -317,18 +370,18 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
                                 "Maven", "Packagist", "NuGet", "Pub", "Hex")):
     """OSV.dev bulk per-ecosystem dumps: language-ecosystem breadth. Each record's
     CVE aliases are the referenced IDs; package name is the attribution product."""
-    import io
-    import zipfile
     out, seen = [], set()
     for eco in ecosystems:
         url = f"https://osv-vulnerabilities.storage.googleapis.com/{eco}/all.zip"
         if not _url_ok(url):
+            record_feed(f"osv:{eco}", False, "url rejected by the SSRF guard")
             continue
+        tmp_path = None
         try:
-            with _OPENER.open(urllib.request.Request(url, headers=UA), timeout=120) as r:
-                zf = zipfile.ZipFile(io.BytesIO(r.read(MAX_BYTES)))
+            zf, tmp_path, nbytes = _stream_zip(url)
         except Exception as e:  # noqa: BLE001
-            print(f"  [osv:{eco}] skip: {e}", file=sys.stderr)
+            record_feed(f"osv:{eco}", False, str(e)[:120])
+            print(f"  [osv:{eco}] FAILED: {e}", file=sys.stderr)
             continue
         n0 = len(out)
         for info in zf.infolist():
@@ -354,7 +407,13 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
                 seen.add(cid)
                 out.append({"cve_id": cid, "source": "osv", "source_ref": f"{eco}:{pkg}",
                             "public_date": pub, "product": pkg, "description": summ})
-        print(f"  [osv:{eco}] +{len(out)-n0}", file=sys.stderr)
+        try:
+            os.unlink(tmp_path)
+        except OSError:
+            pass
+        added = len(out) - n0
+        record_feed(f"osv:{eco}", True, f"{added} ids from {nbytes / 1e6:.0f}MB")
+        print(f"  [osv:{eco}] +{added}", file=sys.stderr)
     return out
 
 

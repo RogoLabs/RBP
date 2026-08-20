@@ -88,10 +88,14 @@ def survey_releases():
     return baseline_date, baseline_url, deltas
 
 
-def download_baseline(dest, url=None):
+def download_baseline(dest, url=None, date=None):
     """Fetch the daily baseline, skipping the download when we already hold that
-    day's file. Freshness is keyed on the asset DATE, never the release tag."""
-    date = None
+    day's file. Freshness is keyed on the asset DATE, never the release tag.
+
+    Callers that already surveyed the feed must pass `date` alongside `url`,
+    otherwise the freshness stamp is never written and the next cold-ish run
+    re-downloads 583 MB it already has.
+    """
     if url is None:
         date, url, _ = survey_releases()
     stamp = dest + ".date"
@@ -286,7 +290,7 @@ def refresh_corpus(baseline_path, index_dir, force=False):
                else f"gap {gap}d > {MAX_DELTA_GAP_DAYS}d" if gap and gap > MAX_DELTA_GAP_DAYS
                else "clock moved backwards" if gap is not None and gap < 0 else "no state")
         print(f"full baseline rebuild ({why})")
-        download_baseline(baseline_path, url=baseline_url)
+        download_baseline(baseline_path, url=baseline_url, date=baseline_date)
         corpus, prod = build_index(baseline_path, index_dir)
         _write_state(index_dir, corpus_date=baseline_date, last_full=baseline_date)
         return corpus, prod
@@ -297,7 +301,7 @@ def refresh_corpus(baseline_path, index_dir, force=False):
     missing = [d for d in _days_between(have, baseline_date) if d not in deltas]
     if missing:
         print(f"full baseline rebuild (delta unavailable for {missing})")
-        download_baseline(baseline_path, url=baseline_url)
+        download_baseline(baseline_path, url=baseline_url, date=baseline_date)
         corpus, prod = build_index(baseline_path, index_dir)
         _write_state(index_dir, corpus_date=baseline_date, last_full=baseline_date)
         return corpus, prod

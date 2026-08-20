@@ -64,6 +64,18 @@ def cmd_run(args):
     refs = feeds.gather(sources, years)
     print(f"  total unique referenced IDs: {len(refs)}")
 
+    # A feed that fails must never read as an improvement. Counts are a floor,
+    # so a silent shrink looks like progress; this is the failure mode most
+    # likely to actually happen (PLAN.md R4). The OSV npm ecosystem was dropped
+    # from every run for exactly this reason before it was caught.
+    failures, attempts = feeds.health_summary()
+    if failures:
+        print(f"  DEGRADED: {len(failures)} of {attempts} feed fetches failed. "
+              f"This run's counts are a lower floor than usual and are NOT "
+              f"comparable to the previous run.")
+        for f in failures:
+            print(f"    - {f}")
+
     attributor = attribution.Attributor(corpus)
     backlog, fresh = classify.classify(refs, corpus, attributor, CACHE, workers=args.workers,
                                        today=today, ttl=args.cache_ttl_days)

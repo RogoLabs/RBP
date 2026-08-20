@@ -157,8 +157,9 @@ def _route(tmp_path, monkeypatch, corpus_date, deltas, force=False, indexed=True
     monkeypatch.setattr(cvelist, "_delta_rows", lambda url: [])
     took = {}
 
-    def fake_full(path, url=None):
+    def fake_full(path, url=None, date=None):
         took["baseline"] = True
+        took["baseline_date"] = date
         return path
 
     def fake_build(zip_path, out_dir):
@@ -221,6 +222,14 @@ def test_refresh_advances_corpus_date(tmp_path, monkeypatch):
     assert cvelist._read_state(index)["corpus_date"] == "2026-08-20"
 
 
+def test_rebuild_passes_the_date_so_the_stamp_gets_written(tmp_path, monkeypatch):
+    """download_baseline only writes its freshness stamp when it knows the date.
+    Callers that already surveyed the feed must pass it, or the next run
+    re-downloads 583 MB it already holds."""
+    took, _ = _route(tmp_path, monkeypatch, None, ALL_DELTAS, indexed=False)
+    assert took["baseline_date"] == "2026-08-20"
+
+
 # --------------------------------------------------------------------------
 # live: the upstream facts this design rests on
 # --------------------------------------------------------------------------
@@ -261,3 +270,36 @@ def test_live_delta_is_cumulative_from_midnight():
     assert sizes == sorted(sizes, reverse=True), (
         f"delta sizes {sizes} are not monotonic within the day; it may no longer "
         "be cumulative, in which case the warm path is skipping changes")
+
+
+# --------------------------------------------------------------------------
+# feed health: a failing feed must not read as an improvement
+# --------------------------------------------------------------------------
+
+def test_archive_ceiling_refuses_to_truncate():
+    """Reading a bulk archive through the in-memory cap silently truncated it
+    into an invalid zip, which is how OSV npm (220 MB against a 100 MB cap) was
+    dropped from every run while the build reported success. The ceiling must
+    raise, never mangle."""
+    from rbp import feeds
+    assert feeds.MAX_ARCHIVE_BYTES > 220_000_000, (
+        "ceiling is below the known size of the OSV npm archive")
+    assert feeds.MAX_ARCHIVE_BYTES > feeds.MAX_BYTES
+
+
+def test_feed_health_records_and_summarises(monkeypatch):
+    from rbp import feeds
+    monkeypatch.setattr(feeds, "FEED_HEALTH", {})
+    feeds.record_feed("osv:npm", True, "2321 ids")
+    feeds.record_feed("osv:Hex", False, "connection reset")
+    feeds.record_feed("debian", True, "17058 ids")
+    failures, attempts = feeds.health_summary()
+    assert attempts == 3
+    assert failures == ["osv:Hex: connection reset"]
+
+
+def test_no_failures_reports_clean(monkeypatch):
+    from rbp import feeds
+    monkeypatch.setattr(feeds, "FEED_HEALTH", {})
+    feeds.record_feed("debian", True, "ok")
+    assert feeds.health_summary() == ([], 1)
