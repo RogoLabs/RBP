@@ -8,6 +8,8 @@ import json
 import os
 from collections import Counter
 
+from . import clock
+
 
 def _trunc(s, n):
     """Truncate on a word boundary so summaries don't cut mid-word."""
@@ -102,16 +104,7 @@ def _indep(sources_str):
     return len({_ORIGIN.get(s, s) for s in sources_str.split(",") if s})
 
 
-def _self_disclosed(r):
-    """Did the owning CNA's OWN feed carry the advisory?
 
-    This is no longer an attribution gate: block inference is (inference.py).
-    It now carries the rule distinction: if the assigning CNA itself disclosed,
-    the 72h publish rule reads as a MUST (CNA Rules 4.5.1.4); if a third party
-    did, it reads as a SHOULD (4.5.1.6). Only the former is a hard breach, so
-    the two must never be reported as the same thing."""
-    fam = _OWNER_FEEDS.get(r.get("owner"))
-    return bool(fam and (fam & set(r["sources"].split(","))))
 
 
 def _summary(r):
@@ -180,12 +173,13 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
 
     def _gated(r):
         if nameable(r):
-            return {**r, "owner_nameable": True, "self_disclosed": _self_disclosed(r)}
+            return {**r, "owner_nameable": True, "self_disclosed": clock.self_disclosed(r)}
         return {**r, "owner": "unattributed", "owner_tier": "abstain",
                 "owner_nameable": False, "self_disclosed": False}
 
     cols = ["cve_id", "state", "vendor", "package", "ecosystem", "owner", "owner_nameable",
-            "owner_tier", "owner_method", "self_disclosed", "days_public", "public_date",
+            "owner_tier", "owner_method", "self_disclosed", "rule", "rule_strength",
+            "rule_basis", "days_public", "hours_public", "past_expectation", "public_date",
             "feed_count", "sources", "advisory_url", "refs", "description"]
     reportable.sort(key=lambda r: -r["days_public"])
     # backlog.csv = shareable, buffered, OWNER-GATED. Full inferred set kept in _full.json.

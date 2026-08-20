@@ -54,6 +54,35 @@ RULE_SHOULD = "4.5.1.6"    # a third party disclosed
 # leaderboard above Microsoft. Show the raw count instead.
 MIN_DENOMINATOR = 20
 
+# A CNA's OWN publication channel. Presence of the owner's own advisory is what
+# turns 4.5.1.6 (SHOULD) into 4.5.1.4 (MUST), because it shows the CNA itself
+# disclosed rather than a third party.
+#
+# Aggregators are deliberately excluded even where they carry the CNA's data.
+# OSV re-publishes GHSA, so an OSV row is not evidence that GitHub disclosed;
+# only `ghsa` is. Getting this wrong would upgrade a SHOULD to a MUST on a
+# mirror, which is the strongest claim the site makes resting on the weakest
+# evidence available.
+OWNER_FEEDS = {
+    "redhat": {"redhat"},
+    "GitHub_M": {"ghsa"},
+    "microsoft": {"msrc"},
+    "mozilla": {"mozilla"},
+}
+
+
+def self_disclosed(row):
+    """Did the owning CNA's own feed carry this advisory?
+
+    False whenever the owner is unknown, so an unattributed row can never be
+    escalated to a MUST.
+    """
+    own = OWNER_FEEDS.get(row.get("owner"))
+    if not own:
+        return False
+    sources = {s for s in (row.get("sources") or "").split(",") if s}
+    return bool(own & sources)
+
 
 def annotate(rows, today=None):
     """Add clock and rule fields to each backlog row, in place.
@@ -80,12 +109,21 @@ def annotate(rows, today=None):
         r["clock_known"] = known
         r["hours_public"] = days * 24 if known else None
         r["past_expectation"] = bool(known and days * 24 > EXPECTATION_HOURS)
-        # Self-disclosure is what makes 4.5.1.4 apply. We can only assert it
-        # where the owning CNA's own feed carried the advisory; absent that,
-        # the weaker rule is the honest reading.
-        must = bool(r.get("self_disclosed"))
+        # Self-disclosure is what makes 4.5.1.4 apply. Computed here rather
+        # than read off the row: it used to be set inside report._gated(), which
+        # runs later in the pipeline AND returns copies, so annotate never saw
+        # it and every row in production came out as a SHOULD.
+        must = self_disclosed(r)
+        r["self_disclosed"] = must
         r["rule"] = RULE_MUST if must else RULE_SHOULD
         r["rule_strength"] = "MUST" if must else "SHOULD"
+        # Ownership is ALWAYS inferred for a reserved ID, because the
+        # reservation endpoint redacts owning_cna for exactly that population.
+        # So a MUST reading rests on inference and must be rendered as a
+        # candidate, never as an established breach. The site is required to
+        # carry this qualifier wherever it shows rule_strength.
+        r["rule_basis"] = "inferred-owner" if r.get("owner") else "unattributed"
+        r["rule_certainty"] = "candidate"
     return rows
 
 

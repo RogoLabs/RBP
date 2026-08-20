@@ -25,11 +25,19 @@ TODAY = "2026-08-20"
 
 
 def row(cve, days, owner=None, self_disclosed=False, public=None):
-    """A backlog row. days=None means an undated feed, so public_date is cleared
-    too: leaving a usable date there would contradict the premise, since the
-    clock derives the age from it."""
-    return {"cve_id": cve, "days_public": days, "owner": owner,
-            "self_disclosed": self_disclosed,
+    """A backlog row.
+
+    days=None means an undated feed, so public_date is cleared too: leaving a
+    usable date there would contradict the premise, since the clock derives the
+    age from it.
+
+    self_disclosed=True is expressed as a real owner plus that owner's own feed
+    in `sources`, because annotate derives the flag rather than trusting it. A
+    row asserting the flag directly would not exercise the real path.
+    """
+    return {"cve_id": cve, "days_public": days,
+            "owner": owner or ("redhat" if self_disclosed else None),
+            "sources": "redhat" if self_disclosed else "debian",
             "public_date": public if public is not None
             else ("2026-01-01" if days is not None else "")}
 
@@ -83,7 +91,7 @@ def test_should_is_the_default_reading():
 
 
 def test_must_only_where_the_cna_itself_disclosed():
-    rows = [row("CVE-2026-1", 10, self_disclosed=True)]
+    rows = [row("CVE-2026-1", 10, owner="redhat", self_disclosed=True)]
     clock.annotate(rows, TODAY)
     assert rows[0]["rule"] == clock.RULE_MUST
     assert rows[0]["rule_strength"] == "MUST"
@@ -92,7 +100,8 @@ def test_must_only_where_the_cna_itself_disclosed():
 def test_every_row_carries_the_split():
     """It has to ride on the row, not be summarised away, or a downstream
     surface can render a mixed table as though it were all one rule."""
-    rows = [row(f"CVE-2026-{i}", 10, self_disclosed=bool(i % 2)) for i in range(6)]
+    rows = [row(f"CVE-2026-{i}", 10, owner="redhat", self_disclosed=bool(i % 2))
+            for i in range(6)]
     clock.annotate(rows, TODAY)
     assert all(r["rule"] in (clock.RULE_MUST, clock.RULE_SHOULD) for r in rows)
     assert all(r["rule_strength"] in ("MUST", "SHOULD") for r in rows)
@@ -261,7 +270,8 @@ def test_time_to_publish_reports_its_own_n(tmp_path):
 
 def test_summary_counts_and_buckets():
     rows = [row("CVE-2026-1", 2), row("CVE-2026-2", 10), row("CVE-2026-3", 200),
-            row("CVE-2026-4", None), row("CVE-2026-5", 40, self_disclosed=True)]
+            row("CVE-2026-4", None),
+            row("CVE-2026-5", 40, owner="redhat", self_disclosed=True)]
     clock.annotate(rows, TODAY)
     s = clock.summary(rows, [{"cna": "acme"}], TODAY)
     assert s["total"] == 5
@@ -320,3 +330,80 @@ def test_summary_carries_the_undated_rows_it_could_not_age():
     s = clock.summary(rows, [], TODAY, undated_excluded=85)
     assert s["undated_excluded"] == 85
     assert s["total"] == 1
+
+
+# --------------------------------------------------------------------------
+# self-disclosure: what turns a SHOULD into a MUST
+# --------------------------------------------------------------------------
+
+def _r(owner, sources):
+    return {"cve_id": "CVE-2026-1", "owner": owner, "sources": sources,
+            "public_date": "2026-01-01", "days_public": 30}
+
+
+def test_owners_own_feed_makes_it_a_must():
+    assert clock.self_disclosed(_r("redhat", "redhat,debian")) is True
+    assert clock.self_disclosed(_r("GitHub_M", "ghsa,alpine")) is True
+
+
+def test_third_party_feeds_alone_stay_a_should():
+    assert clock.self_disclosed(_r("redhat", "debian,alas")) is False
+    assert clock.self_disclosed(_r("GitHub_M", "alpine,debian")) is False
+
+
+def test_an_aggregator_mirror_is_not_self_disclosure():
+    """OSV re-publishes GHSA, so an OSV row is not evidence that GitHub
+    disclosed. Counting it would upgrade a SHOULD to a MUST on a mirror, which
+    is the site's strongest claim resting on its weakest evidence."""
+    assert "osv" not in clock.OWNER_FEEDS["GitHub_M"]
+    assert clock.self_disclosed(_r("GitHub_M", "osv")) is False
+    assert clock.self_disclosed(_r("GitHub_M", "osv,ghsa")) is True
+
+
+def test_unattributed_rows_can_never_be_escalated():
+    assert clock.self_disclosed(_r(None, "redhat,ghsa,msrc")) is False
+    assert clock.self_disclosed(_r("", "redhat")) is False
+    assert clock.self_disclosed(_r("some-unmapped-cna", "redhat")) is False
+
+
+def test_annotate_computes_self_disclosure_itself():
+    """Regression: self_disclosed was set inside report._gated(), which runs
+    later in the pipeline AND returns copies, so annotate never saw it and every
+    row in production came out as a SHOULD. 712 rows, 0 MUST."""
+    rows = [_r("redhat", "redhat,debian"), _r("redhat", "debian")]
+    clock.annotate(rows, TODAY)
+    assert [r["rule_strength"] for r in rows] == ["MUST", "SHOULD"]
+    assert [r["self_disclosed"] for r in rows] == [True, False]
+
+
+def test_missing_sources_field_is_safe():
+    for src in (None, ""):
+        r = {"cve_id": "CVE-2026-1", "owner": "redhat", "sources": src,
+             "public_date": "2026-01-01"}
+        clock.annotate([r], TODAY)
+        assert r["rule_strength"] == "SHOULD"
+
+
+def test_a_must_reading_is_always_marked_a_candidate():
+    """The reservation endpoint redacts owning_cna for exactly the reserved
+    population, so ownership is always inferred and a MUST reading always rests
+    on inference. It may be rendered as a candidate, never as an established
+    breach."""
+    rows = [_r("redhat", "redhat")]
+    clock.annotate(rows, TODAY)
+    assert rows[0]["rule_strength"] == "MUST"
+    assert rows[0]["rule_certainty"] == "candidate"
+    assert rows[0]["rule_basis"] == "inferred-owner"
+
+
+def test_unattributed_rows_say_so_in_the_basis():
+    rows = [_r(None, "debian")]
+    clock.annotate(rows, TODAY)
+    assert rows[0]["rule_basis"] == "unattributed"
+    assert rows[0]["rule_strength"] == "SHOULD"
+
+
+def test_no_row_ever_claims_an_established_breach():
+    rows = [_r("redhat", "redhat"), _r("GitHub_M", "ghsa"), _r(None, "debian")]
+    clock.annotate(rows, TODAY)
+    assert {r["rule_certainty"] for r in rows} == {"candidate"}
