@@ -26,6 +26,10 @@ env:
   # the code default. So widening the buffer under CNA pushback is a settings
   # change, not a commit.
   MIN_AGE_DAYS: ${{ inputs.min_age_days || vars.RBP_MIN_AGE_DAYS || '' }}
+  # Pre-launch by default: / serves the holding page and the dashboard sits at
+  # /overview.html, noindexed. Set the repository variable RBP_LAUNCHED to 1 to
+  # make / the dashboard. The gate is 50% CNA coverage (PLAN.md).
+  RBP_LAUNCHED: ${{ vars.RBP_LAUNCHED || '' }}
 
 permissions:
   contents: write      # pushes the grader ledger to the data branch

@@ -328,6 +328,12 @@ instrument, and the closures prove the open rows are real.
 - **Phase 5: harden the loop** (1 day). Feed-health surfacing, history to `data` branch
   with compaction, failure alerting, staleness banner past 24h.
   *Done when* killing a feed produces a degraded-coverage banner, not a smaller count.
+- **Pre-launch posture (in force now).** `/` serves the holding page and the dashboard
+  sits at `/overview.html`, noindexed, with the holding page carrying no link into it.
+  The dashboard is still built and the data files are still served, because the repo is
+  public either way: the gate is on what the front door presents, not on hiding anything.
+  Flip with the `RBP_LAUNCHED` repository variable, so launching is a settings change
+  rather than a commit.
 - **LAUNCH GATE: 50% CNA coverage.** Nothing is shared or promoted publicly until feeds
   touch at least **half of all CNAs**. Measured 36.4% (158 of 434) on 2026-08-20, so
   roughly 59 more CNAs need touching. The site stays live throughout; the gate is on

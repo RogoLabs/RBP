@@ -5,7 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>{% block title %}RBP Tracker{% endblock %}</title>
 <meta name="description" content="{% block description %}Every CVE ID that is reserved, publicly referenced, and still unpublished. Updated every six hours.{% endblock %}">
+{% if launched %}
 <meta name="robots" content="index, follow">
+{% else %}
+<meta name="robots" content="noindex, nofollow">
+{% endif %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -29,10 +33,10 @@
 {% set p = '../' if page == 'cna' else '' %}
 <header class="header">
   <div class="nav-container">
-    <a href="{{ p }}index.html" class="logo">RBP&nbsp;Tracker</a>
+    <a href="{{ p }}{{ home }}" class="logo">RBP&nbsp;Tracker</a>
     <nav class="nav">
       <ul class="nav-menu">
-        <li><a href="{{ p }}index.html">Overview</a></li>
+        <li><a href="{{ p }}{{ home }}">Overview</a></li>
         <li><a href="{{ p }}cves.html">CVEs</a></li>
         <li><a href="{{ p }}cnas.html">CNAs</a></li>
         <li><a href="{{ p }}changes.html">Changes</a></li>

@@ -407,3 +407,13 @@ def test_no_row_ever_claims_an_established_breach():
     rows = [_r("redhat", "redhat"), _r("GitHub_M", "ghsa"), _r(None, "debian")]
     clock.annotate(rows, TODAY)
     assert {r["rule_certainty"] for r in rows} == {"candidate"}
+
+
+def test_median_of_whole_days_stays_whole():
+    """An even-length day count rendered as "42.0" on the front page, which
+    reads as a precision a floor-derived clock does not have."""
+    assert clock._median([40, 44]) == 42
+    assert isinstance(clock._median([40, 44]), int)
+    assert clock._median([1, 2, 3]) == 2
+    assert clock._median([1, 2]) == 1.5   # genuinely between days, keep it
+    assert clock._median([]) is None

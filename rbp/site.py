@@ -29,6 +29,19 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import clock
 
+# Pre-launch posture. The dashboard is built and reachable either way, because
+# the repo is public and the data files are served regardless; the gate is on
+# what the front door presents, not on hiding anything.
+#
+#   not launched: / is the holding page, the dashboard lives at /overview.html
+#                 and every dashboard page is noindex, so search engines do not
+#                 index a count that is still built on partial CNA coverage.
+#   launched:     / IS the dashboard.
+#
+# Flip with RBP_LAUNCHED=1, wired to a repository variable so it is a settings
+# change rather than a commit. The launch gate is 50% CNA coverage (PLAN.md).
+LAUNCHED = os.environ.get("RBP_LAUNCHED", "").strip().lower() in ("1", "true", "yes")
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 TEMPLATES = os.path.join(ROOT, "templates")
@@ -98,6 +111,10 @@ def load(snap_root, data_dir):
         "rule_should": clock.RULE_SHOULD,
         "owner_feeds": {k: sorted(v) for k, v in clock.OWNER_FEEDS.items()},
         "asset_v": _asset_versions(),
+        "launched": LAUNCHED,
+        # Where the dashboard actually lives, so the nav and the logo point at
+        # it in both postures.
+        "home": "index.html" if LAUNCHED else "overview.html",
     }
 
 
@@ -189,7 +206,7 @@ def _write_data(out, ctx):
 
 
 PAGES = [
-    ("index.html", "index.html"),
+    ("index.html", "index.html" if LAUNCHED else "overview.html"),
     ("cves.html", "cves.html"),
     ("cnas.html", "cnas.html"),
     ("method.html", "method.html"),
@@ -211,6 +228,16 @@ def build(out, snap_root, data_dir):
         html = env.get_template(template).render(**ctx, page=target)
         open(os.path.join(out, target), "w").write(html)
 
+    if not LAUNCHED:
+        # The holding page becomes the front door. Kept as a standalone file
+        # rather than a template: it shares nothing with the dashboard by
+        # design, and it must not link into it before launch.
+        landing = os.path.join(ROOT, "placeholder.html")
+        if os.path.exists(landing):
+            shutil.copyfile(landing, os.path.join(out, "index.html"))
+        else:
+            raise SystemExit("placeholder.html missing; cannot build pre-launch front door")
+
     # Per-CNA detail. This is the page a CNA lands on when someone sends them
     # the link, so it carries the full row list and the method caveats rather
     # than a summary line.
@@ -224,5 +251,8 @@ def build(out, snap_root, data_dir):
         open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
 
     _write_data(out, ctx)
+    posture = "LAUNCHED, / is the dashboard" if LAUNCHED else \
+              "pre-launch, / is the holding page and the dashboard is /overview.html"
     print(f"site: {len(PAGES)} pages + {len(ctx['cnas'])} CNA pages -> {out}")
+    print(f"      {posture}")
     return ctx

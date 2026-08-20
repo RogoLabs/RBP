@@ -247,11 +247,18 @@ def _days_between(a, b):
 
 
 def _median(xs):
+    """Median, kept as an int when the inputs are whole days.
+
+    An even-length day count used to render as "42.0", which reads as a
+    precision this measurement does not have. The clock is a floor derived from
+    advisory dates, so a fractional day is meaningless.
+    """
     if not xs:
         return None
     s = sorted(xs)
     n = len(s)
-    return s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+    mid = s[n // 2] if n % 2 else (s[n // 2 - 1] + s[n // 2]) / 2
+    return int(mid) if float(mid).is_integer() else round(mid, 1)
 
 
 # --------------------------------------------------------------------------
