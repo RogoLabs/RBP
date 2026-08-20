@@ -8,8 +8,8 @@
  "oldest_days": 519,
  "median_days": 42.0,
  "named_cnas": 9,
- "must_rows": 0,
- "should_rows": 542,
+ "must_rows": 210,
+ "should_rows": 332,
  "age_buckets": {
   "7-30d": 133,
   "30-90d": 373,
@@ -19,24 +19,30 @@
  "min_age_days": 7,
  "inference": {
   "k": 3,
-  "run_coverage": 0.5056,
+  "run_coverage": 0.514,
   "leave_one_out": {
    "method": "leave-one-out",
    "k": 3,
-   "decided": 29233,
-   "abstained": 17573,
-   "total": 46806,
-   "correct": 29056,
-   "wrong": 177,
-   "coverage": 0.6246,
-   "precision": 0.9939
+   "decided": 29488,
+   "abstained": 17758,
+   "total": 47246,
+   "correct": 29304,
+   "wrong": 184,
+   "coverage": 0.6241,
+   "precision": 0.9938
   },
   "live": {
-   "graded": 0,
-   "correct": 0,
-   "precision": null,
-   "outstanding": 367,
-   "by_tier": {}
+   "graded": 1,
+   "correct": 1,
+   "precision": 1.0,
+   "outstanding": 366,
+   "by_tier": {
+    "block": {
+     "graded": 1,
+     "correct": 1,
+     "precision": 1.0
+    }
+   }
   }
  },
  "feeds": {

@@ -1,6 +1,24 @@
 {
  "predictions": {},
- "graded": [],
- "history": [],
+ "graded": [
+  {
+   "cve_id": "CVE-2026-50192",
+   "predicted": "GitHub_M",
+   "actual": "GitHub_M",
+   "correct": true,
+   "tier": "block",
+   "k": 3,
+   "predicted_on": "2026-08-20",
+   "graded_on": "2026-08-20"
+  }
+ ],
+ "history": [
+  {
+   "date": "2026-08-20",
+   "newly_graded": 1,
+   "newly_correct": 1,
+   "cumulative_precision": 1.0
+  }
+ ],
  "_note": "open predictions removed from history 2026-08-21: inferred CNA names should not have been published"
 }
