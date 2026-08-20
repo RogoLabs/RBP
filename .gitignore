@@ -1,11 +1,3 @@
-# The CVE List corpus is ~583 MB and must NEVER enter the repo.
-# GitHub's recommended source-repo ceiling is 1 GB. See PLAN.md R8.
-data/
-site/
-__pycache__/
-*.pyc
-.venv/
-.api_cache.json
-.DS_Store
-.pytest_cache/
-snapshots/
+# This branch carries data only. Nothing from the source tree belongs here.
+*.py
+*.html
