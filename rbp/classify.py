@@ -172,10 +172,17 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
 
 
 def _row(cid, e, state, attributor):
-    owner, conf, method = attributor.attribute(e.get("product", ""), e.get("description", ""))
+    # The product->CNA map is corroboration only; it never names a CNA on its
+    # own (85% precision as a standalone fallback — see inference.py). The
+    # authoritative owner column is filled by block inference downstream.
+    pm_owner, pm_conf, pm_method = attributor.attribute(
+        e.get("product", ""), e.get("description", ""))
     return {
-        "cve_id": cid, "state": state, "owner": owner, "owner_confidence": conf,
-        "owner_method": method, "public_date": e["public_date"],
+        "cve_id": cid, "state": state,
+        "owner": None, "owner_tier": "abstain", "owner_method": "pending-inference",
+        "product_map_owner": None if pm_owner == "unclassified" else pm_owner,
+        "product_map_confidence": pm_conf, "product_map_method": pm_method,
+        "public_date": e["public_date"],
         "sources": ",".join(sorted(e["sources"])), "feed_count": len(e["sources"]),
         "refs": ";".join(sorted(e["refs"]))[:250],
         "description": e["description"][:180].replace("\n", " "),

@@ -1,5 +1,10 @@
 """
-Owner attribution for RBP-hard (`DNE`) CVEs — hardened, v2.
+Product -> CNA map. CORROBORATION ONLY — this never names a CNA on its own.
+
+Measured as a standalone fallback where block inference abstains: 20 decisions
+at 85% precision, well under the ~97% floor in PLAN.md section 8. Naming is done
+by inference.py; a match here only promotes an already-named row to the
+corroborated tier (where both fired, they agreed 14/14).
 
 Fixes from adversarial review:
   - Curated keywords are matched against the PRODUCT field only, on whole-token /
@@ -10,8 +15,9 @@ Fixes from adversarial review:
   - Corpus-derived owner requires a MAJORITY (share >= MIN_SHARE) with a margin
     over second place, not a plurality — a 3/20 top CNA is `unclassified`, not named.
 
-Confidence is a match-quality signal; the report applies a further min-confidence
-gate before any CNA is publicly named.
+Confidence is a match-quality signal only. It no longer gates naming — the
+k-neighbour block gate does — so a high-confidence match here still yields no
+name unless block inference independently reached the same CNA.
 """
 from __future__ import annotations
 

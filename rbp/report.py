@@ -94,10 +94,15 @@ def _indep(sources_str):
     return len({_ORIGIN.get(s, s) for s in sources_str.split(",") if s})
 
 
-def _owner_corroborated(r):
-    if r.get("owner_method") == "api-assigner":
-        return True
-    fam = _OWNER_FEEDS.get(r["owner"])
+def _self_disclosed(r):
+    """Did the owning CNA's OWN feed carry the advisory?
+
+    This is no longer an attribution gate — block inference is (inference.py).
+    It now carries the rule distinction: if the assigning CNA itself disclosed,
+    the 72h publish rule reads as a MUST (CNA Rules 4.5.1.4); if a third party
+    did, it reads as a SHOULD (4.5.1.6). Only the former is a hard breach, so
+    the two must never be reported as the same thing."""
+    fam = _OWNER_FEEDS.get(r.get("owner"))
     return bool(fam and (fam & set(r["sources"].split(","))))
 
 
@@ -136,12 +141,14 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
 
     for r in backlog:
         r["indep_sources"] = _indep(r["sources"])
-    hard = [r for r in reportable if r["state"] == "DNE"]
-    soft = [r for r in reportable if r["state"] == "RESERVED"]
+    # Every row is RESERVED now — the reservation endpoint confirms the state
+    # directly, so there is no inferred `DNE` bucket to separate out.
+    hard = [r for r in reportable if r["state"] == "RESERVED"]
+    soft = []
 
     # Single rule-anchored threshold: reportable = provably public >= min_age (14d,
     # >3x the 72h publish window). No separate 30-day tier. Headline core = reportable
-    # DNE corroborated by >=2 INDEPENDENT origins (OSV<-GHSA, ALAS<-RHEL collapsed).
+    # RESERVED rows corroborated by >=2 INDEPENDENT origins (OSV<-GHSA, ALAS<-RHEL collapsed).
     kpi_core = [r for r in hard if r["indep_sources"] >= 2]
 
     # snapshot dir
@@ -154,19 +161,21 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
     # CNA's own feed (never a bare product-map guess). Applied to EVERY shared surface —
     # the Markdown tables AND the CSV — so the shareable CSV never names a CNA the report
     # withholds. Full inferred data is retained only in backlog_full.json (audit).
+    # The naming gate is block inference (inference.py): `owner` is already None
+    # wherever the k-neighbour gate abstained. No second confidence gate here —
+    # one gate, measured, published. min_conf is retained only for the report header.
     def nameable(r):
-        return (r["owner"] != "unclassified" and r["owner_confidence"] >= min_conf
-                and _owner_corroborated(r))
+        return r.get("owner") is not None
 
     def _gated(r):
         if nameable(r):
-            return {**r, "owner_nameable": True}
-        return {**r, "owner": "unattributed", "owner_confidence": "", "owner_method": "",
-                "owner_nameable": False}
+            return {**r, "owner_nameable": True, "self_disclosed": _self_disclosed(r)}
+        return {**r, "owner": "unattributed", "owner_tier": "abstain",
+                "owner_nameable": False, "self_disclosed": False}
 
     cols = ["cve_id", "state", "vendor", "package", "ecosystem", "owner", "owner_nameable",
-            "owner_confidence", "owner_method", "days_public", "public_date", "feed_count",
-            "sources", "advisory_url", "refs", "description"]
+            "owner_tier", "owner_method", "self_disclosed", "days_public", "public_date",
+            "feed_count", "sources", "advisory_url", "refs", "description"]
     reportable.sort(key=lambda r: -r["days_public"])
     # backlog.csv = shareable, buffered, OWNER-GATED. Full inferred set kept in _full.json.
     with open(os.path.join(sdir, "backlog.csv"), "w", newline="") as f:
@@ -214,8 +223,9 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     def owner_str(r):
         if nameable and nameable(r):
             name = "GitHub (GHSA)" if r["owner"] == "GitHub_M" else r["owner"]
-            tag = "" if r["owner_method"] == "api-assigner" else ", inferred"
-            return f"{name} ({r['owner_confidence']}{tag})"
+            tier = r.get("owner_tier", "block")
+            tag = "inferred, corroborated" if tier == "block-corroborated" else "inferred"
+            return f"{name} ({tag})"
         return "unattributed"
 
     n_indep = sum(1 for r in hard if r["indep_sources"] >= 2)
@@ -261,8 +271,7 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
              "72h publish rule) — the single threshold; no separate 30-day tier.\n")
     L.append("| Class | Count |")
     L.append("|---|---:|")
-    L.append(f"| RBP-hard (`DNE`* — no record in API *or* git; owner inferred) | {total_hard} |")
-    L.append(f"| RBP-soft (`RESERVED` — reserved, owner authoritative) | {total_soft} |")
+    L.append(f"| RBP (`RESERVED` — confirmed reserved, publicly referenced) | {total_hard} |")
     L.append(f"| — **and** ≥2 independent sources (headline core) | **{len(kpi_core)}** |")
     L.append("")
     L.append("**Held back / context** (not reported against any CNA):\n")
@@ -272,12 +281,13 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     L.append(f"| age unknown (undated feeds) | {n_undated} |")
     L.append(f"| published since baseline (self-healed this run) | {fresh_resolved} |")
     L.append("")
-    L.append(f"\\* `DNE` = *does not exist in the CVE List* (not that the CVE is fake). "
-             f"`RESERVED` = 0 here means none of these {len(hard)} IDs had a record of *any* state — "
-             f"reserved or published — in either oracle; they are absent, not merely "
-             f"reserved-and-unpublished. (This does **not** imply CNAs fail to reserve IDs; "
-             f"reserve-then-publish is the normal lifecycle — it means no public stub exists yet "
-             f"for these specific IDs.)\n")
+    L.append(f"\\* `RESERVED` is confirmed directly against the CVE Services reservation "
+             f"endpoint (`/api/cve-id/`), which returns the true state for any ID. All {len(hard)} "
+             f"rows are therefore RBP by the CVE Program's own definition — a Reserved ID "
+             f"referenced in a public resource — not an inference about absence. IDs that were "
+             f"never allocated return `CVE_ID_NOT_FOUND` and are excluded, so downstream typos "
+             f"cannot inflate this count. (Reserve-then-publish is the normal lifecycle; what is "
+             f"counted here is reservation that went public and stayed unpublished.)\n")
 
     L.append("## Aged core (owner shown only where a CNA's own feed corroborates it)\n")
     L.append("*Owner is inferred and provisional — NOT an authoritative assignment and NOT a "
@@ -319,15 +329,21 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
              "likely §4.5.1.6 SHOULD gap, **not** a proven MUST breach.\n")
 
     L.append("## Methodology & caveats\n")
-    L.append("- **CNA** = CVE Numbering Authority. Source of truth: official CVE List v5 baseline "
-             "(standalone). `DNE` = absent from **both** the CVE Services API and the cvelistV5 git "
-             "tree, so it is not mere API propagation lag. Re-verified every run — auto-closes when "
-             "a record publishes.")
+    L.append("- **CNA** = CVE Numbering Authority. Source of truth: official CVE List v5 baseline, "
+             "plus the CVE Services reservation endpoint `/api/cve-id/` for state. That endpoint "
+             "returns RESERVED directly, so a row is not an inference about absence and is not API "
+             "propagation lag. Re-verified every run — auto-closes when a record publishes.")
     L.append("- **Sources are not fully independent:** OSV re-publishes GHSA, ALAS is a RHEL rebuild. "
              "The headline's independent-source count collapses those; the raw `feeds` column does not.")
-    L.append("- Owner is **authoritative** only for `RESERVED` (the reserving CNA); for `DNE` there "
-             "is no assignment record, so owner is **inferred**, gated, and only shown when the CNA's "
-             "own feed corroborates. Never publish an inferred owner as non-compliance.")
+    L.append("- Owner is **inferred, never authoritative**. The reservation endpoint redacts "
+             "`owning_cna` for exactly the RESERVED population, so the owner is reconstructed by "
+             "block inference: an ID is named only when the 3 published CVE IDs on *each* side all "
+             "share one assigner. Measured 100% precision at 59.8% coverage out-of-sample, and "
+             "re-graded every run against RBPs that have since published. Rows below the gate are "
+             "left unattributed rather than guessed. An inferred owner is not a compliance finding.")
+    L.append("- `self_disclosed` marks rows where the inferred owner's **own** feed carried the "
+             "advisory. Those read against CNA Rules 4.5.1.4 (72h **MUST**); everything else reads "
+             "against 4.5.1.6 (72h **SHOULD**, third-party disclosure). Do not conflate the two.")
     L.append("- `days_public` = days since the earliest downstream reference — a floor on how long "
              "the ID has been public, **not** the §4.5.1.6 CNA-awareness clock.")
     L.append("- Counts are a **lower bound** — only the configured feeds are checked.")

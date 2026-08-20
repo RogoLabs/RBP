@@ -8,3 +8,4 @@ __pycache__/
 .api_cache.json
 .DS_Store
 .pytest_cache/
+snapshots/

@@ -198,9 +198,21 @@ instrument, and the closures prove the open rows are real.
   Retire `DNE`; taxonomy becomes RESERVED / PUBLISHED / REJECTED / UNKNOWN. Thread-pooled
   with backoff and a circuit-breaker that fails the build rather than publishing a partial scan.
   *Done when* the 456 historical IDs reclassify to 232 / 224, matching today's probe.
-- **Phase 2 — inference + self-grading** (1 day). k-neighbour gate; grader scoring last
-  run against newly-published truth → `precision.json`; wire into templates.
-  *Done when* CI reproduces 60.6%/99.37% (LOO) and 59.8%/100% (out-of-sample).
+- **Phase 2 — inference + self-grading** (1 day). ✅ DONE. k-neighbour gate at k=3;
+  grader scoring earlier runs against newly-published truth → `precision.json`;
+  `run_coverage` reported separately from validation coverage. CI reproduces
+  60.8%/99.35% (LOO) and 59.8%/100% (out-of-sample), 39 tests.
+  **Correction found while building:** coverage is population-dependent, precision is
+  not. A live run over alas+alpine named only **24% of reportable rows**, not the 59.8%
+  the validation set suggests — live RBPs cluster in interleaved regions of the ID
+  space where no CNA owns the neighbourhood. Loosening the gate does not fix it (k=2
+  bought one extra row for 0.25pt of precision; k=1 bought five and dropped LOO
+  precision to 97.75%, brushing the kill floor). The binding constraint is the shape of
+  the ID space. **The site must show each run's actual naming coverage next to the
+  method's validated precision, and never present the latter's coverage as the
+  former's.** Also decided by measurement: the product→CNA map never names a CNA alone
+  (85% precision as a fallback) and REJECTED records are not used as neighbours
+  (too rare to matter).
 - **Phase 3 — policy scoring** (1 day). Trailing-12mo denominators, floor RBP%, 5%/50%
   flags, 3-month persistence. Min-denominator guard + Wilson interval on every rate.
   *Done when* the scoreboard reproduces F7 and no sub-floor CNA shows a percentage.

@@ -6,7 +6,7 @@ and indexes every record into a compact parquet. No dependency on any sibling
 repo or snapshot. Two products fall out of one pass over the corpus:
 
     corpus.parquet       cve_id, state, assigner, vendor, product   (membership + state)
-    product_cna.parquet  product -> dominant assigner + confidence   (DNE attribution)
+    product_cna.parquet  product -> dominant assigner + confidence   (corroboration only)
 """
 from __future__ import annotations
 
