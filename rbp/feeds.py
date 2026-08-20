@@ -639,13 +639,23 @@ ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
 
 
 def gather(sources, years):
+    """Collect referenced CVE IDs from every configured feed.
+
+    Health is recorded here rather than inside each adapter, so instrumentation
+    cannot drift out of step with the adapter list. A feed that raises is
+    recorded as a failure and the run reports degraded coverage; a feed that
+    returns nothing is recorded as a success with zero rows, which is a
+    materially different thing and must not read the same way.
+    """
     refs = {}
     for s in sources:
         try:
             rows = ADAPTERS[s](years)
         except Exception as e:  # noqa: BLE001
+            record_feed(s, False, str(e)[:120])
             print(f"  [{s}] FAILED: {e}", file=sys.stderr)
             continue
+        record_feed(s, True, f"{len(rows)} ids")
         print(f"  [{s}] {len(rows)} referenced IDs in scope")
         for r in rows:
             cid = r["cve_id"]

@@ -138,7 +138,10 @@ def _prev_snapshot(snap_root, today):
 
 def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, min_age=DEFAULT_MIN_AGE_DAYS, min_conf=0.7):
     for r in backlog:
-        r["days_public"] = _age(r["public_date"], today)
+        # clock.annotate is the owner of this field; only fill gaps here so the
+        # two stages cannot disagree.
+        if not isinstance(r.get("days_public"), int):
+            r["days_public"] = _age(r["public_date"], today)
 
     # Buffer: only report RBPs we can PROVE have been public >= min_age days.
     # Younger-than-buffer and undated (age-unknown) entries are held back, not counted

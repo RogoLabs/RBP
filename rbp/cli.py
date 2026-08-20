@@ -12,9 +12,10 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import os
 
-from . import cvelist, feeds, classify, report, attribution, coverage, inference
+from . import cvelist, feeds, classify, report, attribution, coverage, inference, clock
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
 # (CSAF aggregator + Microsoft) move to a deeper monthly cadence.
@@ -30,6 +31,7 @@ INDEX = os.path.join(DATA, "index")
 SNAPS = os.path.join(ROOT, "snapshots")
 CACHE = os.path.join(DATA, ".api_cache.json")
 PRECISION = os.path.join(DATA, "precision.json")
+RESOLUTIONS = os.path.join(DATA, "resolutions.json")
 BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 
 
@@ -85,12 +87,52 @@ def cmd_run(args):
     validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
                                             today=today, k=args.k)
 
+    # The 72-hour clock, and the MUST/SHOULD split that must ride on every row.
+    clock.annotate(backlog, today=today)
+    ledger = clock.ResolutionLedger(RESOLUTIONS)
+    closed = ledger.reconcile(corpus, today=today)
+    ledger.track(backlog)
+    ledger.save()
+    _all = clock.summary(backlog, [], today=today)
+    print(f"  clock: {_all['past_expectation']}/{_all['total']} past the "
+          f"{clock.EXPECTATION_HOURS}h expectation | oldest {_all['oldest_days']}d | "
+          f"median {_all['median_days']}d | {_all['clock_unknown']} undated")
+    print(f"  rule split: {_all['should_rows']} x 4.5.1.6 (SHOULD), "
+          f"{_all['must_rows']} x 4.5.1.4 (MUST, self-disclosed)")
+    if closed:
+        days = [c["days_to_publish"] for c in closed if isinstance(c["days_to_publish"], int)]
+        print(f"  resolved since last run: {len(closed)}"
+              + (f", median {clock._median(days)}d to publish" if days else ""))
+    else:
+        print(f"  resolved since last run: 0 "
+              f"({len(ledger.state['open'])} tracked, "
+              f"{len(ledger.state['resolved'])} resolved all-time)")
+
     cyr = int(today[:4])
     cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr))
     print(f"  CNA coverage: {cov['covered_cnas']}/{cov['total_cnas']} CNAs "
           f"({cov['pct_cnas']}%); observed {cov['observed_pct']}% of CVEs")
     sdir, md, kpi = report.build(backlog, fresh, SNAPS, today, years, sources, cov,
                                  min_age=args.min_age_days, min_conf=args.min_confidence)
+
+    # Clock artefacts the site reads directly. Written after report.build so the
+    # per-CNA view reflects the same buffered, owner-gated rows the tables show.
+    reportable = [r for r in backlog
+                  if isinstance(r.get("days_public"), int)
+                  and r["days_public"] >= args.min_age_days]
+    undated = sum(1 for r in backlog if not r.get("clock_known"))
+    cnas = clock.per_cna(reportable, ledger, corpus, today=today)
+    stats = clock.summary(reportable, cnas, today=today, undated_excluded=undated)
+    stats["min_age_days"] = args.min_age_days
+    stats["inference"] = {
+        "k": validation["k"],
+        "run_coverage": validation["run_coverage"],
+        "leave_one_out": validation["leave_one_out"],
+        "live": {k: v for k, v in validation["live"].items() if k != "misses"},
+    }
+    stats["feeds"] = {"requested": sources, "failures": failures, "attempts": attempts}
+    json.dump(cnas, open(os.path.join(sdir, "cnas.json"), "w"), indent=1)
+    json.dump(stats, open(os.path.join(sdir, "summary.json"), "w"), indent=1)
     print("\n" + "=" * 64)
     print(f"HEADLINE core (reportable, >=2 independent sources): {len(kpi)}")
     named = sum(v for k_, v in validation["named"].items() if k_ != inference.TIER_NONE)

@@ -28,7 +28,7 @@ live_only = pytest.mark.skipif(
     reason="hits the cvelistV5 release API; set RBP_LIVE_TESTS=1",
 )
 
-COLS = ["cve_id", "state", "assigner", "vendor", "product"]
+COLS = cvelist.COLUMNS
 
 
 def _corpus(tmp_path, rows, corpus_date=None):
@@ -39,7 +39,8 @@ def _corpus(tmp_path, rows, corpus_date=None):
                  columns=["product", "cna", "cna_cves", "total_cves", "confidence"]
                  ).to_parquet(index / "product_cna.parquet", index=False)
     if corpus_date:
-        cvelist._write_state(str(index), corpus_date=corpus_date)
+        cvelist._write_state(str(index), corpus_date=corpus_date,
+                             schema=cvelist.SCHEMA)
     return str(index)
 
 
@@ -91,13 +92,13 @@ def test_unreadable_state_is_not_fatal(tmp_path):
 
 def test_apply_deltas_upserts_and_advances_state(tmp_path, monkeypatch):
     index = _corpus(tmp_path, [
-        ("CVE-2026-1", "RESERVED", "", "", ""),
-        ("CVE-2026-2", "PUBLISHED", "acme", "Acme", "widget"),
+        ("CVE-2026-1", "RESERVED", "", "", "", ""),
+        ("CVE-2026-2", "PUBLISHED", "acme", "2026-08-01", "Acme", "widget"),
     ], corpus_date="2026-08-18")
 
     payloads = {
-        "2026-08-19": [("CVE-2026-1", "PUBLISHED", "acme", "Acme", "widget")],
-        "2026-08-20": [("CVE-2026-3", "PUBLISHED", "beta", "Beta", "thing")],
+        "2026-08-19": [("CVE-2026-1", "PUBLISHED", "acme", "2026-08-01", "Acme", "widget")],
+        "2026-08-20": [("CVE-2026-3", "PUBLISHED", "beta", "2026-08-01", "Beta", "thing")],
     }
     monkeypatch.setattr(cvelist, "_delta_rows", lambda url: payloads[url])
 
@@ -113,10 +114,10 @@ def test_apply_deltas_upserts_and_advances_state(tmp_path, monkeypatch):
 def test_apply_deltas_orders_oldest_first(tmp_path, monkeypatch):
     """A record only moves forward, so the newest day must win. Applying out of
     order would resurrect a stale state and re-open a resolved RBP."""
-    index = _corpus(tmp_path, [("CVE-2026-1", "RESERVED", "", "", "")])
+    index = _corpus(tmp_path, [("CVE-2026-1", "RESERVED", "", "", "", "")])
     payloads = {
-        "2026-08-20": [("CVE-2026-1", "REJECTED", "acme", "", "")],
-        "2026-08-19": [("CVE-2026-1", "PUBLISHED", "acme", "", "")],
+        "2026-08-20": [("CVE-2026-1", "REJECTED", "acme", "", "", "")],
+        "2026-08-19": [("CVE-2026-1", "PUBLISHED", "acme", "2026-08-01", "", "")],
     }
     monkeypatch.setattr(cvelist, "_delta_rows", lambda url: payloads[url])
     corpus, applied = cvelist.apply_deltas(index, {d: d for d in payloads})
@@ -127,8 +128,8 @@ def test_apply_deltas_orders_oldest_first(tmp_path, monkeypatch):
 def test_reapplying_the_same_day_is_idempotent(tmp_path, monkeypatch):
     """Today's cumulative delta is re-fetched on every run within the day. That
     has to be a no-op, not a duplicate."""
-    index = _corpus(tmp_path, [("CVE-2026-1", "RESERVED", "", "", "")])
-    rows = [("CVE-2026-2", "PUBLISHED", "acme", "", "")]
+    index = _corpus(tmp_path, [("CVE-2026-1", "RESERVED", "", "", "", "")])
+    rows = [("CVE-2026-2", "PUBLISHED", "acme", "2026-08-01", "", "")]
     monkeypatch.setattr(cvelist, "_delta_rows", lambda url: rows)
     cvelist.apply_deltas(index, {"2026-08-20": "u"})
     corpus, _ = cvelist.apply_deltas(index, {"2026-08-20": "u"})
@@ -137,7 +138,7 @@ def test_reapplying_the_same_day_is_idempotent(tmp_path, monkeypatch):
 
 
 def test_empty_delta_is_skipped(tmp_path, monkeypatch):
-    index = _corpus(tmp_path, [("CVE-2026-1", "PUBLISHED", "acme", "", "")])
+    index = _corpus(tmp_path, [("CVE-2026-1", "PUBLISHED", "acme", "2026-08-01", "", "")])
     monkeypatch.setattr(cvelist, "_delta_rows", lambda url: [])
     corpus, applied = cvelist.apply_deltas(index, {"2026-08-20": "u"})
     assert applied == []
@@ -150,7 +151,7 @@ def test_empty_delta_is_skipped(tmp_path, monkeypatch):
 
 def _route(tmp_path, monkeypatch, corpus_date, deltas, force=False, indexed=True):
     """Run refresh_corpus with the network stubbed and report which path it took."""
-    index = (_corpus(tmp_path, [("CVE-2026-1", "PUBLISHED", "acme", "", "")], corpus_date)
+    index = (_corpus(tmp_path, [("CVE-2026-1", "PUBLISHED", "acme", "2026-08-01", "", "")], corpus_date)
              if indexed else str(tmp_path / "empty"))
     monkeypatch.setattr(cvelist, "survey_releases",
                         lambda: ("2026-08-20", "base-url", deltas))
@@ -165,7 +166,7 @@ def _route(tmp_path, monkeypatch, corpus_date, deltas, force=False, indexed=True
     def fake_build(zip_path, out_dir):
         took["reindex"] = True
         os.makedirs(out_dir, exist_ok=True)
-        df = pd.DataFrame([("CVE-2026-1", "PUBLISHED", "acme", "", "")], columns=COLS)
+        df = pd.DataFrame([("CVE-2026-1", "PUBLISHED", "acme", "2026-08-01", "", "")], columns=COLS)
         df.to_parquet(os.path.join(out_dir, "corpus.parquet"), index=False)
         prod = pd.DataFrame([], columns=["product", "cna", "cna_cves", "total_cves", "confidence"])
         prod.to_parquet(os.path.join(out_dir, "product_cna.parquet"), index=False)
@@ -198,6 +199,32 @@ def test_missing_delta_day_rebuilds(tmp_path, monkeypatch):
     holed = {d: u for d, u in ALL_DELTAS.items() if d != "2026-08-19"}
     took, _ = _route(tmp_path, monkeypatch, "2026-08-18", holed)
     assert took.get("baseline"), "skipped a missing day instead of rebuilding"
+
+
+def test_stale_schema_rebuilds(tmp_path, monkeypatch):
+    """A cached index written under an older schema is missing columns the
+    pipeline now depends on, so it must be rebuilt rather than used."""
+    index = _corpus(tmp_path, [("CVE-2026-1", "PUBLISHED", "acme", "2026-08-01", "", "")],
+                    "2026-08-20")
+    cvelist._write_state(index, schema=cvelist.SCHEMA - 1)
+    monkeypatch.setattr(cvelist, "survey_releases",
+                        lambda: ("2026-08-20", "base-url", ALL_DELTAS))
+    took = {}
+    monkeypatch.setattr(cvelist, "download_baseline",
+                        lambda p, url=None, date=None: took.setdefault("baseline", True))
+    def fake_build(z, out):
+        took["reindex"] = True
+        df = pd.DataFrame([("CVE-2026-1", "PUBLISHED", "acme", "2026-08-01", "", "")],
+                          columns=COLS)
+        df.to_parquet(os.path.join(out, "corpus.parquet"), index=False)
+        prod = pd.DataFrame(
+            [], columns=["product", "cna", "cna_cves", "total_cves", "confidence"])
+        prod.to_parquet(os.path.join(out, "product_cna.parquet"), index=False)
+        return df, prod
+    monkeypatch.setattr(cvelist, "build_index", fake_build)
+    cvelist.refresh_corpus(str(tmp_path / "b.zip"), index)
+    assert took.get("baseline") and took.get("reindex")
+    assert cvelist._read_state(index)["schema"] == cvelist.SCHEMA
 
 
 def test_cold_start_rebuilds(tmp_path, monkeypatch):

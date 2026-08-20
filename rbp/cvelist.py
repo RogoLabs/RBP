@@ -5,7 +5,7 @@ Downloads the official daily baseline release (github.com/CVEProject/cvelistV5)
 and indexes every record into a compact parquet. No dependency on any sibling
 repo or snapshot. Two products fall out of one pass over the corpus:
 
-    corpus.parquet       cve_id, state, assigner, vendor, product   (membership + state)
+    corpus.parquet       cve_id, state, assigner, date_published, vendor, product
     product_cna.parquet  product -> dominant assigner + confidence   (corroboration only)
 """
 from __future__ import annotations
@@ -150,13 +150,17 @@ def build_index(zip_path, out_dir):
             continue
         state = meta.get("state", "")
         assigner = meta.get("assignerShortName", "")
+        # Authoritative publication date. Needed for two things the clock module
+        # cannot approximate: exact time-to-publish for resolved RBPs, and each
+        # CNA's trailing-12-month volume for scale context.
+        published = (meta.get("datePublished") or "")[:10]
         cna = (rec.get("containers", {}) or {}).get("cna", {}) or {}
         vendor = product = ""
         aff = cna.get("affected") or []
         if aff:
             vendor = (aff[0].get("vendor") or "")[:120]
             product = (aff[0].get("product") or "")[:120]
-        rows.append((cid, state, assigner, vendor, product))
+        rows.append((cid, state, assigner, published, vendor, product))
         # attribution signal: only trust PUBLISHED records with a real product
         if state == "PUBLISHED" and assigner:
             for a in aff:
@@ -166,7 +170,7 @@ def build_index(zip_path, out_dir):
         n += 1
         if n % 50000 == 0:
             print(f"  indexed {n:,} records")
-    corpus = pd.DataFrame(rows, columns=["cve_id", "state", "assigner", "vendor", "product"])
+    corpus = pd.DataFrame(rows, columns=COLUMNS)
     corpus.to_parquet(os.path.join(out_dir, "corpus.parquet"), index=False)
 
     prows = []
@@ -191,6 +195,13 @@ def load_index(out_dir):
 # --------------------------------------------------------------------------
 
 STATE_FILE = "corpus_state.json"
+
+# Bump when the corpus columns change. A cached index written under an older
+# schema is unusable, so a mismatch forces a full rebuild rather than silently
+# producing a corpus missing a column the pipeline now depends on.
+SCHEMA = 2
+
+COLUMNS = ["cve_id", "state", "assigner", "date_published", "vendor", "product"]
 
 
 def _read_state(index_dir):
@@ -231,6 +242,7 @@ def _delta_rows(url):
             continue
         aff = ((rec.get("containers", {}) or {}).get("cna", {}) or {}).get("affected") or []
         rows.append((cid, meta.get("state", ""), meta.get("assignerShortName", ""),
+                     (meta.get("datePublished") or "")[:10],
                      (aff[0].get("vendor") or "")[:120] if aff else "",
                      (aff[0].get("product") or "")[:120] if aff else ""))
     return rows
@@ -281,18 +293,24 @@ def refresh_corpus(baseline_path, index_dir, force=False):
     have = state.get("corpus_date")
     indexed = os.path.exists(os.path.join(index_dir, "corpus.parquet"))
 
+    schema = state.get("schema")
+
     gap = None
     if have and indexed:
         gap = (dt.date.fromisoformat(baseline_date) - dt.date.fromisoformat(have)).days
 
-    if force or not indexed or gap is None or gap > MAX_DELTA_GAP_DAYS or gap < 0:
+    stale_schema = indexed and schema != SCHEMA
+    if (force or not indexed or stale_schema or gap is None
+            or gap > MAX_DELTA_GAP_DAYS or gap < 0):
         why = ("forced" if force else "no index" if not indexed
+               else f"schema {schema} != {SCHEMA}" if stale_schema
                else f"gap {gap}d > {MAX_DELTA_GAP_DAYS}d" if gap and gap > MAX_DELTA_GAP_DAYS
                else "clock moved backwards" if gap is not None and gap < 0 else "no state")
         print(f"full baseline rebuild ({why})")
         download_baseline(baseline_path, url=baseline_url, date=baseline_date)
         corpus, prod = build_index(baseline_path, index_dir)
-        _write_state(index_dir, corpus_date=baseline_date, last_full=baseline_date)
+        _write_state(index_dir, corpus_date=baseline_date, last_full=baseline_date,
+                     schema=SCHEMA)
         return corpus, prod
 
     # Warm path. Today's delta is re-applied on every run within the day; it is
@@ -303,13 +321,14 @@ def refresh_corpus(baseline_path, index_dir, force=False):
         print(f"full baseline rebuild (delta unavailable for {missing})")
         download_baseline(baseline_path, url=baseline_url, date=baseline_date)
         corpus, prod = build_index(baseline_path, index_dir)
-        _write_state(index_dir, corpus_date=baseline_date, last_full=baseline_date)
+        _write_state(index_dir, corpus_date=baseline_date, last_full=baseline_date,
+                     schema=SCHEMA)
         return corpus, prod
 
     print(f"incremental refresh: indexed {have}, latest {baseline_date}, "
           f"{len(wanted)} delta day(s)")
     corpus, _ = apply_deltas(index_dir, wanted)
-    _write_state(index_dir, corpus_date=baseline_date)
+    _write_state(index_dir, corpus_date=baseline_date, schema=SCHEMA)
     prod = pd.read_parquet(os.path.join(index_dir, "product_cna.parquet"))
     return corpus, prod
 

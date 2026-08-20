@@ -79,9 +79,15 @@ jobs:
           mkdir -p data
           if [ -f .state/precision.json ]; then
             cp .state/precision.json data/precision.json
-            python -c "import json;d=json.load(open('data/precision.json'));print('ledger restored:',len(d.get('graded',[])),'graded,',len(d.get('predictions',{})),'outstanding')"
+            python -c "import json;d=json.load(open('data/precision.json'));print('grader ledger:',len(d.get('graded',[])),'graded,',len(d.get('predictions',{})),'outstanding')"
           else
-            echo "no ledger yet, starting fresh"
+            echo "no grader ledger yet, starting fresh"
+          fi
+          if [ -f .state/resolutions.json ]; then
+            cp .state/resolutions.json data/resolutions.json
+            python -c "import json;d=json.load(open('data/resolutions.json'));print('resolution ledger:',len(d.get('resolved',[])),'resolved,',len(d.get('open',{})),'tracked')"
+          else
+            echo "no resolution ledger yet, starting fresh"
           fi
           if [ -d .state/snapshots ]; then
             mkdir -p snapshots && cp -r .state/snapshots/. snapshots/
@@ -116,6 +122,7 @@ jobs:
       - name: Persist durable state
         run: |
           cp data/precision.json .state/ 2>/dev/null || true
+          cp data/resolutions.json .state/ 2>/dev/null || true
           mkdir -p .state/snapshots && cp -r snapshots/. .state/snapshots/ 2>/dev/null || true
           cd .state
           git config user.name "github-actions[bot]"
