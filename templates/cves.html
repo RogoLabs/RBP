@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Reserved but Public CVE IDs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Reserved but Public CVE IDs</h1>
+  <p class="text-muted">
+    {{ summary.total | commafy }} rows, provably public for at least
+    {{ summary.min_age_days }} days and still unpublished, so every one is already past
+    the {{ expectation_hours }}-hour publication expectation. Sorted oldest first.
+    Filters are in the URL, so any view here can be linked.
+  </p>
+</div>
+
+<div class="filters">
+  <input type="search" id="q" placeholder="CVE ID, package, vendor, advisory text" aria-label="Search">
+  <label for="rule">Rule</label>
+  <select id="rule">
+    <option value="">any</option>
+    <option value="{{ rule_must }}">{{ rule_must }} MUST</option>
+    <option value="{{ rule_should }}">{{ rule_should }} SHOULD</option>
+  </select>
+  <label for="owner">Owner</label>
+  <select id="owner">
+    <option value="">any</option>
+    <option value="__named">named</option>
+    <option value="__unattributed">unattributed</option>
+    {% for c in cnas %}<option value="{{ c.cna }}">{{ c.cna }}</option>{% endfor %}
+  </select>
+  <label for="minage">Min days</label>
+  <select id="minage">
+    <option value="">any</option>
+    <option value="7">7</option>
+    <option value="30">30</option>
+    <option value="90">90</option>
+    <option value="180">180</option>
+  </select>
+  <span class="result-count" id="count"></span>
+  <a class="chart-export-btn" href="data/rbp.csv" download>CSV</a>
+  <a class="chart-export-btn" href="data/rbp.json" download>JSON</a>
+</div>
+
+<div class="tablewrap">
+  <table class="rbp" id="tbl">
+    <thead>
+      <tr>
+        <th data-sort="cve_id">CVE ID</th>
+        <th class="num" data-sort="days_public" aria-sort="descending">Days public</th>
+        <th data-sort="rule">Rule</th>
+        <th data-sort="owner">Inferred owner</th>
+        <th data-sort="package">Package</th>
+        <th class="num" data-sort="feed_count">Feeds</th>
+        <th data-sort="sources">Sources</th>
+        <th>Advisory title</th>
+      </tr>
+    </thead>
+    <tbody id="body"></tbody>
+  </table>
+</div>
+
+<div class="caveat">
+  <p>
+    <strong>Days public is a floor.</strong> It counts from the earliest advisory this
+    site can see. The rule's clock starts when the CNA became aware, which is not
+    observable from outside, so this column says how long an ID has been public and
+    never how overdue it is.
+  </p>
+  <p class="mb-0">
+    <strong>Owner is inferred and gated.</strong> A CNA is named only where the three
+    published CVE IDs either side of the reserved one all share one assigner. Rows below
+    that gate say <em>unattributed</em> rather than guessing.
+    {% if summary.undated_excluded %}
+    A further {{ summary.undated_excluded | commafy }} reserved IDs are excluded entirely
+    because their feeds publish no date, so they cannot be aged at any threshold.
+    {% endif %}
+    <a href="method.html">Method</a>.
+  </p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script id="rows" type="application/json">{{ rows | tojson }}</script>
+<script>
+(function () {
+  var ROWS = JSON.parse(document.getElementById('rows').textContent);
+  var SHOW_LATE = {{ 'true' if summary.min_age_days * 24 <= expectation_hours else 'false' }};
+  var body = document.getElementById('body');
+  var countEl = document.getElementById('count');
+  var els = {
+    q: document.getElementById('q'),
+    rule: document.getElementById('rule'),
+    owner: document.getElementById('owner'),
+    minage: document.getElementById('minage')
+  };
+  var sortKey = 'days_public', sortDir = -1;
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function ruleChip(r) {
+    var must = r.rule === '{{ rule_must }}';
+    return '<span class="chip ' + (must ? 'chip-must' : 'chip-should') + '">' +
+      esc(r.rule) + ' ' + esc(r.rule_strength) + '</span>';
+  }
+
+  function ownerCell(r) {
+    if (!r.owner || r.owner === 'unattributed') {
+      return '<td class="unattributed">unattributed</td>';
+    }
+    var tier = r.owner_tier === 'block-corroborated' ? 'chip-corrob' : 'chip-block';
+    var label = r.owner_tier === 'block-corroborated' ? 'corroborated' : 'block';
+    return '<td><a href="cna/' + esc(slug(r.owner)) + '.html">' + esc(r.owner) + '</a> ' +
+      '<span class="chip ' + tier + '">' + label + '</span></td>';
+  }
+
+  function slug(n) {
+    return String(n || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '') || 'unknown';
+  }
+
+  function matches(r) {
+    var q = els.q.value.trim().toLowerCase();
+    if (q) {
+      var hay = [r.cve_id, r.package, r.vendor, r.description, r.owner, r.sources]
+        .join(' ').toLowerCase();
+      if (hay.indexOf(q) === -1) return false;
+    }
+    if (els.rule.value && r.rule !== els.rule.value) return false;
+    var named = r.owner && r.owner !== 'unattributed';
+    if (els.owner.value === '__named' && !named) return false;
+    if (els.owner.value === '__unattributed' && named) return false;
+    if (els.owner.value && els.owner.value.indexOf('__') !== 0 &&
+        r.owner !== els.owner.value) return false;
+    if (els.minage.value && !(r.days_public >= +els.minage.value)) return false;
+    return true;
+  }
+
+  function render() {
+    var rows = ROWS.filter(matches);
+    rows.sort(function (a, b) {
+      var x = a[sortKey], y = b[sortKey];
+      if (typeof x === 'number' || typeof y === 'number') {
+        return ((x || 0) - (y || 0)) * sortDir;
+      }
+      return String(x || '').localeCompare(String(y || '')) * sortDir;
+    });
+    body.innerHTML = rows.map(function (r) {
+      // The chip is only informative when the buffer is short enough for rows
+      // to differ. At the default buffer every row is past the expectation, so
+      // a chip on all of them is noise; the page copy states it once instead.
+      var late = (SHOW_LATE && r.past_expectation)
+        ? ' <span class="chip chip-late">past ' + {{ expectation_hours }} + 'h</span>' : '';
+      return '<tr>' +
+        '<td class="id"><a href="' + esc(r.advisory_url) + '">' + esc(r.cve_id) + '</a></td>' +
+        '<td class="num">' + esc(r.days_public) + late + '</td>' +
+        '<td>' + ruleChip(r) + '</td>' +
+        ownerCell(r) +
+        '<td>' + esc(r.package || r.vendor || '') + '</td>' +
+        '<td class="num">' + esc(r.feed_count) + '</td>' +
+        '<td class="mono small">' + esc(r.sources) + '</td>' +
+        '<td class="desc">' + esc(r.description) + '</td>' +
+      '</tr>';
+    }).join('');
+    countEl.textContent = rows.length + ' of ' + ROWS.length + ' rows';
+    writeUrl();
+  }
+
+  function writeUrl() {
+    var p = new URLSearchParams();
+    Object.keys(els).forEach(function (k) { if (els[k].value) p.set(k, els[k].value); });
+    if (sortKey !== 'days_public' || sortDir !== -1) {
+      p.set('sort', sortKey); p.set('dir', sortDir < 0 ? 'desc' : 'asc');
+    }
+    var s = p.toString();
+    history.replaceState(null, '', s ? '?' + s : location.pathname);
+  }
+
+  function readUrl() {
+    var p = new URLSearchParams(location.search);
+    Object.keys(els).forEach(function (k) { if (p.get(k)) els[k].value = p.get(k); });
+    if (p.get('sort')) { sortKey = p.get('sort'); sortDir = p.get('dir') === 'asc' ? 1 : -1; }
+  }
+
+  document.querySelectorAll('th[data-sort]').forEach(function (th) {
+    th.addEventListener('click', function () {
+      var k = th.getAttribute('data-sort');
+      if (k === sortKey) { sortDir = -sortDir; } else { sortKey = k; sortDir = -1; }
+      document.querySelectorAll('th[data-sort]').forEach(function (o) {
+        o.removeAttribute('aria-sort');
+      });
+      th.setAttribute('aria-sort', sortDir < 0 ? 'descending' : 'ascending');
+      render();
+    });
+  });
+  Object.keys(els).forEach(function (k) {
+    els[k].addEventListener(k === 'q' ? 'input' : 'change', render);
+  });
+
+  readUrl();
+  render();
+})();
+</script>
+{% endblock %}

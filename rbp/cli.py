@@ -15,7 +15,7 @@ import datetime as dt
 import json
 import os
 
-from . import cvelist, feeds, classify, report, attribution, coverage, inference, clock
+from . import cvelist, feeds, classify, report, attribution, coverage, inference, clock, site
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
 # (CSAF aggregator + Microsoft) move to a deeper monthly cadence.
@@ -40,6 +40,10 @@ def ensure_corpus(force=False):
     and only re-pulls the 583 MB baseline when the delta chain cannot cover the
     gap. See cvelist.refresh_corpus."""
     return cvelist.refresh_corpus(BASELINE, INDEX, force=force)
+
+
+def cmd_build(args):
+    site.build(args.out, SNAPS, DATA)
 
 
 def cmd_index(args):
@@ -174,6 +178,9 @@ def main():
                    help=argparse.SUPPRESS)   # RESERVED is now re-verified every run
     r.add_argument("--reindex", action="store_true")
     r.set_defaults(func=cmd_run)
+    b = sub.add_parser("build", help="render the static site from the newest snapshot")
+    b.add_argument("--out", default="site")
+    b.set_defaults(func=cmd_build)
     i = sub.add_parser("index")
     i.set_defaults(func=cmd_index)
     args = ap.parse_args()

@@ -328,6 +328,14 @@ instrument, and the closures prove the open rows are real.
 - **Phase 5: harden the loop** (1 day). Feed-health surfacing, history to `data` branch
   with compaction, failure alerting, staleness banner past 24h.
   *Done when* killing a feed produces a degraded-coverage banner, not a smaller count.
+- **LAUNCH GATE: 50% CNA coverage.** Nothing is shared or promoted publicly until feeds
+  touch at least **half of all CNAs**. Measured 36.4% (158 of 434) on 2026-08-20, so
+  roughly 59 more CNAs need touching. The site stays live throughout; the gate is on
+  promotion, not deployment. Below half the landscape the backlog reads as a partial
+  sample of whichever ecosystems happen to be instrumented, and a CNA absent from the
+  site could fairly say the measurement never looked at it. Expansion targets are the
+  Tier A and Tier B lists in VISION.md; a generic CSAF ingester is the highest
+  value-per-effort item, since one fetch unlocks many vendor CNAs.
 - **Phase 6: notify, then go loud**. Site is live throughout; before *promoting* it,
   send per-CNA row exports plus a note to the QWG and Secretariat. Not permission-seeking -
   a correction window that makes "you never told us" unavailable.

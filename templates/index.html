@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}RBP Tracker{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <span class="lead-count">{{ summary.total | commafy }}</span>
+  <p class="lead-unit">
+    CVE IDs are reserved, referenced in a public advisory, and still have no
+    published record in the CVE List.
+  </p>
+  <div class="lead-sub">
+    <p>
+      The CVE Program can tell you an ID is reserved. Ask its API and it returns the
+      state, then withholds the CNA that reserved it:
+      <span class="mono">"owning_cna":</span> <span class="redacted">[REDACTED]</span>.
+      So the owner on this site is reconstructed from public data, and
+      <a href="method.html">graded in public</a> every time one of these records finally
+      publishes.
+    </p>
+  </div>
+</div>
+
+{% if summary.total %}
+<p class="text-muted">
+  Every row listed is already past the {{ expectation_hours }}-hour publication
+  expectation, because nothing appears here until it has been provably public for
+  {{ summary.min_age_days }} days. That buffer exists to absorb normal latency and short
+  coordinated-disclosure windows, so the count is deliberately conservative.
+</p>
+
+<div class="metric-grid">
+  <div class="metric-card">
+    <div class="metric-value">{{ summary.must_rows | commafy }}</div>
+    <div class="metric-label">
+      Candidate {{ rule_must }} MUST, the CNA's own feed carried it
+    </div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ summary.oldest_days | commafy }}</div>
+    <div class="metric-label">Days, oldest outstanding</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ summary.median_days | commafy }}</div>
+    <div class="metric-label">Days, median</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ summary.named_cnas | commafy }}</div>
+    <div class="metric-label">CNAs with at least one row named</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">How long these have been public</h2></div>
+  <div class="card-body">
+    {% set buckets = [('<7d', summary.age_buckets.get('<7d', 0)),
+                      ('7-30d', summary.age_buckets.get('7-30d', 0)),
+                      ('30-90d', summary.age_buckets.get('30-90d', 0)),
+                      ('90-180d', summary.age_buckets.get('90-180d', 0)),
+                      ('180d+', summary.age_buckets.get('180d+', 0))] %}
+    {% set peak = buckets | map(attribute=1) | max %}
+    <div class="histo">
+      {% for label, n in buckets %}
+      <div class="histo-bar" style="height: {{ (100 * n / peak) if peak else 0 }}%"
+           title="{{ label }}: {{ n }}"></div>
+      {% endfor %}
+    </div>
+    <div class="histo-labels">
+      {% for label, n in buckets %}<span>{{ label }}<br>{{ n }}</span>{% endfor %}
+    </div>
+    <p class="small text-muted mt-3 mb-0">
+      Measured from the earliest public advisory this site can see, which is a floor
+      on how long an ID has been public. The rule's own clock starts when the CNA
+      became aware, and that is not observable from outside. See
+      <a href="method.html">Method</a>.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Which rule applies</h2></div>
+  <div class="card-body">
+    <p>
+      RBP Policy v2.0.0 expects publication within {{ expectation_hours }} hours and points
+      at two CNA Operational Rules sections that are not interchangeable.
+    </p>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value">{{ summary.should_rows | commafy }}</div>
+        <div class="metric-label">
+          <span class="chip chip-should">{{ rule_should }} SHOULD</span><br>
+          A third party disclosed. The ordinary distro case.
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ summary.must_rows | commafy }}</div>
+        <div class="metric-label">
+          <span class="chip chip-must">{{ rule_must }} MUST</span><br>
+          The owning CNA's own advisory feed carried it.
+        </div>
+      </div>
+    </div>
+    <div class="caveat">
+      <p class="mb-0">
+        Every {{ rule_must }} reading here is a <strong>candidate</strong>, not an
+        established breach. Ownership is always inferred for a reserved ID, because
+        the reservation endpoint redacts it for exactly that population. Where the
+        owner is unknown, the weaker rule is the only honest reading, so
+        {{ rule_should }} is the default.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">The Program used to publish this</h2></div>
+  <div class="card-body">
+    <p>
+      A quarterly Reserved but Public table appeared on the
+      <a href="https://www.cve.org/About/Metrics">CVE Metrics page</a> in February 2021.
+      It was
+      <a href="https://github.com/CVEProject/cve-website/blob/main/src/views/About/Metrics.vue">commented
+      out of the page</a> on 7 February 2022, after about a year public. The markup is
+      still in the site source, frozen, its last column Q3&nbsp;2021.
+    </p>
+    <p class="mb-0">
+      The Metrics page today reports published records and reserved IDs, and nothing on
+      the overlap between them. RBP Policy v2.0.0 names &ldquo;Program metrics and
+      audits&rdquo; as a way RBPs are identified, so the public face of that channel has
+      been switched off for four and a half years. That is the gap this site fills.
+      <a href="policy.html">Read the policy</a>.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Movement</h2></div>
+  <div class="card-body">
+    {% if changes.have_previous %}
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value">{{ changes.new | length | commafy }}</div>
+        <div class="metric-label">New since {{ changes.previous_date }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ changes.resolved | length | commafy }}</div>
+        <div class="metric-label">Published, and therefore resolved</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ changes.still_open | commafy }}</div>
+        <div class="metric-label">Still open</div>
+      </div>
+    </div>
+    {% else %}
+    <p>First snapshot. Movement appears once there is a previous run to compare against.</p>
+    {% endif %}
+    <p class="small text-muted mb-0">
+      Rows that resolve are the point. The same pipeline that finds these watches them
+      get fixed, which is what makes the ones that do not move hard to explain away.
+      <a href="changes.html">See what changed</a>.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">How accurate is the owner column</h2></div>
+  <div class="card-body">
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value">
+          {% if grader.precision is not none %}{{ grader.precision | pct }}{% else %}&mdash;{% endif %}
+        </div>
+        <div class="metric-label">
+          Measured in production, n={{ grader.graded | commafy }}
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ summary.inference.leave_one_out.precision | pct }}</div>
+        <div class="metric-label">Leave-one-out over the published corpus</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ summary.inference.run_coverage | pct }}</div>
+        <div class="metric-label">Rows this run could be named at all</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ grader.outstanding | commafy }}</div>
+        <div class="metric-label">Predictions awaiting a verdict</div>
+      </div>
+    </div>
+    <p class="small text-muted mb-0">
+      Every RBP that publishes reveals its true assigner, so each prediction gets marked
+      against reality. Nobody has to trust the method; the grading is public and includes
+      the misses. <a href="method.html">Method and misses</a>.
+    </p>
+  </div>
+</div>
+{% else %}
+<div class="caveat warn"><p class="mb-0">No reportable rows in this snapshot.</p></div>
+{% endif %}
+{% endblock %}

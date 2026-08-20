@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}{{ cna.cna }} RBPs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>{{ cna.cna }}</h1>
+  <p class="text-muted">
+    {{ cna.outstanding | commafy }} reserved CVE IDs referenced publicly and still
+    unpublished, as of {{ snapshot_date }}.
+  </p>
+</div>
+
+<div class="caveat">
+  <p>
+    <strong>If this page is about you, read this first.</strong> Ownership here is
+    inferred, not authoritative. The CVE Services reservation endpoint redacts
+    <span class="mono">owning_cna</span> for reserved IDs, so this site reconstructs
+    it: a CNA is named only where the three published CVE IDs either side of the
+    reserved one all share one assigner. That method is graded continuously against
+    reality and currently measures
+    {% if grader.precision is not none %}{{ grader.precision | pct }} on
+    n={{ grader.graded }}{% else %}too few resolved cases to report{% endif %},
+    with leave-one-out precision of
+    {{ summary.inference.leave_one_out.precision | pct }} across the published corpus.
+  </p>
+  <p class="mb-0">
+    If a row is wrong, or is under coordinated disclosure and should not be listed,
+    <a href="https://github.com/RogoLabs/RBP/issues">open an issue</a> and it will be
+    corrected or suppressed on the next build, with the correction visible.
+    Suppressions are counted publicly in aggregate so the mechanism cannot be used
+    to quietly hide the problem.
+  </p>
+</div>
+
+<div class="metric-grid">
+  <div class="metric-card">
+    <div class="metric-value">{{ cna.outstanding | commafy }}</div>
+    <div class="metric-label">Outstanding</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ cna.oldest_days if cna.oldest_days is not none else '&mdash;' }}</div>
+    <div class="metric-label">Days, oldest</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ cna.must_rows | commafy }}</div>
+    <div class="metric-label">Candidate {{ rule_must }} MUST</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">
+      {% if cna.resolved_n %}{{ cna.median_days_to_publish }}d{% else %}&mdash;{% endif %}
+    </div>
+    <div class="metric-label">
+      Median time to publish{% if cna.resolved_n %}, n={{ cna.resolved_n }}{% else %} (no data yet){% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="tablewrap">
+  <table class="rbp">
+    <thead>
+      <tr>
+        <th>CVE ID</th><th class="num">Days public</th><th>Rule</th>
+        <th>Confidence</th><th>Package</th><th>Sources</th><th>Advisory title</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in cna_rows | sort(attribute='days_public', reverse=true) %}
+      <tr>
+        <td class="id"><a href="{{ r.advisory_url }}">{{ r.cve_id }}</a></td>
+        <td class="num">{{ r.days_public }}{% if r.past_expectation %}
+          <span class="chip chip-late">past {{ expectation_hours }}h</span>{% endif %}</td>
+        <td>
+          <span class="chip {{ 'chip-must' if r.rule == rule_must else 'chip-should' }}">
+            {{ r.rule }} {{ r.rule_strength }}</span>
+        </td>
+        <td>
+          <span class="chip {{ 'chip-corrob' if r.owner_tier == 'block-corroborated' else 'chip-block' }}">
+            {{ 'corroborated' if r.owner_tier == 'block-corroborated' else 'block' }}</span>
+        </td>
+        <td>{{ r.package or r.vendor or '' }}</td>
+        <td class="mono small">{{ r.sources }}</td>
+        <td class="desc">{{ r.description }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if cna_resolved %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Resolved</h2></div>
+  <div class="card-body">
+    <p class="small text-muted">
+      RBPs attributed here that have since published. These are the rows that prove the
+      pipeline closes, and they are kept visible for that reason.
+    </p>
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <thead><tr><th>CVE ID</th><th class="num">Days to publish</th><th>First public</th><th>Published</th></tr></thead>
+        <tbody>
+          {% for r in cna_resolved | sort(attribute='days_to_publish', reverse=true) %}
+          <tr>
+            <td class="id">{{ r.cve_id }}</td>
+            <td class="num">{{ r.days_to_publish }}</td>
+            <td class="mono small">{{ r.first_public }}</td>
+            <td class="mono small">{{ r.published }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<p class="small">
+  Machine-readable: <a href="../data/cna/{{ cna.slug }}.json">{{ cna.slug }}.json</a>
+</p>
+{% endblock %}

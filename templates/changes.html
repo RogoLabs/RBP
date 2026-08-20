@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Changes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Changes</h1>
+  <p class="text-muted">
+    {% if changes.have_previous %}Against snapshot {{ changes.previous_date }}.
+    {% else %}First snapshot; nothing to compare yet.{% endif %}
+  </p>
+</div>
+
+{% if changes.have_previous %}
+<div class="metric-grid">
+  <div class="metric-card">
+    <div class="metric-value">{{ changes.new | length | commafy }}</div>
+    <div class="metric-label">New</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ changes.resolved | length | commafy }}</div>
+    <div class="metric-label">Resolved, the record published</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ changes.still_open | commafy }}</div>
+    <div class="metric-label">Still open</div>
+  </div>
+</div>
+
+<div class="caveat">
+  <p class="mb-0">
+    Resolutions are shown as prominently as additions on purpose. The same pipeline that
+    finds these watches roughly half of them get fixed, and that is exactly what makes
+    the ones that do not move difficult to explain as latency.
+  </p>
+</div>
+
+{% if changes.resolved %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Resolved</h2></div>
+  <div class="card-body">
+    <p class="mono small">{{ changes.resolved | join(', ') }}</p>
+  </div>
+</div>
+{% endif %}
+
+{% if changes.new %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">New</h2></div>
+  <div class="card-body">
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <thead><tr><th>CVE ID</th><th class="num">Days public</th><th>Owner</th><th>Advisory title</th></tr></thead>
+        <tbody>
+          {% for r in changes.new | sort(attribute='days_public', reverse=true) %}
+          <tr>
+            <td class="id"><a href="{{ r.advisory_url }}">{{ r.cve_id }}</a></td>
+            <td class="num">{{ r.days_public }}</td>
+            <td>{% if r.owner and r.owner != 'unattributed' %}{{ r.owner }}
+                {% else %}<span class="text-muted">unattributed</span>{% endif %}</td>
+            <td class="desc">{{ r.description }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% if resolutions_n %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Time to publish, all time</h2></div>
+  <div class="card-body">
+    <p class="small text-muted">
+      {{ resolutions_n | commafy }} RBPs have published since this tracker started, with
+      {{ resolutions_tracked | commafy }} still tracked. This accumulates forward from the
+      first run, so it is thin early on.
+    </p>
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <thead><tr><th>CVE ID</th><th>Owner</th><th class="num">Days to publish</th><th>First public</th><th>Published</th></tr></thead>
+        <tbody>
+          {% for r in resolutions | sort(attribute='days_to_publish', reverse=true) %}
+          <tr>
+            <td class="id">{{ r.cve_id }}</td>
+            <td>{{ r.owner }}</td>
+            <td class="num">{{ r.days_to_publish }}</td>
+            <td class="mono small">{{ r.first_public }}</td>
+            <td class="mono small">{{ r.published }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

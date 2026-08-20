@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}The policy{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>The policy, and what changed</h1>
+  <p class="text-muted">
+    RBP Policy v2.0.0, approved by the CVE Board on 13 August 2026.
+  </p>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">What it expects</h2></div>
+  <div class="card-body">
+    <p>The policy states the expectation plainly:</p>
+    <blockquote class="caveat">
+      <p class="mb-0">A CVE Record should be published within 72 hours of either (a)
+      disclosure by the CNA or (b) the CNA becoming aware of a third-party disclosure,
+      as applicable.</p>
+    </blockquote>
+    <p>and aligns itself to two CNA Operational Rules sections:</p>
+    <ul>
+      <li><strong>{{ rule_must }}</strong>: CNAs <strong>MUST</strong> publish within 72
+        hours of publicly disclosing a CVE ID they assigned. Past that, the CNA's Root
+        may direct a CNA-LR to publish.</li>
+      <li><strong>{{ rule_should }}</strong>: CNAs <strong>SHOULD</strong> publish within
+        72 hours of becoming aware that a third party disclosed.</li>
+    </ul>
+    <p class="mb-0">
+      Rule 4.5.3.5 is also relevant: CNAs <strong>MUST reject unused or unpublished CVE
+      IDs</strong>. A long-lived reservation is not a neutral state under the rules.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">What enforcement looks like</h2></div>
+  <div class="card-body">
+    <p>
+      Four levers, which the Program <em>&ldquo;may take&rdquo;</em> and which
+      <em>&ldquo;may be applied individually or combined&rdquo;</em>: Warning,
+      Reservation Caps, Intervention, Formal Review. Remediation deadlines are set case
+      by case by a TL-Root or Root.
+    </p>
+    <p>
+      There is no condition that triggers anything by itself. The previous policy had an
+      automatic arithmetic trigger tied to a CNA's share of unpublished IDs, which anyone
+      with the data could compute. <strong>Version 2.0.0 contains no numeric threshold
+      anywhere in its text.</strong>
+    </p>
+    <p class="mb-0">
+      Discretion is defensible. Discretion exercised entirely in private is not
+      distinguishable from no enforcement at all, and there is no public RBP list, no
+      public record that a CNA was notified, and no public enforcement log.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">The field that would let anyone check</h2></div>
+  <div class="card-body">
+    <p>Ask the CVE Services API about a published ID and it tells you who assigned it:</p>
+<pre class="api">GET /api/cve-id/CVE-2026-26100
+{"state":"PUBLISHED","owning_cna":"<strong>Nozomi</strong>"}</pre>
+    <p>Ask about a reserved one and it does not:</p>
+<pre class="api">GET /api/cve-id/CVE-2026-2574
+{"state":"RESERVED","owning_cna":"<strong>[REDACTED]</strong>"}</pre>
+    <p class="mb-0">
+      The field is populated and served. It is masked on exactly the population the
+      policy governs, even though CNA Rule <strong>4.5.1.7</strong> expressly permits the
+      Secretariat to publicly identify the CNA who reserved a CVE ID
+      <strong>24 hours</strong> after public disclosure.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">The metric that used to exist</h2></div>
+  <div class="card-body">
+    <p>
+      A quarterly Reserved but Public table went live on the
+      <a href="https://www.cve.org/About/Metrics">CVE Metrics page</a> in February 2021
+      and was
+      <a href="https://github.com/CVEProject/cve-website/blob/main/src/views/About/Metrics.vue">commented
+      out</a> on 7 February 2022, after roughly a year in public. The markup is still in
+      the site source, frozen, its final column Q3&nbsp;2021.
+    </p>
+    <p class="mb-0">
+      RBP Policy v2.0.0 names &ldquo;Program metrics and audits&rdquo; as one of the ways
+      RBPs get identified. The public face of that channel has been switched off for four
+      and a half years. This site publishes what that table would show.
+    </p>
+  </div>
+</div>
+{% endblock %}

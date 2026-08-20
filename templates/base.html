@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>{% block title %}RBP Tracker{% endblock %}</title>
+<meta name="description" content="{% block description %}Every CVE ID that is reserved, publicly referenced, and still unpublished. Updated every six hours.{% endblock %}">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/style.css?v={{ asset_v['style.css'] }}">
+<link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/rbp.css?v={{ asset_v['rbp.css'] }}">
+<meta property="og:title" content="{% block og_title %}RBP Tracker{% endblock %}">
+<meta property="og:description" content="{{ summary.total }} CVE IDs are reserved, publicly referenced, and unpublished.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rbptracker.org">
+</head>
+<body>
+<script>
+  (function () {
+    var t = localStorage.getItem('rbp-theme');
+    var light = t === 'light' || (!t && window.matchMedia('(prefers-color-scheme: light)').matches);
+    if (!light) document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+</script>
+<a href="#main" class="skip-link">Skip to main content</a>
+
+{% set p = '../' if page == 'cna' else '' %}
+<header class="header">
+  <div class="nav-container">
+    <a href="{{ p }}index.html" class="logo">RBP&nbsp;Tracker</a>
+    <nav class="nav">
+      <ul class="nav-menu">
+        <li><a href="{{ p }}index.html">Overview</a></li>
+        <li><a href="{{ p }}cves.html">CVEs</a></li>
+        <li><a href="{{ p }}cnas.html">CNAs</a></li>
+        <li><a href="{{ p }}changes.html">Changes</a></li>
+        <li><a href="{{ p }}method.html">Method</a></li>
+        <li><a href="{{ p }}policy.html">Policy</a></li>
+        <li><a href="{{ p }}data.html">Data</a></li>
+      </ul>
+      <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+        <span id="themeIcon">&#9790;</span>
+      </button>
+      <button class="nav-toggle" aria-label="Toggle navigation" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="container">
+{% block content %}{% endblock %}
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div style="display:flex;flex-wrap:wrap;gap:2rem;justify-content:space-between">
+      <div style="flex:1;min-width:15rem">
+        <p class="mb-1"><strong>What this measures</strong></p>
+        <p class="text-muted small mb-0">
+          CVE IDs in the Reserved state that appear in public advisories while the
+          CVE Record is still unpublished. Counts are a floor: only configured
+          feeds are read.<br>
+          Snapshot {{ snapshot_date }} &middot; built {{ generated }}
+        </p>
+      </div>
+      <div style="flex:1;min-width:15rem">
+        <p class="mb-1"><strong>Sources</strong></p>
+        <p class="text-muted small mb-0">
+          <a href="https://www.cve.org/Resources/General/Policies/RBP-CVE-IDs-Policy.pdf">RBP Policy v2.0.0</a><br>
+          <a href="https://www.cve.org/ResourcesSupport/AllResources/CNARules">CNA Operational Rules v4.1.0</a><br>
+          <a href="https://github.com/CVEProject/cvelistV5">CVE List v5</a><br>
+          <a href="https://github.com/RogoLabs/RBP">Source and method</a>
+        </p>
+      </div>
+    </div>
+    <hr class="my-2">
+    <div class="text-center">
+      <small class="text-muted">
+        We would rather not be doing this. Unredact <span class="mono">owning_cna</span>
+        and publish an RBP metric, and this site will point at yours instead.<br>
+        Built by <a href="https://rogolabs.net">RogoLabs</a> &middot;
+        <a href="https://cve.icu">CVE.ICU</a>
+      </small>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var btn = document.getElementById('themeToggle');
+    var icon = document.getElementById('themeIcon');
+    function sync() {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (icon) icon.innerHTML = dark ? '&#9728;' : '&#9790;';
+    }
+    sync();
+    if (btn) btn.addEventListener('click', function () {
+      var dark = document.documentElement.getAttribute('data-theme') === 'dark';
+      if (dark) { document.documentElement.removeAttribute('data-theme'); localStorage.setItem('rbp-theme', 'light'); }
+      else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('rbp-theme', 'dark'); }
+      sync();
+    });
+    var nt = document.querySelector('.nav-toggle');
+    var menu = document.querySelector('.nav-menu');
+    if (nt && menu) nt.addEventListener('click', function () {
+      var open = menu.classList.toggle('active');
+      nt.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  })();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

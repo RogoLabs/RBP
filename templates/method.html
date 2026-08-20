@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Method{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Method</h1>
+  <p class="text-muted">
+    Every number on this site traces to a rule here. The site names CNAs, so the
+    method has to be auditable rather than merely described.
+  </p>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">What counts as an RBP</h2></div>
+  <div class="card-body">
+    <p>
+      A CVE ID in the <strong>Reserved</strong> state that is referenced in one or more
+      public sources while no CVE Record has been published. That is the CVE Program's
+      own definition, quoted from RBP Policy v2.0.0.
+    </p>
+    <p>
+      State comes from the CVE Services reservation endpoint, which returns it directly:
+    </p>
+<pre class="api">GET https://cveawg.mitre.org/api/cve-id/CVE-2026-2574
+{"cve_id":"CVE-2026-2574","cve_year":"2026",
+ "state":"<strong>RESERVED</strong>","owning_cna":"<strong>[REDACTED]</strong>"}</pre>
+    <p>
+      This matters because the more commonly used <span class="mono">/api/cve/</span>
+      endpoint returns 404 for a reserved ID, making it indistinguishable from an ID
+      that was never allocated. Using the reservation endpoint instead means a row here
+      is a confirmed reservation and not an inference about absence. IDs that were never
+      allocated return <span class="mono">CVE_ID_NOT_FOUND</span> and are excluded, so a
+      typo in a downstream advisory cannot inflate the count.
+    </p>
+    <p class="mb-0">
+      The bulk CVE List contains <strong>zero</strong> reserved records, and the
+      cvelistV5 git tree carries none either, so no tool sourcing only from those can
+      see any of this.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">The clock</h2></div>
+  <div class="card-body">
+    <p>
+      Rows are reportable once provably public for at least
+      <strong>{{ summary.min_age_days }} days</strong>, a buffer past the
+      {{ expectation_hours }}-hour expectation that absorbs normal latency and short
+      coordinated-disclosure windows.
+    </p>
+    <p>
+      <strong>Days public is a floor, not a deadline measure.</strong> It counts from the
+      earliest public advisory this site can see. The rule's clock starts when the CNA
+      became aware of the disclosure, and that is not observable from outside. So the
+      column reads <em>days public</em> and never <em>days overdue</em>.
+    </p>
+    {% if summary.undated_excluded %}
+    <p class="mb-0">
+      <strong>{{ summary.undated_excluded | commafy }} reserved IDs are excluded
+      entirely</strong> because their feeds publish no usable date. They cannot be aged
+      at any threshold, which is a permanent limit on coverage rather than a temporary
+      gap.
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Which rule, and why it is never a MUST outright</h2></div>
+  <div class="card-body">
+    <p>
+      <span class="chip chip-should">{{ rule_should }} SHOULD</span>
+      is the default: publish within {{ expectation_hours }} hours of becoming aware that
+      a third party disclosed. This is the ordinary case, where a distribution or
+      ecosystem advisory appears first.
+    </p>
+    <p>
+      <span class="chip chip-must">{{ rule_must }} MUST</span>
+      applies where the CNA itself disclosed. This site claims it only when the owning
+      CNA's <em>own</em> advisory feed carried the advisory:
+    </p>
+    <ul>
+      {% for cna, feeds in owner_feeds.items() %}
+      <li><span class="mono">{{ cna }}</span>: {{ feeds | join(', ') }}</li>
+      {% endfor %}
+    </ul>
+    <p>
+      Aggregators are deliberately excluded even where they carry a CNA's data. OSV
+      re-publishes GHSA, so an OSV row is not evidence that GitHub disclosed anything.
+      Counting it would upgrade a SHOULD to a MUST on the strength of a mirror.
+    </p>
+    <div class="caveat">
+      <p class="mb-0">
+        Because ownership is always inferred for a reserved ID, a {{ rule_must }} reading
+        is always a <strong>candidate</strong> and never an established breach. This site
+        cannot observe who disclosed first; it observes only that a source referenced the
+        ID.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">How the owner is reconstructed</h2></div>
+  <div class="card-body">
+    <p>
+      CVE IDs are issued to CNAs in runs, so an ID whose published neighbours all share
+      one assigner is very likely assigned to that CNA too. A name is published only when
+      the <strong>{{ summary.inference.k }} published CVE IDs on each side</strong> all
+      agree. Anything less abstains, and the row says <em>unattributed</em>.
+    </p>
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value">
+          {% if grader.precision is not none %}{{ grader.precision | pct }}{% else %}&mdash;{% endif %}
+        </div>
+        <div class="metric-label">Production precision, n={{ grader.graded | commafy }}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ summary.inference.leave_one_out.precision | pct }}</div>
+        <div class="metric-label">
+          Leave-one-out, {{ summary.inference.leave_one_out.decided | commafy }} decisions
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ summary.inference.run_coverage | pct }}</div>
+        <div class="metric-label">Rows named this run</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ grader.outstanding | commafy }}</div>
+        <div class="metric-label">Awaiting a verdict</div>
+      </div>
+    </div>
+    <p class="mt-3">
+      <strong>Coverage and precision are different things.</strong> The leave-one-out
+      figure is measured over published IDs, which are spread evenly through the ID
+      space. A live RBP set is not: these cluster in regions where no single CNA owns the
+      neighbourhood, so the share of rows that can be named is lower than the validation
+      coverage suggests. Both are shown, and they are never presented as the same number.
+    </p>
+    <p>
+      A second signal, a product-to-CNA map built from the corpus, is used only to
+      corroborate. Tested on its own it reached 85% precision, below this project's
+      floor, so it can promote a named row to
+      <span class="chip chip-corrob">corroborated</span> but never create a name.
+    </p>
+    {% if grader.misses %}
+    <p class="mb-2"><strong>Misses.</strong> Predictions that turned out wrong, shown because
+      a precision figure without its errors is marketing.</p>
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <thead><tr><th>CVE ID</th><th>Predicted</th><th>Actual</th><th>Graded</th></tr></thead>
+        <tbody>
+          {% for m in grader.misses %}
+          <tr><td class="id">{{ m.cve_id }}</td><td>{{ m.predicted }}</td>
+              <td>{{ m.actual }}</td><td class="mono small">{{ m.graded_on }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <p class="small text-muted mb-0">No misses recorded yet. They will be listed here when
+      they occur.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Feeds read this run</h2></div>
+  <div class="card-body">
+    <p class="mono small">{{ summary.feeds.requested | join(', ') }}</p>
+    {% if summary.feeds.failures %}
+    <div class="caveat warn">
+      <p><strong>Degraded coverage.</strong> {{ summary.feeds.failures | length }} of
+        {{ summary.feeds.attempts }} feed fetches failed this run, so these counts are a
+        lower floor than usual and are <strong>not</strong> comparable to the previous
+        run.</p>
+      <ul class="mb-0">{% for f in summary.feeds.failures %}<li class="mono small">{{ f }}</li>{% endfor %}</ul>
+    </div>
+    {% else %}
+    <p class="small text-muted">
+      All {{ summary.feeds.attempts }} feed fetches succeeded. A feed that fails is
+      reported here rather than simply yielding fewer rows, because counts are a floor
+      and a silent shrink would read as improvement.
+    </p>
+    {% endif %}
+    <p class="small text-muted mb-0">
+      <strong>Counts are a lower bound.</strong> Only configured feeds are read, so an
+      RBP in an ecosystem not listed above is invisible here. That is the main reason
+      this site understates the problem.
+    </p>
+  </div>
+</div>
+{% endblock %}
