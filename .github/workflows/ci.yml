@@ -15,7 +15,7 @@ jobs:
         with:
           python-version: '3.13'
           cache: pip
-      - run: pip install -r requirements.txt pytest
+      - run: pip install -r requirements-dev.txt
 
       # Frozen fixtures only — deterministic, no network.
       - name: Unit + acceptance tests

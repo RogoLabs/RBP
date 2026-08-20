@@ -16,11 +16,11 @@ third parties and still ranks in search, which is how it got picked up.
 """
 from __future__ import annotations
 
+import io
 import json
 import os
 import pathlib
 import re
-import subprocess
 import urllib.request
 
 import pytest
@@ -163,11 +163,10 @@ def test_live_cna_rules_still_match_the_fixture():
 
 @live_only
 def test_live_rbp_policy_is_still_v2_and_still_thresholdless():
-    pdf = _fetch(POLICY["url"], binary=True)
-    path = "/tmp/_rbp_policy_live.pdf"
-    open(path, "wb").write(pdf)
-    text = subprocess.run(["pdftotext", "-layout", path, "-"],
-                          capture_output=True, text=True).stdout
+    import pypdf  # pure-python: the CI runner has no pdftotext
+
+    reader = pypdf.PdfReader(io.BytesIO(_fetch(POLICY["url"], binary=True)))
+    text = "\n".join(page.extract_text() or "" for page in reader.pages)
     assert "Document Version: 2.0.0" in text, "RBP policy version changed — re-read it"
     assert "published within 72 hours" in text
     assert not re.search(r"\b\d{1,3}\s?%", text), (
