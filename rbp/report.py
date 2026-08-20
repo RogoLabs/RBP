@@ -27,7 +27,7 @@ _SRC_VENDOR = {"msrc": "Microsoft", "mozilla": "Mozilla", "alas": "Amazon Linux"
 
 def _derive_meta(row):
     """Pull affected package, ecosystem, a defender-recognizable vendor, and a real
-    advisory URL out of the feed refs — so a defender can filter by software and open
+    advisory URL out of the feed refs, so a defender can filter by software and open
     the source page. advisory_url is always populated."""
     cid = row["cve_id"]
     pkg = eco = ""
@@ -46,7 +46,7 @@ def _derive_meta(row):
         if s in srcs:
             vendor = _SRC_VENDOR[s]
             break
-    # advisory URL — one per source, always populated (enterprise sources included)
+    # advisory URL: one per source, always populated (enterprise sources included)
     def _u(s):
         if s == "redhat":
             return f"https://access.redhat.com/security/cve/{cid}"
@@ -79,13 +79,13 @@ def _derive_meta(row):
     return pkg, eco, vendor, url
 
 
-# Feeds that trace to a common origin — collapsed when counting *independent*
+# Feeds that trace to a common origin: collapsed when counting *independent*
 # corroboration (OSV re-publishes GHSA; ALAS is a RHEL rebuild).
 _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redhat",
            "ubuntu": "ubuntu", "debian": "debian", "alpine": "alpine", "csaf": "csaf",
            "msrc": "microsoft", "mozilla": "mozilla", "arch": "arch"}
 # A CNA may be NAMED as owner only when its own feed corroborates it (or it is the
-# authoritative RESERVED assigner) — never on a bare product-map guess.
+# authoritative RESERVED assigner), never on a bare product-map guess.
 _OWNER_FEEDS = {"redhat": {"redhat"}, "GitHub_M": {"ghsa", "osv"},
                 "microsoft": {"msrc"}, "mozilla": {"mozilla"}}
 
@@ -97,7 +97,7 @@ def _indep(sources_str):
 def _self_disclosed(r):
     """Did the owning CNA's OWN feed carry the advisory?
 
-    This is no longer an attribution gate — block inference is (inference.py).
+    This is no longer an attribution gate: block inference is (inference.py).
     It now carries the rule distinction: if the assigning CNA itself disclosed,
     the 72h publish rule reads as a MUST (CNA Rules 4.5.1.4); if a third party
     did, it reads as a SHOULD (4.5.1.6). Only the former is a hard breach, so
@@ -111,7 +111,7 @@ def _summary(r):
     d = (r.get("description") or "").strip()
     low = d.lower()
     if not d or low.startswith(("note:", "[unknown", "unknown")) or low in ("security update",):
-        return r.get("package") or "—"
+        return r.get("package") or "-"
     return _trunc(d, 56)
 
 
@@ -134,14 +134,14 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
 
     # 14-day buffer: only report RBPs we can PROVE have been public >= min_age days.
     # Younger-than-buffer and undated (age-unknown) entries are held back, not counted
-    # against a CNA — this is what lets us say "not front-running; these are overdue."
+    # against a CNA. That is what lets us say "not front-running; these are overdue."
     reportable = [r for r in backlog if isinstance(r["days_public"], int) and r["days_public"] >= min_age]
     within_buffer = [r for r in backlog if isinstance(r["days_public"], int) and r["days_public"] < min_age]
     undated = [r for r in backlog if not isinstance(r["days_public"], int)]
 
     for r in backlog:
         r["indep_sources"] = _indep(r["sources"])
-    # Every row is RESERVED now — the reservation endpoint confirms the state
+    # Every row is RESERVED now, the reservation endpoint confirms the state
     # directly, so there is no inferred `DNE` bucket to separate out.
     hard = [r for r in reportable if r["state"] == "RESERVED"]
     soft = []
@@ -158,11 +158,11 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
         r["package"], r["ecosystem"], r["vendor"], r["advisory_url"] = _derive_meta(r)
 
     # An owner may be NAMED only at/above the confidence gate AND corroborated by that
-    # CNA's own feed (never a bare product-map guess). Applied to EVERY shared surface —
-    # the Markdown tables AND the CSV — so the shareable CSV never names a CNA the report
+    # CNA's own feed (never a bare product-map guess). Applied to EVERY shared surface -
+    # the Markdown tables AND the CSV, so the shareable CSV never names a CNA the report
     # withholds. Full inferred data is retained only in backlog_full.json (audit).
     # The naming gate is block inference (inference.py): `owner` is already None
-    # wherever the k-neighbour gate abstained. No second confidence gate here —
+    # wherever the k-neighbour gate abstained. No second confidence gate here -
     # one gate, measured, published. min_conf is retained only for the report header.
     def nameable(r):
         return r.get("owner") is not None
@@ -185,7 +185,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
     json.dump(backlog, open(os.path.join(sdir, "backlog_full.json"), "w"), indent=1)
     json.dump([_gated(r) for r in reportable], open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
 
-    # WoW diff — compare like-for-like (full backlog both sides, not full-vs-reportable)
+    # WoW diff: compare like-for-like (full backlog both sides, not full-vs-reportable)
     prev = _prev_snapshot(snap_root, today)
     new_ids = resolved_ids = still_ids = None
     if prev and os.path.exists(os.path.join(prev, "backlog_full.json")):
@@ -196,7 +196,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
     scoreboard = Counter(r["owner"] for r in hard if nameable(r))
     below_gate = sum(1 for r in hard if not nameable(r))
 
-    # Per-feed reportable contribution — so a feed that produced 0 rows reads as 0,
+    # Per-feed reportable contribution, so a feed that produced 0 rows reads as 0,
     # rather than the scope line implying it contributed content (practitioner).
     src_contrib = Counter()
     for r in reportable:
@@ -231,8 +231,8 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     n_indep = sum(1 for r in hard if r["indep_sources"] >= 2)
     n_single = len(hard) - n_indep
     L = []
-    L.append(f"# RBP weekly report — {today}\n")
-    L.append("> **Internal / pre-preview — do not forward.** Contains unpublished CVE IDs; named "
+    L.append(f"# RBP weekly report: {today}\n")
+    L.append("> **Internal / pre-preview. Do not forward.** Contains unpublished CVE IDs; named "
              "CNAs receive a private preview and correction window before any external circulation.\n")
     L.append("**What this is:** CVE IDs that downstream security feeds reference but that are missing "
              "from the official CVE List v5, so anyone relying on the CVE List cannot see them. "
@@ -247,32 +247,32 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
         feed_str = ", ".join(sources)
     L.append(f"*Scan scope: CVE years {sorted(years)} | as of {today}. Reportable rows "
              f"contributed per feed: {feed_str}. (A feed showing 0 ran but surfaced no "
-             f"reportable RBP — e.g. prompt vendors self-heal before the {min_age}d buffer.)*\n")
+             f"reportable RBP; e.g. prompt vendors self-heal before the {min_age}d buffer.)*\n")
 
     L.append("## Headline\n")
-    L.append(f"> **{n_indep} CVE IDs — corroborated by ≥2 independent sources and publicly "
-             f"referenced for ≥{min_age} days — have no published record in the CVE List v5** "
+    L.append(f"> **{n_indep} CVE IDs: corroborated by ≥2 independent sources and publicly "
+             f"referenced for ≥{min_age} days: have no published record in the CVE List v5** "
              f"({len(hard)} including single-source references). The IDs are real and referenced "
              f"downstream; the authoritative record has not landed.\n")
     L.append(f"The ≥{min_age}-day threshold is a deliberately conservative buffer, well past the 72h "
              "publish rule, so normal latency and short coordinated-disclosure windows are excluded "
-             f"(it is measured from first downstream reference — a floor on, not equal to, the "
+             f"(it is measured from first downstream reference, a floor on, not equal to, the "
              "rule's CNA-awareness clock). Of the wider {0}, {1} rest largely on a single GitHub "
              "advisory mirrored into OSV; all {0} are absent from the List regardless of source "
              "count.\n".format(len(hard), n_single))
     if prev and new_ids is not None:
         L.append(f"Week-over-week (vs {os.path.basename(prev)}): +{len(new_ids)} new / "
-                 f"−{len(resolved_ids)} resolved. Resolved = the record finally published — the "
+                 f"−{len(resolved_ids)} resolved. Resolved = the record finally published, the "
                  "pipeline self-closes, confirming these were real gaps, not tool noise.\n")
 
     total_hard, total_soft = len(hard), len(soft)
     L.append("## Totals\n")
     L.append(f"**Reportable** = provably public ≥ {min_age} days (a conservative buffer well past the "
-             "72h publish rule) — the single threshold; no separate 30-day tier.\n")
+             "72h publish rule), the single threshold; no separate 30-day tier.\n")
     L.append("| Class | Count |")
     L.append("|---|---:|")
-    L.append(f"| RBP (`RESERVED` — confirmed reserved, publicly referenced) | {total_hard} |")
-    L.append(f"| — **and** ≥2 independent sources (headline core) | **{len(kpi_core)}** |")
+    L.append(f"| RBP (`RESERVED`: confirmed reserved, publicly referenced) | {total_hard} |")
+    L.append(f"|: **and** ≥2 independent sources (headline core) | **{len(kpi_core)}** |")
     L.append("")
     L.append("**Held back / context** (not reported against any CNA):\n")
     L.append("| | Count |")
@@ -283,30 +283,30 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     L.append("")
     L.append(f"\\* `RESERVED` is confirmed directly against the CVE Services reservation "
              f"endpoint (`/api/cve-id/`), which returns the true state for any ID. All {len(hard)} "
-             f"rows are therefore RBP by the CVE Program's own definition — a Reserved ID "
-             f"referenced in a public resource — not an inference about absence. IDs that were "
+             f"rows are therefore RBP by the CVE Program's own definition, a Reserved ID "
+             f"referenced in a public resource, not an inference about absence. IDs that were "
              f"never allocated return `CVE_ID_NOT_FOUND` and are excluded, so downstream typos "
              f"cannot inflate this count. (Reserve-then-publish is the normal lifecycle; what is "
              f"counted here is reservation that went public and stayed unpublished.)\n")
 
     L.append("## Aged core (owner shown only where a CNA's own feed corroborates it)\n")
-    L.append("*Owner is inferred and provisional — NOT an authoritative assignment and NOT a "
+    L.append("*Owner is inferred and provisional, NOT an authoritative assignment and NOT a "
              "compliance finding. `unattributed` = no confident, feed-corroborated owner.*\n")
     L.append("| CVE | package | days public | feeds | owner | summary (verbatim title) |")
     L.append("|---|---|---:|---|---|---|")
     shown = sorted(kpi_core, key=lambda r: -r["days_public"])
     for r in shown[:40]:
-        L.append(f"| {r['cve_id']} | {r.get('package') or '—'} | {r['days_public']} | "
+        L.append(f"| {r['cve_id']} | {r.get('package') or '-'} | {r['days_public']} | "
                  f"{r['sources']} | {owner_str(r)} | {_summary(r)} |")
     if len(shown) > 40:
         L.append(f"\n*(showing 40 of {len(shown)}; full set in backlog.csv)*")
     L.append("")
 
-    L.append("## Inferred-owner tally — provisional triage, NOT a compliance leaderboard\n")
+    L.append("## Inferred-owner tally: provisional triage, NOT a compliance leaderboard\n")
     L.append(f"*Inferred from a product→CNA map, gated at confidence ≥ {min_conf} **and** requiring "
              "the CNA's own feed to corroborate; still **not** an authoritative assignment. "
              f"**{below_gate} of {len(hard)} reportable RBP-hard are unattributed.** Do not publish "
-             "any row as non-compliance without confirming the owning CNA — and only the Secretariat "
+             "any row as non-compliance without confirming the owning CNA, and only the Secretariat "
              "may formally identify a reserving CNA (§4.5.1.7).*\n")
     L.append("| Inferred owner (CVE Numbering Authority) | count to route for confirmation |")
     L.append("|---|---:|")
@@ -317,30 +317,30 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     L.append("")
 
     L.append("## Why it matters (data completeness)\n")
-    L.append("- Every RBP is a record a consumer pulling the CVE List cannot see — no CVSS, CWE, "
-             "CPE, or references to key on — so any enrichment or scanning that sources from the "
+    L.append("- Every RBP is a record a consumer pulling the CVE List cannot see, no CVSS, CWE, "
+             "CPE, or references to key on, so any enrichment or scanning that sources from the "
              "CVE List silently skips it until the record lands.")
-    L.append("- Rule context — **RBP Policy v2.0.0** (CVE Board approved 2026-08-13) and **CNA "
+    L.append("- Rule context: **RBP Policy v2.0.0** (CVE Board approved 2026-08-13) and **CNA "
              "Operational Rules v4.1.0** (approved 2025-05-14); both are pinned verbatim in "
              "tests/fixtures and CI fails if either moves. A CVE Record should be published "
              "**within 72h** of disclosure by the CNA or of the CNA becoming aware of a "
              "third-party disclosure. §4.5.1.4 states this as a **MUST** *when the assigning CNA "
              "itself publicly discloses*; §4.5.1.6 as a **SHOULD** when a **third party** (e.g. a "
-             "distro) discloses — the usual RBP case. This tool observes only that a downstream "
+             "distro) discloses, the usual RBP case. This tool observes only that a downstream "
              "source referenced the ID; it **cannot establish who disclosed**, so aged RBPs "
              "indicate a likely §4.5.1.6 SHOULD gap, **not** a proven MUST breach.\n")
     L.append("- **v2.0.0 sets no numeric threshold.** Enforcement is four discretionary levers "
              "(Warning, Reservation Caps, Intervention, Formal Review) that the Program *may* "
              "apply, with remediation deadlines set case by case by a TL-Root or Root. The "
              "withdrawn v1.0 policy had an automatic trigger at 5% of trailing-12-month public "
-             "IDs; **do not cite it** — third parties still host that PDF. Nothing here should be "
+             "IDs; **do not cite it**: third parties still host that PDF. Nothing here should be "
              "read as a CNA being over a threshold, because there is no longer a threshold.\n")
 
     L.append("## Methodology & caveats\n")
     L.append("- **CNA** = CVE Numbering Authority. Source of truth: official CVE List v5 baseline, "
              "plus the CVE Services reservation endpoint `/api/cve-id/` for state. That endpoint "
              "returns RESERVED directly, so a row is not an inference about absence and is not API "
-             "propagation lag. Re-verified every run — auto-closes when a record publishes.")
+             "propagation lag. Re-verified every run: auto-closes when a record publishes.")
     L.append("- **Sources are not fully independent:** OSV re-publishes GHSA, ALAS is a RHEL rebuild. "
              "The headline's independent-source count collapses those; the raw `feeds` column does not.")
     L.append("- Owner is **inferred, never authoritative**. The reservation endpoint redacts "
@@ -352,9 +352,9 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     L.append("- `self_disclosed` marks rows where the inferred owner's **own** feed carried the "
              "advisory. Those read against CNA Rules 4.5.1.4 (72h **MUST**); everything else reads "
              "against 4.5.1.6 (72h **SHOULD**, third-party disclosure). Do not conflate the two.")
-    L.append("- `days_public` = days since the earliest downstream reference — a floor on how long "
+    L.append("- `days_public` = days since the earliest downstream reference, a floor on how long "
              "the ID has been public, **not** the §4.5.1.6 CNA-awareness clock.")
-    L.append("- Counts are a **lower bound** — only the configured feeds are checked.")
+    L.append("- Counts are a **lower bound**, only the configured feeds are checked.")
     L.append("- Some RBPs may be under legitimate coordinated disclosure. Named CNAs **must** receive "
              "a private preview and correction window before any row naming them is circulated.\n")
     return "\n".join(L)

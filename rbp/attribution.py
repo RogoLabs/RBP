@@ -1,5 +1,5 @@
 """
-Product -> CNA map. CORROBORATION ONLY — this never names a CNA on its own.
+Product -> CNA map. CORROBORATION ONLY, this never names a CNA on its own.
 
 Measured as a standalone fallback where block inference abstains: 20 decisions
 at 85% precision, well under the ~97% floor in PLAN.md section 8. Naming is done
@@ -8,15 +8,15 @@ corroborated tier (where both fired, they agreed 14/14).
 
 Fixes from adversarial review:
   - Curated keywords are matched against the PRODUCT field only, on whole-token /
-    whole-phrase boundaries — never as a substring of the free-text description
+    whole-phrase boundaries, never as a substring of the free-text description
     (which produced glibc->"glib"->Red Hat @0.9). No description matching at all.
   - Bulk-reporter exclusion is case-normalized and the @huntrdev short name fixed
     (the old set had the wrong "@huntr_ai").
   - Corpus-derived owner requires a MAJORITY (share >= MIN_SHARE) with a margin
-    over second place, not a plurality — a 3/20 top CNA is `unclassified`, not named.
+    over second place, not a plurality, a 3/20 top CNA is `unclassified`, not named.
 
-Confidence is a match-quality signal only. It no longer gates naming — the
-k-neighbour block gate does — so a high-confidence match here still yields no
+Confidence is a match-quality signal only. It no longer gates naming, the
+k-neighbour block gate does, so a high-confidence match here still yields no
 name unless block inference independently reached the same CNA.
 """
 from __future__ import annotations
@@ -42,7 +42,7 @@ CURATED = {
     "libheif": "GitHub_M", "libde265": "GitHub_M", "freerdp": "GitHub_M",
     "c-ares": "GitHub_M", "vim": "GitHub_M", "netrw": "GitHub_M", "libvnc": "GitHub_M",
     "squid": "GitHub_M", "openvpn": "OpenVPN", "tls-crypt": "OpenVPN",
-    # enterprise vendors (own CNAs) — corroborated only by their own feed at display time
+    # enterprise vendors (own CNAs): corroborated only by their own feed at display time
     "windows": "microsoft", "office": "microsoft", "sharepoint": "microsoft",
     "exchange": "microsoft", "edge": "microsoft", ".net": "microsoft",
     "firefox": "mozilla", "thunderbird": "mozilla",
@@ -87,7 +87,7 @@ class Attributor:
                 self.map[p] = (cna, round(share, 2))
 
     def attribute(self, product, description):
-        pnorm = _norm(product)             # PRODUCT only — never the description
+        pnorm = _norm(product)             # PRODUCT only, never the description
         if pnorm:
             ptokens = set(pnorm.split())
             for kw, cna in CURATED.items():

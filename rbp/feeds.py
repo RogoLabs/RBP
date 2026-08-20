@@ -25,7 +25,7 @@ MAX_BYTES = 100_000_000     # cap on a single _get body (Debian tracker ~30MB is
 
 
 def _public_ips(host):
-    """Resolve host; return its addresses IFF every one is public (else [] — reject the
+    """Resolve host; return its addresses IFF every one is public (else [], reject the
     whole host if ANY record is private/loopback/link-local/reserved)."""
     try:
         infos = socket.getaddrinfo(host, None)
@@ -184,7 +184,7 @@ def feed_ubuntu(years, page_cap=200):
     while offset < page_cap * limit:
         try:
             data, code, _ = _get(f"https://ubuntu.com/security/cves.json?limit={limit}&offset={offset}", timeout=60)
-        except Exception as e:  # noqa: BLE001 — keep partial results
+        except Exception as e:  # noqa: BLE001, keep partial results
             print(f"  [ubuntu] stopped at offset {offset}: {e}", file=sys.stderr)
             break
         rows = (data or {}).get("cves", []) if isinstance(data, dict) else []
@@ -207,7 +207,7 @@ def feed_ubuntu(years, page_cap=200):
     else:
         capped = True
     if capped:
-        print(f"  [ubuntu] hit page cap ({page_cap}) — coverage may be truncated", file=sys.stderr)
+        print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
     return out
 
 
@@ -261,7 +261,7 @@ def feed_ghsa(years, page_cap=40):
 
 
 def feed_redhat(years):
-    """Red Hat security-data API — broad CNA coverage + severity + package."""
+    """Red Hat security-data API: broad CNA coverage + severity + package."""
     out, seen = [], set()
     for y in sorted(years):
         page, per = 1, 1000
@@ -270,7 +270,7 @@ def feed_redhat(years):
                 data, code, _ = _get(
                     f"https://access.redhat.com/hydra/rest/securitydata/cve.json"
                     f"?after={y}-01-01&before={y}-12-31&per_page={per}&page={page}", timeout=90)
-            except Exception as e:  # noqa: BLE001 — keep partial results
+            except Exception as e:  # noqa: BLE001, keep partial results
                 print(f"  [redhat] stopped ({y} p{page}): {e}", file=sys.stderr)
                 break
             rows = data or []
@@ -291,13 +291,13 @@ def feed_redhat(years):
 
 
 def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "community")):
-    """Alpine secdb — per-branch package -> secfixes -> CVE ids."""
+    """Alpine secdb: per-branch package -> secfixes -> CVE ids."""
     out, seen = [], set()
     for br in branches:
         for repo in repos:
             try:
                 data, code, _ = _get(f"https://secdb.alpinelinux.org/{br}/{repo}.json", timeout=60)
-            except Exception as e:  # noqa: BLE001 — one branch failure shouldn't drop the feed
+            except Exception as e:  # noqa: BLE001: one branch failure shouldn't drop the feed
                 print(f"  [alpine] skip {br}/{repo}: {e}", file=sys.stderr)
                 continue
             for pkg in (data or {}).get("packages", []):
@@ -315,7 +315,7 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
 
 def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
                                 "Maven", "Packagist", "NuGet", "Pub", "Hex")):
-    """OSV.dev bulk per-ecosystem dumps — language-ecosystem breadth. Each record's
+    """OSV.dev bulk per-ecosystem dumps: language-ecosystem breadth. Each record's
     CVE aliases are the referenced IDs; package name is the attribution product."""
     import io
     import zipfile
@@ -366,7 +366,7 @@ def _date_year(s):
 
 
 def feed_msrc(years):
-    """Microsoft MSRC CVRF API — monthly Patch-Tuesday docs. Microsoft is its own
+    """Microsoft MSRC CVRF API: monthly Patch-Tuesday docs. Microsoft is its own
     CNA, so an RBP here is self-disclosure (the stronger §4.5.1.4 MUST). Also bundles
     Azure Linux/Mariner CVEs, adding breadth."""
     try:
@@ -416,7 +416,7 @@ CSAF_PROVIDERS = (
     "https://sick.com/.well-known/csaf/provider-metadata.json",                   # SICK (ICS CNA)
 )
 
-# CSAF aggregators list many vendors' provider-metadata URLs in one file — one fetch
+# CSAF aggregators list many vendors' provider-metadata URLs in one file, one fetch
 # unlocks N vendors (Red Hat, Nozomi, Stackable, KUNBUS, ...).
 CSAF_AGGREGATORS = (
     "https://wid.cert-bund.de/.well-known/csaf-aggregator/aggregator.json",       # BSI CERT-Bund
@@ -446,7 +446,7 @@ def _expand_csaf_providers(providers, aggregators, max_providers):
 
 def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
               cap_per_provider=120, max_providers=40, workers=8):
-    """Generic CSAF/ROLIE ingester — unlocks vendor/enterprise/ICS CNAs. Expands
+    """Generic CSAF/ROLIE ingester: unlocks vendor/enterprise/ICS CNAs. Expands
     aggregators into providers, then for each provider: metadata -> ROLIE feed(s)
     -> recent advisory docs -> CVEs in scope."""
     out, seen = [], set()
@@ -556,7 +556,7 @@ def feed_mozilla(years):
 
 
 def feed_arch(years):
-    """Arch Linux security tracker — one JSON of AVGs (group -> CVE issues + packages).
+    """Arch Linux security tracker: one JSON of AVGs (group -> CVE issues + packages).
     Rolling-distro breadth; not a CNA (owner stays product-inferred). Undated."""
     data, _, _ = _get("https://security.archlinux.org/issues/all.json", timeout=60,
                       headers={"Accept": "application/json"})

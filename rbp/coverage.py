@@ -1,10 +1,10 @@
 """
-CNA coverage — what slice of the CVE ecosystem do our feeds actually touch?
+CNA coverage: what slice of the CVE ecosystem do our feeds actually touch?
 
 Authoritative (no inference): for every referenced ID that IS published in the
 corpus, we know its real assigner. The set of those assigners = the CNAs our
 downstream feeds surface. We rank all CNAs by recent published volume and report
-how much of that universe the feeds cover — so the "top X% of CNAs" claim is
+how much of that universe the feeds cover, so the "top X% of CNAs" claim is
 grounded in data, not vibes.
 """
 from __future__ import annotations
@@ -31,7 +31,7 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50):
     covered = {assigner[c] for c in surfaced_ids if assigner.get(c)}
     covered.discard("")
 
-    # "attributable volume" = full output of any touched CNA — an UPPER BOUND (one
+    # "attributable volume" = full output of any touched CNA, an UPPER BOUND (one
     # sighting credits the CNA's whole volume). Report it as such, alongside the
     # honest OBSERVED coverage (distinct published CVEs actually surfaced / total).
     covered_vol = int(vol[[c for c in covered if c in vol.index]].sum())
@@ -54,17 +54,17 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50):
 
 
 def markdown(cov):
-    # This section measures THIS TOOL's feed reach — not the CVE Program's completeness.
+    # This section measures THIS TOOL's feed reach, not the CVE Program's completeness.
     L = ["\n## Feed reach (how much of the CVE ecosystem this tool observes)\n",
-         "*This measures the tool's own coverage via its downstream feeds — NOT the health or "
+         "*This measures the tool's own coverage via its downstream feeds, NOT the health or "
          "completeness of the CVE Program.*\n",
          f"*Universe: {cov['total_pub']:,} CVEs published by {cov['total_cnas']} CNAs in "
          f"{cov['recent_years']} (a wider window than the RBP scan, to size the CNA landscape).*\n",
          f"- Feeds touch **{cov['covered_cnas']} of {cov['total_cnas']} CNAs "
          f"({cov['pct_cnas']}%)**.",
          f"- **Observed** reach (distinct published CVEs the tool actually surfaced ÷ total): "
-         f"**{cov['observed_pct']}%** ({cov['observed_ids']:,} CVEs) — the honest floor.",
-         f"- Those CNAs account for {cov['pct_volume_attributable']}% of recent CVE volume — an "
+         f"**{cov['observed_pct']}%** ({cov['observed_ids']:,} CVEs), the honest floor.",
+         f"- Those CNAs account for {cov['pct_volume_attributable']}% of recent CVE volume, an "
          "*upper bound only* (touching a CNA once credits its entire output; bulk reporters dominate). "
          "Not a coverage claim.",
          f"- Of the **top {cov['top_n']} CNAs by volume**, the feeds touch **{cov['top_covered']}**.",

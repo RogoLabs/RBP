@@ -17,7 +17,7 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
 
-      # Frozen fixtures only — deterministic, no network.
+      # Frozen fixtures only: deterministic, no network.
       - name: Unit + acceptance tests
         run: python -m pytest tests/ -q
 

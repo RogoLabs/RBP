@@ -2,7 +2,7 @@
 Acceptance tests for the reservation oracle (PLAN.md phase 1).
 
 The frozen tests run offline and gate CI. The live test is opt-in via
-RBP_LIVE_TESTS=1 — it hits the real endpoint and asserts the invariants that
+RBP_LIVE_TESTS=1. It hits the real endpoint and asserts the invariants that
 must hold for all time, not the snapshot numbers, which drift as records
 publish.
 """
@@ -34,7 +34,7 @@ live_only = pytest.mark.skipif(
 
 
 # --------------------------------------------------------------------------
-# frozen — the phase 1 acceptance criterion
+# frozen: the phase 1 acceptance criterion
 # --------------------------------------------------------------------------
 
 def test_fixture_is_the_documented_snapshot():
@@ -89,7 +89,7 @@ def test_id_validation(cid, ok):
 
 
 # --------------------------------------------------------------------------
-# live — invariants that survive drift
+# live: invariants that survive drift
 # --------------------------------------------------------------------------
 
 @live_only
@@ -116,7 +116,7 @@ def test_live_backlog_only_ever_shrinks():
 
 @live_only
 def test_live_reserved_owner_still_redacted():
-    """If this fails, MITRE unredacted the field — see PLAN.md section 8.
+    """If this fails, MITRE unredacted the field. See PLAN.md section 8.
     That is a win, not a regression. Update the site's framing."""
     reserved = [c for c, r in PROBE["results"].items() if r["state"] == "RESERVED"]
     sample = [c for c in reserved[:20] if _get(c)["state"] == "RESERVED"]

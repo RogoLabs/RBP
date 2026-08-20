@@ -99,7 +99,7 @@ def test_predictions_persist_for_a_later_run_to_grade(backlog, corpus, tmp_path)
     saved = json.loads(path.read_text())
     assert saved["predictions"][RBP_NAMEABLE]["predicted"] == "acme"
 
-    # Next run, the ID has published — and it was acme after all.
+    # Next run, the ID has published, and it was acme after all.
     later = pd.concat([corpus, pd.DataFrame(
         [(RBP_NAMEABLE, "PUBLISHED", "acme", "Acme", "widget")], columns=corpus.columns)])
     v = apply_to_backlog([], later, str(path), today="2026-09-01")
@@ -121,13 +121,13 @@ def test_report_writes_a_snapshot_the_site_can_read(backlog, corpus, tmp_path):
     abstained = next(r for r in rows if r["cve_id"] == RBP_ABSTAIN)
 
     assert named["owner"] == "acme" and named["owner_nameable"] == "True"
-    # The abstained row still ships — it just carries no name.
+    # The abstained row still ships, it just carries no name.
     assert abstained["owner"] == "unattributed" and abstained["owner_nameable"] == "False"
     assert "RESERVED" in md and "DNE" not in md
 
 
 def test_csv_never_names_a_cna_the_report_withholds(backlog, corpus, tmp_path):
-    """The shareable CSV and the Markdown must gate identically — an ungated
+    """The shareable CSV and the Markdown must gate identically, an ungated
     CSV column was a real defect in the previous engine."""
     bl, fresh = backlog
     apply_to_backlog(bl, corpus, str(tmp_path / "precision.json"), today="2026-08-20")

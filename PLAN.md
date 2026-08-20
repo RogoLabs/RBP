@@ -1,4 +1,4 @@
-# rbptracker.org — build plan
+# rbptracker.org build plan
 
 Public tracker for **RBP** CVE IDs: IDs in the `RESERVED` state that are referenced in
 public advisories but have no published CVE Record. Lists the CVE, the owning CNA, and
@@ -21,17 +21,17 @@ force. It states the expectation plainly:
 
 and aligns itself explicitly to the CNA Operational Rules (v4.1.0, approved 2025-05-14):
 
-- **§4.5.1.4** — CNAs **MUST** publish within 72 hours of *the CNA itself* publicly
+- **§4.5.1.4**: CNAs **MUST** publish within 72 hours of *the CNA itself* publicly
   disclosing. Past that, the CNA's Root **MAY** direct a CNA-LR to publish.
-- **§4.5.1.6** — CNAs **SHOULD** publish within 72 hours of becoming aware a third party
+- **§4.5.1.6**: CNAs **SHOULD** publish within 72 hours of becoming aware a third party
   disclosed. This is the usual distro/RBP case.
-- **§4.5.1.7** — the Secretariat **MAY publicly identify the CNA who reserved the CVE ID
+- **§4.5.1.7**, the Secretariat **MAY publicly identify the CNA who reserved the CVE ID
   24 hours after** public disclosure.
-- **§4.5.3.5** — CNAs **MUST reject unused or unpublished CVE IDs**, so a long-lived
+- **§4.5.3.5**: CNAs **MUST reject unused or unpublished CVE IDs**, so a long-lived
   reservation is not a neutral state under the rules.
 
-Then enforcement. The entire mechanism is four discretionary levers — **Warning,
-Reservation Caps, Intervention, Formal Review** — which the Program *"may take"* and
+Then enforcement. The entire mechanism is four discretionary levers, **Warning,
+Reservation Caps, Intervention, Formal Review**, which the Program *"may take"* and
 which *"may be applied individually or combined."* Remediation deadlines are whatever a
 TL-Root or Root decides case by case. There is no condition that triggers anything by
 itself.
@@ -49,7 +49,7 @@ from no enforcement at all, and right now there is:
 - no public list of RBPs,
 - no public record that a CNA was notified,
 - no public enforcement log,
-- no public attribution — `owning_cna` is redacted for exactly the reserved population,
+- no public attribution: `owning_cna` is redacted for exactly the reserved population,
   despite §4.5.1.7 expressly permitting the Secretariat to name it after 24 hours,
 - and a Program RBP metrics page that still promises figures *"from 2017 to present"* and
   stops at **Q3 2021**.
@@ -58,13 +58,13 @@ The site publishes the observable half and reconstructs the redacted half with a
 method.
 
 > **Do not cite the 5%/50% thresholds.** They are withdrawn. The v1.0 PDF is still hosted
-> by third-party CNAs and still ranks well in search — it is how this project picked them
+> by third-party CNAs and still ranks well in search. That is how this project picked them
 > up in the first place. `tests/test_policy.py` pins the current text and fails the build
 > if either canonical source moves.
 
 ## 2. Verified findings (2026-08-20)
 
-### F1 — the bulk CVE List contains zero RESERVED records
+### F1, the bulk CVE List contains zero RESERVED records
 Full state census over the `all_CVEs` release, 365,232 records, 9.2s:
 
 ```
@@ -75,13 +75,13 @@ RESERVED         0
 
 The policy's numerator is invisible in the bulk feed.
 
-### F2 — the git tree does not carry reserved stubs either (corrects VISION.md)
+### F2, the git tree does not carry reserved stubs either (corrects VISION.md)
 `cves/2026/26xxx` in `CVEProject/cvelistV5`: 487 files present in the 26000–26999 range,
 **513 IDs absent**. The small stub files are `REJECTED`, not `RESERVED`. Cloning the
 2.63 GB repo buys nothing. Drop that approach.
 
-### F3 — `/api/cve-id/` exposes the true state, unauthenticated  ← the unlock
-Not `/api/cve/` (which 404s on reserved IDs — this is why the current engine mislabels
+### F3: `/api/cve-id/` exposes the true state, unauthenticated  ← the unlock
+Not `/api/cve/` (which 404s on reserved IDs, the reason the current engine mislabels
 everything `DNE`). The reservation endpoint:
 
 ```
@@ -95,18 +95,18 @@ GET https://cveawg.mitre.org/api/cve-id/CVE-2026-26100
 Rate limit header: `ratelimit-policy: 25000;w=60`. Measured 94 req/s at 24 threads;
 456 IDs resolved in 4.9s.
 
-**Consequence:** every row the current engine calls `DNE` becomes `RESERVED` — the
+**Consequence:** every row the current engine calls `DNE` becomes `RESERVED`, the
 policy's own literal definition of RBP. The "these might be typos" objection dies.
 
-### F4 — `owning_cna` is redacted on exactly the population the policy governs
+### F4: `owning_cna` is redacted on exactly the population the policy governs
 Sampled 2023–2026. Every `PUBLISHED` ID returns a real `owning_cna`. Every `RESERVED` ID
-returns `[REDACTED]`. No partial disclosure, no aged unblinding — despite CNA
+returns `[REDACTED]`. No partial disclosure, no aged unblinding, despite CNA
 Operational Rules §4.5.1.7 permitting the Secretariat to name the reserving CNA 24 hours
 after public disclosure.
 
 **This is the site's thesis.** The field is populated, served, and masked by choice.
 
-### F5 — block inference reconstructs the owner, 100% precision out-of-sample
+### F5: block inference reconstructs the owner, 100% precision out-of-sample
 CVE IDs are issued in runs. If published IDs bracketing a reserved ID agree on one
 assigner, that assigner very likely owns the reserved one. Tested on the *real RBP
 population*: predicted from the 2026-07-14 corpus, graded against IDs that published
@@ -115,7 +115,7 @@ after.
 | gate | coverage | precision | verdict |
 |---|---:|---:|---|
 | k=1 | 86.2% | 99.5%  | aggressive |
-| k=2 | 65.2% | 99.3%  | — |
+| k=2 | 65.2% | 99.3%  |: |
 | **k=3** | **59.8%** | **100.0%** | **ship this** |
 | k=5 | 50.9% | 100.0% | costs coverage for nothing |
 
@@ -125,23 +125,23 @@ Leave-one-out across all 32,267 published 2026 IDs corroborates: k=3 → 60.6% /
 Self-validating: every RBP that later publishes reveals its true owner, so precision is
 re-measured on every build and printed on the site.
 
-### F6 — persistence is real; this is not publication lag
+### F6: persistence is real; this is not publication lag
 Re-queried all 456 IDs from the 2026-07-19 snapshot, 32 days later (already ≥14 days
 public when captured):
 
 ```
 still RESERVED   232   (~46+ days RBP minimum)
-now  PUBLISHED   224   (self-healed — proves these were real)
+now  PUBLISHED   224   (self-healed, proves these were real)
 ```
 
-Of the 224 resolved, **213 were GitHub_M** vs. the old engine's inference of 70 — current
+Of the 224 resolved, **213 were GitHub_M** vs. the old engine's inference of 70, current
 attribution under-calls by ~3x.
 
-### F7 — the policy's numeric thresholds no longer exist (correction)
+### F7, the policy's numeric thresholds no longer exist (correction)
 An earlier draft of this plan built a per-CNA scoreboard around RBP% against a 5%
 threshold, sourced from a PDF hosted by INCIBE. That document is **RBP Policy v1.0 and is
 superseded.** The canonical policy at `cve.org/Resources/General/Policies/RBP-CVE-IDs-Policy.pdf`
-is **v2.0.0, approved 2026-08-13**, and contains no percentage anywhere in its text —
+is **v2.0.0, approved 2026-08-13**, and contains no percentage anywhere in its text -
 verified by regex over the full document, and pinned in `tests/fixtures/rbp_policy_v2.json`.
 
 Consequences, all of which are already applied below:
@@ -152,7 +152,7 @@ Consequences, all of which are already applied below:
 - The judgment moves to `/cves`, where it is properly anchored: **72 hours**, from a rule
   that is current and quoted verbatim.
 - A normalised rate is still worth showing so a large CNA with 200 RBPs is not compared
-  naively against a five-person CNA with two — but it carries no threshold and no verdict.
+  naively against a five-person CNA with two, but it carries no threshold and no verdict.
 
 The CVE Program's own public RBP metric ends at **Q3 2021** (4,326 in 2017 Q1 falling to
 ~350–550 by 2021) on a page that says "to present". Since v2.0.0 names "Program metrics
@@ -178,7 +178,7 @@ is redacted.**
 - "This CNA violated the rules." Say: over the threshold the program itself set.
 - Anything about severity, exploitability, or risk. Publishing completeness only
   (VISION.md principle 3 carries over).
-- An inferred owner below the k=3 gate — publish the row with the owner blank, and say why.
+- An inferred owner below the k=3 gate: publish the row with the owner blank, and say why.
 - Vulnerability detail beyond the verbatim advisory title already public downstream.
 
 ---
@@ -206,8 +206,8 @@ self-healing story visible.
 |---|---|---|
 | Pages published site | 1 GB | <1%, payload is a few MB |
 | Pages deploy timeout | 10 min | deploy step only; build is separate |
-| Pages bandwidth | 100 GB/mo soft | real risk at launch — see R7 |
-| Source repo recommended max | 1 GB | corpus never committed — non-negotiable |
+| Pages bandwidth | 100 GB/mo soft | real risk at launch, see R7 |
+| Source repo recommended max | 1 GB | corpus never committed: non-negotiable |
 | Actions cache | 10 GB/repo, 7-day idle evict | ~600 MB, refreshed 6-hourly so never idles |
 | Actions job timeout | 6 h | target <15 min warm |
 | CVE Services rate limit | 25,000/min | peak ~5,600/min at 24 threads |
@@ -216,21 +216,21 @@ self-healing story visible.
 
 ## 5. Pages
 
-Visual system inherits cve.icu directly — port `web/static/css/style.css` and extend.
+Visual system inherits cve.icu directly, port `web/static/css/style.css` and extend.
 Same tokens, same dark-mode toggle, same card/stat-grid grammar. Do not redesign.
 
 | route | purpose | must nail |
 |---|---|---|
 | `/`            | headline count, aging distribution, live precision, WoW movement | the redaction thesis in one sentence above the fold |
-| `/cves`        | full table: ID, package, days RBP, sources, owner, advisory link | measures the **72h per-record rule**; sortable by days RBP, deep-linkable filters — this is the page people cite |
-| `/cnas`        | descriptive: RBP count, oldest outstanding, time-to-publish distribution, normalised rate | **no threshold flags — v2.0.0 has no threshold.** Every rate labelled as this site's statistic, not a program limit; min-denominator guard visible |
-| `/cna/<name>`  | per-CNA detail, full rows, time-to-publish history | the page a CNA lands on — make it fair and complete |
+| `/cves`        | full table: ID, package, days RBP, sources, owner, advisory link | measures the **72h per-record rule**; sortable by days RBP, deep-linkable filters. The page people cite |
+| `/cnas`        | descriptive: RBP count, oldest outstanding, time-to-publish distribution, normalised rate | **no threshold flags: v2.0.0 has no threshold.** Every rate labelled as this site's statistic, not a program limit; min-denominator guard visible |
+| `/cna/<name>`  | per-CNA detail, full rows, time-to-publish history | the page a CNA lands on, make it fair and complete |
 | `/method`      | definitions, k=3 gate, live precision, feed inventory, limits | every number on the site links here |
 | `/policy`      | v2.0.0 quoted, the v1.0→v2.0.0 change shown side by side, the redaction demonstrated live | the withdrawal of the arithmetic trigger is the story; show the actual API response |
-| `/data`        | JSON, CSV, per-CNA endpoints, schema, licence | stable URLs — others building on this is the win condition |
+| `/data`        | JSON, CSV, per-CNA endpoints, schema, licence | stable URLs, others building on this is the win condition |
 | `/changes`     | new / resolved / still-open since last run | resolutions as prominent as additions |
 
-Resolved rows stay visible 30 days marked *Published — resolved in N days*. A tracker
+Resolved rows stay visible 30 days marked *Published, resolved in N days*. A tracker
 that only accumulates looks like a grudge; one that visibly closes rows looks like an
 instrument, and the closures prove the open rows are real.
 
@@ -238,20 +238,20 @@ instrument, and the closures prove the open rows are real.
 
 ## 6. Build sequence
 
-- **Phase 0 — port and re-found** (½ day). Lift `rbp/` into this repo. Strip snapshots,
+- **Phase 0, port and re-found** (½ day). Lift `rbp/` into this repo. Strip snapshots,
   the 550 MB zip, PDF/email artefacts. `.gitignore` the corpus. MIT, CNAME, Pages→Actions.
   *Done when* `python -m rbp.cli run` reproduces the old snapshot in a clean checkout.
-- **Phase 1 — replace the oracle** (1 day). Rewrite `classify.py` against `/api/cve-id/`.
+- **Phase 1: replace the oracle** (1 day). Rewrite `classify.py` against `/api/cve-id/`.
   Retire `DNE`; taxonomy becomes RESERVED / PUBLISHED / REJECTED / UNKNOWN. Thread-pooled
   with backoff and a circuit-breaker that fails the build rather than publishing a partial scan.
   *Done when* the 456 historical IDs reclassify to 232 / 224, matching today's probe.
-- **Phase 2 — inference + self-grading** (1 day). ✅ DONE. k-neighbour gate at k=3;
+- **Phase 2: inference + self-grading** (1 day). ✅ DONE. k-neighbour gate at k=3;
   grader scoring earlier runs against newly-published truth → `precision.json`;
   `run_coverage` reported separately from validation coverage. CI reproduces
   60.8%/99.35% (LOO) and 59.8%/100% (out-of-sample), 39 tests.
   **Correction found while building:** coverage is population-dependent, precision is
   not. A live run over alas+alpine named only **24% of reportable rows**, not the 59.8%
-  the validation set suggests — live RBPs cluster in interleaved regions of the ID
+  the validation set suggests, live RBPs cluster in interleaved regions of the ID
   space where no CNA owns the neighbourhood. Loosening the gate does not fix it (k=2
   bought one extra row for 0.25pt of precision; k=1 bought five and dropped LOO
   precision to 97.75%, brushing the kill floor). The binding constraint is the shape of
@@ -260,64 +260,64 @@ instrument, and the closures prove the open rows are real.
   former's.** Also decided by measurement: the product→CNA map never names a CNA alone
   (85% precision as a fallback) and REJECTED records are not used as neighbours
   (too rare to matter).
-- **Phase 3 — the 72-hour clock** (1 day). Per-row hours since first public reference
+- **Phase 3, the 72-hour clock** (1 day). Per-row hours since first public reference
   against the 72h expectation; `self_disclosed` splitting 4.5.1.4 (MUST) from 4.5.1.6
-  (SHOULD); per-CNA aggregation — outstanding count, oldest, time-to-publish distribution
+  (SHOULD); per-CNA aggregation, outstanding count, oldest, time-to-publish distribution
   from resolved RBPs. Normalised rate for scale context only: min-denominator guard,
-  Wilson interval, labelled as this site's statistic. **No threshold flags — v2.0.0 has
+  Wilson interval, labelled as this site's statistic. **No threshold flags, v2.0.0 has
   no threshold.**
   *Done when* no page renders a percentage beside a pass/fail verdict, and the MUST/SHOULD
   split shows on every row.
-- **Phase 4 — site build** (2 days). Port cve.icu CSS + base template. Eight routes.
+- **Phase 4: site build** (2 days). Port cve.icu CSS + base template. Eight routes.
   Client-side sort/filter with deep-linkable query state. JSON/CSV with documented schema.
   *Done when* cold build <20 min and Lighthouse ≥95 perf + a11y.
-- **Phase 5 — harden the loop** (1 day). Feed-health surfacing, history to `data` branch
+- **Phase 5: harden the loop** (1 day). Feed-health surfacing, history to `data` branch
   with compaction, failure alerting, staleness banner past 24h.
   *Done when* killing a feed produces a degraded-coverage banner, not a smaller count.
-- **Phase 6 — notify, then go loud**. Site is live throughout; before *promoting* it,
-  send per-CNA row exports plus a note to the QWG and Secretariat. Not permission-seeking —
+- **Phase 6: notify, then go loud**. Site is live throughout; before *promoting* it,
+  send per-CNA row exports plus a note to the QWG and Secretariat. Not permission-seeking -
   a correction window that makes "you never told us" unavailable.
 
 ---
 
 ## 7. Risk register
 
-- **R1 (high) — MITRE removes or authenticates `/api/cve-id/`.** The whole RESERVED signal
+- **R1 (high): MITRE removes or authenticates `/api/cve-id/`.** The whole RESERVED signal
   is one undocumented public endpoint. *Mitigate:* snapshot every observed state transition
   to the `data` branch from day one so the record survives independently; keep `/api/cve/`
-  as a flagged fallback; state in `/method` — before it happens — that closing the endpoint
+  as a flagged fallback; state in `/method`, before it happens, that closing the endpoint
   in response to this site would itself be a transparency reduction. Do not scrape beyond
   candidate IDs; give no operational reason to close it.
-- **R2 (high) — a named CNA is named wrongly.** 100% on 134 cases is not infallible.
+- **R2 (high), a named CNA is named wrongly.** 100% on 134 cases is not infallible.
   *Mitigate:* k=3 never lower; publish measured precision beside every inferred name;
   one-click correction on every CNA page applied within one build cycle with a visible
   changelog; label the column *Inferred owner*, never *Assigner*; show prediction vs. truth
   side by side once revealed, including misses.
-- **R3 (high) — a row is under legitimate embargo.** *Mitigate:* keep the 14-day buffer;
+- **R3 (high), a row is under legitimate embargo.** *Mitigate:* keep the 14-day buffer;
   reproduce only advisory titles already public downstream, never detail; embargo-exception
   path that suppresses a row on request, with suppressions counted and disclosed in
   aggregate so the mechanism can't hide the problem.
-- **R4 (medium) — a feed dies quietly and the numbers shrink.** Most likely failure mode;
+- **R4 (medium), a feed dies quietly and the numbers shrink.** Most likely failure mode;
   silently corrupts the trend. *Mitigate:* per-feed counts asserted against a rolling median,
   build fails past tolerance; feed-health table with last-success timestamps; never publish
   a degraded run without a banner. Phase 5, not optional.
-- **R5 (medium) — "you're doing the Secretariat's job badly."** *Mitigate:* §4.5.1.7 permits
+- **R5 (medium): "you're doing the Secretariat's job badly."** *Mitigate:* §4.5.1.7 permits
   the Secretariat to name; it doesn't prohibit anyone else from computing. But win on frame,
-  not technicality: *we would rather not be doing this — unredact the field and we'll point
+  not technicality: *we would rather not be doing this, unredact the field and we'll point
   at yours instead.* Footer of every page. It's a standing offer, and it's true.
-- **R6 (medium) — small-denominator CNAs pilloried by arithmetic.** A five-person CNA with
+- **R6 (medium): small-denominator CNAs pilloried by arithmetic.** A five-person CNA with
   4 RBPs against 14 published reads as 28.6% and tops a leaderboard above Microsoft. Worse
   now that no policy threshold exists to justify the ranking at all.
   *Mitigate:* rank by absolute count, not rate. Suppress the rate below a denominator floor
   (start at 20 published/12mo) and show the raw count instead; Wilson lower bound where a
   rate is shown; label every rate as this site's descriptive statistic. No verdict attaches
   to a rate anywhere on the site.
-- **R7 (medium) — launch traffic exceeds 100 GB/mo.** *Mitigate:* paginate JSON — small
+- **R7 (medium): launch traffic exceeds 100 GB/mo.** *Mitigate:* paginate JSON, small
   summary for first paint, detail lazy-loaded; gzip at build; content-hashed filenames;
   raw dumps as separate downloads, not page dependencies.
-- **R8 (low) — repo bloat.** *Mitigate:* corpus never committed; orphan `data` branch with
+- **R8 (low): repo bloat.** *Mitigate:* corpus never committed; orphan `data` branch with
   compacted daily rollups; quarterly aggregation past 12 months. Set the rule in Phase 0.
-- **R9 (low) — 583 MB cold pull on cache miss.** *Mitigate:* 6-hourly runs mean the cache
+- **R9 (low): 583 MB cold pull on cache miss.** *Mitigate:* 6-hourly runs mean the cache
   never idles; key on release tag with a restore-key prefix; cold path ~15 min, inside the
   6-hour job limit and never touching the 10-minute deploy step.
 
@@ -341,11 +341,11 @@ leaderboard is the evidence; the redaction is the story.
 
 ## 9. Still open
 
-- **"Days out of scope" — confirm the metric.** Built here as *days in RBP state*: days
+- **"Days out of scope", confirm the metric.** Built here as *days in RBP state*: days
   since earliest downstream reference, for an ID still Reserved. A floor on the true clock,
   not the rule's CNA-awareness clock. If you meant something else, it changes the headline column.
 - **Years in scope.** Engine currently scans 2025–2026. Backfilling to 2020 would surface
-  long-tail reserved-hoarding at real API cost — do it once offline as a launch artefact.
+  long-tail reserved-hoarding at real API cost, do it once offline as a launch artefact.
 - **REJECTED-but-public.** Publicly referenced then rejected is a different pathology and
   arguably worse for consumers. Out of scope for v1; note it.
 - **Feed expansion before or after launch.** Tier-A list in VISION.md (GitLab, Wolfi, SUSE,

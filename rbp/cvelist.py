@@ -1,5 +1,5 @@
 """
-Standalone CVE List v5 corpus — the source of truth.
+Standalone CVE List v5 corpus, the source of truth.
 
 Downloads the official daily baseline release (github.com/CVEProject/cvelistV5)
 and indexes every record into a compact parquet. No dependency on any sibling
@@ -36,7 +36,7 @@ def download_baseline(dest, url=None):
     """Download the latest baseline, refreshing when a NEWER release exists.
 
     Freshness is keyed on the release tag (stored in a sidecar), NOT merely file
-    presence — otherwise the weekly job would re-use a frozen zip forever and the
+    presence: otherwise the weekly job would re-use a frozen zip forever and the
     'source of truth' would silently go stale.
     """
     tag = None
@@ -75,7 +75,7 @@ def _iter_records(zip_path):
                 continue
             total += info.file_size
             if total > MAX_TOTAL:
-                raise RuntimeError("baseline decompressed size exceeded ceiling — aborting")
+                raise RuntimeError("baseline decompressed size exceeded ceiling, aborting")
             try:
                 yield json.loads(z.read(name))
             except Exception:  # noqa: BLE001

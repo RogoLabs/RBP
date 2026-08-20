@@ -3,7 +3,7 @@ Acceptance tests for block inference and live grading (PLAN.md phase 2).
 
 Both harnesses run offline against a frozen 2026-07-14 corpus slice, so the
 precision figures the site publishes are reproducible by anyone who clones the
-repo. That reproducibility is the point — the site names CNAs, so its method
+repo. That reproducibility is the point, the site names CNAs, so its method
 has to be auditable rather than merely described.
 """
 from __future__ import annotations
@@ -56,7 +56,7 @@ def inf(corpus):
 
 
 # --------------------------------------------------------------------------
-# out-of-sample — the headline number
+# out-of-sample, the headline number
 # --------------------------------------------------------------------------
 
 def _out_of_sample(inf, k):
@@ -112,7 +112,7 @@ def test_shipped_gate_clears_the_kill_threshold(inf):
 
 
 # --------------------------------------------------------------------------
-# leave-one-out — corroborates on 20x the sample
+# leave-one-out: corroborates on 20x the sample
 # --------------------------------------------------------------------------
 
 def test_leave_one_out_2026(inf):
@@ -171,7 +171,7 @@ def test_abstains_rather_than_guesses(inf):
 
 def test_product_map_corroboration_never_creates_a_name(inf):
     """The product map can only confirm a block inference, never supply one.
-    Measured at 85% precision as a standalone fallback — under the floor."""
+    Measured at 85% precision as a standalone fallback, under the floor."""
     abstained = next(c for c in TRUTH if inf.infer(c) is None)
     owner, tier, _ = inf.attribute(abstained, product_map_owner="redhat")
     assert owner is None and tier == TIER_NONE

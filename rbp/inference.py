@@ -3,14 +3,14 @@ Reconstruct the redacted owning CNA of a reserved CVE ID, and grade the
 reconstruction in public.
 
 The CVE Services reservation endpoint serves `owning_cna` for PUBLISHED and
-REJECTED records and returns "[REDACTED]" for RESERVED ones — precisely the
+REJECTED records and returns "[REDACTED]" for RESERVED ones, precisely the
 population the RBP policy governs (PLAN.md F4). So the owner of an RBP row has
 to be inferred from public data.
 
 Method: block inference. CVE IDs are handed to CNAs in runs, so an ID whose
 published neighbours all share one assigner is very likely assigned to that CNA
 too. Require `k` published IDs on *each* side, all naming the same assigner;
-abstain otherwise. Unanimity is the whole point — a majority-with-margin rule
+abstain otherwise. Unanimity is the whole point, a majority-with-margin rule
 buys coverage at a precision cost this project cannot afford.
 
 Measured on the real RBP population (n=224 IDs that were reserved on
@@ -29,7 +29,7 @@ COVERAGE IS POPULATION-DEPENDENT, PRECISION IS NOT. The figures above are
 coverage over *published* IDs, which are spread evenly through the ID space. A
 live RBP set is not: a measured run over the alas+alpine feeds named only 24% of
 reportable rows, because those RBPs sit in interleaved regions where no single
-CNA owns the neighbourhood. Loosening the gate barely helps — on that same run
+CNA owns the neighbourhood. Loosening the gate barely helps, on that same run
 k=2 named one extra row for a 0.25pt precision cost, and k=1 named five more but
 dropped leave-one-out precision to 97.75%, brushing the kill floor. The binding
 constraint is the shape of the ID space, not the threshold.
@@ -41,13 +41,13 @@ as though it described the backlog. `apply_to_backlog` returns both.
 Two things deliberately NOT done:
 
   * REJECTED records are not used as neighbours. Tested; they are too rare
-    (452 in 2026) to move coverage — k=3 shifts 60.8% -> 60.9%. Not worth the
+    (452 in 2026) to move coverage: k=3 shifts 60.8% -> 60.9%. Not worth the
     extra state to explain.
 
   * The product->CNA map (attribution.py) is never used to name a CNA. Tested
     as a fallback where block inference abstains: it adds 20 decisions at 85%
     precision, far under the ~97% floor in PLAN.md section 8. It is used only
-    as corroboration — where both methods fire they agreed 14/14, which earns
+    as corroboration: where both methods fire they agreed 14/14, which earns
     a row the highest confidence tier but never creates a name on its own.
 
 Everything here is arithmetic over the public corpus. No network.
@@ -62,7 +62,7 @@ import os
 
 DEFAULT_K = 3
 
-# Confidence tiers. These are labels for the site, not probabilities — the
+# Confidence tiers. These are labels for the site, not probabilities, the
 # honest probability is the measured precision, published alongside.
 TIER_CORROBORATED = "block-corroborated"   # block inference + product map agree
 TIER_BLOCK = "block"                       # block inference alone
@@ -98,7 +98,7 @@ class BlockInferencer:
         ids, owners = self.index[year]
         i = bisect.bisect_left(ids, num)
         left = ids[max(0, i - k):i]
-        # bisect_left puts an existing num at i, so drop it explicitly — this
+        # bisect_left puts an existing num at i, so drop it explicitly, this
         # is what makes leave-one-out honest rather than self-confirming.
         right = [x for x in ids[i:i + k + 1] if x != num][:k]
         if len(left) < k or len(right) < k:
@@ -118,7 +118,7 @@ class BlockInferencer:
         """Full attribution for one RBP row.
 
         Returns (owner, tier, method). `owner` is None when the gate does not
-        pass — the site renders those rows with an empty owner column and links
+        pass, the site renders those rows with an empty owner column and links
         to the method page, rather than guessing.
         """
         owner = self.infer(cve_id)
@@ -177,7 +177,7 @@ def _score(correct, wrong, abstain, k, method):
 
 
 # --------------------------------------------------------------------------
-# live grading — the claim the site makes about itself
+# live grading, the claim the site makes about itself
 # --------------------------------------------------------------------------
 
 class Grader:
@@ -187,7 +187,7 @@ class Grader:
     CVE List finally reveals its true assigner. That makes the inference
     self-marking: each run grades the predictions it made on earlier runs, so
     the precision shown on the site is earned continuously rather than asserted
-    once. Nobody has to trust the method — they can watch it being graded.
+    once. Nobody has to trust the method, they can watch it being graded.
     """
 
     def __init__(self, path):
@@ -203,7 +203,7 @@ class Grader:
 
     def record(self, cve_id, predicted_owner, tier, k, today):
         """Log a prediction so a future run can mark it. First prediction for
-        an ID wins — re-recording would let a late correction hide an early miss."""
+        an ID wins: re-recording would let a late correction hide an early miss."""
         if predicted_owner and cve_id not in self.state["predictions"]:
             self.state["predictions"][cve_id] = {
                 "predicted": predicted_owner, "tier": tier, "k": k, "on": today,
@@ -270,7 +270,7 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
 
     Mutates each backlog row in place with `owner` / `owner_tier` /
     `owner_method`, then returns the validation block the site renders on its
-    method page. Rows below the gate keep `owner = None` — the site shows an
+    method page. Rows below the gate keep `owner = None`, the site shows an
     empty owner column there and links to the method, rather than guessing.
     """
     today = today or dt.date.today().isoformat()
@@ -303,7 +303,7 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
           f"({100 * (total - named[TIER_NONE]) / total:.1f}%), "
           f"{named[TIER_NONE]} abstained")
     print(f"  method precision (leave-one-out, {today[:4]}): {_pct(loo['precision'])} "
-          f"[validation coverage {_pct(loo['coverage'])} over published IDs — "
+          f"[validation coverage {_pct(loo['coverage'])} over published IDs, "
           f"NOT this run's {_pct(run_coverage)}]")
     if live_score["graded"]:
         print(f"  live grading: {live_score['correct']}/{live_score['graded']} correct "

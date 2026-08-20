@@ -1,5 +1,5 @@
 """
-RBP-CVEs weekly runner — 100% standalone.
+RBP-CVEs weekly runner: 100% standalone.
 
     python -m rbp.cli run                      # full pipeline (current+prior year, all feeds)
     python -m rbp.cli run --years 2026 --sources alas,ubuntu,debian,ghsa
@@ -99,7 +99,7 @@ def main():
     r.add_argument("--years", default="")
     r.add_argument("--profile", choices=list(PROFILES), default="weekly",
                    help="source set: 'weekly' = fast distro/OSS + Mozilla (default); "
-                        "'deep' = also CSAF aggregator + Microsoft (heavy — monthly cadence)")
+                        "'deep' = also CSAF aggregator + Microsoft (heavy, monthly cadence)")
     r.add_argument("--sources", default="",
                    help="explicit comma list, overrides --profile")
     r.add_argument("--today", default="")

@@ -4,7 +4,7 @@ Guard the site's citations against drift.
 Every rule the site quotes is pinned to a fixture captured from the canonical
 source. The frozen tests assert we still say what the document says. The live
 tests re-fetch the canonical sources and fail if the wording, the section
-numbers, or the version changed — because a site that names CNAs against a rule
+numbers, or the version changed: because a site that names CNAs against a rule
 must not go on quoting a superseded one.
 
 This exists because it already happened. The first draft of this project cited
@@ -36,7 +36,7 @@ live_only = pytest.mark.skipif(
 
 
 # --------------------------------------------------------------------------
-# the 72-hour clock — what makes an individual record late
+# the 72-hour clock: what makes an individual record late
 # --------------------------------------------------------------------------
 
 def test_4514_is_the_72_hour_must():
@@ -87,7 +87,7 @@ def test_rules_version_is_pinned():
 
 
 # --------------------------------------------------------------------------
-# RBP policy v2.0.0 — what replaced the arithmetic
+# RBP policy v2.0.0: what replaced the arithmetic
 # --------------------------------------------------------------------------
 
 def test_policy_version_is_pinned():
@@ -138,7 +138,7 @@ def test_v1_thresholds_are_recorded_as_withdrawn():
 
 
 # --------------------------------------------------------------------------
-# live — fail loudly when the canonical sources move
+# live: fail loudly when the canonical sources move
 # --------------------------------------------------------------------------
 
 def _fetch(url, binary=False):
@@ -151,7 +151,7 @@ def _fetch(url, binary=False):
 def test_live_cna_rules_still_match_the_fixture():
     d = json.loads(_fetch(RULES["origin"]))
     assert d["versionNumber"] == RULES["version"], (
-        f"CNA Rules moved to {d['versionNumber']} — re-capture the fixture and "
+        f"CNA Rules moved to {d['versionNumber']}: re-capture the fixture and "
         "re-read every section the site cites before shipping.")
     paras = [p for sec in d["pageSections"] for sub in sec.get("subSections", [])
              for p in sub.get("subSectionParagraphs", [])]
@@ -167,8 +167,8 @@ def test_live_rbp_policy_is_still_v2_and_still_thresholdless():
 
     reader = pypdf.PdfReader(io.BytesIO(_fetch(POLICY["url"], binary=True)))
     text = "\n".join(page.extract_text() or "" for page in reader.pages)
-    assert "Document Version: 2.0.0" in text, "RBP policy version changed — re-read it"
+    assert "Document Version: 2.0.0" in text, "RBP policy version changed, re-read it"
     assert "published within 72 hours" in text
     assert not re.search(r"\b\d{1,3}\s?%", text), (
-        "a numeric threshold reappeared in the RBP policy — the site's framing "
+        "a numeric threshold reappeared in the RBP policy, the site's framing "
         "needs revisiting before the next deploy")

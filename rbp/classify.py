@@ -1,7 +1,7 @@
 """
 Resolve referenced CVE IDs to their authoritative reservation state.
 
-Oracle: the CVE Services *reservation* endpoint, `/api/cve-id/{id}` — NOT
+Oracle: the CVE Services *reservation* endpoint, `/api/cve-id/{id}`, NOT
 `/api/cve/{id}`. This distinction is the whole point of this module.
 
     /api/cve/{id}      404s on reserved IDs. A reserved ID and an ID that was
@@ -19,12 +19,12 @@ So RESERVED is directly observable, and "reserved" is cleanly separable from
 "never allocated". A row we call RBP now matches the CVE Program's own
 definition verbatim: an ID in the Reserved state, referenced in public.
 
-The cvelistV5 git tree is NOT consulted. It carries no reserved stubs — the
+The cvelistV5 git tree is NOT consulted. It carries no reserved stubs, the
 26000-26999 block holds 487 files against 513 absent IDs, and the small stubs
 there are REJECTED, not RESERVED. Cloning 2.63 GB buys nothing. (PLAN.md F2.)
 
 `owning_cna` is served for PUBLISHED and REJECTED and redacted for exactly the
-RESERVED population — the one the RBP policy governs. Owner attribution for
+RESERVED population, the one the RBP policy governs. Owner attribution for
 reserved IDs is therefore inferred downstream (see attribution.py), never taken
 from this oracle.
 
@@ -51,11 +51,11 @@ CVE_RE = re.compile(r"^CVE-\d{4}-\d{4,}$")
 # Terminal: the record exists and is visible to any CVE List consumer.
 _IMMUTABLE = ("PUBLISHED", "REJECTED")
 # Terminal in the other direction: the ID was never allocated. Re-checked every
-# run anyway — an ID can be allocated later, and a downstream typo can be fixed.
+# run anyway, an ID can be allocated later, and a downstream typo can be fixed.
 _NOT_FOUND = "NOT_ALLOCATED"
 
 # The endpoint advertises `ratelimit-policy: 25000;w=60`. 24 workers measured
-# ~94 req/s, i.e. ~5,600/min — roughly 22% of the ceiling. Do not raise this
+# ~94 req/s, i.e. ~5,600/min: roughly 22% of the ceiling. Do not raise this
 # without re-reading the live header; there is no upside in going faster.
 DEFAULT_WORKERS = 24
 
@@ -66,7 +66,7 @@ def _valid(cid):
 
 def _get(cid, attempts=3):
     """One reservation lookup. Retries only on transient failure, never on a
-    decisive 404/400 — those are answers, not errors."""
+    decisive 404/400: those are answers, not errors."""
     for i in range(attempts):
         try:
             req = urllib.request.Request(CVE_ID_API + cid, headers=UA)
@@ -106,7 +106,7 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
              today=None, ttl=None):
     """Partition referenced IDs into RBP backlog vs. resolved.
 
-    `ttl` is accepted and ignored — it belonged to the old dual-oracle cache,
+    `ttl` is accepted and ignored, it belonged to the old dual-oracle cache,
     where RESERVED was expensive to re-check. It no longer is.
     """
     today = today or dt.date.today().isoformat()
@@ -155,7 +155,7 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
             tally["RESERVED"] += 1
             backlog.append(_row(cid, refs[cid], "RESERVED", attributor))
         elif st == _NOT_FOUND:
-            # Referenced downstream but never allocated. Not RBP — a data-quality
+            # Referenced downstream but never allocated. Not RBP, a data-quality
             # defect in the citing advisory. Counted, never published as RBP.
             tally[_NOT_FOUND] += 1
         else:
@@ -165,7 +165,7 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
           f"{tally['PUBLISHED']} published | {tally['REJECTED']} rejected | "
           f"{tally[_NOT_FOUND]} never allocated | {tally['ERROR']} unresolved")
     if tally["ERROR"]:
-        print(f"  WARNING: {tally['ERROR']} ids unresolved (transient) — counts are a floor")
+        print(f"  WARNING: {tally['ERROR']} ids unresolved (transient), counts are a floor")
 
     fresh_resolved = tally["PUBLISHED"] + tally["REJECTED"]
     return backlog, fresh_resolved
@@ -173,7 +173,7 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
 
 def _row(cid, e, state, attributor):
     # The product->CNA map is corroboration only; it never names a CNA on its
-    # own (85% precision as a standalone fallback — see inference.py). The
+    # own (85% precision as a standalone fallback, see inference.py). The
     # authoritative owner column is filled by block inference downstream.
     pm_owner, pm_conf, pm_method = attributor.attribute(
         e.get("product", ""), e.get("description", ""))
