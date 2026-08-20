@@ -79,6 +79,14 @@ def _derive_meta(row):
     return pkg, eco, vendor, url
 
 
+# How long an ID must be provably public before it is reportable, in days.
+# Set to 7 (2.3x the 72h expectation) rather than 3, so normal latency and short
+# coordinated-disclosure windows are excluded and every published row is hard to
+# dispute. Deliberately configurable via --min-age-days: if CNAs push back that
+# 7 days is unfair, raising it to 14 or 30 is a one-flag change and strengthens
+# the remaining rows rather than weakening the project.
+DEFAULT_MIN_AGE_DAYS = 7
+
 # Feeds that trace to a common origin: collapsed when counting *independent*
 # corroboration (OSV re-publishes GHSA; ALAS is a RHEL rebuild).
 _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redhat",
@@ -128,11 +136,11 @@ def _prev_snapshot(snap_root, today):
     return dirs[-1] if dirs else None
 
 
-def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, min_age=14, min_conf=0.7):
+def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, min_age=DEFAULT_MIN_AGE_DAYS, min_conf=0.7):
     for r in backlog:
         r["days_public"] = _age(r["public_date"], today)
 
-    # 14-day buffer: only report RBPs we can PROVE have been public >= min_age days.
+    # Buffer: only report RBPs we can PROVE have been public >= min_age days.
     # Younger-than-buffer and undated (age-unknown) entries are held back, not counted
     # against a CNA. That is what lets us say "not front-running; these are overdue."
     reportable = [r for r in backlog if isinstance(r["days_public"], int) and r["days_public"] >= min_age]
@@ -146,8 +154,8 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
     hard = [r for r in reportable if r["state"] == "RESERVED"]
     soft = []
 
-    # Single rule-anchored threshold: reportable = provably public >= min_age (14d,
-    # >3x the 72h publish window). No separate 30-day tier. Headline core = reportable
+    # Single rule-anchored threshold: reportable = provably public >= min_age, a
+    # conservative buffer past the 72h expectation. No separate tiers. Core = reportable
     # RESERVED rows corroborated by >=2 INDEPENDENT origins (OSV<-GHSA, ALAS<-RHEL collapsed).
     kpi_core = [r for r in hard if r["indep_sources"] >= 2]
 
@@ -218,7 +226,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
 
 def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolved,
               scoreboard, prev, new_ids, resolved_ids, still_ids,
-              min_age=14, n_buffer=0, n_undated=0, min_conf=0.7, below_gate=0, nameable=None,
+              min_age=DEFAULT_MIN_AGE_DAYS, n_buffer=0, n_undated=0, min_conf=0.7, below_gate=0, nameable=None,
               src_contrib=None):
     def owner_str(r):
         if nameable and nameable(r):

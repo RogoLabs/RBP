@@ -347,7 +347,8 @@ instrument, and the closures prove the open rows are real.
   one-click correction on every CNA page applied within one build cycle with a visible
   changelog; label the column *Inferred owner*, never *Assigner*; show prediction vs. truth
   side by side once revealed, including misses.
-- **R3 (high), a row is under legitimate embargo.** *Mitigate:* keep the 14-day buffer;
+- **R3 (high), a row is under legitimate embargo.** *Mitigate:* keep the buffer (7 days by
+  default, 2.3x the 72h expectation, and configurable);
   reproduce only advisory titles already public downstream, never detail; embargo-exception
   path that suppresses a row on request, with suppressions counted and disclosed in
   aggregate so the mechanism can't hide the problem.
@@ -392,6 +393,33 @@ and it makes every CNA reading the site a potential ally rather than a target. T
 leaderboard is the evidence; the redaction is the story.
 
 ---
+
+## 8a. Settled metric decisions (2026-08-20)
+
+- **Headline column is descriptive: "N days public".** Not "N days overdue" and not hours
+  past 72. The clock we can observe starts at the earliest downstream advisory we can see,
+  which is a floor on how long the ID has been public, not the rule's CNA-awareness clock.
+  A descriptive number stays true under that limitation; an "overdue" number asserts more
+  than the evidence supports. Past-72h is shown as a separate marker, not baked into the
+  number.
+- **"Out of scope" means out of compliance, loosely.** It does NOT mean the CVE Program's
+  sense of a CNA's declared assignment scope. Avoid the word "scope" in site copy
+  entirely, because it collides with that term. Declared-scope violations are a different
+  project and are noted only as possible future work.
+- **Buffer defaults to 7 days and is configurable.** 2.3x the 72h expectation. Precedence
+  is dispatch input, then the `RBP_MIN_AGE_DAYS` repository variable, then
+  `report.DEFAULT_MIN_AGE_DAYS`, so widening it under CNA pushback is a settings change
+  rather than a commit. Measured against the 716-row backlog of 2026-08-20:
+
+  | buffer | multiple of 72h | reportable |
+  |---:|---:|---:|
+  | 3d | 1.0x | 572 |
+  | **7d** | **2.3x** | **546** |
+  | 14d | 4.7x | 485 |
+  | 30d | 10.0x | 412 |
+
+  85 rows come from undated feeds and can never be reportable at any buffer, which is its
+  own honest limitation to state on `/method`.
 
 ## 9. Still open
 

@@ -16,6 +16,16 @@ on:
         description: 'Force a full 583 MB baseline rebuild'
         type: boolean
         default: false
+      min_age_days:
+        description: 'Days public before a row is reportable (blank uses the repo variable, then the code default of 7)'
+        type: string
+        default: ''
+
+env:
+  # Precedence: dispatch input, then repository variable RBP_MIN_AGE_DAYS, then
+  # the code default. So widening the buffer under CNA pushback is a settings
+  # change, not a commit.
+  MIN_AGE_DAYS: ${{ inputs.min_age_days || vars.RBP_MIN_AGE_DAYS || '' }}
 
 permissions:
   contents: write      # pushes the grader ledger to the data branch
@@ -80,9 +90,19 @@ jobs:
 
       - name: Run pipeline
         run: |
-          python -m rbp.cli run \
-            --profile "${{ inputs.profile || 'weekly' }}" \
-            ${{ inputs.force_reindex == true && '--reindex' || '' }}
+          ARGS=(--profile "${{ inputs.profile || 'weekly' }}")
+          # Explicit ifs rather than `[ -n "$X" ] && ...`: the AND-OR form does
+          # work under `bash -e` (set -e exempts non-final commands in such a
+          # list), but that is a rule worth not having to recall when reading a
+          # deploy script.
+          if [ -n "$MIN_AGE_DAYS" ]; then
+            ARGS+=(--min-age-days "$MIN_AGE_DAYS")
+          fi
+          if [ "${{ inputs.force_reindex }}" = "true" ]; then
+            ARGS+=(--reindex)
+          fi
+          echo "running: rbp.cli run ${ARGS[*]}"
+          python -m rbp.cli run "${ARGS[@]}"
 
       - name: Build site
         run: |

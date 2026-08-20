@@ -120,10 +120,12 @@ def main():
                    help="published neighbours required on EACH side, all agreeing, "
                         f"before a CNA is named (default {inference.DEFAULT_K}: measured "
                         "100%% precision at 59.8%% coverage out-of-sample)")
-    r.add_argument("--min-age-days", type=int, default=14,
-                   help="only report RBPs provably public >= this many days (default 14; "
-                        "a conservative buffer well past the 72h publish rule, so normal "
-                        "latency and short coordination windows are excluded)")
+    r.add_argument("--min-age-days", type=int, default=report.DEFAULT_MIN_AGE_DAYS,
+                   help="only report RBPs provably public >= this many days (default "
+                        f"{report.DEFAULT_MIN_AGE_DAYS}, a conservative buffer past the 72h "
+                        "expectation so normal latency and short coordination windows are "
+                        "excluded). Raise it if CNAs dispute the window; that strengthens "
+                        "the remaining rows rather than weakening the project.")
     r.add_argument("--min-confidence", type=float, default=0.7,
                    help=argparse.SUPPRESS)   # superseded by the --k block-inference gate
     r.add_argument("--cache-ttl-days", type=int, default=6,
