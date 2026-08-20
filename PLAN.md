@@ -173,6 +173,29 @@ asserting what a site says.
 
 ---
 
+## 2a. Editorial stance
+
+**The site leads with the count.** *"We are publishing the dashboard they should have
+published."*
+
+That is literally true, and it is a stronger position than criticism. The CVE Program
+shipped a quarterly RBP table in February 2021 and commented it out on 2022-02-07. This
+site resumes an abandoned Program artifact rather than attacking anyone, which keeps it
+useful rather than merely critical and makes every CNA a potential ally instead of a
+target.
+
+Design consequences, binding on phase 4:
+
+- Count above the fold, refreshed every six hours. It is the number people cite and the
+  reason to come back.
+- The `owning_cna` redaction is the immediate subhead. It explains why the count had to be
+  assembled from outside rather than read off cve.org.
+- The removed Program metric gets its own section lower down. Documented, dated, checkable.
+- **Never lead with a per-CNA leaderboard.** `/cnas` exists and is reachable, but the front
+  page is a measurement, not a ranking.
+- Visual register is instrument panel, not exposé. Inherit cve.icu's system, which already
+  reads that way.
+
 ## 3. What the site claims, precisely
 
 | claim | basis | strength |
@@ -272,6 +295,18 @@ instrument, and the closures prove the open rows are real.
   former's.** Also decided by measurement: the product→CNA map never names a CNA alone
   (85% precision as a fallback) and REJECTED records are not used as neighbours
   (too rare to matter).
+- **Phase 2.5, prove the pipeline in CI** (half a day). Three gaps found 2026-08-20 that
+  block everything downstream. The Actions cache path does not match what the code writes
+  (`data/corpus` vs `data/index`), so nothing persists between runs. Delta-zip incremental
+  corpus update is referenced by the plan and the workflow but not implemented, and
+  `download_baseline` keys freshness on the release tag, which rotates hourly, so a
+  6-hourly schedule re-pulls the same 583 MB up to four times a day. And the grader ledger
+  lives only in the cache, which is evictable, so the self-grading claim would silently
+  reset. Fix the paths, implement delta application, move the ledger and snapshots to a
+  durable `data` branch.
+  *Done when* one cold run and one warm run both complete in Actions, the warm run costs
+  ~4 MB rather than 583 MB, and `precision.json` survives across runs with a non-zero
+  graded count.
 - **Phase 3, the 72-hour clock** (1 day). Per-row hours since first public reference
   against the 72h expectation; `self_disclosed` splitting 4.5.1.4 (MUST) from 4.5.1.6
   (SHOULD); per-CNA aggregation, outstanding count, oldest, time-to-publish distribution
