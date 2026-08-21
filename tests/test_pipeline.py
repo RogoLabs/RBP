@@ -194,3 +194,58 @@ def test_no_published_artefact_carries_a_cna_rate():
     for banned in ("rate", "rate_wilson_lower", "rate_suppressed"):
         assert banned not in out, f"{banned} is still published"
     assert out["published_12mo"] == 50      # raw scale context is kept
+
+
+def test_held_back_rows_are_gated_like_every_other_artefact(backlog, corpus, tmp_path):
+    """held_back.json was written with _publishable, which strips the product map
+    but does NOT withhold an inferred owner. So the file that exists to explain
+    what the buffer withholds was publishing CNA names on rows one day old,
+    recreating the leak the previous fix had just closed."""
+    bl, fresh = backlog
+    apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
+    # min_age above every row's age, so both land in the buffer and are held
+    # back. That is the population this file exists to describe.
+    sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
+                              ["debian"], min_age=9999,
+                              rows=[])
+    held = json.load(open(pathlib.Path(sdir) / "held_back.json"))
+    assert len(held) == len(bl), "every row should be held back at this buffer"
+    for row in held:
+        assert not [k for k in row if k.startswith("product_map")]
+        # Never named, whether or not the inference succeeded. These rows failed
+        # an earlier test than the naming gate: whether the site will report them
+        # at all. Naming a CNA on a within-buffer row contradicts the buffer.
+        assert row["owner"] == "unattributed", row["cve_id"]
+        assert row["owner_nameable"] is False
+        assert row["counted"] is False
+        assert row["held_back_reason"] in ("pre-epoch", "within-buffer", "undated")
+
+
+def test_the_grader_ledger_only_records_published_rows(backlog, corpus, tmp_path):
+    """The ledger is committed to a PUBLIC branch. Recording every row put 366
+    CVE-to-CNA name pairs there, including rows the site itself withholds, which
+    was a larger exposure than any snapshot file and sat outside every
+    snapshot-scoped cleanup rule."""
+    bl, _ = backlog
+    path = tmp_path / "p.json"
+    published = {bl[0]["cve_id"]}
+    apply_to_backlog(bl, corpus, str(path), today="2026-08-20", record_for=published)
+    recorded = set(json.load(open(path))["predictions"])
+    assert recorded <= published, f"ledger recorded unpublished rows: {recorded - published}"
+
+
+def test_no_snapshot_artefact_leaks_an_ungated_owner(backlog, corpus, tmp_path):
+    """Widened from backlog.json to every file in the snapshot, because the last
+    two leaks were both in files the narrow test did not look at."""
+    bl, fresh = backlog
+    apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
+    sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
+                              ["debian"], min_age=14)
+    published = {"backlog.json", "held_back.json"}
+    for f in pathlib.Path(sdir).glob("*.json"):
+        if f.name not in published:
+            continue
+        for row in json.load(open(f)):
+            assert not [k for k in row if k.startswith("product_map")], f.name
+            if row.get("owner_nameable") is False:
+                assert row["owner"] == "unattributed", f"{f.name}:{row['cve_id']}"

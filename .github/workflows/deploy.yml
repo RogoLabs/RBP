@@ -172,8 +172,35 @@ jobs:
               fi
             done
           done
-          # Remove anything a previous run published before this rule existed.
+          # Remove anything a previous run published before these rules existed.
+          # Note that precision.json sits at the branch ROOT, so a
+          # snapshots-scoped rule never touched it: its `predictions` map had
+          # 366 CVE-to-CNA name pairs on a public branch, a larger exposure than
+          # any snapshot file. The pipeline now only records published rows, but
+          # the historical entries have to be pruned here too.
           rm -f .state/snapshots/*/backlog_full.json .state/snapshots/*/report.md
+          python - <<'PRUNE'
+          import json, os
+          # Keep the graded history: that IS the accountability record and it
+          # only ever names CNAs whose records have since published, so the
+          # assigner is authoritative rather than inferred. Prune the open
+          # predictions to the rows the current run actually publishes.
+          try:
+              pub = {r["cve_id"] for r in json.load(open("snapshots/%s/backlog.json"
+                     % sorted(os.listdir("snapshots"))[-1]))}
+          except Exception:
+              pub = None
+          path = ".state/precision.json"
+          if pub is not None and os.path.exists(path):
+              d = json.load(open(path))
+              before = len(d.get("predictions", {}))
+              d["predictions"] = {k: v for k, v in d.get("predictions", {}).items()
+                                  if k in pub}
+              if len(d["predictions"]) != before:
+                  json.dump(d, open(path, "w"), indent=1)
+                  print("pruned %d unpublished predictions from the ledger"
+                        % (before - len(d["predictions"])))
+          PRUNE
           cd .state
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

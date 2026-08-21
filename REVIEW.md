@@ -1,1113 +1,1445 @@
-# RBP Tracker: combined panel review
+# RBP Tracker: combined panel review, round 3
 
-Chair's verdict: the pipeline, the inference method and the epistemic instincts in this
-codebase are better than the site built on top of them, and nothing here is
-unrecoverable. But the project is not currently in a state where it should be shown to
-anyone, because the public surfaces misquote the rules they enforce, name at least two
-organisations for vulnerabilities that are almost certainly not theirs, and promise a
-correction mechanism that does not exist.
+**Verdict.** The measurement instinct in this codebase is sound and better than the site
+built on top of it: the buffer, the abstention tier, the three-bucket change split, the
+withdrawn-threshold reasoning and the refusal to publish a rate are all correct calls
+that most projects would not have made. But it is not launchable in its current state,
+because four rounds of review have established that the site names organisations on
+evidence it cannot check, publishes those names on a world-readable branch that no gate
+governs, promises a correction mechanism that does not exist, and would fail its own
+launch procedure on launch day.
 
-Eight reviewers sat: Python, Web Design and Layout, GitHub Actions, CNA Operator, CVE
-Program (MITRE), CISA / Government, CVE Consumer Working Group, RogoLabs Marketing.
-Where more than one discipline reached the same defect independently, that is recorded,
-because it is the strongest signal on this list.
+Eight reviewers sat: Python, Web Design and Layout, GitHub Actions, CNA Operator,
+CVE Program (MITRE), CISA / Government, CVE Consumer Working Group, RogoLabs Marketing.
+Where a defect was found independently by more than one discipline it is recorded below,
+because cross-discipline convergence was the strongest signal on the table. Roughly
+ninety findings were raised; they merge into thirty items, of which sixteen block launch.
+
+Ordering rationale for Part 1: what is already public and false about a third party
+comes first, then what the next unattended cron tick will publish, then what breaks on
+the day `RBP_LAUNCHED` is flipped, then the rest by consequence over effort.
 
 ---
 
-## Part 1: launch blockers, in the order they should be done
-
-Ordering weighs three things: is it already public, does it make a false statement about
-a named third party, and how cheap is it. Items 1 to 4 are the ones that are wrong
-*right now* on a page anyone can reach.
-
-### 1. Fix the live holding page (Marketing, MITRE, CISA, CNA, Actions)
-
-`placeholder.html` is the only page a search engine or an unfurler can reach today, it
-carries the project's most aggressive copy, and it carries none of the hedges. Four
-one-line changes, today, independent of everything else on this list.
-
-- Quote CNA Rule 4.5.1.7 in full. The site quotes sentence one and drops sentence two
-  ("Otherwise, the Secretariat SHOULD NOT publicly identify the CNA until the CVE Record
-  has been published"), which is the sentence that *mandates* the redaction the site
-  calls a choice. Verified against the project's own pinned fixture
-  `tests/fixtures/cna_rules_4-5.json`. Also stop citing the rule as the site's own
-  permission: both sentences bind the Secretariat by name and neither addresses third
-  parties, so the site cannot "satisfy" 4.5.1.7 and should not claim to.
-- Add `<meta name="robots" content="noindex, nofollow">` to `placeholder.html` (verified
-  absent) and emit `robots.txt` with `Disallow: /` from `rbp/site.py` while unlaunched.
-  The `noindex` in `templates/base.html:11` covers only the Jinja pages, and GitHub Pages
-  cannot set `X-Robots-Tag`, so today the holding page and every file under `site/data/`
-  are simply public.
-- Rewrite the h1. "Every reserved CVE the List won't show you" asserts refusal where the
-  finding is absence, and is refutable in one sentence: a reserved ID has no record to
-  show. The dashboard's own lead block already says it correctly.
-- Rewrite the removed-metric paragraph per item 9 before it is indexed anywhere.
-
-Add `og:title`, `og:description` and a 1200x630 `og:image` at the same time, or suppress
-the description entirely while unlaunched. `placeholder.html` currently has no Open Graph
-tags at all.
-
-### 2. Pull the two wrong named rows and the pages they generate (MITRE, CNA, CISA, Marketing, Python, Consumer)
-
-Six disciplines converged on the same two rows in the deployed build.
-
-- `CVE-2026-16566`, owner WPScan, description an Ansible `community.general`
-  `jenkins_credential` flaw, sources `alas,debian,redhat,ubuntu`.
-- `CVE-2026-9238`, owner Wordfence, description a QEMU 9pfs `v9fs_readdir` flaw, sources
-  `alas,debian,ubuntu`.
-
-Both are WordPress-ecosystem CNAs named on Linux distribution rows. Both have a deployed
-`/cna/<slug>.html` page whose entire content is that one row, quoting the corpus-average
-precision as though it described the row. Both carry `indep_sources: 3`, so the
-"require two independent sources" proposal on the table would not have caught either.
-
-Do three things now: pull both rows, remove `site/cna/wpscan.html` and
-`site/cna/wordfence.html`, and land the one gate that catches them mechanically today.
-That gate is the **product-map contradiction gate**: withhold the name when
-`product_map_owner` is non-null, at confidence >= 0.85, and disagrees with the block
-inference owner. Measured on the current snapshot it fires on 11 of 282 named rows
-(GitHub_M/redhat 7, zdi/redhat 1, GitHub_M/Google 1, plus the two exemplars), costs 3.9%
-of naming coverage, and includes exactly one MUST row. Both bad rows carry a firing
-verdict already (`ansible -> redhat` at 0.85, `qemu -> redhat` at 0.9).
-
-Also delete the false absolute from `templates/method.html:30-34`: "a typo in a downstream
-advisory cannot inflate the count". `CVE_ID_NOT_FOUND` screens only IDs that were never
-allocated; a mistyped ID landing on an allocated-but-reserved neighbour passes every check.
-
-### 3. Stop making promises the code cannot keep, and build the accountability surface (CNA, MITRE, CISA, Python, Marketing, Design, Consumer)
-
-Seven findings, one root cause. `templates/cna.html:26-32` promises that a wrong or
-embargoed row "will be corrected or suppressed on the next build, with the correction
-visible" and that "suppressions are counted publicly in aggregate". `grep -rni suppress`
-over `rbp/` returns only `rate_suppressed` and two `argparse.SUPPRESS`. There is no
-suppression list, no override file, no counter, no private contact route anywhere in
-`templates/` or `placeholder.html`, and `owner` is recomputed by block inference on every
-run (`rbp/cli.py:91`), so a hand correction cannot persist even in principle.
-
-Worse, the only channel offered is a public GitHub issue, so a CNA holding an embargoed
-row must disclose the embargo publicly in order to get it delisted. That is a harm the
-site creates, not merely a promise it has not kept.
-
-Today, before anything else ships:
-
-- Cut the promise paragraph from `templates/cna.html`.
-- Gate the per-CNA pages and `data/cna/<slug>.json` on `RBP_LAUNCHED` in
-  `rbp/site.py:241-251`, not just the front door. `rbp/report.py:363-364` already states
-  the project's own rule that named CNAs get a private preview before any row naming them
-  circulates, and the six-hourly public deploy breaks it on every run.
-
-Before any CNA is notified:
-
-- `data/overrides.json` on `main` (not the machine-written `data` branch), with **three**
-  record types, not two: `SUPPRESS` (row removed everywhere, reason code recorded),
-  `CORRECT` (owner pinned, marked CNA-supplied), and `DENY` (name withheld, row retained
-  and counted as unattributed, `owner_method: cna-denied`). `DENY` is the record a
-  wrongly-named CNA actually needs and every design on the table omitted it: without it
-  the only options are to defame a third party or to help the site hide a real RBP.
-- Apply suppressions **once in `rbp/cli.py`** before `report.build`, and owner overrides
-  after `apply_to_backlog` and before `clock.annotate`. Also apply before `ledger.track`
-  and `grader.record`, or a suppressed row keeps moving the accountability numbers.
-- Publish the three counts and a reason-code breakdown on `/method` and `/cves` from the
-  first build that has any, not later.
-- Add a private intake route (GitHub private vulnerability reporting or a security
-  address) and name it on `/cna` as *the* embargo channel. Add a Root and Secretariat
-  route as well: under the policy the Root, not the CNA, is the party who can act.
-- Add an About page linked in the nav, stating the author's name, the cve.icu and
-  cnascorecard.org relationship, the day-job affiliation, and that no commercial product
-  consumes this data. Verified today: zero hits for a byline, affiliation, mailto or About
-  route anywhere. The blast radius of a wrong name is cve.icu's neutrality, and an
-  undisclosed portfolio overlap is a story rather than a footnote.
-- Test that a suppressed ID is absent from `backlog.json`, `backlog.csv`, `rbp.json`,
-  `rbp.csv`, every `data/cna/*.json`, `resolutions.json['open']` and
-  `precision.json['predictions']`, and present only in the aggregate.
-
-### 4. Stop the exports naming CNAs the site withholds, and stop pushing the ungated set (Python, Consumer, CISA)
-
-`rbp/report.py:174-178` `_gated` returns `{**r, "owner": "unattributed", ...}` and
-overwrites only four keys, so `product_map_owner`, `product_map_confidence` and
-`product_map_method` survive into `backlog.json` and from there into `data/rbp.json` and
-every `data/cna/<slug>.json`. Measured: 112 of 553 published rows carry an 85%-precision
-CNA name on a row the site renders as unattributed (GitHub_M 63, redhat 41, drupal 3,
-suse 2, plus four singletons), and `data/cna/github-m.json` carries rows where block
-inference says GitHub_M and the product map says redhat in the same object with no
-precedence field. `templates/method.html:160-165` says that map "can promote a named row
-to corroborated but never create a name".
-
-- Strip the three `product_map_*` keys inside `_gated`, on both branches. Publish only a
-  boolean `owner_contested` if the signal is wanted publicly.
-- Stop pushing `backlog_full.json` and `report.md` to the public `data` branch
-  (`.github/workflows/deploy.yml:132-142`). `backlog_full.json` carries 724 rows including
-  170 inside the buffer or undated, 85 of them named. `report.md` opens "Internal /
-  pre-preview. Do not forward." on a world-readable branch, and still describes the owner
-  column with a confidence gate that `/method` contradicts (`rbp/report.py:311`).
-- Test that no published artefact contains any key matching `product_map*`, and that no
-  row has a non-null owner absent from `cnas.json`.
-
-### 5. One population, computed once, asserted once (Python, CNA, CISA, Consumer, Actions, Design, Marketing)
-
-The single highest-consensus defect class on the board, found independently by six
-reviewers, and the codebase already documents two prior instances of it in comments
-(`rbp/clock.py:139-142`, `rbp/clock.py:154-157`, plus the commit "fix: the MUST/SHOULD
-split was inert in production").
-
-Verified ordering: `rbp/cli.py:119` calls `report.build(backlog, ...)`, which derives its
-own `reportable` (`rbp/report.py:142`) and writes `backlog.csv` and `backlog.json`
-(`rbp/report.py:186-191`); only afterwards, at `rbp/cli.py:130`, does `clock.split_epoch`
-run, feeding `cnas.json` and `summary.json` alone; `rbp/site.py:74` reads `backlog.json`.
-Simulated with an epoch of 2026-08-01 on the live snapshot: front page 78, `/cves` table
-553 rows with its own counter reading "553 of 553", per-CNA cards reading "9 Outstanding"
-above 236 rows, and CNAs dropping out of `cnas.json` entirely while `/cves` still links to
-their now-nonexistent pages.
-
-The fix is structural, not a patch:
-
-- `rbp/cli.py` computes the published population once (buffer, then epoch, then
-  suppressions) and **passes rows in**. `report.build` takes a `rows` argument and filters
-  nothing. Add a structural test asserting `report.build` applies no filter of its own.
-- Write the excluded rows with a reason rather than dropping them: `counted: false` plus
-  `held_back_reason` in `("pre-epoch", "within-buffer", "undated")` in a separate
-  `held_back.json` in the snapshot, and publish the held-back count *and the oldest
-  held-back age* beside the headline. An epoch that removes the oldest and strongest
-  evidence must read as deliberate conservatism, not be discovered as a discrepancy.
-- Emit `epoch` and `epoch_excluded` into the published envelope.
-- Cross-stage regression test: `len(json.load(backlog.json)) == summary["total"]`, every
-  per-CNA page's row count equals its `outstanding`, and every owner link resolves.
-
-Three things travel with this, because they are the same launch-day mechanism:
-
-- **Validate `RBP_EPOCH`.** `rbp/clock.py:69` reads a raw string and `:80` compares it
-  lexicographically. Verified: `'2026-12-31' < '2026-8-20'` is `True`, so a single missing
-  zero in a hand-typed repository variable classifies every row as pre-epoch, reports 0,
-  and exits 0. Validate with `dt.date.fromisoformat` at import, and make "a non-empty
-  epoch that excludes 100% of reportable rows" a hard error. Do the same for
-  `RBP_LAUNCHED` (`rbp/site.py:43` silently accepts only `1|true|yes`).
-- **Decide the launch-day semantics deliberately.** Verified: the newest `public_date` in
-  the reportable set is exactly `min_age_days` before the snapshot date, so an epoch set to
-  launch day yields **zero** counted rows for the first seven days, `index.html:23`
-  collapses the whole dashboard to a one-line empty state, and `og:description` reads
-  "0 CVE IDs are reserved, publicly referenced, and unpublished". Counts at candidate
-  epochs on live data: launch day 0, 2026-08-13 gives 38, 2026-08-01 gives 78, 2026-07-01
-  gives 338, 2026-01-01 gives 543. Either set the epoch well back and disclose the cutoff
-  on the lead screen, or keep a launch-day epoch and make the lead metric "new since
-  launch" with the pre-epoch backlog published as a named, separately counted archive so
-  the 519-day row still has a home. Never inherit the zero. Give
-  `{% if summary.total %}` a real empty state either way.
-- **The epoch is keyed on a mutable field.** `public_date` is a min-across-feeds scalar
-  that gets revised *backwards* between runs (two rows measured moving 2026-08-05 to
-  2026-08-04 at the same URL under the same date label, with no revision marker and no
-  `public_date_source`). Verified against HEAD: that revision flips a row from counted to
-  held-back across an epoch boundary with no publication event, which after the fix above
-  renders as "Published, and therefore resolved". Record the epoch decision per ID once in
-  the ledger, or key it on first-seen, and surface a `revised_public_date` flag.
-
-### 6. Make the site fail loudly instead of publishing a hollow page (Python, Actions)
-
-`rbp/site.py:60-64` `_read` swallows every artefact parse error and returns a default.
-Reproduced by execution: with a truncated `backlog.json` beside a good `summary.json`,
-`site.build` prints "site: 7 pages + 9 CNA pages", exits 0, and publishes a front page
-reading 553 above an empty table, `data/rbp.json` containing `[]`, `data/rbp.csv`
-containing only a header, and nine per-CNA pages each asserting outstanding rows above a
-table of none. Because the step exits 0 the artifact uploads, the deploy runs, and the
-truncated snapshot is committed as the next run's `/changes` baseline. Every writer in the
-pipeline is a bare non-atomic `json.dump`, so one interrupted write produces exactly this.
-
-- Read `backlog.json`, `summary.json` and `cnas.json` strictly (raise `SystemExit` naming
-  the file). Keep the swallow only for the two ledgers, where genuine absence is a valid
-  first-run state.
-- Assert the cross-stage invariant in one place and **raise**: `len(rows) ==
-  summary["total"]`, `sum(c["outstanding"]) == named row count`, every owner either
-  `unattributed` or present in `cnas.json`. This one assertion also catches item 5 and the
-  two-copies divergence, so it is one guard covering three blockers.
-- Write every ledger and snapshot artefact atomically (`path.tmp`, `fsync`, `os.replace`)
-  in `rbp/inference.py:261`, `rbp/clock.py:281`, `rbp/classify.py:144`,
-  `rbp/report.py:190-191`, `rbp/site.py:188-197`. On a parse failure of a **non-empty**
-  ledger, rename to `.corrupt` and raise instead of starting empty. Note that
-  `tests/test_clock.py:245-249` currently pins the silent-reset behaviour as desirable, so
-  deleting that test is part of the change.
-- Add the workflow guard: capture `len(graded)` and `len(resolved)` at seed time and fail
-  the run if either decreased before `git add`. `deploy.yml:87-101` currently prints "no
-  grader ledger yet, starting fresh" and continues on exit 0, and `deploy.yml:134-136`
-  masks its copies with `2>/dev/null || true`, so the accountability record can be zeroed
-  by a green run in two independent ways.
-
-### 7. "Resolved, the record published" must be verified, and it must not be one bucket (all eight disciplines)
-
-The highest-consensus correctness defect on the board. `rbp/site.py:131-137` computes
-`resolved = before - now` over CVE ID sets from two `backlog.json` files with no corpus
-check, and `templates/index.html:146` and `templates/changes.html:21` label it
-"Published, and therefore resolved" / "Resolved, the record published", with the raw ID
-list printed at `changes.html:41`. `clock.ResolutionLedger.reconcile` already computes the
-honest answer and its return value is discarded after a print at `rbp/cli.py:97`.
-
-A row leaves the set for at least six reasons other than publication: a transient oracle
-error, a failed or truncated feed, a **feed profile change** (`deploy.yml:109` defaults to
-`weekly`, which `rbp/cli.py:22-25` excludes `csaf` and `msrc` from, so one `deep` dispatch
-followed by the next cron reports every CSAF-only and MSRC-only row as published), a
-raised `--min-age-days`, a `public_date` revision, and an ID that was **REJECTED**.
-
-- Three rendered buckets with three labels, never merged: `published` (verified PUBLISHED
-  in the corpus, from the ledger), `rejected` (state REJECTED, per rule 4.5.3.5), and
-  `no longer listed` (unverified: feed, profile or API change). The word "published" never
-  appears on the last two.
-- Write the reconciled closures into the committed snapshot as `resolved.json` so any
-  interval is recomputable from artefacts, not from whatever the mutable ledger happens to
-  hold at render time. Export it; today `data/resolutions.json` is computed, persisted, and
-  then withheld from consumers while the unverified number is rendered as fact.
-- **Prerequisite:** fix the ledger's population first. `rbp/cli.py:98` calls
-  `ledger.track(backlog)` on the full backlog before the buffer filter and the epoch split.
-  Measured: the ledger holds 724 open IDs against 553 published rows; 171 tracked IDs were
-  never listed, 84 of them rows `rbp/clock.py:29-30` calls "never reportable at any
-  buffer". Sourcing `/changes` from `reconcile` today would close 171 rows nobody ever
-  counted. Move `track` after the buffer and epoch, and assert
-  `len(ledger.state["open"]) == summary["total"]` immediately after.
-- Stop summing REJECTED into `fresh_resolved` (`rbp/classify.py:169`) and remove
-  "self-healed" from `rbp/report.py:287`. Under 4.5.3.5 rejection is lawful and is the
-  likely outcome for the oldest rows, and it is *worse* for defenders than an open RBP.
-- Record the feed profile, the buffer, the feed health and the unresolved-lookup count in
-  every snapshot, and refuse to diff two snapshots that disagree on any of them. Show
-  "not comparable" instead.
-- Ownership transfer is the policy's own remedy (4.5.1.4, 4.5.1.5) and will contaminate
-  both surfaces. `reconcile` sets `owner` to the *post-transfer* assigner
-  (`rbp/clock.py:262`) and `rbp/site.py:249` credits the resolution to that CNA's page and
-  median-time-to-publish card. Keep `predicted_owner` and `published_assigner` as separate
-  fields, key `cna_resolved` on the tracked owner, render a differing pair as "published
-  by X, transferred", and give the Grader a third outcome bucket so a transfer is never
-  reported as an inference miss. Land this before the first resolution closes.
-
-### 8. The MUST claim: one CNA, one feed, one aggregator, no token (all eight disciplines)
-
-Five findings on concentration, three on the feed, one on the aggregator. Measured on the
-snapshot: `must_rows` is 210 to 241 and **every one is GitHub_M**; all 241 carry `ghsa` in
-sources and zero survive without it; 194 to 197 of them are `ghsa` plus its own OSV mirror,
-so `indep_sources` is 1. `rbp/clock.OWNER_FEEDS` has four entries and three of their feeds
-are not fetched on the scheduled `weekly` profile, so `self_disclosed` is structurally
-incapable of returning True for anyone but GitHub_M.
-
-Three separate problems, one work item:
-
-- **The evidence does not mean what the code assumes.** `api.github.com/advisories`
-  carries no assigner field at all, so `ghsa in sources` cannot distinguish "GitHub_M
-  assigned and disclosed this" from "another CNA's advisory is in GitHub's database". The
-  site's own export proves it in both directions: four `apple/swift-nio` repository
-  advisories arrive through `ghsa` and are scored SHOULD, which is Apple's own channel
-  read as a third party's, and simultaneously proves `ghsa` cannot corroborate GitHub_M.
-  This is exactly the reasoning `rbp/clock.py:114-119` applies one level down to exclude
-  OSV. Retain `source_code_location` and `repository_advisory_url` in `feed_ghsa`
-  (`rbp/feeds.py:296-304` discards them) and emit the source as `ghsa:<org>`.
-- **The feed is unauthenticated and silently windowed.** `grep -rn 'secrets\.'
-  .github/workflows/` returns nothing (verified), so up to 45 anonymous
-  `api.github.com` calls per run run against a 60/hour shared-IP budget, and
-  `cvelist._releases` (`rbp/cvelist.py:29-42`) builds its own request with no token lookup,
-  no retry and no hardened opener, propagating a 403 straight through `ensure_corpus` to
-  kill the whole run before any feed is read. Meanwhile `ghsa`'s oldest returned row is
-  2026-05-29 against a two-year scan window, which is exactly `page_cap=40 x per_page=100`
-  at GHSA's publish rate: an 83-day rolling window, with no cap detection at all
-  (`for _ in range(page_cap)` just ends). Rows age out of `ghsa` while staying in the
-  backlog and silently downgrade from candidate MUST to SHOULD at roughly five a day, for
-  reasons that have nothing to do with any CNA. Add `env: GITHUB_TOKEN: ${{
-  secrets.GITHUB_TOKEN }}` to the pipeline step, plumb it into `cvelist` and
-  `_gh_headers`, make a missing token *raise* so `gather` records a failure, record
-  `ghsa`'s oldest returned advisory date in `summary.json` and treat "oldest date moved
-  forward" as truncation, then raise `page_cap` to cover the window.
-- **Stop presenting it as an ecosystem measurement.** Take `must_rows` off the front-page
-  metric grid (`templates/index.html:31-37`) until more than one CNA is eligible, and
-  remove the duplicate `210` tile at `index.html:95`. Replace the "6 CNAs with at least one
-  row named" card with the top-owner share, which is the only breadth signal on the lead
-  screen and currently implies the opposite of the truth. Split `OWNER_FEEDS` on
-  `/method` into "configured" and "fetched this run". Add an "own feed ingested" yes/no
-  column to `/cnas` and to `cnas.json`, and render the per-CNA MUST card as "not measured,
-  own feed not ingested" rather than `0` (today `/cna/microsoft.html` shows a measured-
-  looking zero for a test that could not fire). Key `_ORIGIN` and self-disclosure on the
-  CSAF publisher, which is already retained in `refs` as `csaf:<publisher>:<id>` and is not
-  discarded as three findings claimed, excluding aggregator republications.
-
-Also fix the MUST clock itself: `rbp/feeds.py:751-752` collapses every source to the
-minimum date and discards per-source dates, and `self_disclosed` is pure set membership
-with no ordering test, so on 18 of 210 MUST rows the site measures a 4.5.1.4 clock from a
-third party's advisory when the ordering is checkable from data the pipeline already
-fetched and threw away. Retain `dates: {source: date}`, claim MUST only where the owner's
-own feed date is earliest, and add the regression test.
-
-### 9. The citation pass: quote what you cite, whole (MITRE, CISA, CNA, Marketing, Consumer)
-
-Four separate instances of the same pattern were found: the site quotes the duties in a
-document and omits the allowances in the same paragraph. A reader who checks three
-citations and finds all three cropped in the site's favour stops evaluating the data. All
-of these are copy changes in `templates/policy.html`, `templates/index.html`,
-`templates/method.html`, `templates/cves.html` and `placeholder.html`.
-
-- **4.5.1.7 in full**, and not as the site's own permission. See item 1.
-- **Enforcement.** Delete "There is no condition that triggers anything by itself": it is
-  false on the document's face. Quote the mandatory step ("The TL-Root or Root **will**
-  notify the CNA of affected CVE ID(s) and the required remediation timeline"), the MUST
-  ("CNAs MUST prioritize requests from their TL-Root or Root to publish CVE Records for
-  RBPs identified as critical") and the ladder ("up to and including CNA
-  decertification"), then make the claim that survives contact: the process exists and is
-  entirely unobservable from outside, so nobody can tell whether it ran.
-- **Timely Publication in full.** Three mitigating clauses appear nowhere on the site and
-  are the first thing a CNA will quote back: publication "may, at times, coincide with
-  ongoing vulnerability or incident response activities"; "internal processes may
-  necessitate short delays"; and the remediation timeline "may account for factors such as
-  volume, complexity, and resource constraints". Answer them in the same breath with the
-  buffer, the median (42 to 45 days) and the age distribution, which is the strongest
-  response available and is already computed.
-- **The removed metric.** Drop "the public face of that channel has been switched off for
-  four and a half years" and the concealment framing. The documented sequence, in the repo
-  the site already links, is: cve-website issue #835 (2022-01-25) removes the v1.0 PDF "Per
-  the Program Lead ... It will be replaced with a new version of the document at a later
-  date"; issue #842 comments out the RBP table thirteen days later as item 2 of a
-  three-item quarterly-to-annual restructuring; the block survives commented in
-  `Metrics.vue` with its nav anchors intact and its final quarter already `N/A`; and the
-  RBP glossary entry is still live on cve.org today. Also correct "about a year in public":
-  cve.org did not launch publicly until 2021-09-29, so the table's public life was about
-  four months. Cite the issues by number, pin them in `tests/test_policy.py`, and make the
-  conclusion an ask: restore the series now that v2.0.0 is in force.
-- **"Program metrics and audits".** Delete the implied broken commitment. That bullet is
-  an internal identification channel for TL-Roots, Roots and the Secretariat, not a
-  publication promise, and construing it as one is the weakest inference on the site.
-- **"This site publishes what that table would show".** Delete it. The archived series is a
-  quarterly *flow* of newly identified RBPs (4,326 in Q1 2017 down to 350 in Q3 2021)
-  measured with authoritative internal access; the headline is a live *stock* discovered
-  from feeds reaching a minority of CNAs with roughly half the owners inferred. Reproduce
-  the archived table with its source link and state the non-comparability, then ask for the
-  Program's series back rather than claiming to have replaced it.
-- **"Masked on exactly the population the policy governs".** Retire it. The redaction
-  covers roughly 55,000 reserved 2026 IDs by the Program's own published figure, over 99%
-  of which are not RBP and none of which the endpoint can distinguish. Replace with the
-  mechanism plus the grantable ask: unblind `owning_cna` only for reserved IDs already
-  publicly referenced for more than 24 hours. Say out loud that the site's own block
-  inference is the reason a blanket unblinding would be unsafe, because exposed block
-  boundaries make pre-disclosure ownership derivable. That reframes the project from
-  accuser to the party that found both the gap and the safe way to close it.
-- **"Every row listed is already past the 72-hour publication expectation"** (front page
-  and `/cves`) contradicts `/method`, `rbp/clock.py:24-28` and `rbp/report.py:360-361` on
-  the same site. Restate as the observation: publicly referenced for at least N days, more
-  than twice the 72-hour window, measured from the earliest advisory this site can see.
-  Then anchor the normative weight on the policy's own sentence, which appears nowhere on
-  the site and measures from public disclosure exactly as `days_public` does: "The CVE
-  Program does not condone any unnecessary, intentional, or routine delay between Public
-  Disclosure of vulnerability information (e.g., advisory or Fix) and CVE Record
-  publication."
-- **RBP is a state, not a violation.** The policy defines an RBP as a pure state and
-  separately conditions its notification steps on "an RBP ... in violation of Program
-  Rules 4.5.1.4 or 4.5.1.6 exceeding the 72 hours", assigning that determination to Roots,
-  TL-Roots and the Secretariat. The site's headline count is definitionally identical to
-  the Program's own published glossary term, which makes it undisputable; converting it to
-  a violation count makes all 553 rows contestable on three grounds the site cannot rebut.
-  Make the headline a state count, quote the definition and link the live glossary entry,
-  and confine violation language to a separate, smaller, explicitly candidate figure.
-- **The buffer does not absorb coordinated disclosure.** Replace the justification in
-  `index.html:24-29` and `method.html:44-50`. The RBP signature and the multi-party embargo
-  signature are identical from outside, the live median is 42 to 45 days, and no buffer
-  length distinguishes them. Say so, add a paragraph to the `/cna` caveat block stating
-  that a listed row may be under a legitimate hold and that the site cannot tell, and name
-  the private route. Consider a distinct row state, "held pending coordinated disclosure,
-  asserted by the CNA", counted separately: the panel's single best idea, because it is the
-  only proposal that turns the site into a mechanism a CNA can participate in.
-- **Delete "roughly half of them get fixed"** from `templates/changes.html:32-33`. It is
-  literal prose, it renders on the second run, `data/resolutions.json` holds
-  `resolved: 0`, and the front page has already been de-numbered so the two pages now
-  contradict each other. Either drop the figure or compute it from the ledger with its n,
-  suppressed below a stated floor.
-- **Advisory titles are not titles.** `templates/data.html:55-59` claims "Advisory titles
-  are reproduced verbatim" and "No vulnerability detail beyond those titles appears
-  anywhere on this site". The rendered field is `e["description"][:180]`
-  (`rbp/classify.py:188`), often a body rather than a title, 60 rows are hard-truncated
-  mid-token, and the content includes exploit-mechanism prose for IDs with no published
-  record. Restrict the column to a genuine title or the package name, or restate the claim
-  exactly, and rename the column header, which currently repeats the false statement over
-  the data. This is a prerequisite for item 10.
-
-### 10. Submit the list through the channel the policy names, then say you did (MITRE, CISA, Marketing)
-
-RBP Policy v2.0.0's RBP Tracking section names "Monitoring public sources for disclosed
-CVE IDs" and "Reports from vendors, researchers, CNAs, or the public" as sanctioned
-identification routes. The site is precisely those two things at scale and says so
-nowhere; there is no Secretariat or Root contact anywhere in `templates/` and no statement
-that the list has ever been submitted.
-
-The first question at a Board meeting is "did you send us the list?". If the answer is no,
-the framing collapses from "the Program is not publishing this" to "an outside party
-published accusations without using the reporting channel the policy provides". Submit the
-current list to the Secretariat and to the Roots covering the named CNAs, in writing, with
-a stated response window, before launch. Then quote the two bullets on `/method` and
-`/policy`, state when it was submitted and what happened, and keep that paragraph updated.
-This is the cheapest and highest-leverage change on the board.
-
-Write the adversarial-use statement in the same pass, after item 9's description fix.
-`grep -rni "attacker|exploit|adversar|misuse|harm"` over `templates/` and
-`placeholder.html` returns zero. Five points, headed with the question: every row is
-already public and linked; nothing is derived from non-public information; the inference
-uses only the public CVE List and is reproducible without this site; the population is an
-absence of records, not a presence of exploit detail; the intended use is that a defender
-whose tooling is CVE-driven can see what it is missing. Then state the residual risk you
-do accept and its bound.
-
-### 11. Precision: measure the problem you actually solve, and gate on the cell (CISA, CNA, Python, Design, Consumer, Marketing)
-
-Seven findings, and the panel resolved a genuine disagreement here by measurement, so this
-supersedes the individual proposals.
-
-Three defects compound. `validate_loo` masks exactly one published ID
-(`rbp/inference.py:143-144`) while production faces a run of unpublished IDs, so the
-99.38% headline measures a strictly easier problem: run-masked, precision falls to roughly
-94.7% at m=29 and 84.5% at m=78, and the live bracketing gap has median 4 to 5, mean 12.8,
-p90 44, max 86. The aggregate hides strata below the project's own 97% kill floor: WPScan
-81.1% (n=95), Wordfence 87.3% (n=228), redhat 94.1%, VulDB 96.1%. And 282 named rows rest
-on only **167 distinct block judgments**, with one judgment carrying 29 consecutive rows,
-while `Grader.summary` divides by row count.
-
-The decisive measurement: the two proposed gates are anti-correlated. A flat `gap <= 10`
-gate drops 30 to 31 mitre rows measured at 97.7 to 99.8% and keeps 23 GitHub_M rows in the
-11-30 band measured at roughly 90.7%; a flat per-CNA floor does the reverse. Neither alone
-cleans the site and one of them deletes its most accurate attributions. Precision is a
-joint function of predicted CNA and gap width and does not separate.
-
-- Change `validate_loo` to mask a contiguous run drawn from the observed live gap
-  distribution, and publish that figure as the method's precision, with its method string
-  changed so no consumer keeps citing the old number under the old name.
-- Compute a (predicted CNA, gap-width band) precision table every build, store it in
-  `summary.inference`, and abstain on any cell below the 97% floor. Disclose the withheld
-  count by reason.
-- Store the block signature `(year, left tuple, right tuple)` with each prediction, report
-  distinct-block n beside row n everywhere precision appears, and grade one verdict per
-  block. Any minimum-n floor must be a floor on distinct blocks, or a single judgment
-  clears it: the first mitre block to resolve would take the grader from n=1 to n=30 on one
-  judgment.
-- Apply the project's own `MIN_DENOMINATOR` discipline to its own claim. `rbp/site.py:86-88`
-  has no minimum n and `pct` renders two decimals, so the first graded case publishes
-  "100.00%" or "0.00%" in a headline tile and on every `/cna` page. Below the floor, remove
-  the tile (a metric card containing an em dash reads as a broken widget) and render one
-  sentence at body size. Put the floor in `Grader.summary()` so both consumers inherit it,
-  and delete `site.load`'s independent recomputation, which can legitimately disagree with
-  `summary.json`.
-- On `/cna`, render that CNA's own cell figures with their n and interval, never the corpus
-  average. Publish per-row gap width and per-CNA precision in `cnas.json` and every
-  `data/cna/<slug>.json` so a consumer can apply its own threshold.
-- Require more than one inferred row before a standalone `/cna` page exists at all. A page
-  whose entire content is one inferred row cannot survive one wrong inference, and we now
-  know two such pages existed and both rows were wrong.
-- Add the corpus-derived ecosystem gate as the second plausibility check: withhold when the
-  sources' ecosystems are disjoint from the ecosystems the inferred CNA has published in,
-  computed from corpus assigner-by-ecosystem counts. Note that the existing `ecosystem`
-  field cannot be used for this: it is an OSV package-ecosystem label and is empty on
-  exactly the distro rows that need it.
-
-### 12. Feed health must have three states, and a bad run must be visible (Python, Actions, MITRE, Consumer, CISA)
-
-Five reviewers, one defect. `feeds.gather` records `record_feed(s, True, f"{len(rows)} ids")`
-for any adapter that returns without raising (`rbp/feeds.py:742`), and nine internal paths
-break, cap or skip and return partial results (`feeds.py:241, 263, 295, 327, 354, 435, 447,
-574, 599`). `templates/method.html:196-201` then renders "All N feed fetches succeeded. A
-feed that fails is reported here rather than simply yielding fewer rows", which is false on
-every run today because the Ubuntu 200-page cap fires every run. The `gather` docstring
-asserts the invariant the code breaks, verbatim. `feed_osv` already does it correctly
-(`feeds.py:377, 383, 415`), so this is a consistency fix, not new machinery.
-
-- Change `record_feed(name, status, detail)` to three states (ok, truncated, failed) and
-  call it from every cap and break path. Truncation must fire on loop exhaustion, not only
-  on an exception, because `feed_ghsa` has no cap-detection path at all.
-- Fix the unit before adding numbers. Verified: `summary.feeds.attempts` is 20 for 10 feeds
-  (19 for 9) because OSV records per ecosystem *and* `gather` records again for `osv`, so
-  "All 20 feed fetches succeeded" describes a unit that does not exist, and any consumer
-  health check of the form `failures == [] and attempts == len(requested)` is broken on
-  arrival. Emit a structured per-feed block `{name: {ok, rows, truncated, detail}}`; three
-  other proposed fixes depend on that input, which does not exist today. Reset the
-  `FEED_HEALTH` module global at the top of `gather`.
-- Add the circuit breaker PLAN phase 1 promised. `rbp/classify.py:161-168` tallies ERROR,
-  prints a warning, and returns only `(backlog, fresh_resolved)`, so an oracle brownout
-  silently shrinks the headline and those rows are then reported as resolved. Return the
-  tally, put `unresolved` in `summary.json` and the envelope, and abort **before**
-  `report.build` writes the snapshot when unresolved exceeds ~2% of `len(unknown)` (not of
-  `refs`) or ~25 absolute. A breaker that trips after the snapshot is on disk is worse than
-  none, because the date-keyed directory means it poisons the day's baseline.
-- Add the R4 rolling-median guard as a named `run:` step that reads `summary.json` and
-  exits non-zero, keyed on the feed profile, and apply it to `must_rows` as well as to
-  per-feed counts.
-- Move the degraded banner into `templates/base.html` so it renders on every page. A health
-  disclosure that lives only on `/method` is invisible to a reader who arrived on `/` from
-  a shared link, and to a CNA who arrived on `/cna/<slug>` from an email.
-- Add jitter to the retry backoff (`classify.py:81-88` sleeps `2 ** i` across 24 workers;
-  `feeds.py:170` has the same lockstep inside three nested pools), read `retry-after`, and
-  count a rate-limit refusal separately from a network error.
-
-### 13. Nothing may claim a cadence it cannot verify (Actions, CISA, Consumer, MITRE, CNA)
-
-`templates/base.html:7` and `templates/data.html:8` assert "Updated every six hours" as
-static copy. `grep` finds no staleness, `generated_at` or `age_hours` logic anywhere, and
-`.github/workflows/deploy.yml` has no `if: failure()` step, no notification and no
-`timeout-minutes`. Two silent-stop paths exist (GitHub disables scheduled workflows after
-60 days of repository inactivity; cron is best-effort), and neither produces a failure to
-condition on. Note that `.stale-banner` already exists in `static/css/rbp.css:169-176` and
-is referenced by nothing, so this is a wiring job.
-
-- Emit an ISO-8601 UTC `generated_at` into `summary.json` and the envelope. Its only time
-  field today is a day-granularity `date` for a pipeline that runs four times a day, so
-  even an external monitor cannot detect a stall shorter than 24 hours.
-- Compute freshness at render time, banner past 12h, hard-warn past 24h, and make the
-  six-hourly sentence conditional on it.
-- Add a notification step with `if: always()` and an explicit conclusion check, because
-  `concurrency: group: pages` with `cancel-in-progress: false` reports a skipped tick as
-  `cancelled`, which `failure()` does not catch. Add the external check against the
-  published timestamp, since a workflow that stops running emits no signal at all.
-- Set `timeout-minutes: 45` on build and `10` on deploy (measured wall times are 6.9 to
-  14.9 minutes against a 360-minute default). Do **not** set `cancel-in-progress: true`;
-  it creates a corruption window on the in-place parquet write and can cancel an in-flight
-  `deploy-pages`.
-- Give `_stream_zip` a wall-clock deadline checked per chunk, and replace
-  `urllib.request.urlretrieve` in `rbp/cvelist.py:108` (which accepts no timeout at all,
-  on the 583 MB cold path) with a streamed download through the hardened opener.
-- Move `upload-pages-artifact` ahead of the persist step, and give persist a
-  `git fetch origin data && git rebase && git push` retry. Keep persist gated on success;
-  `if: always()` would commit a half-written ledger over the good one. Better still, split
-  into build, deploy, persist jobs so state only advances after publication succeeds.
-
-### 14. Publish the coverage bound, and enforce the gate in code (CNA, MITRE, CISA, Consumer, Marketing)
-
-Four reviewers found the same omission: `rbp/cli.py:116` computes coverage on every run,
-prints it to a build log, and it reaches `summary.json` nowhere and no template. The
-launch gate itself is enforced by nothing: `RBP_LAUNCHED` is a bare truthiness test at
-`rbp/site.py:43` with no coverage precondition anywhere in the code or the workflow, and
-the variable does not exist yet, so the gate is currently one uncontested settings edit.
-
-- Write `cov` into `summary.json` and the `rbp.json` envelope, and render "feeds currently
-  reach N of M CNAs" as one data-driven sentence directly beneath the lead count, not only
-  on `/method`. Publish `observed_pct` as the honest floor. Track it over time so a count
-  delta can be normalised against a coverage delta; today every count change is
-  uninterpretable.
-- Make `rbp/site.py` refuse `LAUNCHED` below the gate unless an explicit override variable
-  is set, and add a workflow step that reads `summary.json` and exits non-zero if
-  `RBP_LAUNCHED` is truthy while coverage is under gate, so the gate produces a red check
-  rather than depending on memory.
-- Fix the denominator. `coverage.compute` derives its universe from corpus assigners
-  (verified: 434 for the 2024-2026 window, against 479 assigners with any published
-  record), not from the Program's partner roster, so the gate's denominator moves every run
-  and the gate can be crossed by the denominator drifting. Worse, a CNA that publishes
-  nothing is excluded from the denominator, structurally unnameable by k=3 inference,
-  suppressed from the rate column and invisible to coverage: the pathological RBP case is
-  invisible by construction. Pin the roster in a fixture, report roster size / CNAs with
-  any published record / CNAs the feeds touch as three separate numbers, and publish the
-  zero-publication cohort as a named blind spot. Validate every named owner against the
-  roster before rendering.
-
-### 15. Delete the `/cnas` rate column and the Wilson bound (CISA, MITRE, Python, CNA, Consumer, Design)
-
-Two findings that resolve to one deletion, and the panel moved from "disclose" to "delete"
-during review.
-
-`rate = outstanding_rbp_rows / published_last_12mo` (`rbp/clock.py:341-346`) is
-arithmetically the exact quantity RBP Policy v1.0 attached its 5% and 50% sanction
-triggers to. v2.0.0 withdrew every numeric threshold, the v1.0 PDF is still mirrored by
-third parties and still ranks in search (which is how this project first picked up the
-thresholds), and the site never states anywhere that v1.0 was withdrawn. So the site
-publishes the withdrawn metric's arithmetic against named CNAs while pointing readers at
-the document that gives it teeth. The numerator and denominator are also different
-populations: outstanding RBPs are by definition unpublished, so this is not a proportion,
-the Wilson interval rendered beneath it at `cnas.html:57` as ">= X%" is meaningless, and
-`clock.wilson_lower` raises `ValueError: math domain error` whenever `k > n` (verified:
-`wilson_lower(20,20)` returns 0.839, `wilson_lower(21,20)` raises), which is precisely the
-profile of the worst offender the site exists to find.
-
-- Delete `rate`, `rate_wilson_lower` and `rate_suppressed` from `cnas.json`, every
-  `data/cna/<slug>.json` and the `/cnas` column. Keep `published_12mo` as raw scale
-  context beside `outstanding`. PLAN 2a already forbids leading with a per-CNA leaderboard,
-  and a rate column is a leaderboard whatever the caption says.
-- Clamp `wilson_lower` (`p = min(k / max(n, 1), 1.0)`) as a crash guard with a `k > n`
-  test, since the function is public, then reuse it where the inputs genuinely are a
-  proportion: the grader's `correct / graded` and `_score`.
-- Add one sentence to `/policy`: RBP Policy v1.0 was removed from cve.org in January 2022
-  at the Program Lead's direction pending a new version, copies still circulating are not
-  in force, and its 5% and 50% thresholds should not be cited.
-
-### 16. Make the site readable, operable and archivable (Design, CISA, Consumer, Marketing)
-
-WCAG 2.1 AA is the practical gate on federal reuse, and the site fails it in four separate
-ways. Two disciplines argued this is launch-blocking for citation, not polish, and the
-chair agrees: a page that cannot be excerpted into an agency product is a page that does
-not get cited.
-
-- **Contrast.** `.text-muted` (#6c757d, 14 to 16px) measures 4.45:1 on the body and 3.95:1
-  at the far end of the `.page-header` gradient; `td.unattributed` (#adb5bd) measures 1.97
-  to 2.07:1 and is the label on 43% of rows; the six chip foregrounds measure 3.3 to 3.8:1
-  at 11.52px; and `.metric-value` (#2196f3 on the #e3f2fd to #bbdefb card gradient)
-  measures 2.74:1 and 2.22:1, failing even the 3:1 large-text allowance, so **every number
-  on the site except the lead count** is under AA in light theme. Dark theme is mostly fine
-  except `.chip-block` at 4.16:1. Introduce an AA-compliant caption token, darken
-  `td.unattributed` and drop its italic (abstention is the site's most creditable act and
-  is currently rendered as a whisper), give `.metric-value` an ink colour, raise the chip
-  to about 12.5px, delete the dead `.chip-none`, and pin the required ratios in a check.
-  Three separate contrast defects have now been found in the same inherited layer.
-- **Table geometry.** `table.rbp` is 1322px inside an 1152px wrapper at a 1492px desktop,
-  so 170px of the advisory column is clipped at every width, and at 375px the unscoped
-  `th, td { white-space: nowrap }` at `style.css:1620-1623` makes it 2262px inside a 351px
-  viewport. Replace `td.desc { min-width: 22rem }` with `max-width: 44ch` plus a line
-  clamp, restore `white-space: normal`, widen the container on the table routes only, cut
-  the column budget (fold Feeds and Sources into one origins cell), and bound `.tablewrap`
-  with `max-height: min(75vh, 900px)`, which also makes the sticky header work (it is
-  currently inert because `overflow-x: auto` makes the unbounded wrapper the scroll
-  container) and lifts the `/cves` caveat block from y=25,622 to on-screen.
-- **Keyboard and no-JS.** Sortable headers are click-only with no `tabindex`, `role` or
-  keydown handler while correctly emitting `aria-sort`, which announces an affordance a
-  screen reader cannot operate; the scroll container is not focusable; `#count` has no
-  `aria-live`; there is no `<caption>`; and the entire tbody is JS-rendered from an inline
-  JSON blob with **zero** `<noscript>`, so a crawler, an archive capture or a strict
-  corporate browser sees an empty table under a headline count. Server-render the tbody in
-  Jinja (the rows are already in the context) and let JS take over. That one change fixes
-  the accessibility and the archivability together.
-- **Document identity.** `/overview.html` has **no h1 at all** (the lead is a `<span>`, the
-  outline starts at h2) and subpages ship bare one-word titles like `<title>Data</title>`.
-  Wrap the lead as an h1 and append the site name to the title block.
-- **Caveat placement.** There is no `{% include %}` anywhere in `templates/`, so each page
-  carries a hand-written subset of the hedges and the page a named CNA is deep-linked to
-  carries the fewest plus the one unimplemented promise. Add one `_caveats.html` partial
-  with a required minimum set (days public is a floor, owner is inferred and gated, a MUST
-  reading is a candidate, counts are a floor bounded by coverage at N of M CNAs), include
-  it on every page that renders a row or a name, render it at body size in the `.caveat`
-  treatment, and cap the front page at one "how to read this number" strip so future
-  hedges have a defined home instead of accumulating as unread paragraphs.
-- **Per-CNA fairness.** `templates/cna.html:70-71` stamps a "past 72h" chip on every row
-  (220 to 241 of them) using the exact rendering `templates/cves.html:91` suppresses with
-  a code comment explaining that it is noise, and it is the one page missing the
-  days-public-is-a-floor caveat. Pass a single `show_late` boolean from `site.py` into both
-  templates and move the caveat onto the page a CNA actually reads.
-
-### 17. Carry the candidate qualifier everywhere the strength appears (CNA, Consumer, CISA, MITRE, Design)
-
-`rbp/clock.py:162-168` sets `rule_certainty = "candidate"` and states "The site is
-required to carry this qualifier wherever it shows `rule_strength`". Verified: `grep` finds
-`rule_certainty` and `rule_basis` in no template and in neither CSV column list, the
-rendered chips read a bare "4.5.1.4 MUST" 210 times, and the deployed `data/rbp.json` does
-not even contain the keys, so a consumer cannot reconstruct the qualifier at all. The word
-"candidate" appears in three prose paragraphs and on zero rows.
-
-Render it in the Rule cell as a second line at an AA-compliant colour (not in a `title`
-attribute, which is invisible on touch and to screen readers, and not appended inside an
-11.52px chip). Add `rule_certainty`, `rule_basis`, `owner_nameable`, `state`,
-`indep_sources` and `clock_known` to `CSV_COLS`. Consider welding the pair into one column
-name so the hedge survives a downstream column drop. Add a test that no rendered page and
-no exported column contains `rule_strength` without the adjacent certainty.
-
-Same pass: render `indep_sources` as the Feeds column. Verified 314 of 553 rows show
-`feed_count >= 2` with `indep_sources == 1`, all of them GHSA plus its own OSV mirror, on a
-site whose `/method` explains in prose that an OSV row is not evidence GitHub disclosed
-anything. The honest number is already computed at `rbp/report.py:147` and rendered
-nowhere.
-
-### 18. Version and identify the published data before anyone can pin it (Consumer, Actions, Python, CISA)
-
-`rbp/site.py:188` writes `rbp.json` as a bare top-level array with no version, no
-timestamp, no run identity and no degraded flag; `report.py:180-183` and
-`site.py:179-181` define **different** column lists for two published CSVs of the same
-rows; and the field set has already drifted twice at a stable public URL with no marker
-(the deployed rows lack `rule_basis` and `rule_certainty` which the snapshot rows carry,
-and the persisted `summary.json` predates the `epoch` keys its own code emits). Adding an
-envelope after launch is itself the breaking change, so it has to land before anyone pins.
-
-- Wrap as `{schema_version, generated_at, run_id, git_sha, snapshot_dir, profile,
-  min_age_days, epoch, epoch_excluded, undated_excluded, coverage, feeds: {requested,
-  failed, truncated}, degraded, unresolved, counts, rows}`. Same header block in
-  `summary.json`, and a version plus comment lines in the CSV.
-- Key the snapshot directory on the **run timestamp**, not the date. Verified: five state
-  commits on 2026-08-20 against exactly one `snapshots/2026-08-20/` directory, so three of
-  four daily runs overwrite the day's snapshot, `site.py:72`'s `snaps[-2]` baseline is
-  actually yesterday's final run, and the diff interval oscillates between roughly 2 and 20
-  hours within one day. Land it together with a retention policy (see item 24) or the fix
-  for a diffing bug becomes a repo-size bug.
-- Stamp `github.run_id` and `github.sha` into the snapshot, the built site and the state
-  commit message (today it is `state: run <date>` with neither), so a published number is
-  attributable to the code and configuration that produced it.
-- Publish `sources`, `refs` and the per-source dates as JSON **arrays**. They are currently
-  unescaped delimited strings in a JSON file, 391 ref tokens contain more than one colon,
-  and one delimiter position now carries third-party free text (`csaf:Schneider Electric
-  CPCERT:...`, `csaf:Bundesamt fur Sicherheit in der Informationstechnik:...`), so a
-  publisher name containing a comma or semicolon corrupts the list for every consumer.
-  Split the CSAF reference into explicit `publisher` and `tracking_id` fields, which also
-  unblocks the publisher keying in item 8. Stop truncating `refs` at 250 characters, or
-  truncate on a token boundary and set a flag.
-- Fix the `/data` page's description of `precision.json`, which is wrong: the published
-  file is a summary dict where `graded` is an integer count, with no predictions in it.
-  Rename the published file so it cannot be confused with the real ledger the workflow
-  copies under the same name.
-- Add `owner_nameable` to the CSV so abstention is machine-readable rather than inferable
-  from a magic string, and publish the slug-to-assigner mapping as the authoritative join
-  table. Assert slug uniqueness and fail the build on a collision: verified two collisions
-  in the real assigner namespace (`Hillstone`/`hillstone`, `NETGEAR`/`netgear`) which would
-  silently overwrite one CNA's page and export with another's.
-- Pin `CSV_COLS`, both column lists and the JSON key set in a test so drift fails CI.
-
-### 19. Lock down the token and the branches (Actions, Python, CISA, Consumer)
-
-`deploy.yml:40-43` grants `contents: write`, `pages: write` and `id-token: write` at
-workflow level, so both jobs get all three, and verified server-side that nothing
-constrains it: `/branches/data/protection` returns 404, `/rulesets` returns `[]`,
-`allowed_actions` is `all`, `sha_pinning_required` is `false`. The `data` branch is the
-**only** copy of `precision.json`, `resolutions.json` and every snapshot (nine paths, no
-mirror), and the checkout keeps the credential on disk in the same job that parses roughly
-2 GB of untrusted remote archives. Deleting that branch also breaks step two of every
-future run, since `actions/checkout` fails hard on a missing ref with no fallback, so the
-pipeline never self-heals.
-
-- Add rulesets on `main` and `data` blocking deletion and non-fast-forward pushes. This is
-  the immediate win: no code change, and it closes the irrecoverable outcome.
-- Split permissions per job (`build: contents: write`, `deploy: pages + id-token,
-  contents: read`), set `persist-credentials: false`, add `permissions: {}` to `ci.yml`,
-  and turn on the repository's `sha_pinning_required` setting, which exists and is off.
-- Mirror both ledgers outside this repo (a release asset per run, or a second repository)
-  so `contents: write` here is not sufficient to destroy the accountability record.
-- Make the state checkout tolerant and bootstrap an orphan `data` branch when it is
-  missing, and document that prerequisite so the build is reproducible from a fork.
-- Move `RBP_MIN_AGE_DAYS`, `RBP_EPOCH` and `RBP_LAUNCHED` into a committed file on `main`.
-  Three unversioned settings decide the headline number, they leave no trace after the
-  90-day log retention, and a site whose thesis is that private discretion is
-  indistinguishable from no enforcement should not compute its own headline from private,
-  unreviewable configuration. If they stay as variables, echo the resolved triple to
-  `$GITHUB_STEP_SUMMARY`, write it into `summary.json`, and put it in the state commit as
-  git trailers.
-- Generate a hash-pinned lockfile (`pip-compile --generate-hashes`) and install with
-  `--require-hashes`. `pandas>=2.0,<3.0` and `pyarrow>=14,<21` with no lockfile, four times
-  a day, unattended, into a job holding `contents: write`, is the real supply-chain path
-  here; the actions themselves are all first-party and SHA-pinning them is lower priority.
-  Point `cache-dependency-path` at the lockfile when you do.
-- Delete the dead `else` branch at `deploy.yml:123-129`. It is a success path that
-  publishes a one-page holding site over the live dashboard if `rbp/site.py` is ever
-  renamed. Replace it with an output assertion.
-
-### 20. Delete the loaded gun in `report.py` (Python, MITRE, CNA, CISA)
-
-`rbp/report.py:99-100` defines a dead `_OWNER_FEEDS` mapping `GitHub_M` to
-`{"ghsa", "osv"}` (verified: referenced nowhere), two hundred lines from the live
-`clock.OWNER_FEEDS`, which deliberately excludes `osv` with a comment explaining that
-including it would rest the site's strongest claim on the weakest evidence available. On
-the live snapshot, reconnecting it would move roughly 200 rows from SHOULD to MUST on
-mirror evidence. Delete it and add a grep-style test asserting `clock` is the only module
-defining an owner-feed mapping, the way `tests/test_clock.py:358` already pins the OSV
-exclusion. Keep `report._gated`'s recomputation of `clock.self_disclosed`: the project has
-already shipped a production outage from reading a field an earlier stage set, so
-recomputing from the single live table is the defensive direction.
+## Part 1: launch blockers, in the order to do them
+
+### 1. Stop the next scheduled run before touching anything else
+**BLOCKER. Effort: ten minutes. Raised by: GitHub Actions (r2, r3), Python (r2), all five
+`held_back` findings.**
+
+`origin/data`'s tip is `9d0433d "state: run 2026-08-20T22:43Z"`; every remediation commit
+on `main` is later. No run has executed since the fixes landed, so the next tick is the
+first execution of the current `.github/workflows/deploy.yml`, and in one unattended pass
+it will publish `held_back.json` for the first time: 79 rows, 38 of them carrying an
+inferred CNA name, 63 undated and 16 inside the coordination buffer, built with
+`report._publishable` (rbp/report.py:244) rather than `_gated`, so `owner` survives and
+`owner_nameable` is absent entirely. The workflow has no `if:` key on any job or step, no
+`dry_run` input, no pause switch and no `if: always()` notification, so there is no lever
+to hold that moment.
+
+Do now, in one commit:
+- Delete `held_back.json` from the copy loop at `.github/workflows/deploy.yml:167`. One
+  line. Once it lands on the branch it is in that branch's history permanently and the
+  remedy becomes item 2's history rewrite.
+- Add an `RBP_PAUSE` repository variable, checked as a job-level
+  `if: vars.RBP_PAUSE != '1'` on the persist and deploy jobs, document it in PLAN.md as
+  the incident switch, and set it while items 2 and 3 land.
+- Add a `dry_run` dispatch input that runs pipeline, build and upload and skips persist
+  and deploy, so launch day, a candidate epoch and a gate flip can each be rehearsed
+  against real data with no publication. There is currently no way to see what a
+  configuration change will do without publishing it.
+
+### 2. Retract the CNA names already on the public data branch
+**BLOCKER. Raised independently by: Python (r2), CNA (r2), Consumer (r2), CISA (r2),
+Marketing (r2), MITRE.**
+
+This is the only ungated-name exposure that has already shipped, and it is roughly ten
+times the volume of the `held_back.json` leak the panel spent five findings on.
+`git show origin/data:precision.json` parses to a `predictions` map naming a CNA for 366
+reserved CVE IDs (GitHub_M 316, mitre 36, apple 4, Chrome 2, microsoft 2, and six
+single-row CNAs), against one graded verdict. Five of those CNAs have no `cnas.json`
+entry, therefore no `/cna` page, therefore no correction surface anywhere on the site.
+The file sits at the branch root, so the snapshot-scoped `rm -f` at deploy.yml:176 and
+every proposed snapshot-directory test cannot reach it, and `rbp/site.py`'s
+`Disallow: /` is irrelevant to it. `snapshots/2026-08-20/backlog_full.json` (712 rows,
+366 named, 182 carrying the ungated `product_map_owner`) and `report.md` (whose first
+line reads "Internal / pre-preview. Do not forward") are also still at the tip.
+
+The write is unavoidable at its current call site: `inference.apply_to_backlog` calls
+`grader.record` over the whole backlog and `grader.save()` before `rbp/cli.py:119`
+computes `reportable`, so no buffer, epoch, gate or downstream suppression can reach it.
+
+Sequence, and the sequence matters because a force-push over `data` destroys the only
+copy of both ledgers and the entire dated snapshot series:
+1. Mirror `precision.json`, `resolutions.json` and every `snapshots/<date>/` directory
+   off-repo. Cut a dated GitHub Release per run carrying the whitelisted artefacts;
+   release assets are immutable, survive a branch rewrite, satisfy the citability
+   requirement in item 14, and are the off-repo ledger mirror.
+2. Move `grader.record` onto the `reportable` population, and split the persisted ledger:
+   keep the full `predictions` map runner-local, push a redacted copy carrying
+   `{cve_id, tier, k, on}` with `predicted` omitted. Graded verdicts can stay in full,
+   because grading only happens once the true assigner is public in the CVE List.
+3. Land the enforcement before the purge, or the same class of leak returns: after
+   `git add -A` in the persist step, run `git diff --staged --name-only` and exit
+   non-zero on any path outside an explicit allowlist, and on any staged JSON carrying a
+   non-null `owner` on a row that is not counted. The whitelist is currently a copy loop
+   plus a post-hoc `rm -f` for two filenames, on a branch that deliberately carries no
+   `.gitignore`, and that branch's own history records a leak in each direction
+   (`85a6eee` removed workflow files that leaked in at branch creation; `45c0fbc` records
+   a green state commit that silently dropped every snapshot).
+4. With the schedule paused, rewrite history with `git filter-repo` removing only
+   `backlog_full.json`, `report.md` and the `predictions` map, preserving the commit
+   series and both ledgers. Verify the old blob SHAs 404 and treat a request to GitHub
+   Support as required, not contingent: unreferenced commits stay fetchable by SHA on a
+   public repo until GitHub acts.
+5. Add a retention policy: keep the current snapshot, the previous one and a monthly
+   archive, prune the rest, and restore only what the diff needs in the seed step. An
+   unbounded public log of every row ever named, including names later withdrawn, is a
+   standing liability that grows four times a day and that no correction can reach.
+
+Also correct the false statements around it: the `rm -f` comment at deploy.yml:176
+describes a cleanup it performs only at the tip, and `rbp/report.py:295-296` and `:419`
+both assert that "named CNAs receive a private preview and correction window before any
+external circulation", in a document that is itself published on the branch.
+
+### 3. Fix the naming gate, and make a withdrawal reach the ledger
+**BLOCKER. The two known-wrong rows are still named. Raised by all eight disciplines;
+the veto-inert finding was reached independently five times.**
+
+The product-map contradiction gate (`rbp/inference.py:149-151`) is inert on exactly the
+population it was written for. Its only input is `attributor.attribute(e.get("product",
+""), ...)` and `rbp/attribution.py:89-101` matches the product field only, while
+`feed_alas` (feeds.py:283), `feed_ubuntu` (:305), `feed_ghsa` (:358), `feed_csaf` (:697)
+and `feed_msrc` (:514) all emit `"product": ""`. Measured: 52 of 96 named rows have an
+empty package, 78 of 96 have no product-map verdict at all, `owner_method` counts are
+`block-k3-abstain 133, block-k3 79, block-k3+product-map 17`, and **zero** rows are
+vetoed. Both rows the panel identified as wrong (a WordPress-ecosystem CNA named on an
+Ansible collection flaw, and another named on a QEMU 9pfs flaw, both distro-only rows
+with `sources: "alas,ubuntu"` and an empty product) carry
+`product_map_method: "none"` and are still named in the current snapshot. The same
+inertness will apply to the entire CSAF population, which is every ICS and enterprise
+vendor row, i.e. the population the coverage gate depends on adding.
+
+Implement the covered-set gate, which the panel converged on as the best available fix:
+- `rbp/coverage.py:29-32` already computes the `covered` set and discards it. Return it,
+  and refuse to name a CNA outside it, recording
+  `owner_method: "uncorroborated-cna-not-reached"` and publishing the withheld count.
+  This suppresses both known-wrong rows today with no product string, no description
+  matching and no hard-coded exclusion list, and it states in one sentence that survives
+  a hostile reading: we name only CNAs whose advisories we read. The live
+  `coverage.top_missed` lists both of those CNAs, so today one published artefact says
+  "we do not read this CNA" and another says "this CNA owns this row".
+- Harden `covered` before gating on it. It currently credits a CNA on a single sighting
+  of one published ID anywhere in any feed, so one incidental reference re-admits a CNA
+  and the gate silently reopens with no code change. Require a sighting floor, and pin
+  the gate to a rolling union over the last N successful runs or to a committed roster,
+  because a per-run set means a CNA appears Monday, vanishes Tuesday on a feed failure,
+  and each appearance is a fresh publication of the claim.
+- Give the grader a withdrawal path. `Grader.record` is first-prediction-wins by design
+  (`inference.py:230`) with no removal path except grading, so a name the gate withdraws
+  stays in the ledger and is republished by CVE ID and CNA name in the `/method` misses
+  table when the record publishes. Add a `withdrawn` bucket carrying the reason and a
+  `superseded_by` entry, excluded from the precision denominator. This preserves the
+  anti-gaming property the docstring wants without making a correction impossible.
+- Add the build assertions that make silence distinguishable from agreement: fail when a
+  named row's product key is empty, publish `veto_evaluated` per row, and fail when a
+  published artefact names an owner absent from `covered_cnas`. Today
+  `owner_contested: false` ships on 150 of 150 rows as though it were a measurement.
+- Require a second independent signal before naming any CNA in
+  `attribution.BULK_REPORTERS` or operating as a Root, TL-Root or CNA-LR. That set is
+  defined in `rbp/attribution.py:29-33` as CNAs "rarely the canonical owner of a
+  distro-shipped OSS component" and is excluded from the product map on that ground,
+  while block inference names them on 35 of 58 named rows. Move the set into one shared
+  definition both the product map and inference import, and add the WordPress-ecosystem
+  CNAs, which are absent today.
+- Raise the naming standard to match the headline standard. `report.py:174` holds the
+  aggregate to `indep_sources >= 2`; `report.py:188-189` holds a named-CNA claim to
+  `owner is not None`. Measured: 43 of 58 named rows are single-origin and single-feed.
+  Either require two independent origins to name, publishing the withheld count, or
+  publish `single_origin: true` on the row and on the `/cna` page and state the
+  asymmetry. A build assertion should make the naming standard never weaker than the
+  headline-core standard.
+- Rewrite `rbp/inference.py:131` and `tests/test_inference.py:257-258` to reference the
+  bug class, not the identifiers. Both wrong (CVE ID, CNA) pairs are currently committed
+  in the public repo's source and test docstrings, indexed by code search, permanent in
+  git history, and no purge of the data branch retracts them. Do not implement the
+  suppression as a deny list of literal IDs in tracked code, which would commit them a
+  fourth time in a file whose purpose is to name them. Do not force-push `main` for this;
+  the cost exceeds the benefit. Do decide explicitly whether to notify the two CNAs and
+  record the decision.
+
+### 4. Build a correction channel before any name is public
+**BLOCKER. Cheapest item on the list. Raised by: Design, CNA (r3), CISA (r3), Marketing
+(r3), MITRE, Consumer.**
+
+`templates/cna.html:27-33` promises that a wrong row, or one "under coordinated
+disclosure", will be "corrected or suppressed on the next build" and that "suppressions
+are counted publicly in aggregate". `grep -rni suppress rbp/` returns nothing: there is
+no suppression list, no pin, no counter, and `rbp/cli.py` recomputes `owner` by block
+inference every run. The only route offered is a public GitHub issue on a public
+repository, so acting on the site's own instruction requires disclosing an embargo in
+public in order to ask for it to be respected. `grep -rniE 'mailto:|security\.txt|
+contact'` over `templates/`, `placeholder.html` and `static/` returns no contact address
+of any kind, and there is no `SECURITY.md`. The site's own front page (index.html:33-38)
+and `/method` (:67-69) both state that an overdue record and a live coordinated-disclosure
+hold are indistinguishable from outside.
+
+Do all four parts in one commit, and do not do only the first:
+1. Cut the paragraph at `templates/cna.html:27-33`, and the two identical claims at
+   `rbp/report.py:295-296` and `:419`.
+2. Publish a monitored non-public role address in `templates/base.html`'s footer, on
+   `placeholder.html`, `/method`, `/cna` and `/data`, plus a `/.well-known/security.txt`,
+   with a stated response window and an explicit line that an embargo report needs only
+   the CVE ID and the word embargo, no detail.
+3. Build the lever before advertising it: a committed suppression list read inside
+   `report._gated` **and** inside `inference.apply_to_backlog` ahead of `grader.record`,
+   with an aggregate suppressed count published in `summary.json` and rendered, so the
+   mechanism cannot be used to hide the problem.
+4. Replace the promise with what is true today: rows are recomputed from public data on
+   every build, a withheld row is counted in an aggregate and never named, and here is
+   where to write. Route ownership disputes to the reserving CNA's Root or the
+   Secretariat as well, since they hold the authoritative `owning_cna` this site can only
+   infer.
+
+Removing the invitation without providing a route is not acceptable either: a live
+coordinated-disclosure row is this project's highest-consequence risk, and removing the
+only way to report it makes the site more dangerous while looking more careful.
+
+### 5. Rejected and transferred closures: one crash, three false statements
+**BLOCKER. Reproduced by execution by three reviewers. Raised by: CNA, CISA, MITRE,
+Consumer, Python.**
+
+`clock.reconcile` is terminal on `PUBLISHED` and `REJECTED` (clock.py:329) and sets
+`days_to_publish: None` for rejections (:357), then appends both states to one list
+(:361). `templates/changes.html:158` and `templates/cna.html:104` both sort that list on
+`days_to_publish`, and Jinja's `sort` filter calls `sorted()`, so one PUBLISHED plus one
+REJECTED closure raises `TypeError: '<' not supported between instances of 'int' and
+'NoneType'` before any page is written. `changes.html` is in `site.PAGES`, so this kills
+the pre-launch build too, and because the raise lands in the Build site step the artefact
+never uploads, `deploy` is skipped, Pages keeps serving the last good build, and nothing
+notifies. The next run re-derives the same rejection and fails identically: the outage is
+self-sustaining. It is latent only because `resolved` is currently 0, so it fires on the
+first closure after launch, and rule 4.5.3.5 makes rejection the lawful and likely end
+state for the oldest rows.
+
+Below the crash threshold the render is worse than the crash. A single rejection with no
+publications emits, verbatim, `/cna/<slug>.html` under the heading "Resolved" with the
+prose "RBPs attributed here that have since published" and a cell reading `None`, and
+`/changes` reads "1 RBPs have published since this tracker started". A 4.5.3.5 rejection
+is the CNA complying with the rules; the site reports it as the opposite.
+
+- Split at the render boundary, in `site.load`, not in the templates:
+  `resolutions_published` and `resolutions_rejected`, count only the former in
+  `resolutions_n`, sort only the former. Note `sort(..., default=0)` does not exist in
+  Jinja; `do_sort`'s signature has no `default` parameter.
+- Give rejections their own card headed under 4.5.3.5, with prose stating that rejecting
+  an unused or unpublished ID is lawful and is not a failure to publish, and a visually
+  distinct treatment rather than an identically styled table under a different heading.
+- Guard every `days_to_publish` render the way `changes.html:79` already does. Never
+  print a bare `None` in a `td.num` column of right-aligned integers.
+- Key `site.py:397` on `predicted_owner`, not `r.get("owner")`, which `reconcile` sets to
+  the post-transfer assigner. Today `clock.by_owner` (:373) and `site.py:397` key the
+  median tile and the table beneath it on the same `/cna` page to two different parties,
+  so a CNA-LR that publishes another CNA's overdue record under 4.5.1.5 acquires a
+  resolution history it never had. Render a differing pair as "published by X,
+  transferred", as `changes.html:82` already does.
+- Add `rejected`, `transferred` and `withdrawn-by-correction` outcome buckets to
+  `Grader.grade`, none counting as a miss. Today a correct inference on a transferred row
+  publishes as a named method miss in the `/method` misses table.
+- Close a prediction on `REJECTED` as well as `PUBLISHED`. `grade` filters
+  `state == "PUBLISHED"` only, so a prediction on an ID that is later rejected can never
+  be graded, sits in the public ledger forever, and the precision figure is
+  survivorship-biased onto IDs that published, which is the opposite of the region where
+  block inference is weakest.
+- Drop the `[-200:]` truncation at `site.py:160`, or compute `resolutions_n` from the
+  same truncated list; they diverge silently past 200 closures.
+- Add a test that renders every template against a ledger holding one closure of each
+  state for the same owner, and asserts the word "published" does not appear in the
+  rejected block.
+
+### 6. Design launch day before setting `RBP_EPOCH`
+**BLOCKER. Raised by: Design, CNA, Actions, MITRE, CISA, Marketing, Python.**
+
+Measured: the newest `public_date` in the reportable set is exactly `min_age_days` before
+the snapshot date, so a launch-day epoch excludes 100% of reportable rows for the whole
+buffer window, and `rbp/cli.py:127-131` raises `SystemExit` on exactly that condition.
+Flipping `RBP_LAUNCHED` and `RBP_EPOCH` together therefore produces a red cron four times
+a day for about a week while Pages keeps serving the pre-launch holding page, with no
+notification step anywhere in the workflow. The observable result of launching is that
+nothing happens and nobody is told.
+
+The alternative branch is no better. `templates/index.html:226-228` is the entire empty
+state, one `.caveat warn` line reading "No reportable rows in this snapshot" under a
+104px zero, and because the whole body including every disclosure sits inside
+`{% if summary.total %}` (index.html:23), the zero-state page collapses to a header, one
+paragraph and one yellow line, under an `og:description` reading "0 CVE IDs are reserved,
+publicly referenced, and unpublished".
+
+Then `/changes` inverts on the same run. The comparability guard is
+`if prev_sum.get(key) is not None and prev_sum.get(key) != now_sum.get(key)`
+(site.py:229-230), and `clock.summary` emits `"epoch": EPOCH or None` (:476), so the
+None-to-date transition short-circuits and the pair is declared comparable. Reproduced by
+execution: `comparable: True, incomparable_reason: None, no_longer_listed: 150 of 150`.
+At live scale that is roughly 500 CVE IDs rendered as a comma-joined mono ID dump under
+"No longer listed, cause unverified" on the first day anyone reads the site. The guard
+catches the harmless direction (unsetting the epoch) and misses the one that will happen.
+
+- Publish `held_back.json` under `site/data`, gated or with `owner` dropped entirely, and
+  give it a named archive route ("The backlog at launch") carrying its count, age
+  distribution and rows, linked directly beneath the lead count and listed on `/data`.
+  The oldest row, at 519 days, is the single strongest piece of evidence the project has
+  and the epoch currently deletes it from the site with no home anywhere.
+- Relabel the lead metric on an epoch build as "new since `<epoch>`" with the epoch on the
+  lead screen, and move the empty state outside the `{% if summary.total %}` guard so a
+  designed zero still carries the epoch, the held-back count and the coverage bound.
+- Keep the `SystemExit` only behind an explicit `RBP_EPOCH_ALLOW_ZERO`, so a deliberate
+  clean slate publishes the designed zero and only an accidental epoch refuses.
+- Validate the epoch against the data at startup in `cmd_run`, before any network work,
+  and put the arithmetic in the message: "RBP_EPOCH=X excludes every row; the newest
+  reportable advisory date is Y and the buffer is N days".
+- Fix the comparability guard to key on presence (`key in prev_sum`), not truthiness, for
+  `epoch`, `min_age_days` **and** the feed set (`site.py:237` is `if a and b and a != b`,
+  the same hole a third time). Read the previous `backlog.json` with `_read_strict` when
+  the directory exists; today the tolerant `_read(..., [])` turns a missing previous
+  backlog into "every row is new" while `comparable` stays True.
+- Better than a flag: compute `gone` against the previous snapshot restricted to IDs
+  epoch-eligible under the current epoch, so an epoch change moves rows into the archive
+  rather than through the diff at all.
+- Add an explicit `epoch_started` case on `/changes` that names the epoch as the cause and
+  shows no movement. Cap the rendered `no_longer_listed` list (show 50, link the JSON);
+  a 7,000-character ID paragraph defeats the caveat above it.
+- Sequence: design the zero state, publish the archive, then set the epoch. Never the
+  reverse.
+
+### 7. Make the launch gate mean something, and enforce it at the transition
+**BLOCKER, and the gate definition itself should change. Raised by: Python, Actions,
+MITRE, CISA, Marketing, Consumer.**
+
+Three separate defects, and the panel's original fix for the first would have caused a
+worse failure than the one it prevented.
+
+*Unenforced.* `rbp/site.py:43` is a bare `os.environ.get("RBP_LAUNCHED", ...)` with no
+coverage precondition; `grep` for a gate constant across `rbp/` and `.github/` returns
+only prose comments; no workflow step reads `summary.json`. One repository variable edit
+flips the front door, un-noindexes every page and starts writing `/cna` pages, with no
+check and no audit trail.
+
+*Measured on a number the cron cannot produce.* `PROFILES["deep"]` (cli.py:24) is the only
+profile carrying `csaf` and `msrc`; the cron defaults to `weekly` (deploy.yml:124).
+PLAN.md records weekly at 36.4% and deep at 40.6%, and the live snapshot publishes 18.7%
+because that run used three feeds. One field, three values, selected by an undeclared
+dispatch input, with no `profile` recorded in `summary.coverage`.
+
+*The wrong unit.* `coverage.compute` credits a CNA as covered on a single sighting:
+`surfaced_ids = {c for c in refs if c in pub_ids}` then `covered = {assigner[c] ...}`.
+Nothing requires the site to read that CNA's own channel or any channel that
+systematically carries its products, which is the property PLAN.md says the gate exists
+to guarantee. The nine-feed weekly profile is distro and OSS package feeds, which never
+carry ICS or OT products, and the site's own `top_missed` confirms it (siemens, sap,
+huawei, dell, ibm, qualcomm, google_android). So the gate can be cleared while zero
+critical-infrastructure CNAs are measurable, which is exactly the position PLAN.md says
+must not be launched from. The denominator also floats: `total_cnas` is derived from
+corpus assigners in a rolling three-year window recomputed from the run date, so both
+sides of the ratio move overnight on 1 January. Verified bugs in the same function:
+`state = dict(zip(...))` at coverage.py:27 is allocated and never used, and
+`total_cnas = int((vol > 0).sum())` is a no-op filter, since `value_counts()` never emits
+a zero.
+
+*And the proposed enforcement would freeze the site.* A `SystemExit` in `site.load` lands
+in the Build site step; `deploy` is `needs: build` with no `if:`, so the whole deploy job
+is skipped and Pages serves the previous artefact indefinitely, with no notification
+anywhere in the workflow. After a legitimate launch cleared on a manual `deep` run, every
+scheduled `weekly` run would trip the refusal, so the site would freeze permanently four
+times a day while continuing to serve a count and a six-hour cadence claim.
+
+- Publish three coverage numbers and gate on the strictest: `cnas_sighted` (the current
+  figure, relabelled), `cnas_own_channel_ingested` (`OWNER_FEEDS` intersected with the
+  run's `feeds.requested`, computable today), and `cnas_detectable` (CNAs for which some
+  ingested feed systematically carries their products). State on `/method` which number
+  the gate uses. Report the ICS/OT sector separately and state plainly, while it is true,
+  that no critical-infrastructure CNA is measurable here.
+- Pin the CNA roster in a committed fixture so the denominator stops moving, and report
+  roster size, CNAs with any published record, and CNAs the feeds touch as three separate
+  integers. A percentage over a floating denominator cannot be trended or held to.
+- Move `csaf` into the scheduled profile, or add a second less-frequent cron running
+  `deep`, before the gate is measured for real. Land item 22's CSAF budget first, or the
+  first scheduled deep run hits `timeout-minutes: 45`.
+- Enforce at the transition, not per run: on the run that clears the gate, persist a
+  `launch_gate` record (coverage value, profile, run id, date); on a launched build assert
+  the record exists and the current coverage has not fallen more than a stated fraction
+  below it; refuse only on a missing record or a large regression, and degrade to a banner
+  on every page otherwise. Below gate, ignore `RBP_LAUNCHED` and keep serving the
+  pre-launch page (fail closed on the flag) while a separate `run:` step exits non-zero
+  (fail loud in CI). Never fail dark on the publication.
+- Add the condition the aggregate numbers do not cover, and make it a build invariant
+  rather than a threshold: every CNA named anywhere on the site is inside the covered set
+  for the run that named it (item 3).
+- Validate `RBP_LAUNCHED` strictly the way `clock._validated_epoch` validates the epoch,
+  so `on`, `y` and `enabled` raise instead of silently meaning not-launched.
+
+### 8. Bind the 24-hour naming warrant in code
+**BLOCKER, launch gate candidate. Raised by: MITRE (r3). Not caught in rounds 1 or 2.**
+
+The project's entire warrant for naming a reserving CNA is the 24-hour permission in CNA
+Rule 4.5.1.7, quoted on `placeholder.html`, on `/policy` and named as the R5 mitigation in
+PLAN.md. Nothing binds the buffer to it. `--min-age-days` is
+`type=int, default=report.DEFAULT_MIN_AGE_DAYS` (rbp/cli.py:203) with no lower bound, and
+`deploy.yml:28` passes `vars.RBP_MIN_AGE_DAYS` through unvalidated, so a repository
+variable of `0` publishes inferred CNA names on IDs public for under 24 hours, inside the
+window the Program's own rule tells its own Secretariat not to name in, with no error and
+no visible change. Compare `rbp/clock.py:69-96`, where the epoch got a validator that
+raises because a silent config error would be catastrophic: the same discipline, one file
+away, on the less consequential variable. Two rendered claims also break silently:
+`index.html:26` and `method.html:62` hardcode "more than twice the
+{{ expectation_hours }}-hour window", true only at `min_age_days >= 7`.
+
+Add `MIN_AGE_FLOOR_DAYS = 4` and refuse to run below it, with an error naming the
+24-hour 4.5.1.7 horizon as the absolute floor and the 72-hour expectation as the
+operating one. Derive the "more than twice" clause from the numbers. Publish
+`min_age_days` and the floor in the artefact envelope. Pin the floor in
+`tests/test_policy.py` beside the existing 4.5.1.7 quotation assertion, so the code
+constraint and the quoted rule are held together.
+
+### 9. Move the artefact invariants onto the publishing path
+**BLOCKER. Raised by: Actions (r2), Python, Consumer, CNA, CISA, Marketing, MITRE.**
+
+The remediation plan above rests on assertions that currently have nowhere to run.
+`deploy.yml`'s build job has nine steps and none is pytest; `pip install -r
+requirements.txt` does not install pytest, which lives in `requirements-dev.txt`; tests
+run only in `ci.yml`, a separate workflow with no dependency in either direction, so a
+red `ci.yml` does not stop a deploy and the four scheduled publishes a day never invoke
+the suite at all. At least fourteen findings on this table end in "add a test".
+
+Separately, the one artefact assertion that does exist is a one-element tuple:
+`tests/test_pipeline.py:153` iterates `for name in ("backlog.json",)` in a directory that
+had just gained a new file, which is precisely why the `held_back.json` leak shipped
+green. And `grep -rn "rows=" tests/*.py` returns nothing, so all three `report.build`
+call sites in the suite take the `rows is None` branch that production never uses.
+
+- Put the invariants that protect published artefacts where the cron enforces them:
+  extend `site._assert_consistent` (which already refuses to publish rows naming CNAs
+  absent from `cnas.json`, and is therefore the working precedent), add an equivalent in
+  `report.build`, and add the staged-path and owner checks to the persist step. Run
+  `_assert_consistent` over every artefact `_write_data` and `report.build` emit, not just
+  `backlog.json`: `held_back.json`'s named owners include two CNAs absent from
+  `cnas.json`, so it publishes exactly the values the existing assertion refuses.
+- The invariant set: no non-null `owner` on a `counted == false` row; no `owner` value
+  outside `{unattributed}` plus the `cnas.json` keys; no `owner` outside `covered_cnas`;
+  `owner_nameable` present on every row of every artefact; no named row with an empty
+  product key; no `advisory_url` equal to the cve.org last-resort fallback; no `http` or
+  `NOTE:` in a published description; no boolean single-valued across the whole published
+  set; every emitted `cna/` href resolving to a file the build wrote; no built page
+  containing `&amp;`.
+- Then gate the commit path: add a `test` job to `deploy.yml` (install
+  `requirements-dev.txt`, `pytest tests/ -q`) with `build: needs: test`, or make `ci.yml`
+  a reusable workflow `deploy.yml` calls. Keep the pipeline-time assertions regardless; a
+  cron run has no commit to gate on.
+- Widen `tests/test_pipeline.py:153` from the tuple to
+  `pathlib.Path(sdir).glob("*.json")` plus the CSVs, assert on `owner` and
+  `owner_nameable` as well as `product_map*`, parse the allowlist out of `deploy.yml` so
+  adding a file forces a test update, and add the missing structural test that
+  `report.build(..., rows=[one_row], min_age=999)` applies no filter of its own. Delete
+  the `rows is None` branch once `cli` is the only caller.
+
+### 10. Decide the guard taxonomy once, before six guards are written in the same shape
+**BLOCKER (design decision, blocks items 6, 7, 15). Raised by: Actions (r3), with
+amendments from Consumer, CISA and Marketing on five separate findings.**
+
+At least six proposed guards land in the pipeline or build step, both of which precede
+`upload-pages-artifact` and the persist step, with `deploy` on a default `success()`:
+the epoch zero-count exit, the count floor, the oracle circuit breaker, the coverage
+gate, the ledger non-decrease guard and the corrupt-ledger raise. Each one as proposed
+converts a data fault into a frozen site with no signal, and `grep -rn
+"always()\|failure()\|cancelled()\|notif" .github/` returns nothing.
+
+Split them:
+- **Artefact-safety guards**, where publishing is itself the harm (a named row no gate
+  cleared, a staged path outside the whitelist, an owner absent from `cnas.json`, a
+  shrunken ledger, a snapshot failing `_assert_consistent`): refuse to publish, as a hard
+  non-zero exit before the upload.
+- **Data-quality guards** (unresolved oracle lookups, feed truncation, a count below
+  floor, coverage below gate, an epoch that excludes everything): publish with a banner
+  and go red. Write the condition into `summary.json`, let the site render it, and put the
+  assertion in its own named `run:` step. The governing principle: refuse to publish
+  wrong data, never refuse to publish correct data that is merely surprising.
+- Add a `notify` job with `if: always()` inspecting `needs.*.result` explicitly for
+  `failure`, `cancelled` and `skipped`, opening or updating a single tracking issue.
+  `if: failure()` does not match `cancelled`, which is what `concurrency: group: pages`
+  with `cancel-in-progress: false` produces for a displaced tick. Do this before the
+  guards, because every guard makes a frozen site more likely.
+- Dedent the empty-population check out of `if pre_epoch:` (`rbp/cli.py:122-131`), which
+  makes it unreachable whenever `RBP_EPOCH` is unset, i.e. today. Replace the zero test
+  with a fractional-drop comparison against the previous snapshot's `summary["total"]`
+  (already restored in-process by the seed step). Do not use an absolute floor: zero is
+  this project's goal state, not an error state, and a 4.5.3.5 bulk rejection sweep is a
+  legitimate large drop.
+
+### 11. The copy and citation pass
+**BLOCKER, and the cheapest work on this list: roughly two hours, all templates. Raised
+by: CNA, MITRE (x4), CISA, Marketing (x3), Design.**
+
+Every item here is a place where the site's public surfaces contradict each other or omit
+what cuts against them, on a project whose entire authority rests on quoting accurately.
+
+- `templates/index.html:131` still reads "after about a year public" while
+  `templates/policy.html:135-137` labels that figure a correction ("closer to four months
+  than a year"). One click apart, front page holding the wrong version.
+- `index.html:139-140` says the Metrics page reports "nothing on the overlap between
+  them, which is the gap this site fills" while `policy.html:141` says "The two are not
+  comparable and this site does not replace it". Take the `/policy` wording as canonical.
+- `<th>Advisory title</th>` still ships at `cves.html:55`, `cna.html:64` and
+  `changes.html:126` while `data.html:58-66` retracts exactly that word. Rename to
+  "Advisory summary", and move the disclosure out from under the card headed "Licence" to
+  a line directly above each table.
+- `templates/base.html:7` sets `<meta name="description">` beginning "Every CVE ID that
+  is reserved..." on every page. "Every" is the absolute the placeholder h1 was corrected
+  to remove, contradicted five times by the site's own copy, on a run at 18.7% CNA
+  coverage, in the one string search engines and link previews quote verbatim.
+- **Quote the clauses that cut against the site.** `grep` over `templates/` and
+  `placeholder.html` returns zero hits for "incident response", "short delays",
+  "resource constraints" and "volume, complexity". The front page quotes the policy's
+  "does not condone any unnecessary, intentional, or routine delay" and omits, from the
+  same paragraph, "recognizing that such publication may, at times, coincide with ongoing
+  vulnerability or incident response activities" and "internal processes may necessitate
+  short delays"; and from Notification and Remediation, that a CNA must publish "no later
+  than the deadline stated by their TL-Root or Root (which may account for factors such as
+  volume, complexity, and resource constraints)"; and from Enforcement, "The CVE Program
+  may take further action depending on the CNA's volume, history, and severity of RBPs."
+  Quote all five **in the sections they occupy**, since two of them are not in Timely
+  Publication and misfiling them would be the exact error `tests/test_policy.py` exists to
+  prevent. Then answer them in the same breath with the buffer, the median and the 180d+
+  bucket, and add the sentence they license: the only deadline that binds a specific row
+  is one a Root set privately, which is why this site measures days public and never calls
+  a row overdue. `/policy:38-41` already states the project's own standard here
+  ("quoting only the discretionary parts would be selective"); it is broken on the section
+  that governs the headline.
+- **Re-anchor the ask on the in-force document.** `policy.html:143-146` asks for the
+  return of a v1.0-era quarterly table under a policy that withdrew the arithmetic that
+  table scored, which is answerable with "that was v1.0". `grep` for "metrics and audits"
+  returns one hit, in PLAN.md, and none in any template: RBP Policy v2.0.0 names "Program
+  metrics and audits" as one of its own identification channels. Ask for the public face
+  of that channel and present the archived series as one shape it could take.
+- **State the exculpatory inferences, do not just assemble the facts.** `/policy` collects
+  the whole innocent explanation and stops one sentence short of it three times: a final
+  column already reading N/A means the series had stopped being populated before anyone
+  commented it out; a flow falling 4,326 to 350 describes a problem that was measurably
+  shrinking; and RBP was item 2 of a three-item restructuring, so name items 1 and 3 so a
+  reader can confirm it was not singled out. Carry all three onto `index.html`, which has
+  none of them. Fix "appeared"/"went live" on both pages to distinguish markup added in
+  February 2021 from public reachability at the 29 September 2021 cve.org launch.
+- **Fix `placeholder.html`, the only page anyone can reach.** Lines 59-66 imply this site
+  publishes the Program's archived metric ("The Program used to publish a count of
+  these"), which `/policy` retracts on a page nobody can reach. Add the flow-versus-stock
+  distinction and the coverage bound in one clause, and add the N/A fact, since the
+  holding page is where good faith is cheapest to establish.
+- **Keep the framing assets alive past launch.** `rbp/site.py:365-379` copies
+  `placeholder.html` over `index.html` only in the `not LAUNCHED` branch, so flipping the
+  variable deletes the glossary-provenance paragraph ("That is not our term. It is the CVE
+  Program's own"), the full 4.5.1.7 quotation, and the narrow ask with its own
+  safety reasoning. `grep` on the built dashboard returns zero occurrences of "unblind"
+  and zero of "glossary"; the only surviving ask is `<small class="text-muted">` in the
+  footer. Keep the page as a permanent route (`/about-this-count.html`) and lift its three
+  load-bearing paragraphs onto the dashboard.
+- **Put the legitimacy claim above the accusation.** The site's best sentence, "RBP is a
+  state, not a verdict... the headline count on this site is the state, which makes it the
+  Program's own metric", is the second paragraph of `/method`, item four in the nav. The
+  lead screen's first substantive claim is about the Program withholding a field. Invert
+  that order on both front doors, move the standing offer out of footer small print, and
+  write the one sentence you want quoted into `<meta name="description">` and
+  `og:description`, then read it with a hostile headline attached.
+- Add a rendered-site grep test asserting that no built page contains "about a year",
+  `>Advisory title<`, or an interval stated as a completed fact, and pin `#835`, `#842`,
+  both dates and the cve.org launch date in `tests/test_policy.py`. Every policy quotation
+  is pinned and none of the historical claims are, which is backwards, since the
+  historical claims are the contested ones.
+
+### 12. Stop rendering unmeasurable as measured
+**BLOCKER. `must_rows` raised independently six times; the false-by-construction field
+audit raised by Consumer (r2); the rule default by CNA (r2).**
+
+The panel's characteristic finding, in five places at once.
+
+*`must_rows: 0`.* `clock.OWNER_FEEDS` holds three entries after GitHub_M was removed
+("removing it dropped the site's MUST count from 241 to 0"), so the 4.5.1.4 test is
+unavailable to 431 of 434 CNAs, and `msrc` is not in the weekly profile so one of the
+three cannot be measured on the scheduled cadence at all. That zero renders as a plain
+`.metric-value` on the front page under "The owning CNA's own advisory feed carried it",
+as a bare `0` in a "Candidate MUST" column for every CNA on `/cnas`, as a `0` tile on
+every `/cna` page, and as an offered `/cves` filter that returns a header-only table with
+no message. Remove the front-page tile entirely while the count is structurally zero: a
+tile whose value is a sentence explaining why there is no value is worse than no tile.
+Publish `owner_feeds: {configured, ingested}` in `summary.json` and `own_feed_ingested`
+per CNA in `cnas.json` and every `data/cna/<slug>.json`, derived from
+`feeds.health_detail()` status ok rather than mere membership in `requested` (ubuntu is
+requested and truncated every run). Split `/method:128-132` into configured and
+fetched-this-run. Hide the `/cves` MUST filter option. Do not render "not measured, own
+feed not ingested" as a blanket replacement: redhat and mozilla *are* fetched on the
+scheduled profile, so that string would be false. The honest headline is the denominator:
+the test is available for 3 of 434 CNAs.
+
+*`should_rows: 150`.* `clock.annotate` sets `rule = RULE_MUST if must else RULE_SHOULD`
+unconditionally, so 4.5.1.6 is assigned to 100% of rows including the 92 where no CNA is
+identified at all, and rendered as "A third party disclosed. The ordinary distro case."
+4.5.1.6 carries three predicates (assigned by that CNA, disclosed by a party other than
+the CNA, the CNA became aware), none observable on an unattributed row, and its clock runs
+from awareness, which the site cannot see. Add a third state: `rule: null`,
+`rule_strength: null`, `rule_basis: "unattributed"`, and a published
+`rule_unassignable` count. Restrict `should_rows` to rows with an inferred owner (58, not
+150). Render the three-way split with the unassignable share largest, because 61%
+unassignable is the most honest thing the site can say about itself. Relabel the SHOULD
+tile to what is observed ("an advisory from a party other than the inferred owner is the
+earliest this site can see"). Anchor `past_expectation` explicitly to the RBP Policy
+v2.0.0 72-hour publication expectation, which has an observable start, and stop citing
+4.5.1.6 as the basis for the age tiles.
+
+*Eight of 27 published row fields are single-valued.* Measured over all 150 rows: `state`
+RESERVED, `clock_known` True, `rule` 4.5.1.6, `rule_strength` SHOULD, `rule_certainty`
+candidate, `self_disclosed` False, `past_expectation` True, `owner_contested` False. Three
+are false because the test could not run. Worse, `held_back.json` publishes all 63 undated
+rows with `days_public: null, clock_known: false` beside `past_expectation: false,
+rule: "4.5.1.6", rule_strength: "SHOULD"`, i.e. a fully populated rule verdict on rows
+`clock.py:29-30` calls unageable at any threshold. Emit `null` for a test that could not
+run, or add explicit companions (`expectation_measurable`, `self_disclosure_measurable`,
+`veto_evaluated`) and document that false means measured-false. Move the genuinely
+constant fields into the envelope rather than repeating them per row. Add the build
+assertion that fails when a boolean is single-valued across the whole published set: that
+single check would have caught four separate findings here, and it is the cheapest general
+detector on this list.
+
+### 13. `self_disclosed` defaults to MUST on every ambiguous shape
+**BLOCKER. Reproduced by execution by five reviewers. Raised by: Python, Consumer, CNA,
+CISA, MITRE, Marketing.**
+
+`clock.py:192-195` is `mine = [...]; theirs = [...]; if not mine: return True` then
+`return not theirs or min(mine) <= min(theirs)`. All four ambiguous shapes return MUST:
+own feed undated with a dated third party; own feed dated with undated co-sources; a
+same-day tie; and no dates at all. `feeds.gather` only records a per-source date when
+`public_date` is truthy, and `feed_debian` (:331), `feed_alpine` (:419) and `feed_arch`
+(:769) all emit `""`, so those three feeds can never populate `theirs`, and they are all
+in the weekly profile. Measured on the live snapshot: of 52 multi-source rows, every one
+carries dates for only a subset. `feed_redhat` passes a null `public_date` straight
+through, so the CNA most likely to be tested is the one whose own dates are least reliable.
+The docstring above the function claims this defect was fixed, and the comment at
+`clock.py:157-159` states this ordering property as the condition for restoring `ghsa` to
+`OWNER_FEEDS`, which would reinstate all 241 MUST rows on a function that cannot order
+them.
+
+Write it once as one rule: claim MUST only when at least one dated own-feed entry and at
+least one dated non-owner entry exist and `min(mine) < min(theirs)`; the own feed being
+the only source is a legitimate MUST; every other shape abstains with
+`rule_certainty: "unmeasurable"`. Absence of a date is never evidence, in either
+direction. Fix it in one place: `annotate` and `report._gated` both compute
+`self_disclosed` today and only `annotate` derives `rule` from it, so a divergence
+publishes a row with `self_disclosed: true` and `rule: 4.5.1.6`. Then delete or rewrite
+the `clock.py:157-159` comment so it reads as an unmet condition.
+
+### 14. Give consumers an envelope, a versioned schema and a citable target
+**HIGH, launch blocker. Raised by: Consumer (r2, r3), CISA (r2), Design, Marketing, CNA,
+MITRE.**
+
+`data/rbp.json` is `json.dump(ctx["rows"], ...)`: a bare array with no `schema_version`,
+no `generated_at`, no `epoch`, no `min_age_days`, no coverage, no floor flag. Every
+caveat that makes the count safe to use lives in HTML and in a sibling file the tool has
+no reason to fetch. Meanwhile this review queues at least eight published-key changes
+against artefacts with no version field, so any consumer who integrates in the meantime
+breaks silently.
+
+- Wrap both JSON artefacts: `{schema_version, generated_at, run_id, snapshot_date,
+  profile, launched, min_age_days, epoch, counts: {total, undated_excluded,
+  epoch_excluded, rule_unassignable}, coverage: {...}, caveats: {count_is_a_floor: true,
+  owner_is_inferred: true, must_measurable: false}, rows: [...]}`. Bump `schema_version`
+  on any key rename and publish the current value on `/data`. For the CSV, freeze the
+  column list as a documented contract with stable order and ship an
+  `rbp.csv.meta.json` sidecar.
+- **Stop overloading `owner`.** 92 of 150 rows carry the magic string `"unattributed"` in
+  the field that otherwise holds CNA short names, it is the largest value in that field by
+  a factor of three, `cnas.json` has no such entry, and `site._assert_consistent` only
+  passes because it special-cases the string. `data.html:40-41` documents the opposite
+  ("absent wherever the gate did not pass"), so a consumer who codes to the documentation
+  treats all 92 as named. Emit `owner: null` and an empty CSV cell, keep
+  `owner_nameable: false` as the marker, and put the presentational placeholder in a
+  separate documented field if one is wanted.
+- **One column contract, not three.** `rbp.json` carries 27 fields, `site.CSV_COLS` 22,
+  and the data-branch `backlog.csv` 26 in a different order, with the code comment at
+  `report.py:216` asserting the two CSVs are kept identical. The five fields missing from
+  the documented CSV are the audit fields: `dates` (the sole input to the rule call),
+  `owner_method` (the only field distinguishing a plausibility-checked name from an
+  unchecked one), `refs`, `hours_public`, `ecosystem`. Define the list once in a shared
+  module, make the CSV a declared subset that includes `owner_method` and `refs`, publish
+  `own_feed_date` and `earliest_other_date` as scalars so the rule call is checkable
+  without parsing nested JSON, and publish a field dictionary on `/data` (name, type,
+  value-for-absent, meaning, which views carry it). Three absence conventions are in use
+  today (`""`, `null`, `"unattributed"`) and none is documented.
+- **Export the closure record.** `_write_data` writes five artefacts; `resolved.json`,
+  `held_back.json` and the `_changes` dict are computed, rendered and withheld, and
+  neither reaches consumers through any channel (verified: neither is on `origin/data`).
+  "Which RBPs closed since the last run, and was each PUBLISHED or REJECTED" is the most
+  useful signal this project produces and the only way to get it is to diff two `rbp.json`
+  snapshots, which reproduces the exact "left the set therefore published" error the site
+  removed from its own code. Publish `changes.json` verbatim including `comparable` and
+  `incomparable_reason`, plus `resolved.json` and a gated `held_back.json`, list them on
+  `/data` with field meanings, and add an Atom or JSON Feed so new/published/rejected is
+  subscribable. Make the `data/cna/<slug>.json` row on `/data` conditional on `launched`;
+  it currently documents a 404.
+- **Give every run an identity, and something immutable to cite.** Four runs a day
+  overwrite `snapshots/<date>/` on a public branch with no run id, no per-artefact
+  timestamp and no content hash, and `_prev_snapshot` selects strictly by date so all four
+  diff against yesterday and re-publish the same `new` set. Add `run_id`, `generated_at`
+  and a hash to every artefact and as git trailers on the state commit; bound the change
+  buckets with `from_run_id`/`to_run_id`; diff against the previous run, not the previous
+  date. Cut a dated GitHub Release per day and add a "Cite this as" line on `/data`; that
+  one control also gives item 2 its off-repo mirror and its purge-survivable archive. Add
+  a small `latest.json` pointer so polling does not require refetching the whole file.
+  Protect `data` against force-push and deletion with a ruleset that still allows the
+  bot's fast-forward push. Choose a data licence (CC0 or ODC-BY) alongside MIT for the
+  code and say on `/data` which applies to the rows; MIT on a dataset says nothing about
+  attribution or redistribution.
+- Add a check that fails when an artefact a writer depends on is absent from the persist
+  allowlist. That would have caught the dead week-over-week diff: `report.build:251` still
+  reads the previous snapshot's `backlog_full.json`, which the allowlist removed and the
+  `rm -f` deletes, so that diff is permanently inert in CI with nothing reporting it.
+
+### 15. Stop publishing degraded runs as clean ones
+**HIGH, launch blocker. Raised by: Python (x3), CNA, MITRE, Actions, CISA, Consumer,
+Marketing.**
+
+The one direction of error this project cannot afford is a silent shrink, because a
+shrinking count reads as the Program improving. Four mechanisms produce one today.
+
+- **The oracle tally is computed and thrown away.** `classify.py:171` returns
+  `backlog, fresh_resolved`; `cli.py:86` unpacks two values; `unresolved` is absent from
+  `summary.json`. An ERROR'd ID is never appended to `backlog` at all, so it vanishes from
+  the snapshot, lands in `_changes.no_longer_listed` as an unexplained departure, stays in
+  `ledger.state["open"]` forever, and keeps an outstanding grader prediction. So a
+  brownout both shrinks the headline and manufactures fake departures. Do **not** fix this
+  with a bare abort: the correct primitive is carry-forward, keeping a row that was
+  RESERVED in the previous snapshot with `state_verified_this_run: false` and counting it,
+  and only then a threshold for how much unverified carry-forward is tolerable. Publish
+  `unresolved`, `lookups_attempted` and `never_allocated` (the `_NOT_FOUND` count, a
+  genuinely valuable data-quality population currently printed to a log and discarded).
+  Count 429 separately, read `Retry-After`, and add jitter to `time.sleep(2 ** i)`, which
+  24 workers currently execute in lockstep against a MITRE endpoint this project depends
+  on and does not own.
+- **`record_feed` is called from 2 of 9 degrade paths.** Only ubuntu's cap and osv's
+  sub-fetches record anything; `feed_ghsa`'s `for _ in range(page_cap)` has no `else:`,
+  and `gather` then stamps `record_feed(s, OK, ...)`. Add `for ... else` on loop
+  exhaustion and record TRUNCATED (not FAILED) on any break that keeps partial results.
+  Do not record on `feed_redhat`'s `if len(rows) < per: break`, which is normal pagination
+  exhaustion. Add per-provider `record_feed(f"csaf:{host}", ...)` on metadata failure,
+  feed failure and cap: `feed_csaf` calls `record_feed` on no path at all, and CSAF is the
+  only route to CISA, Siemens, SICK, Cisco and SUSE, so "Huawei yields 0" and "Huawei was
+  never reached" are currently indistinguishable. `health_detail`'s parent rollup already
+  supports sub-names.
+- **A 404 is laundered into an empty page.** `_get` returns `None, 404, {}` and every
+  paginated caller binds `code` and never reads it, so a retired path or a WAF 404 ends
+  pagination through the normal `if not rows: break`, with no exception and no loop
+  exhaustion, and `gather` records OK. This defeats the `for...else` fix above: a project
+  that implemented every other health fix here would still publish a 404-truncated Ubuntu
+  feed as `status: ok`. Give `_get` a `not_found_ok=False` default, read the status in
+  every paginated adapter, and refuse to record OK for any feed that returned zero rows
+  without an adapter-level record.
+- **`health_summary` returns only FAILED entries**, so `cli.py:78`'s `if failures:` can
+  never fire on truncation, and the live snapshot publishes `failures: []` beside
+  `truncated: ["ubuntu"]` on a run with known data loss. Return failed and truncated
+  separately and print DEGRADED for both. Rewrite `method.html:232-236` ("No feed failed
+  outright this run") to name what it covers; that sentence currently asserts the negation
+  of a state its input cannot express.
+- **The comparability guard cannot catch the churn that actually happens.** Three findings
+  proposed adding `feeds.truncated` to the guard keys; two authors withdrew it. Ubuntu is
+  truncated on *every* run, so both snapshots compare equal in exactly the case where the
+  200-page boundary has moved and taken rows with it, and those rows render as "No longer
+  listed, cause unverified" with the IDs printed. Record per-feed ID-set size and the
+  oldest returned advisory date for every paginated or windowed feed, compare magnitudes
+  and window edges rather than status names, suppress an ID from `no_longer_listed` when
+  its only sourcing feed degraded or its window moved past its `public_date`, and count
+  the suppressions. Raise the ubuntu cap and the ghsa 40-page cap (against a measured
+  83-day rolling window) before `/changes` is presented as a record of anything. The
+  exposure is large: 60 of 150 rows are ubuntu-only and 36 of 58 named rows are.
+- **Move the degraded and truncated banners into `templates/base.html`** beside the
+  staleness banner, so they render on every page including `/cna`. Every published build
+  is a truncated build and the only disclosure is on `/method`, which simultaneously
+  asserts no feed failed. PLAN.md:383-385 states the rule ("never publish a degraded run
+  without a banner") and it is broken on every run.
+- **Assert corpus completeness.** `refresh_corpus` discards `applied` and writes
+  `corpus_date=baseline_date` unconditionally, so a delta day that parses to zero rows is
+  stepped over permanently: `wanted` selects `d >= have`, `missing` only covers days
+  absent from the release feed, and `gap` is then 0 forever. A single change to the delta
+  zip's internal layout freezes the corpus silently and forever, and the open
+  `restore-keys: corpus-index-v2-` prefix restores the frozen index on every subsequent
+  run. Because the corpus is the ground truth for `reconcile`, `Grader.grade`,
+  `published_last_12mo` and `coverage`, a frozen corpus stops detecting closures entirely:
+  already-published IDs keep accruing `days_public` against named CNAs while every health
+  surface reads green. Advance `corpus_date` only to `max(applied)`; fail when `applied` is
+  empty while `wanted` was not; bind the cache key to `hashFiles('rbp/cvelist.py')` plus
+  the schema; validate the restored index against the release survey; and add the one-line
+  canary that catches the whole class: assert `max(corpus["date_published"])` is within a
+  day or two of today, right after `ensure_corpus`.
+
+### 16. Make the freshness claim falsifiable, and notice when the pipeline stops
+**HIGH, launch blocker. Raised by: Python, Actions, MITRE, Design, Consumer, CISA,
+Marketing.**
+
+`stats["generated_at"]` is written at `cli.py:170` and `age_hours` is computed in
+`site.load` against `now()` in the next step of the same job, so `stale` (>12h) and
+`very_stale` (>24h) are always False and the footer freezes at "(0.0h ago)" forever.
+Verified empirically: `grep -c stale-banner` over all eight built pages returns 0. The
+failure this was written to detect (a schedule disabled after repository inactivity, a
+displaced tick, a build failure) leaves the last successful page deployed, and that page
+asserts it is fresh. The test that "proves" the feature writes a synthetic timestamp the
+pipeline cannot produce.
+
+- Emit `generated_at` as `<time datetime="...">` and compute the age in the browser
+  against `Date.now()`, which is the only clock a static page has, in a reserved
+  fixed-height slot so the banner does not push a 104px lead count down after first paint.
+  Keep the server value for the footer only.
+- Make `templates/data.html:8` ("Stable URLs, rebuilt every six hours") data-driven from
+  the same value. A stalled pipeline currently puts "This data is 40 hours old" directly
+  above "rebuilt every six hours" on the one page a consumer builds against, and that page
+  is wrong in two further places: it describes `precision.json` by fields the published
+  file does not have, and documents a `data/cna/<slug>.json` directory the pre-launch
+  build does not write.
+- Add the external check against the published `generated_at`. A workflow that stops
+  running emits no in-repo signal at all, so this is the only control that survives the
+  failure. Add the `notify` job from item 10; an issue write is also repository activity,
+  which helps keep the schedule alive.
+- Move the cron off the top of the hour (`'17 */6 * * *'`), the slot most likely to be
+  delayed or dropped. And harden the recovery path before trusting `timeout-minutes: 45`:
+  a gap over `MAX_DELTA_GAP_DAYS` forces the full-baseline branch, which is
+  `urllib.request.urlretrieve(url, dest)` with no timeout, no retry and no size cap
+  against a 583 MB asset, inside a budget calibrated on 6.9 to 14.9 minute warm runs. The
+  least-tested path is the one an outage guarantees you take. Add a greppable test that no
+  template states an interval as a completed fact.
+
+### 17. Accessibility and the primary data surface
+**HIGH, launch blocker for the stated audience. Raised by: Design (r2, r3), endorsed by
+CISA on Section 508 grounds, and by Marketing on positioning grounds.**
+
+Two reviewers independently measured these and one called them disqualifying for a
+federal reader: a documented WCAG failure on the primary data table is a bar to citing or
+embedding a third-party resource from official guidance, regardless of data quality. All
+of the fixes are small.
+
+- **Contrast.** Ten measured AA failures across both themes, all traceable to three
+  inherited cve.icu tokens never re-audited against the striped-row background this
+  project introduced at `rbp.css:200`. Worst: `td.unattributed` at **1.75:1** on the
+  stripe, on 92 of 150 rows. Also failing: every link on every even row (3.80:1), the
+  column headers themselves (3.95:1), `.qualifier` and `td.desc` (3.95:1),
+  `.result-count` and `.filters label` (4.45:1), the `.page-header` subtitle on every page
+  including all `/cna` pages (4.10:1), and in dark theme `td.unattributed` (3.30:1) plus
+  everything taking `--color-primary`. Introduce project-owned text tokens in `rbp.css`
+  measured against `--color-bg-content`, `--color-bg-secondary` and `--color-bg-hover` in
+  both themes, and pin the ratios in a check. Do not audit against white; half the rows
+  are not white, which is the mistake the false comment at `rbp.css:206` already documents
+  making (that comment claims AA "against the card background" for a class that only ever
+  renders in a table). The semantic point matters as much as the standard: the least
+  certain cell on the page, the site's own abstention marker, is the least legible, so the
+  site's conservatism is the part a reader cannot see.
+- **The sticky header never sticks.** `.tablewrap { overflow-x: auto }` makes the wrapper a
+  scroll container on both axes, so `th { position: sticky; top: 0 }` binds to a scrollport
+  with `max-height: none` that never scrolls. Proven three ways; at 4000px scroll the `th`
+  sits at -3,630px. So an 11,982px table (about 44,000px at live scale) is read with no
+  column labels visible at any point, and the columns a reader loses are Inferred owner,
+  Confidence and Rule, which carry all the hedging. Fix:
+  `.tablewrap { max-height: calc(100vh - 8rem); overflow: auto }` and
+  `th { top: 0; z-index: 20 }`, give the header its own fill (it currently shares the
+  even-row stripe token), and make the header height a token since two sticky offsets must
+  agree.
+- **Keyboard and screen reader.** Sorting is a click listener on a non-focusable `<th>`
+  (SC 2.1.1, level A): seven columns unreachable without a pointer, while `aria-sort` is
+  maintained correctly, so the state is announceable and the control is inoperable. The
+  322px-overflowing scroll container has no `tabindex`, `role` or accessible name.
+  `render()` replaces `#body.innerHTML` wholesale with no `aria-live` anywhere, so a
+  filter that matches nothing announces nothing. No `<caption>` on any table, no `scope`
+  on any `th`, and one `outline` rule in the entire project, so no focus treatment was ever
+  designed. Fixes: a `<button>` inside each sortable `th`;
+  `<div class="tablewrap" tabindex="0" role="region" aria-label="...">`; `aria-live` on
+  `.result-count`; an explicit empty-state row; a `<caption>` carrying the certainty
+  statement (which also fixes item 20's constant-qualifier problem).
+- **`/cves` below 768px.** The table lays out at min-content 2,488px in a 351px wrapper, a
+  7.1x overflow that `min-width: 940px` guarantees can never reflow, so 86% of every row
+  is off screen and the Inferred owner column is never visible on a phone. The filter bar
+  is actively mislabelled: `.filters` wraps between each label and its own control, so
+  three visible labels sit beside controls they do not describe. `rbp.css` contains **zero**
+  `@media` rules, so this is the first breakpoint in a layer that has none. Below 768,
+  render each row as a card from the client-side JSON, with hedges adjacent to the claims
+  they qualify.
+- **No `<h1>` on the front page.** `document.querySelectorAll('h1')` is empty on
+  `index.html` and `overview.html`; the outline starts at H2. Every other template has
+  one and `style.css:459` already styles `.page-header h1`. The same page is also the only
+  one with no distinct `{% block title %}` and no `og_title` override, so the page that
+  will be ranked and linked most is headingless and generically titled. One small commit.
+- **No empty-state design anywhere.** `/changes` ships today as an `<h1>` plus one grey
+  sentence, 167 characters of `<main>`, as item four of seven in the primary nav, and that
+  is also what launch day looks like. `index.html:150` already handles the same condition
+  correctly, so the pattern exists and was not applied. A zero-row `/cves` renders the
+  full filter bar plus CSV and JSON links that produce a header-only file. Design one
+  empty-state treatment (a plain bordered block, not `.caveat warn`; empty is not a
+  warning) and use it in all three places, and suppress export links on a zero-row table.
+- **Print strips every hedge.** `rbp.css` has no `@media print`, and the inherited print
+  block forces `color: #212529 !important` on `td, th, span, a`, collapsing the whole
+  certainty vocabulary to one ink (a candidate MUST becomes indistinguishable from a
+  SHOULD, `td.unattributed` loses its distinction), while not resetting `.tablewrap`'s
+  `overflow` or the table's `min-width`, so an overflow box with no scrollbar clips
+  everything past about 680px with no indication. A PDF is the most likely way a named CNA
+  circulates its own page internally. Add a print block: reset the overflow and min-width,
+  drop to the four columns that carry the claim, re-express the chip and unattributed
+  distinctions as border or weight, and print the standing hedges immediately after the
+  `<h1>`.
+
+### 18. Strip introducing and fixing commits out of published descriptions
+**BLOCKER, cheap. Raised by: Marketing (r3), with CISA (r2) amending its own detail-boundary
+finding to the same conclusion.**
+
+Measured over the 150 published rows: 13 descriptions contain a URL and 11 carry Debian
+security-tracker annotations, including `NOTE: Introduced with: <commit URL>` and
+`NOTE: Fixed by: <commit URL>`, several cut mid-URL at the 180-character ceiling. 46 of
+150 carry mechanism language and 62 are cut mid-sentence. An "Introduced with" pointer is
+not a description of a flaw, it is a pointer to the vulnerable code, reproduced inside a
+curated list of CVE IDs selected precisely because no record has been published. The
+defence that Debian already publishes it is true and will not survive the headline, and it
+is gratuitous: the annotation identifies nothing a defender needs.
+
+Strip URLs and `NOTE:` / `DEBIANBUG` annotations before `description` leaves
+`report.py`, then cut at the first sentence boundary rather than at 180 raw characters.
+Add the build assertion that no published description contains `http` or `NOTE:`. Keep the
+field: with an empty package on 52 of 96 named rows, and no package at all on CSAF rows,
+the description is the only identifier a defender has, so deleting it makes the site less
+useful without making anyone safer. Then amend PLAN.md section 3, which still lists
+"vulnerability detail beyond the verbatim advisory title" under "Never say", so the plan
+describes what the code does.
+
+### 19. Decide the MITRE framing before a journalist decides it
+**BLOCKER (a decision, not a code change). Raised by: Marketing (r2, r3), MITRE (r2),
+CNA (r2), CISA (r3), Design.**
+
+Three facts that are individually documented above and only become a problem together.
+`mitre` holds 33 of 58 named rows, exactly the anonymous "56.90% Share of named rows held
+by the single largest CNA" rendered as the first metric tile. Those rows are third-party
+OSS plausibly assigned through the CNA-of-Last-Resort path (gst-plugins-good MKV demuxer,
+mbedtls, an NXP ENET IRQ handler, mongoose, a GIMP LBM parser), 29 of 33 sourced from
+`ubuntu` alone and 30 of 33 at `indep_sources: 1`. And the ask is addressed to the
+Secretariat. `grep -rn 'CNA-LR\|Last Resort\|requester\|delegat' rbp/` returns nothing, so
+no field distinguishes an ID a CNA-LR reserved for a third-party requester from one a
+vendor reserved for its own advisory. The pinned policy fixture makes it worse: under
+v2.0.0 a Root can delegate publication to a CNA-LR, so the largest accusation on the site
+may be concentrated on the mechanism the policy defines as the fix.
+
+The story "MITRE is the largest holder of CVE IDs that violate MITRE's own publication
+policy" is irresistible, is what the front page's first tile says once the name is filled
+in, is not supported by the data, and would make the ask unwinnable.
+
+- Do not build a delegation inference; the data does not support one. State the limitation
+  on `/method` and on the `/cna` page of any Root, TL-Root or CNA-LR, quoting the
+  delegation sentence, and say plainly that some rows may be IDs delegated to this CNA for
+  publication rather than withheld by it, and that this tool cannot tell which.
+- Replace the single-share tile with a distribution over named CNAs, captioned as a
+  property of block width, feed coverage and assignment role rather than of CNA behaviour.
+  Do **not** simply name the CNA in the tile: a lead-screen tile naming one CNA as holder
+  of the majority is a leaderboard with one entrant, which PLAN 2a forbids and which
+  `clock.py:440-447` deliberately refuses to build in the per-CNA view.
+- Say once, in the lead block, that the count is a Program-level transparency measurement
+  and not a CNA scorecard.
+- Draft the two-sentence answer to "so MITRE is the worst offender?" and make sure the site
+  already contains it.
+- Pin the delegation sentence in `tests/test_policy.py`, since it is now load-bearing for
+  the site's own caveats.
+
+### 20. Bound the lead screen, and lead with the defensible number
+**HIGH, launch blocker. Raised by: Design (x3), CISA, Consumer, Marketing (x2), CNA.**
+
+The count is the whole product and it carries none of its qualifiers. `grep -rn coverage
+templates/` finds `summary.coverage` only at `method.html:249-257`; the built front page
+contains no occurrence of the denominator 434; `undated_excluded` (63 against a headline of
+150) appears on `/cves` inside a caveat block measured at y=9,665, projecting past y=44,000
+at live scale; `summary.feeds.truncated` is `["ubuntu"]` with the banner only on `/method`.
+`base.html:19` emits `og:description` as the raw count with no guard on all seven noindex
+pages under a hard-coded root `og:url`, which is the one string that travels into Slack,
+Teams and every link preview, and unfurlers do not read `robots.txt`.
+
+Worse, the number being led with is the least defensible one. Measured: `indep_sources` is
+1 on 98 of 150 rows (65%), 60 of 150 rows are `ubuntu`-only (40%), and `ubuntu` is the feed
+that admits truncation on every run. The site already computes and publishes the
+corroborated subset (`kpi_core`, `indep_sources >= 2`, 52 rows here and 179 at live scale)
+and renders none of it on the front page.
+
+- Lead with the corroborated figure in the sentence, with the total beside it: "N CVE IDs
+  are reserved, referenced in two or more independent public advisories, and still
+  unpublished", "and M seen in at least one".
+- Add one bound strip directly under `.lead-unit`, generated from `summary` rather than
+  written, so it cannot drift: feeds reach N of M CNAs (X%), K IDs excluded as undated and
+  unageable at any threshold, E held back pre-epoch, F feeds truncated this run, each
+  linking to `/method`. Put it inside `.lead-sub`, which already has the rule and the 62ch
+  measure.
+- Rewrite `og:description` to carry the corroborated figure and the coverage bound, and
+  gate it on `launched` so a pre-launch paste stops publishing the pre-gate count. Emit
+  per-page `og:url` and `og:title`, add a canonical link, and give `placeholder.html`
+  `og:title`, `og:description`, a `<meta name="description">` and a 1200x630 image, since
+  it is the only page anyone can reach and currently unfurls as a bare link.
+- Fix the tile row: every tile has a different unstated base. "56.90%" is 33 of 58 named
+  rows, which a reader takes as a share of the backlog and is therefore read 2.6x too high
+  (it is 22% of the 150 rows on the page); "5 CNAs" is against a roster of 434 that appears
+  nowhere; "185 days oldest" excludes 63 unageable rows, so it is the oldest *datable* row.
+  Put the base in every tile as a second line, move the two instrument metrics
+  (top-owner share, named-CNA count) into the bound strip where they belong, relabel
+  "Days, oldest outstanding", and change the `pct` filter (`site.py:297`) to one decimal or
+  an integer while keeping the raw ratio in the JSON. Two decimals on a 58-row base implies
+  a precision of one part in ten thousand.
+- Drop the precision `n/a` tile. It renders the literal string "n/a" in a 2rem
+  `.metric-value` with a 70-character label, and measures 182-204px against 136px for its
+  siblings, so a withheld figure sets the height of the whole row. Adopt the rule once: a
+  tile holds a number or it does not exist, and absence is prose. Then fix the surviving
+  three, which currently mix three denominators and one non-accuracy metric (run coverage)
+  under one accuracy heading with no base rendered on any of them.
 
 ---
 
-## Part 2: the launch gate
+## Part 2: what should join the 50% coverage gate
 
-The stated gate is 50% CNA coverage (currently 36.4 to 40.6%). Keep it exactly as stated:
-it is in a public repo, and swapping it for easier-sounding conditions after failing to
-reach it reads as moving the goalposts, with the diff as evidence. Add these conditions on
-top, in the same commit, and say plainly that the additions are about concentration and
-fairness rather than breadth.
+The panel's clear consensus is that the coverage gate as defined is necessary and
+nowhere near sufficient, and that five findings assumed it was the only gate. Promotion
+should require all of the following, written into PLAN.md as a go/no-go checklist and
+published on `/method` so the commitment is checkable from outside:
 
-1. **No single CNA above 50% of named rows.** Today one CNA is 84 to 96% of named rows and
-   100% of the MUST count. Breadth is not what makes this unfair; concentration is.
-2. **At least 10 CNAs whose own advisory feed is ingested**, so a candidate MUST is
-   reachable for more than one organisation. Today it is one on the scheduled profile.
-3. **No named CNA below the 97% floor** at the (CNA, gap-width) cell its live rows
-   actually occupy. This is the condition that would have caught both bad rows before
-   anyone had to notice them by eye.
-4. **Every named CNA notified, with the correction window elapsed**, through a route that
-   exists, including a private one. The project's own rule (`rbp/report.py:363-364`)
-   already requires this and the six-hourly deploy currently breaks it.
-5. **The list submitted to the Secretariat and the relevant Roots**, with the outcome
-   stated on the site.
-6. **All Part 1 blockers closed and their CI assertions green**, including the
-   `len(rows) == summary["total"]` invariant and the epoch integration test.
-
-Also: coverage must be published and the gate enforced in `site.py`, or none of the above
-is a gate. And measure it against the Program's partner roster, not against corpus
-assigners.
+1. **Coverage** measured as `cnas_detectable` on the profile the cron actually runs,
+   against a pinned roster, at or above the stated threshold, with the profile recorded in
+   `summary.coverage`. Top-50-by-volume coverage reported alongside it. (Item 7.)
+2. **No ungated name on any world-readable artefact**, enforced by a publish-time
+   assertion, not a test. (Items 2, 9.)
+3. **Every CNA named anywhere on the site inside the covered set** for the run that named
+   it, as a build invariant that fails forever, not a threshold checked once. (Item 3.)
+4. **A monitored non-public correction channel exists, and a suppression lever exists
+   behind it**, with a published aggregate withheld count. (Item 4.)
+5. **The 24-hour naming warrant is bound in code** with a floor that refuses to run below
+   it. (Item 8.)
+6. **One precision figure, stratified, with its sample composition stated** in the same
+   sentence as the number. (Item 21.)
+7. **A dated immutable archive exists** so anything cited before launch stays resolvable
+   after the epoch flip. (Items 2, 14.)
+8. **A failure notification exists** and has been exercised once. (Item 10.)
+9. **The launch state has been rehearsed** via `dry_run` against real data, including the
+   epoch flip. (Item 1.)
 
 ---
 
 ## Part 3: wanted, not blocking
 
-Ranked by value per unit of effort.
+Ranked by value per unit of effort. Several of these are prerequisites for items in
+Part 1 and are marked as such.
 
-1. **Rejected-while-public as a first-class class** (CISA, Consumer, MITRE, CNA, Python,
-   Marketing). The best additive idea on the board and the best post-launch beat. A CVE ID
-   cited in a public advisory and then rejected is a permanent orphan reference: the
-   advisory stays up, the ID resolves to nothing forever, and every CVE-keyed pipeline gets
-   a permanent miss. It is strictly worse for defenders than an RBP, nobody publishes it,
-   and the code currently counts it as the backlog healing itself. Prerequisite: stop
-   caching REJECTED in `rbp/classify.py` (`_IMMUTABLE` plus permanent caching means these
-   rows are already unreachable; 13 are sitting in the local cache today), because after
-   that the population is unrecoverable without a cache wipe.
-2. **KEV cross-reference** (CISA, Marketing, CNA, MITRE, Consumer). A `kev` boolean and
-   `kev_date_added` joined on `cve_id` from CISA's free catalog, with a front-page line and
-   a `/cves` filter. It is the single change that turns an age-ordered compliance list into
-   something a defender acts on, and it adds exactly zero information to an attacker
-   because those entries are already exploited and already federally published. Keep the
-   scope discipline: no CVSS, no EPSS, no severity of the site's own. Publish the zero when
-   the intersection is empty; volunteering the reassuring result is what makes the alarming
-   one credible.
-3. **A time series.** There is no count-over-time surface anywhere and no history export,
-   so the site can only ever produce bad news, and the snapshot-per-date overwrite is
-   destroying the raw history as it is produced. Append one record per run to
-   `data/history.json` (timestamp, total, past_expectation, median, coverage, degraded,
-   profile, sha) and render one line chart beneath the lead count. This is what makes the
-   count citable more than once, and it is the only surface on which the project's own
-   declared win condition could ever be visible.
-4. **Delta and resolution exports.** `data/changes.json` (three verified buckets),
-   `data/resolutions.json`, `data/held_back.json`. `changes` and `resolutions` are already
-   built into the render context and discarded to HTML, so this is two `json.dump` calls.
-   Hold the Atom feed until `/changes` can distinguish "new because a CNA missed a
-   deadline" from "new because a feed was added": a subscription surface converts that
-   ambiguity into a stream of individually wrong notifications aimed at named
-   organisations.
-5. **Per-CNA change feed.** More valuable to the named party than a site-wide feed: add
-   new/resolved/dropped to `data/cna/<slug>.json` and print the URL on the page, so a CNA
-   can be notified rather than ambushed.
-6. **Per-row proof link.** Nothing on any row links to the evidence of non-publication; the
-   CVE ID links offsite to a third-party advisory. The row already carries `state` and
-   `cve_id`, so a reservation-endpoint link is free, and it lets `/method` say every row is
-   independently checkable in one click. Mark external links with `rel` and a consistent
-   affordance, and fix the footer links, which are currently pixel-identical to plain text
-   in both themes (1.0:1 link-versus-text contrast) including all four normative citations.
-7. **Quote hierarchy.** The standing offer ("Unredact `owning_cna` and publish an RBP
-   metric, and this site will point at yours instead") renders at 11.67px in the footer,
-   the smallest text on the site, while the lead count is 104px: a 9:1 type ratio between
-   the most defensible sentence and the most contestable framing. Promote it into the lead
-   block at body size, and decide the one sentence the project wants quoted.
-8. **Wire the good product map back in.** `product_cna.parquet` (17,366 products at the
-   equivalent gate) is built, cached, restored and read every run only to have its length
-   printed, while `Attributor` rebuilds a degraded 7,698-product map from the corpus's
-   first-affected-product column, which is exactly the degradation `apply_deltas`'
-   docstring says it exists to prevent. Use it **negatively** (contradiction and
-   plausibility gates), not to promote more rows to corroborated. `cvelist.load_index` is
-   entirely unreferenced; delete it or use it.
-9. **Corpus integrity guards.** Row-count floor, monotonic non-decrease, zero PUBLISHED
-   rows with an empty assigner, column-order assertion, a content hash and the pyarrow
-   version in `corpus_state.json`, atomic parquet write, and a guarded read that falls
-   through to the full rebuild rather than raising. The `assigner` column is simultaneously
-   the grader's ground truth and the substrate of every name on every `/cna` page, and
-   `drop_duplicates(keep="last")` can blank it with no check. Two wedge paths exist: an
-   unreadable parquet the warm path cannot recover from, and `refresh_corpus` stamping the
-   corpus as current when zero deltas were applied (reproduced), which freezes the grader,
-   the ledger and `published_last_12mo` while every symptom reads as a finding about CNA
-   behaviour.
-10. **One hardened HTTP path.** Move `_OPENER`, `_url_ok`, `_get` and `_stream_zip` into
-    `rbp/http.py` and have `classify` and `cvelist` use it, with a test that no module
-    calls `urllib.request` directly. The SSRF control exists in exactly one of three
-    network modules; the exposed ones are the two that fetch from URLs taken out of remote
-    JSON.
-11. **Per-source provenance.** `dates`, `products` and `descriptions` keyed by source, an
-    explicit documented precedence constant instead of iteration order, and
-    `public_date_source` published. Verified: `gather` resolves product and description by
-    first-non-empty in profile-string order, so reordering one string literal changes every
-    row's displayed text and re-resolves the product map across the corpus, and an
-    ALAS-only row reaches the attributor with `product == ""` by construction, which is why
-    the plausibility gates cannot fire on exactly the rows that produced the two bad names.
-    Publish a per-feed date-semantics table on `/method`: the six date fields do not all
-    mean the same event, and for the 112 rows dated only by flaw-date feeds the floor
-    property is not guaranteed.
-12. **Naming coverage over the published set.** `run_coverage` is computed over the full
-    724-row backlog and rendered beside a 553-row table. The numeric difference is 0.3
-    points, so this is a labelling fix: rename the published key `backlog_coverage`, add
-    `published_coverage`, and label it as abstention rather than as shortfall, since
-    declining to name half the rows is the site's best evidence of discipline.
-13. **Histogram.** The lowest band is derived from a hardcoded 7 while `min_age_days` gates
-    the set, so `<7d` can never be produced (the key is absent from the published
-    `age_buckets` entirely, which is also an undeclared sparse-schema hazard for
-    consumers), and `.histo-bar { min-height: 2px }` draws 0 and 8 identically. Derive the
-    lowest band from `min_age_days`, emit all bands explicitly, remove the min-height, and
-    rebband to the real mass. The panel split on whether to keep the chart at all; the
-    chair's view is keep it, because it is the only visual that answers "this is just
-    publication latency", which is the objection that decides how the site is read.
-14. **Linked-filter degradation.** A shared `?owner=X` URL silently renders all rows and
-    `writeUrl` then erases the evidence that a filter was requested, on a page that
-    promises linkable views; a bogus `?sort=` renders source order while presenting itself
-    as sorted; and `'&mdash;'` inside three Jinja expressions renders as literal
-    `&amp;mdash;` under autoescape. Inject a disabled option and a visible notice, move
-    `aria-sort` to the restored column, and use a plain ASCII placeholder (the house style
-    excludes em dashes anyway).
-15. **Data branch retention.** Verified 1.44 MB per snapshot day, append-only, with two
-    directories ever read and no pruning anywhere, so the branch grows roughly 525 MB a
-    year toward the 1 GB ceiling the project's own `.gitignore` documents, and every run
-    downloads and copies all of it. Dropping `backlog_full.json` and `report.md` from the
-    pushed set (item 4) removes about 90% of the growth. Add a retention policy before
-    timestamp-keyed snapshots multiply the rate.
-16. **Baseline index memory and the cold path.** `build_index` holds the 647 MB inner zip
-    in RAM (measured 2.44 GB peak) while its docstring claims the opposite, the zip-bomb
-    ceiling is applied after the largest allocation, and the `ZipFile` objects are never
-    closed. Stream to a temp file, close the handles, move the ceiling ahead of the
-    allocation, and correct the docstring. Comfortable on a 16 GB runner today; the
-    docstring is the real hazard.
-17. **Nav and orientation.** No current-page indicator on any of eight route types though
-    `.nav-menu a.active` is already styled and `page` is already in the context, and no
-    breadcrumb on the per-CNA page, which is the deep-link entry point. One expression per
-    nav item, no new CSS.
-18. **Share previews.** Per-page overridable `og_title` and `og_description` blocks (the
-    title is already a block that no child overrides), the CNA name and row count on
-    `/cna`, `og:url` from the page path rather than a constant, `twitter:card`, and a
-    1200x630 image carrying the floor caveat rather than a number that goes stale in six
-    hours. Build the floor into the verb ("At least N CVE IDs...") rather than a
-    parenthetical that truncation will eat first.
-
----
-
-## Part 4: dropped, and why
-
-These were argued and did not survive, or survived only in amended form. They are recorded
-so they are not silently reopened.
-
-- **"Two public copies of 2026-08-20 disagree by 151 rows" as a live blocker.** Withdrawn
-  by its author: both files compared are gitignored local builds from two hand-run
-  invocations, not published copies. What survives is real and is folded into item 18:
-  missing run identity, a date-keyed snapshot directory that overwrites in place, and a
-  persist step that runs before the Pages upload so the branch can advance past a snapshot
-  the public never saw.
-- **A flat `gap <= 10` abstention gate.** Refuted by measurement: it deletes 30 mitre rows
-  at 97.7 to 99.8% precision and keeps 23 GitHub_M rows at roughly 90.7%. Superseded by
-  the joint (CNA, gap band) cell gate in item 11.
-- **A per-CNA precision floor as the sole gate.** Self-corrected by its author for the
-  mirror-image reason: it keeps all 236 GitHub_M rows including the weak mid-gap band. Also
-  superseded by the cell gate.
-- **"Require two or more independent sources before naming."** Both known-bad rows carry
-  `indep_sources: 3`. Independent-origin counting is a mirror-collapse gate, not a
-  plausibility gate, and must not be presented as a correctness check on the owner name. It
-  does still bite for MUST specifically, where 197 of 210 rows are single-origin.
-- **Using `attribution.CURATED` against the free-text description as a suppression signal.**
-  Measured roughly 50/50: it would suppress a probably-correct zdi row (100% precision on
-  n=102) alongside the true catches, and it reintroduces the substring hazard
-  `attribution.py` documents having already fixed once. Replaced by the product-map
-  contradiction gate and the corpus-derived ecosystem gate.
-- **Gating on the existing `ecosystem` field.** It is an OSV package-ecosystem label,
-  populated on 374 of 553 rows and empty on exactly the distro-sourced rows the gate needs,
-  including both exemplars. The corpus-derived version stands.
-- **`if: always()` on the persist step.** Would commit a half-written ledger over the good
-  one, which is the corruption the atomicity finding is trying to prevent. Keep persist
-  gated on success; the reorder and the retry loop stand.
-- **`cancel-in-progress: true` on the pages concurrency group.** Creates an interruption
-  window on the in-place parquet rewrite and can cancel an in-flight `deploy-pages`.
-  Timeouts plus atomic writes get the same recovery without the corruption window.
-- **Cross-branch or fork poisoning of the corpus cache.** Refuted: Actions cache entries
-  are scoped to the current ref and the default branch, so poisoning requires push access
-  to `main`. The guards stand as robustness and reproducibility work, not as an attack
-  path.
-- **SHA-pinning the actions as a priority item.** All five are first-party `actions/*`;
-  the unhashed pip range is the real exposure. Reduced to low, and the server-side
-  `sha_pinning_required` setting is a better fix than per-line comments.
-- **Deleting 4.5.3.5 from the site.** Amended, not adopted. Its current use on `/policy`
-  ("a long-lived reservation is not a neutral state") overreaches and should go, because
-  read literally it makes every reserved ID a live breach and it points a pressured CNA at
-  the outcome worst for defenders. But the rule is load-bearing in its correct home: it is
-  why rejection is a lawful terminal outcome, which is the basis for the rejected-while-
-  public class.
-- **Exporting `owner` as null in JSON and empty in CSV.** Refuted: a blank reads as missing
-  data, invites `row.product_map_owner or row.owner` coalescing, and a spreadsheet fill-down
-  turns it into a real misattribution. Keep the `unattributed` sentinel, add
-  `owner_nameable` and `owner_status`, and do not rename the published key on an
-  unversioned file.
-- **Renaming `past_expectation` to `days_public_exceeds_expectation_floor`.** Refuted as
-  unusable. Keep the field, add `expectation_clock: "floor-from-first-public-reference"` to
-  the envelope, and fix the on-page copy, which is where the risk actually lives.
-- **Repairing the `/cnas` rate statistic (relabelling, or a composite denominator).**
-  Refuted in favour of deletion, item 15.
-- **Deleting `report._gated`'s `self_disclosed` recomputation.** Refuted: reading a field an
-  earlier stage set is the direction that caused a shipped production outage. The dead
-  `_OWNER_FEEDS` table is the real defect.
-- **Building a render-time duration filter for "four and a half years".** Refuted as
-  premature: the paragraph is being rewritten. If a span survives, state the two dates
-  (2022-01-25 "will be replaced at a later date" to 2026-08-13 v2.0.0), which is checkable
-  and is also the only version of the claim that is unarguable.
-- **"There is no public record that a CNA was notified" as an unscoped absolute.**
-  Downgraded to low. The claim appears to be true, but it is asserted from absence of
-  search rather than from evidence, and "the Board archives and working group minutes are
-  public" is a complete rebuttal to the sentence as written. Scope it and turn it into the
-  ask: report RBP notification and remediation volumes in aggregate.
-- **Replacing the 50% coverage gate.** Self-refuted by its author. Keep it and add
-  conditions, Part 2.
-- **A site-wide Atom feed of newly appearing rows.** Deferred, not dropped, and it must not
-  ship before the notification path and the feed-addition ambiguity are fixed. A resolutions
-  feed is the safe one to ship first.
-- **The claim that `/changes` says "since last run".** Refuted: the templates render
-  "Against snapshot {{ changes.previous_date }}". The interval defect is real and the
-  phrasing is in PLAN.md, not on the site.
-- **The claim that the CSAF publisher is parsed and discarded** (asserted in four
-  findings). It is retained in `refs` as `csaf:<publisher>:<id>` and is already published,
-  which makes the publisher-keying fixes cheaper than the panel believed, and which is also
-  why item 18's array-and-escaping fix is a prerequisite rather than a nicety.
-- **`deploy.yml:128` as the pre-launch mechanism.** It is dead code; the holding page is
-  installed by `rbp/site.py:235-239`. The holding-page conclusions are unaffected, and the
-  dead branch is its own small hazard (item 19).
-- **The claim that a single-feed failure would publish hundreds of false resolutions.**
-  Measured: feeds overlap heavily, and total loss of any one feed strands at most about 5%
-  of rows (osv 36, debian 35, alpine 23, csaf 12, redhat 9, ghsa 5, ubuntu 0, alas 0). The
-  unbounded departure causes are the feed profile switch and the MUST bucket. Argue it on
-  the profile, not on hundreds.
-
----
-
-## Part 5: chair's additions
-
-Five things the panel did not raise, and which the chair believes belong on the list.
-
-1. **Hand-review every named row before the first notification, and every new CNA's first
-   appearance thereafter.** There are roughly 280 named rows across 9 CNAs. That is a few
-   hours of reading, it would have caught both bad rows before six reviewers had to find
-   them, and it is the only control that catches the error class no gate anticipates. Make
-   it a standing rule: the first time a CNA appears on this site, a human looks at the row.
-   Record the review in the repo so the discipline is visible.
-2. **Verify mechanically that the CVE ID appears in the advisory you link.** The typo class
-   is currently addressed only by rhetoric (a false absolute on `/method`). Fetch the
-   `advisory_url` and confirm the CVE ID string is present in the page or the feed record
-   that produced it. That is a real check against transcription errors upstream, it is
-   cheap on a few hundred rows, and it converts "a typo cannot inflate the count" from a
-   claim into a measurement. Publish the count of rows that failed the check.
-3. **Bound the floor with a sampling audit.** The site says "counts are a floor" everywhere
-   and never estimates how far below the true number it is. Take a random sample of reserved
-   IDs from the corpus-adjacent population, check by hand whether each is publicly
-   referenced, and publish the estimated miss rate with its interval. Without that, the
-   floor claim is unfalsifiable, which is exactly the property the site criticises in the
-   Program. It is also the strongest possible answer to "your feeds only reach a third of
-   CNAs".
-4. **Decide the publishing entity, the terms, and the corrections policy before
-   notification.** An individual publishing accusatory claims about named organisations, on
-   a domain with no entity, no terms of use, no data licence and no stated corrections
-   policy, is carrying risk that a paragraph and a page would materially reduce. Publish:
-   who publishes this, under what licence the data is reusable, how a correction is
-   requested, how long it takes, and what happens when the site declines. The appeals ladder
-   is part of the mechanism, not an afterthought.
-5. **Decide deliberately whether PLAN.md stays public.** It is on `main` in a public repo
-   and it contains the launch strategy, the predicted attacks, the risk register and the
-   project's own assessment of where it is weakest. That is a gift to a hostile reader and
-   also, arguably, the most honest artefact the project has. Either is defensible; inheriting
-   it is not. If it stays, it should be written knowing it will be read, and the review
-   documents that accompany it (including this one) should be too.
+21. **Stratify the precision claim, and publish one value.** HIGH. (CNA r2, MITRE r2,
+    Consumer.) The out-of-sample warrant is 100% on n=224, and PLAN.md records twelve
+    lines later that 213 of the 224 were one CNA; verified against
+    `tests/fixtures/probe_2026-08-20.json` (GitHub_M 213 of 224 published cases). Eleven
+    cases inform every other CNA in the Program, and both known-wrong rows are outside
+    that 213. The outstanding ledger is 90 of 96 two block-holding CNAs, so the next 20
+    verdicts will be too and crossing `GRADER_MIN_N` would license a figure that never
+    tested the tail. The kill criterion is insensitive to the only failure mode that has
+    occurred: with both wrong rows graded wrong and the other 94 right, precision reads
+    97.9% and clears PLAN.md's ~97% floor while the tail error rate is 2 in 3. Group
+    `validate_loo` by true owner, publish per-CNA precision and coverage with
+    `MIN_DENOMINATOR` applied so a CNA below the floor reads "not separately measurable"
+    rather than inheriting the global figure, record contiguous-run length per prediction
+    now (it cannot be backfilled) so density bands are reportable later, make the floor and
+    the kill criterion per-stratum, and render the owning CNA's own row on `cna.html`
+    instead of the global figure. State the composition wherever the n=224 figure appears,
+    PLAN.md included. **Also fix the two-answers bug**: the `GRADER_MIN_N` floor lives only
+    in `site.py:48,170-172`, so `Grader.summary()` publishes the unfloored value into
+    `summary.json` (`inference.live.precision: 1.0` at graded 1, already live on
+    `origin/data`) beside `precision.json`'s `precision: null, below_floor: true`. Move the
+    floor into `Grader.summary()`, delete the recomputation, stop appending the unfloored
+    value into `history[].cumulative_precision`, and rename the derived file to
+    `accuracy.json` so one basename stops carrying two incompatible schemas (one has
+    `graded` as an int, the other as a list, and `/data` documents the fields of neither).
+22. **CSAF: publisher identity, coordinator separation, and a time budget.** HIGH, and a
+    prerequisite for item 7. (CNA, CISA r2/r3, Consumer, Python r2/r3.) Four defects in one
+    adapter. (a) `out, seen = [], set()` is initialised outside the provider loop and the
+    guard is on `cve_id` alone, so the first provider to yield an ID wins and every later
+    publisher's row is discarded before `gather` sees it, which means the surviving row's
+    `public_date` is whichever provider was enumerated first. Dedupe on
+    `(cve_id, publisher)`. (b) `_ORIGIN` maps `"csaf": "csaf"`, so a vendor's own CSAF
+    advisory counts as independent of that vendor's own feed and the row enters `kpi_core`;
+    emit `csaf:<publisher-slug>` as the source so it lands in both `sources` and `dates`,
+    map slugs onto origins, and add the test `_indep("redhat,csaf:redhat") == 1`. (c) The
+    agreed fix is unsafe unless the two uses are split: `_ORIGIN` must fold a coordinator's
+    or aggregator's republication onto the originating vendor for independence counting,
+    while `OWNER_FEEDS` must contain vendor slugs only. Keep an explicit
+    `COORDINATOR_PUBLISHERS` set (CISA, BSI CERT-Bund, JPCERT, CERT/CC, TR-CERT, INCIBE and
+    aggregator-discovered mirrors), populate it from the CSAF document's own publisher
+    category (`vendor` versus `coordinator`, already parsed), and assert at import that it
+    is disjoint from `OWNER_FEEDS`, or a US-government republication becomes evidence that
+    the vendor self-disclosed. (d) There is no wall-clock budget: the worst case for a
+    single provider is roughly 69 minutes against `timeout-minutes: 45`, `_get_text` has no
+    retry so one blip demotes a provider from dated `changes.csv` to undated `index.txt`
+    (and undated entries then sort last and are cut by `entries[:cap]`), and
+    `_expand_csaf_providers` reads the provider list out of a third party's
+    `aggregator.json` in that file's order with no sort, so a remote party decides which
+    CNAs `coverage.compute` credits. Add `deadline = time.monotonic() + budget` checked per
+    provider and per directory, record TRUNCATED when it trips, sort providers on a stable
+    key before truncating, and record the resolved provider list in `summary.json`. Also:
+    every CSAF row currently publishes `advisory_url` as the cve.org last-resort fallback,
+    a page that shows no record for a RESERVED ID, with `vendor`, `package` and `ecosystem`
+    all empty, on the entire ICS and enterprise-vendor population. The entry `href` is in
+    scope at `feeds.py:684` and discarded; carry it, add a `csaf` branch to `_u`, map the
+    publisher into `_SRC_VENDOR`, and parse a product token out of the product tree, which
+    also gives item 3's veto an input on ICS rows.
+23. **Split the workflow into three jobs and shrink the token.** HIGH. (Actions x2, CISA,
+    Consumer, MITRE, Marketing.) `permissions` is per job, so the `contents: write` +
+    `pages: write` + `id-token: write` token is in the environment of the step that parses
+    roughly 2 GB of third-party archives from hosts a remote aggregator chooses, after two
+    checkouts that leave `x-access-token` in `.git/config` (`persist-credentials: false`
+    appears nowhere), with three unpinned dependency ranges resolved from PyPI *after*
+    those checkouts and no lockfile. `refs/remotes/origin/data` is the only copy of both
+    ledgers, and `contents: write` is repository-wide, so a leak is persistence, not just
+    data loss: an attacker pushes to `main`, which the next tick executes with the same
+    permissions. Split into `build` (`permissions: contents: read`, which still lifts
+    api.github.com to 1,000 req/hr, all item 8's token was for), `deploy`
+    (`needs: build`, pages + id-token), and `persist` (`needs: deploy`, the only holder of
+    `contents: write`, receiving the snapshot tree as a workflow artifact since
+    `snapshots/` is gitignored). That single change also makes the comment at
+    deploy.yml:147-149 true (the persist step is currently the last step of the job
+    `deploy` depends on, so a push rejection discards an already-uploaded artefact) and
+    gives the staged-path assertion a natural home. Add `git fetch && git rebase` with one
+    retry, `permissions: {}` to `ci.yml`, a `requirements.lock` with
+    `pip-compile --generate-hashes` installed via `--require-hashes`, SHA-pinned actions
+    with Dependabot, `$GITHUB_STEP_SUMMARY` echoing the resolved
+    `{profile, min_age_days, epoch, launched, coverage, reportable_rows}` before the
+    pipeline runs, git trailers carrying `run_id` and `sha` on the state commit, and
+    `.state/` to `.gitignore`.
+24. **Ledger durability.** HIGH. (Python, Actions, CNA, CISA, Consumer, MITRE.) Three
+    policies contradict each other for one artefact: both constructors do
+    `except Exception: pass` and start empty, both `save()` methods then overwrite the
+    original, `site.py:72-74` refuses to publish from a corrupt ledger, and the suite pins
+    both policies at once (`tests/test_clock.py:250-254` asserts the silent reset,
+    `tests/test_site.py:227` asserts the raise, for the same file). The site's guard is
+    unreachable in the deploy flow because the pipeline overwrites before the build reads.
+    `grep -rn "os.replace\|fsync\|\.tmp" rbp/` returns one unrelated hit across ~20
+    writers, and `json.dump(obj, open(path, "w"))` truncates the file at the moment of the
+    call with no explicit close, so a serialisation error leaves a partial file. Order the
+    work by reachability, per the Actions amendment: the reachable destruction path in CI is
+    *absence*, not an interrupted write, because the runner is ephemeral and
+    `actions/cache` saves only on success. So: (a) the seed step must exit non-zero when
+    `.state` is checked out and non-empty but a ledger file is missing, instead of printing
+    "starting fresh" and continuing; (b) capture `len(graded)`/`len(resolved)` into
+    `$GITHUB_OUTPUT` at seed and fail the persist step if either decreased, dropping the
+    `2>/dev/null || true` masks, since a missing `precision.json` at persist time is a bug;
+    (c) mirror both ledgers off-repo (item 2's releases); (d) add one `_atomic_write` helper
+    (tmp, flush, fsync, `os.replace`, unlink on failure) and route all writers through it,
+    including the parquet writes; (e) on a parse failure of a non-empty file,
+    `os.replace(path, path + ".corrupt")` and raise, and delete the test that pins the
+    reset. These two files are the only artefacts on the branch not regenerable from a
+    snapshot, and `resolutions.json` is the only record that can ever say something good
+    about a CNA.
+25. **Ledger population drift.** MEDIUM. (Consumer, CNA, MITRE, CISA, Actions.)
+    `ledger.track` only ever inserts and nothing prunes, and the assertion item 7 asked for
+    shipped as a `print` at `cli.py:146-148` that leaves the run green. The drifted
+    population is published twice, as `resolutions_tracked` on `/changes` and through
+    `by_owner()` into every `cnas.json` entry and per-CNA median. It becomes unbounded the
+    moment `RBP_EPOCH` is set. Have `track` reconcile both directions with a `withdrawn`
+    bucket carrying a reason, publish the withdrawn counts, and make the mismatch fail
+    (bounded, not strict equality, since a transient oracle ERROR legitimately drops a row
+    for one run).
+26. **`cnas.json` publishes both operands of the ratio the code forbids publishing.**
+    HIGH. (Consumer r3, new in round 3.) `clock.py:443-450` explains at length why a rate
+    column must not exist: `outstanding/published_12mo` is exactly the arithmetic v1.0
+    attached its withdrawn 5% and 50% sanction triggers to, the v1.0 PDF is still hosted by
+    third parties, and "a rate column is a leaderboard whatever the caption says". The
+    artefact then ships the numerator and the denominator one key apart, per named CNA,
+    in a file `/data` documents as "Descriptive only, no thresholds", and
+    `published_12mo` is rendered nowhere. Drop `published_12mo` from `cnas.json` and
+    `data/cna/<slug>.json` and keep the scale context on the page as a non-divisible band,
+    or publish a `ratio_note` in the same object; a note does not survive a
+    `read_json` and a column selection, which is the whole argument in that comment. Fix
+    `data.html:24-25`, state the decision in PLAN.md next to the leaderboard prohibition,
+    and assert at build time that a per-CNA numerator and denominator are never published
+    together without the note.
+27. **`cnas.json` absence conflates four states.** MEDIUM. (Consumer r3.) The file is five
+    entries against a 434-CNA roster with no field marking absence, so it reads as "these
+    are the CNAs with outstanding RBPs and everyone else is clean", which is the inverse of
+    the site's own floor language and lands hardest on the CNAs the feeds do reach.
+    Publish it as an envelope with the roster counts and an explicit
+    `meaning_of_absence` naming all four states (no rows, feeds not ingested, below the
+    inference gate, held back), plus `own_feed_ingested` and `reached` per entry.
+28. **Payload and column budget on `/cves`.** MEDIUM. (Design, CISA on the Pages bandwidth
+    ceiling, Consumer.) The page is 132,322 bytes of which the inline `<script id="rows">`
+    blob is 118,952 (89.9%) for 150 rows, duplicating `data/rbp.json`, with 10 of 27 keys
+    rendered by no cell. At 553 rows that is roughly 440 KB of inline JSON before anything
+    paints. Emit a purpose-built minimal projection rather than the full row set, and keep
+    `data/rbp.json` as the consumer artefact free to carry the full field set; do not have
+    the page fetch it, since "no network, no runtime API calls: every page is a file" is a
+    stated property. Decide this before writing the server-rendered tbody, which would
+    otherwise add the rendered rows on top of the blob. Fold Sources and Independent
+    sources into one origins cell ("2 independent of 3 feeds: alas, ubuntu"); the two
+    columns and a sub-line currently render one idea, and the Independent-sources column
+    alone is 166px of a 1,474px table that must fit 1,152px.
+29. **The constant qualifier, and the false AA claim in the stylesheet.** MEDIUM.
+    (Design r1/r2, CNA, Consumer.) `rule_certainty` is set unconditionally to "candidate"
+    on all 150 rows and `rule_basis` takes two values, so the per-row `.qualifier`
+    sub-line is one of two constant strings and costs about 21% of the table's height
+    (11,982px against 9,475px) for text that repeats the owner cell two columns away. Move
+    "candidate" into the `<th>` and a `<caption>`; keep `rule_basis` as a per-row token,
+    since a 58/92 split on whether the rule reading rests on a guessed name is the most
+    fairness-relevant fact in the row. Delete or fix the false accessibility claim at
+    `rbp.css:206`, which asserts AA against a background the class never renders on. Do
+    the same in the artefacts: a constant belongs in the envelope, not repeated 150 times
+    per file.
+30. **Component vocabulary, and the `&mdash;` entity.** LOW to MEDIUM. (Design, MITRE,
+    CISA, CNA.) One `.caveat` treatment carries four meanings across 15 uses, including
+    `<blockquote class="caveat">` on verbatim RBP Policy v2.0.0 and CNA Rule 4.5.1.7 text,
+    so a reader cannot tell the Program's words from the site's. Split `.quote` out first,
+    with a citation line naming document and section; that one is citation integrity, not
+    style. Then `.caveat` for standing hedges, `.notice` for run-scoped degradation, and a
+    plain empty-state treatment, allocating distinct fills, since `.caveat`'s current fill
+    is the same token as the table header and the even-row stripe. Do this before the
+    queued `_caveats.html` partial adds a fifth use. Separately, four `&mdash;` literals
+    sit inside Jinja expressions under `select_autoescape` and render as `&mdash;d` in
+    numeric cells (`cna.html:42`, `cnas.html:48-49`, `changes.html:79`); do not touch
+    `cna.html:51`, which is template text and correct. Add the render assertion that no
+    built page contains `&amp;`, which catches the whole class.
+31. **Corpus and OSV hardening.** MEDIUM. (Python r1/r2, Actions, CISA, Consumer.)
+    `cvelist.py` uses none of the hardening `feeds.py` built: `_releases` is a bare
+    `urlopen` with no retry, called from `ensure_corpus` before any feed, so one transient
+    5xx from api.github.com ends the run before a line of data is read, four times a day
+    (fix this first, it is three lines and the highest-frequency single point of failure);
+    `_delta_rows` reads an uncapped blob; `download_baseline` is `urlretrieve` with no
+    timeout on 583 MB; `apply_deltas` reads and rewrites `corpus.parquet` in place with no
+    try, while `refresh_corpus` has a rebuild fallback for every other failure mode.
+    `_iter_records` also materialises the inner zip in RAM outside both size guards and
+    never closes its handles. Move `_OPENER`, `_get` and the byte caps into a shared
+    module; note the real hardening gap is narrow and precise: `download_baseline` passes
+    `browser_download_url`, read from a remote JSON body, to `urlretrieve`, which honours
+    `http://` and `file://` and follows redirects unvalidated. Separately, `feed_osv` never
+    closes its `ZipFile` and unlinks the temp file only on the success path, and any
+    exception in the record loop escapes into `gather`, which records the whole `osv` feed
+    FAILED and skips every remaining ecosystem; wrap each ecosystem in try/except that
+    records `osv:<eco>` FAILED and continues, and make `_stream_zip` a context manager
+    owning both objects (closing before unlinking).
+32. **One writer per row field.** MEDIUM. (Python r3, new in round 3.) Three of the bugs
+    this project has shipped were one stage reading or writing a field another stage owns,
+    each found in production. The duplication that made them possible is still there:
+    `report._age` duplicates `clock.age_days`; `_gated` recomputes `self_disclosed` and
+    hard-codes `False` for unattributed rows while `_publishable` (which writes
+    `held_back.json`) preserves what `annotate` computed, so one run publishes the field
+    under two rules into two artefacts on the public branch; `owner_contested` exists only
+    inside `_publishable` and is derived from a field `report.py` then strips, so it is
+    unreproducible from any published field. Delete the duplicates, move `owner_contested`
+    into `annotate`, and generalise the existing precedent at
+    `tests/test_pipeline.py:171` (which already asserts only `clock.py` defines
+    `OWNER_FEEDS`) to assert that only `clock.py` assigns `days_public`, `self_disclosed`,
+    `past_expectation`, `rule`, `rule_strength` and `owner_contested`. That test would have
+    caught all three historical bugs and is cheaper than any of the three fixes was.
+33. **Age histogram draws a structural zero and the oldest row identically.** MEDIUM.
+    (Design r3, new in round 3.) `index.html:63-67` hard-codes five buckets including
+    `<7d`, which is empty by construction while `min_age_days > 0` and has no key in
+    `summary.json` at all; measured bar heights are `[2, 80, 34, 6, 2]`, so the impossible
+    bucket and the single 180d+ row (the most rhetorically load-bearing datum on the page)
+    draw as the same 2px nub, with no axis, no scale, and counts recoverable only from a
+    0.65rem label row measuring 2.07:1. Drop the `<7d` bucket, give any `n >= 1` a floor
+    that reads as present, label a genuine zero as "none", state the peak, and raise
+    `.histo-labels` to an accessible token.
+34. **Two visual identities.** LOW. (Design r3, amended.) `placeholder.html` loads neither
+    stylesheet and defines its own palette, measure and hierarchy, and is measurably the
+    more accessible surface. Restyle it into the cve.icu system rather than the reverse:
+    looking like cve.icu is a deliberate credibility asset and re-tokenising it to the
+    holding page's teal would spend that asset to fix a consistency problem. Import the
+    holding page's accessibility advantages as token corrections inside `rbp.css` (item 17
+    is the vehicle). Do this before the page becomes a permanent route, or the preserved
+    page arrives as a visual orphan.
+35. **Export-link sizing.** LOW. (Design r2, amended.) The CSV and JSON links render at
+    41x21 and 49x21, styled from a cve.icu chart-hover control revealed by `:focus-within`,
+    on the only route to the bulk data from a page whose sibling says "Others building on
+    this is the point". Give them a project-owned class sized as a primary action and raise
+    the search input (34px) and selects (36px) to one consistent control-row height. Do not
+    restyle `.chart-export-btn` itself; `style.css` stays a re-pullable upstream copy.
+36. **Delete the dead `else` branch, and assert the build output.** LOW, but do the
+    assertion. (Actions, amended twice including by its author.) `deploy.yml:138-145` still
+    has a success path that publishes a one-page holding site over the live dashboard if
+    `rbp/site.py` is ever absent. The valuable half is the output assertion that replaces
+    it: `test -s site/index.html`, a non-empty and row-counted `site/data/rbp.json`, a
+    minimum page count, every emitted `cna/` href resolving to a file, and no `cna/`
+    directory pre-launch. That assertion also catches a template that renders empty and the
+    five dead `/cna` links currently on the deployed `/cnas` page.
 
 ---
 
-## Part 6: what the panel disagreed about most, and why it matters
+## Part 4: dropped, and downgraded
 
-The sharpest disagreement was not about any single finding. It was about **whether a defect
-that fails closed is serious**, and it split cleanly along discipline lines.
+Recorded so they are not silently lost, with the reason the refutation won.
 
-The engineers repeatedly downgraded findings on the grounds that the failure is safe: the
-Wilson `ValueError` kills the run rather than publishing a wrong number, so it is not a
-blocker; a partial scan aborts and leaves the previous good site live; a 2.44 GB peak fits
-in a 16 GB runner; an unversioned export cannot make a false statement about a named CNA.
-The non-engineers repeatedly upgraded findings on the grounds that the failure is
-quotable: a hand-typed "roughly half" beside a rendered zero, a 104px accusation above a
-1.97:1 hedge, a "Do not forward" banner on a public branch, a half-quoted rule. Neither
-side was wrong, and the resolution is that this project has two failure modes with
-different physics. A wrong number can be corrected. A demonstrated pattern of cropping the
-documents you cite cannot, because the second time a reader finds one they stop checking
-and start assuming.
+- **"Add `feeds.truncated` to the `_changes` comparability keys."** Proposed by three
+  findings, **withdrawn by two of their authors**. Ubuntu is truncated on every run, so
+  both snapshots compare equal in exactly the case where the cap boundary has moved and
+  taken rows with it. The guard would fire on the rare transition and miss the every-run
+  condition. Superseded by per-feed row counts and window edges (item 15).
+- **"Raise `SystemExit` in `site.load` when coverage is below gate."** Proposed by five
+  findings, **withdrawn or amended by four reviewers including two authors**. It makes the
+  promotion gate able to take a launched site down: the coverage denominator moves every
+  run and steps on 1 January, a feed outage moves the numerator, and the deploy job is
+  skipped on a failed build, so the observable result is a permanently frozen site with no
+  notification. Superseded by item 7's transition gate plus item 10's taxonomy.
+- **"Refuse to publish when `len(reportable)` is below an absolute floor."** Refuted: zero
+  is this project's goal state, not an error state, and 4.5.3.5 makes a bulk rejection
+  sweep a legitimate large drop. Superseded by a fractional-drop comparison against the
+  previous snapshot.
+- **"Add a hard-coded deny list of the two wrong CVE IDs."** Proposed by four findings,
+  **withdrawn by two authors**. It fixes two rows and leaves the class; it is a permanent
+  public artefact reading "these two names were wrong and we patched them by hand"; and it
+  would not even work, because both names are already in the ledger under
+  first-prediction-wins, so a downstream suppression leaves them published. Superseded by
+  the covered-set gate plus the withdrawal bucket (item 3).
+- **"`must_rows: 0` should render as 'not measured, own feed not ingested'."** Proposed by
+  four findings, refuted on fact: `PROFILES["weekly"]` contains `redhat` and `mozilla`, so
+  that string would be false on every scheduled build. The zero in the snapshot on disk
+  comes from a three-feed hand run. Superseded by removing the tile and rendering the
+  denominator (item 12).
+- **"Name the largest CNA in the front-page concentration tile."** Refuted: a lead-screen
+  tile naming one CNA as holder of the majority is a leaderboard with one entrant, which
+  PLAN 2a forbids and which `clock.py:440-447` deliberately refuses to build. Superseded by
+  a distribution plus the CNA-LR disclosure (item 19).
+- **"Rewrite `policy.html:134-141` to remove the errata framing."** **Refuted outright.**
+  The premise that the wrong claim never circulated is false (the repository is public and
+  the erroneous wording is in public template and commit history), and the errata is an
+  asset: a dated in-page record of the project correcting its own two strongest claims
+  against the Program is the cheapest demonstration that it accepts the standard it is
+  asking for. Keep it, reframe it as a dated Corrections section, and fix
+  `index.html:131` so the retracted figure is not the only live version.
+- **"Force-push an orphan `data` branch as the first remediation step."** Refuted: it
+  destroys the only copy of both ledgers and the entire dated series, which PLAN.md R1
+  names as the mitigation for the reservation endpoint being closed. Superseded by item
+  2's ordering (mirror, enforce, pause, then a targeted `filter-repo`).
+- **"`top_missed` should be removed from the published envelope."** Refuted by three
+  reviewers: it is the single most useful self-limiting disclosure in `summary.json` and
+  the only machine-readable description of the shape of the floor. Keep it, rename it
+  `cnas_not_reached`, and publish it as an object carrying its own `meaning` string so the
+  explanation cannot be separated from the names by a consumer that keeps only the array.
+  The proposed regex test on key names was also dropped; the invariant is that the list
+  travels with its meaning, not that a string is absent.
+- **"Gate `data/rbp.json`, `rbp.csv` and `cnas.json` on `RBP_LAUNCHED`, or swap `owner` to
+  'withheld-prelaunch'."** Both branches amended. Gating means the two documented primary
+  URLs 404 pre-launch and then appear, which is the worst possible contract; a value
+  substitution changes a field's meaning with no version marker. If redaction is chosen it
+  must be a declared schema state with a version bump and an explicit `owner_redacted`
+  flag. And note the code comments contradict each other about whether the gate is a
+  disclosure control at all (`site.py:32-34` versus `:386-391`); fix the comments to
+  describe what the code does.
+- **"`observed_pct >= 25%` as a launch condition."** **Withdrawn by its author.** At 7.04%
+  of published CVEs, over a corpus dominated by CNAs with no distro or ecosystem presence,
+  25% may be structurally unreachable, so the gate would either never open or be quietly
+  relaxed. Publish `observed_pct` as a disclosure figure instead.
+- **"Validate `RBP_LAUNCHED` strictly because `=on` silently means not-launched."**
+  Downgraded to LOW: the lax parse fails *closed*, so it cannot cause a premature launch.
+  Worth one line for symmetry with the epoch validator; not a safety item.
+- **Downgraded on severity, keep the fix:** the `&mdash;` entity (LOW; latent, zero
+  occurrences in any current build, but keep the render assertion); the two-CSV column
+  divergence (the Consumer statement at HIGH supersedes the Python statement at LOW,
+  because the missing fields are the audit fields); the corrupt-ledger atomicity half
+  (MEDIUM; the reachable CI path is absence, so the workflow guards outrank the 20-writer
+  refactor); mutable-tag action pinning (LOW; first-party `actions/*`, and the three
+  unpinned PyPI ranges in the same job are the higher risk); the dead `else` branch (LOW;
+  reaching it requires a committed rename); `design-r2-two-visual-identities` (LOW);
+  `marketing-the-ask-disappears-on-launch-day` (MEDIUM; the ask does survive on `/policy`
+  and `/method`, the front page and the holding page's composition are what is lost).
+- **Corrected evidence, conclusions kept:** the `/cves` table is 1,474px intrinsic at
+  1280px and 2,488px at 375px, so the column budget is a mild desktop annoyance and a
+  total mobile failure; the qualifier sub-lines cost 0px of *width* and about 21% of table
+  *height*, not "+42% row height"; removing the Independent-sources column takes 1,474 to
+  1,308, which still overflows 1,152, and relaxing `td.desc { min-width }` buys nothing;
+  the export links pass SC 2.5.8's spacing exception (52.9px apart) so the WCAG citation
+  was struck while the sizing complaint stands; "last column Q3 2021" and "final column
+  already reading N/A" are not contradictory, they are an asymmetry of emphasis, and the
+  finding should say so or a critic who checks `Metrics.vue` will discount the rest; two of
+  the four omitted policy clauses are in Notification and Remediation, not Timely
+  Publication, and filing them wrongly would be the error `tests/test_policy.py` exists to
+  prevent; the archived quarterly table's dependence on v1.0's thresholds is a hypothesis,
+  not an established fact, and should not be asserted; "a third of the headline will leave
+  the same way it arrived" is wrong, rows do not exit by ageing, so arrival is lumpy and
+  departure is not, which is worth stating rather than implying symmetry.
 
-That is why the ordering above puts the citation pass and the two wrong rows ahead of
-several genuinely more severe code defects. The code defects are all recoverable by a
-commit. The framing defects are recoverable only before anyone reads them, and one of them
-is already live.
+---
 
-The second disagreement worth recording: **the epoch**. Three reviewers found that the
-launch-day reset produces a literal zero for a week, and the panel could not agree whether
-the answer is to move the epoch, to drop it, or to change the lead metric. That decision is
-not a bug fix, it decides what the product is: a stock of outstanding rows, which supports
-"the dashboard the CVE Program should have published", or a flow of new arrivals, which is
-a different and narrower claim. It should be made deliberately, in writing, by one person,
-before any of the epoch code is touched.
+## Part 5: chair additions
 
-The third: **whether the fix rate should be published at all**. One reviewer wanted the
-hardcoded "roughly half" simply deleted; another argued it is the single best credibility
-asset the project has and should be computed, published with its n, and moved to the front
-page, because a site that publishes how often the problem resolves itself is an instrument
-and a site that publishes only the backlog is a campaign. The chair sides with the second,
-conditional on it coming from the verified ledger over the published population. That
-sentence is the difference between the two things this project could become.
+Four things the panel did not raise.
+
+**C1. This document must not carry the wrong attributions, and probably should not be
+public yet.** The previous `REVIEW.md` draft contains two of the disputed
+(CVE ID, CNA) pairs (`grep -c` returns 2) and, in the panel record, verbatim
+`held_back.json` rows including a named CNA on a one-day-old within-buffer ID. Committing
+that to a public repository republishes the false attributions that item 3 exists to
+retract, in a file whose stated purpose is to say they are false, and hands a reader a
+catalogue of the project's unremediated disclosure exposures with file and line numbers.
+This version refers to bug classes rather than identifiers throughout, deliberately. Keep
+it that way, and consider holding the file out of the public repo until Part 1 items 1 to 4
+have landed. This is the same defect as `cisa-r3-wrong-attributions-committed-in-source-comments`,
+one layer up, and the panel produced it while diagnosing it.
+
+**C2. PLAN.md is a public file, and nobody asked whether it should be.** It carries the
+risk register, the launch-gate arithmetic, the "Never say" boundary the code now breaks
+(item 18), and R3's assertion that the correction mechanism is a live mitigation when it
+does not exist (item 4). Every panellist quoted PLAN.md as authority; a hostile reader will
+too, and the first quote will be a control the plan claims and the code lacks. Decide
+deliberately whether PLAN.md is a public artefact. If it stays public it has to be kept
+strictly current, because a stale plan asserting controls that do not exist is exactly the
+defect the whole site is about, committed by the site's own author.
+
+**C3. The gate will be met long before the remediation is, and there is no written go/no-go.**
+Coverage is at 40.6% against a 50% gate; that is one CSAF profile change away. Part 1 is
+weeks of work. The predictable failure mode of a review this size is that the gate opens,
+the pressure to launch arrives, and half of Part 1 is done. Write Part 2's checklist into
+PLAN.md as a hard go/no-go before touching any code, so the launch decision is against a
+list rather than against a number and a memory.
+
+**C4. Pick six items and defer the rest explicitly.** Ninety findings and one maintainer.
+My recommended cut, in order: items 1, 2, 3, 4, 5, then 11 (the copy pass, because it is
+two hours and changes how the site reads more than anything else on the list). Items 9 and
+10 are prerequisites that make everything after them stick, so they come next. Everything
+in Part 3 should be written down as a post-launch list with owners and dropped from the
+pre-launch conversation entirely, because the alternative is that all thirty items are
+80% done, which is the state this review has just finished documenting.
+
+---
+
+## What the panel disagreed about most, and why it matters
+
+**Whether a guard should refuse to publish.** This produced more amendments than any other
+question: six findings proposed an in-process refusal and four reviewers argued in each
+case that a refusal converts a data fault into a silent publication outage, since the
+deploy job is skipped on a failed build and no notification exists. The disagreement
+matters because both sides are right about different classes of fault, and resolving it
+per-guard would have produced six inconsistent behaviours on an unattended six-hourly
+cron. The rule the panel converged on, and which item 10 records, is worth writing into
+PLAN.md verbatim: refuse to publish wrong data, never refuse to publish correct data that
+is merely surprising, and never fail dark. This project already has the vocabulary to
+publish honestly while degraded (a floor claim, a truncation banner, an unattributed
+state, a not-comparable flag), and a refusal throws all of it away.
+
+**How weak the evidence for a *veto* may be.** The naming pipeline deliberately bans
+description matching, because `glibc` once matched `glib` and named Red Hat. Three
+reviewers argued the ban should not extend to withholding a name, because a veto's failure
+mode is abstention rather than defamation, and that asymmetry is sound. Two argued against
+re-litigating a self-imposed ban under launch pressure. The panel landed on neither: the
+covered-set gate achieves the same suppression with no new inference surface, so the
+asymmetry principle should be written down on `/method` as a stated design rule and cashed
+in later, not this week. That is the right outcome, and it is a good example of the panel
+finding a third option under cross-examination rather than splitting the difference.
+
+**Whether the launch epoch is a good idea at all.** Two reviewers argued it forfeits the
+project's strongest evidence at the exact moment of promotion; one argued, late and
+persuasively, that a post-epoch cohort flow net of closures is much closer in shape to the
+archived quarterly series the site is asking the Program to restore, which makes the epoch
+defensible on the merits rather than merely as a stability measure. That reframing also
+means the site's own non-comparability paragraph becomes wrong in the opposite direction on
+the day the epoch is set, unremarked, on both the page that makes the ask and the page that
+leads with the count. Nobody has decided which framing the project holds. It should be
+decided before `RBP_EPOCH` is set, not after, and the answer determines whether item 6's
+archive route is a courtesy or the load-bearing part.
+
+**Whether the concentration finding is about data or about positioning.** The data
+reviewers treated the 57% top-owner share as a measurement problem (block width, feed
+coverage, an undifferentiated CNA-LR pool); the marketing and Program reviewers treated it
+as the single most likely story to be written from this site, and the one that would make
+the ask unwinnable. Both readings are correct and they imply different fixes: better
+attribution versus a different presentation. The panel's answer is to do the presentation
+fix now, because it is cheap and reversible, and to state the attribution limitation
+rather than infer around it. That is the right call, and it is the clearest instance of the
+general lesson in this review: on a site whose only asset is being trusted with a number,
+the presentation of a limit is not decoration, it is the measurement.

@@ -241,7 +241,18 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
             reason = "within-buffer"
         else:
             reason = "pre-epoch"
-        held.append(_publishable(r, counted=False, held_back_reason=reason))
+        # NEVER named, regardless of whether the inference succeeded. _gated only
+        # asks whether the inference passed; these rows failed a different and
+        # earlier test, which is whether the site is willing to report them at
+        # all. A within-buffer row is one the buffer exists to withhold, so
+        # naming a CNA on it here would contradict the buffer's entire purpose
+        # and would break the project's own rule that a named CNA gets a private
+        # preview before any row naming it circulates. This file publishes the
+        # shape of what is withheld, never who.
+        held.append(_publishable(
+            r, owner="unattributed", owner_tier="abstain", owner_nameable=False,
+            owner_method="withheld-not-reported", self_disclosed=False,
+            counted=False, held_back_reason=reason))
     json.dump(held, open(os.path.join(sdir, "held_back.json"), "w"), indent=1)
     json.dump([_gated(r) for r in reportable], open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
 

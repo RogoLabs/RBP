@@ -88,7 +88,18 @@ def cmd_run(args):
     print(f"  RBP backlog: {len(backlog)}  (published-since-baseline: {fresh})")
 
     # Name what the gate allows, and grade what earlier runs predicted.
+    # Which rows will actually be published, decided BEFORE inference so the
+    # grader ledger can be scoped to them. days_public depends only on the
+    # advisory date, so this needs nothing from inference and avoids annotating
+    # twice.
+    _published_ids = {
+        r["cve_id"] for r in backlog
+        if isinstance(clock.age_days(r.get("public_date"), today), int)
+        and clock.age_days(r.get("public_date"), today) >= args.min_age_days
+        and not clock.before_epoch(r)
+    }
     validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
+                                            record_for=_published_ids,
                                             today=today, k=args.k)
 
     # The 72-hour clock, and the MUST/SHOULD split that must ride on every row.

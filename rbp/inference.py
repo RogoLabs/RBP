@@ -288,7 +288,8 @@ class Grader:
 # pipeline entry point
 # --------------------------------------------------------------------------
 
-def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K):
+def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K,
+                     record_for=None):
     """Name what can be named, grade what can be graded, and report both.
 
     Mutates each backlog row in place with `owner` / `owner_tier` /
@@ -317,7 +318,8 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
         named[tier] += 1
         if "vetoed" in method:
             vetoed += 1
-        grader.record(row["cve_id"], owner, tier, k, today)
+        if record_for is None or row["cve_id"] in record_for:
+            grader.record(row["cve_id"], owner, tier, k, today)
 
     grader.save()
     live_score = grader.summary()
