@@ -105,6 +105,12 @@ jobs:
           fi
 
       - name: Run pipeline
+        env:
+          # Without this the pipeline made up to 45 anonymous api.github.com
+          # calls per run against a 60/hour shared-runner-IP budget, and a 403
+          # from cvelist._releases propagates through ensure_corpus to kill the
+          # whole run before any feed is read.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ARGS=(--profile "${{ inputs.profile || 'weekly' }}")
           # Explicit ifs rather than `[ -n "$X" ] && ...`: the AND-OR form does

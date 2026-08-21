@@ -134,9 +134,29 @@ def split_epoch(rows, epoch=None):
 # evidence available.
 OWNER_FEEDS = {
     "redhat": {"redhat"},
-    "GitHub_M": {"ghsa"},
     "microsoft": {"msrc"},
     "mozilla": {"mozilla"},
+    # GitHub_M is deliberately ABSENT, and removing it dropped the site's MUST
+    # count from 241 to 0.
+    #
+    # `ghsa` was here on the theory that a GitHub Security Advisory is GitHub's
+    # own publication. It is not, or rather it is not only that:
+    # api.github.com/advisories carries NO assigner field (verified), and GitHub's
+    # database curates advisories for everyone's code, so the presence of a GHSA
+    # cannot distinguish "GitHub_M assigned and disclosed this" from "some other
+    # CNA's advisory is in GitHub's database". The site's own export proved it in
+    # both directions: apple/swift-nio repository advisories arrive through `ghsa`
+    # and were scored SHOULD, which is Apple's own channel being read as a third
+    # party's.
+    #
+    # This is exactly the reasoning applied one level down to exclude OSV. Every
+    # one of the 241 MUST rows carried `ghsa`, none survived without it, and
+    # ~195 were `ghsa` plus its own OSV mirror, so a single unauthenticated feed
+    # with an 83-day rolling window was carrying the strongest claim on the site.
+    #
+    # To restore it, feed_ghsa must retain `source_code_location` and emit
+    # `ghsa:<org>`, and self_disclosed must additionally require the owner's own
+    # feed to hold the EARLIEST date rather than merely be present.
 }
 
 
@@ -148,16 +168,31 @@ def _same_name(a, b):
 
 
 def self_disclosed(row):
-    """Did the owning CNA's own feed carry this advisory?
+    """Did the owning CNA's own feed carry this advisory FIRST?
 
-    False whenever the owner is unknown, so an unattributed row can never be
-    escalated to a MUST.
+    Presence alone is not enough. 4.5.1.4 turns on the CNA having disclosed, so
+    if a distro advisory predates the CNA's own, the CNA is reacting to a third
+    party and 4.5.1.6 is the right rule. Measured on the live snapshot, presence
+    without ordering scored 18 of 210 MUST rows against a third party's advisory
+    date, using per-source dates the pipeline already fetched and discarded.
+
+    Falls back to presence only when per-source dates are unavailable, and never
+    escalates a row whose owner is unknown.
     """
     own = OWNER_FEEDS.get(row.get("owner"))
     if not own:
         return False
     sources = {s for s in (row.get("sources") or "").split(",") if s}
-    return bool(own & sources)
+    if not (own & sources):
+        return False
+    dates = row.get("dates") or {}
+    if not dates:
+        return True
+    mine = [d for s, d in dates.items() if s in own and d]
+    theirs = [d for s, d in dates.items() if s not in own and d]
+    if not mine:
+        return True
+    return not theirs or min(mine) <= min(theirs)
 
 
 def annotate(rows, today=None):
@@ -444,10 +479,21 @@ def summary(rows, cnas, today=None, undated_excluded=0, epoch_excluded=0):
         "oldest_days": max(ages) if ages else None,
         "median_days": _median(ages),
         "named_cnas": len(cnas),
+        # The honest breadth signal. "N CNAs with a row named" implies spread;
+        # this says how concentrated the naming actually is, which on live data
+        # is the opposite of what the count suggests.
+        "top_owner_share": _top_share(cnas),
         "must_rows": sum(1 for r in rows if r.get("rule") == RULE_MUST),
         "should_rows": sum(1 for r in rows if r.get("rule") == RULE_SHOULD),
         "age_buckets": _buckets(ages),
     }
+
+
+def _top_share(cnas):
+    """Fraction of named rows held by the single largest CNA."""
+    counts = [c.get("outstanding", 0) for c in (cnas or [])]
+    total = sum(counts)
+    return round(max(counts, default=0) / total, 4) if total else None
 
 
 def _buckets(ages):

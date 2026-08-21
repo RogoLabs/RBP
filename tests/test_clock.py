@@ -350,21 +350,49 @@ def _r(owner, sources):
 
 def test_owners_own_feed_makes_it_a_must():
     assert clock.self_disclosed(_r("redhat", "redhat,debian")) is True
-    assert clock.self_disclosed(_r("GitHub_M", "ghsa,alpine")) is True
+    assert clock.self_disclosed(_r("microsoft", "msrc,debian")) is True
+
+
+def test_ghsa_is_not_treated_as_githubs_own_disclosure():
+    """api.github.com/advisories carries NO assigner field, and GitHub's database
+    curates advisories for everyone's code, so a GHSA cannot distinguish "GitHub
+    assigned and disclosed this" from "another CNA's advisory is in GitHub's
+    database". Every one of the site's 241 MUST rows rested on that inference and
+    none survived without ghsa. Same reasoning that excludes OSV, one level up."""
+    assert "GitHub_M" not in clock.OWNER_FEEDS
+    assert clock.self_disclosed(_r("GitHub_M", "ghsa,alpine")) is False
+    assert clock.self_disclosed(_r("GitHub_M", "ghsa")) is False
+
+
+def test_must_requires_the_owners_feed_to_be_earliest():
+    """4.5.1.4 turns on the CNA having disclosed. If a distro advisory predates
+    the CNA's own, the CNA is reacting to a third party and 4.5.1.6 applies.
+    Measured: 18 of 210 MUST rows were scored from a third party's date."""
+    first = _r("redhat", "redhat,debian")
+    first["dates"] = {"redhat": "2026-01-01", "debian": "2026-02-01"}
+    assert clock.self_disclosed(first) is True
+
+    reacting = _r("redhat", "redhat,debian")
+    reacting["dates"] = {"redhat": "2026-02-01", "debian": "2026-01-01"}
+    assert clock.self_disclosed(reacting) is False
+
+    # No per-source dates available: fall back to presence rather than dropping
+    # a legitimate MUST entirely.
+    assert clock.self_disclosed(_r("redhat", "redhat")) is True
 
 
 def test_third_party_feeds_alone_stay_a_should():
     assert clock.self_disclosed(_r("redhat", "debian,alas")) is False
-    assert clock.self_disclosed(_r("GitHub_M", "alpine,debian")) is False
+    assert clock.self_disclosed(_r("microsoft", "alpine,debian")) is False
 
 
 def test_an_aggregator_mirror_is_not_self_disclosure():
-    """OSV re-publishes GHSA, so an OSV row is not evidence that GitHub
-    disclosed. Counting it would upgrade a SHOULD to a MUST on a mirror, which
-    is the site's strongest claim resting on its weakest evidence."""
-    assert "osv" not in clock.OWNER_FEEDS["GitHub_M"]
-    assert clock.self_disclosed(_r("GitHub_M", "osv")) is False
-    assert clock.self_disclosed(_r("GitHub_M", "osv,ghsa")) is True
+    """OSV re-publishes GHSA, so an OSV row is not evidence anyone disclosed.
+    No owner feed anywhere in the map may name an aggregator."""
+    aggregators = {"osv", "csaf"}
+    for cna, feeds in clock.OWNER_FEEDS.items():
+        assert not (feeds & aggregators), f"{cna} lists an aggregator: {feeds}"
+    assert clock.self_disclosed(_r("redhat", "osv")) is False
 
 
 def test_unattributed_rows_can_never_be_escalated():
@@ -411,7 +439,7 @@ def test_unattributed_rows_say_so_in_the_basis():
 
 
 def test_no_row_ever_claims_an_established_breach():
-    rows = [_r("redhat", "redhat"), _r("GitHub_M", "ghsa"), _r(None, "debian")]
+    rows = [_r("redhat", "redhat"), _r("microsoft", "msrc"), _r(None, "debian")]
     clock.annotate(rows, TODAY)
     assert {r["rule_certainty"] for r in rows} == {"candidate"}
 

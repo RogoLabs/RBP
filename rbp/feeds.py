@@ -744,12 +744,21 @@ def gather(sources, years):
         for r in rows:
             cid = r["cve_id"]
             e = refs.setdefault(cid, {"sources": set(), "refs": set(), "public_date": "",
-                                      "product": "", "description": ""})
+                                      "product": "", "description": "",
+                                      # Per-source dates, kept so the MUST clock
+                                      # can ask who published FIRST rather than
+                                      # only who published. Collapsing to the
+                                      # minimum discarded exactly that.
+                                      "dates": {}})
             e["sources"].add(s)
             if r["source_ref"]:
                 e["refs"].add(f'{s}:{r["source_ref"]}')
-            if r["public_date"] and (not e["public_date"] or r["public_date"] < e["public_date"]):
-                e["public_date"] = r["public_date"]
+            if r["public_date"]:
+                if not e["public_date"] or r["public_date"] < e["public_date"]:
+                    e["public_date"] = r["public_date"]
+                prev = e["dates"].get(s)
+                if not prev or r["public_date"] < prev:
+                    e["dates"][s] = r["public_date"]
             if r["product"] and not e["product"]:
                 e["product"] = r["product"]
             if r["description"] and not e["description"]:

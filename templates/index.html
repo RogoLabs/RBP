@@ -30,9 +30,9 @@
 
 <div class="metric-grid">
   <div class="metric-card">
-    <div class="metric-value">{{ summary.must_rows | commafy }}</div>
+    <div class="metric-value">{{ summary.get('top_owner_share') | pct }}</div>
     <div class="metric-label">
-      Candidate {{ rule_must }} MUST, the CNA's own feed carried it
+      Share of named rows held by the single largest CNA
     </div>
   </div>
   <div class="metric-card">

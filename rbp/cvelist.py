@@ -27,12 +27,28 @@ UA = {"User-Agent": "rbptracker.org (+https://github.com/RogoLabs/RBP)"}
 MAX_DELTA_GAP_DAYS = 10
 
 
+def _auth_headers():
+    """Authenticated headers when a token is present.
+
+    Anonymous api.github.com is 60 requests per hour per IP, shared across every
+    job on a GitHub-hosted runner, and a 403 here propagates through
+    ensure_corpus and kills the run before any feed is read.
+    """
+    h = dict(UA)
+    token = os.environ.get("GITHUB_TOKEN", "").strip()
+    if token:
+        h["Authorization"] = f"Bearer {token}"
+        h["X-GitHub-Api-Version"] = "2022-11-28"
+    return h
+
+
 def _releases(pages=3):
     """Recent releases, newest first. cvelistV5 cuts one per hour, so three
     pages is roughly twelve days of history."""
     out = []
     for page in range(1, pages + 1):
-        req = urllib.request.Request(f"{RELEASES_API}?per_page=100&page={page}", headers=UA)
+        req = urllib.request.Request(f"{RELEASES_API}?per_page=100&page={page}",
+                                     headers=_auth_headers())
         with urllib.request.urlopen(req, timeout=60) as r:
             batch = json.load(r)
         if not batch:

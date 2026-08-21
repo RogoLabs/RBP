@@ -184,6 +184,7 @@ def _row(cid, e, state, attributor):
         "product_map_confidence": pm_conf, "product_map_method": pm_method,
         "public_date": e["public_date"],
         "sources": ",".join(sorted(e["sources"])), "feed_count": len(e["sources"]),
+        "dates": dict(e.get("dates") or {}),
         "refs": ";".join(sorted(e["refs"]))[:250],
         "description": e["description"][:180].replace("\n", " "),
     }
