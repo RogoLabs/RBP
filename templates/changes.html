@@ -142,6 +142,37 @@
 {% endif %}
 {% endif %}
 
+{% if resolutions_rejected_n %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Rejected, all time</h2></div>
+  <div class="card-body">
+    <div class="caveat">
+      <p class="mb-0">
+        <strong>These are not failures to publish.</strong> Rule 4.5.3.5 requires a CNA to
+        reject an unused or unpublished CVE ID, so a rejection here is the CNA complying
+        with the rules and is counted apart from publications for that reason. It does
+        still leave anyone reading the citing advisory without a record, which is why the
+        rows are listed rather than dropped.
+      </p>
+    </div>
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <thead><tr><th>CVE ID</th><th>First public</th><th>Rejected</th></tr></thead>
+        <tbody>
+          {% for r in resolutions_rejected %}
+          <tr>
+            <td class="id">{{ r.cve_id }}</td>
+            <td class="mono small">{{ r.first_public }}</td>
+            <td class="mono small">{{ r.published }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
 {% if resolutions_n %}
 <div class="card">
   <div class="card-header"><h2 class="card-title">Time to publish, all time</h2></div>
@@ -155,11 +186,12 @@
       <table class="rbp" style="min-width:0">
         <thead><tr><th>CVE ID</th><th>Owner</th><th class="num">Days to publish</th><th>First public</th><th>Published</th></tr></thead>
         <tbody>
-          {% for r in resolutions | sort(attribute='days_to_publish', reverse=true) %}
+          {% for r in resolutions_published | sort(attribute='days_to_publish', reverse=true) %}
           <tr>
             <td class="id">{{ r.cve_id }}</td>
-            <td>{{ r.owner }}</td>
-            <td class="num">{{ r.days_to_publish }}</td>
+            <td>{{ r.predicted_owner or r.owner }}{% if r.transferred %}
+              <span class="chip chip-none">published by {{ r.published_assigner }}, transferred</span>{% endif %}</td>
+            <td class="num">{{ r.days_to_publish if r.days_to_publish is not none else 'n/a' }}</td>
             <td class="mono small">{{ r.first_public }}</td>
             <td class="mono small">{{ r.published }}</td>
           </tr>

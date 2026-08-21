@@ -344,3 +344,101 @@ def test_retention_is_a_noop_below_the_keep_count(tmp_path):
     (root / "2026-08-20").mkdir(parents=True)
     assert site.prune_snapshots(str(root), keep=2) == []
     assert [p.name for p in root.iterdir()] == ["2026-08-20"]
+
+
+# --------------------------------------------------------------------------
+# mixed closure states must not crash the build (r3 item 5)
+# --------------------------------------------------------------------------
+
+def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
+    """Both states shared one list that the templates sorted on days_to_publish,
+    which is None for a rejection. Jinja's sort calls sorted(), so this raised
+    TypeError in the Build site step: the artefact never uploaded, deploy was
+    skipped, and the next run re-derived the same rejection and failed
+    identically. A self-sustaining outage, latent only because resolved was 0."""
+    import importlib
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    (snaps / "backlog.json").write_text(json.dumps([{
+        "cve_id": "CVE-2026-9", "owner": "acme", "owner_tier": "block",
+        "owner_nameable": True, "days_public": 30, "past_expectation": True,
+        "rule": "4.5.1.6", "rule_strength": "SHOULD", "rule_certainty": "candidate",
+        "package": "widget", "vendor": "Acme", "public_date": "2026-07-21",
+        "feed_count": 2, "indep_sources": 2, "sources": "debian,alas",
+        "advisory_url": "https://example.invalid/a", "description": "a flaw",
+    }]))
+    (snaps / "summary.json").write_text(json.dumps({
+        "total": 1, "past_expectation": 1, "oldest_days": 30, "median_days": 30,
+        "named_cnas": 1, "must_rows": 0, "should_rows": 1, "clock_unknown": 0,
+        "undated_excluded": 0, "min_age_days": 7, "age_buckets": {"7-30d": 1},
+        "top_owner_share": 1.0,
+        "inference": {"k": 3, "run_coverage": 1.0,
+                      "leave_one_out": {"precision": 0.99, "coverage": 0.6, "decided": 10},
+                      "live": {"graded": 0, "correct": 0, "precision": None,
+                               "outstanding": 0, "by_tier": {}}},
+        "feeds": {"requested": ["debian"], "failures": [], "attempts": 1,
+                  "truncated": [], "detail": {}},
+    }))
+    (snaps / "cnas.json").write_text(json.dumps([{
+        "cna": "acme", "outstanding": 1, "oldest_days": 30, "median_days_public": 30,
+        "past_expectation": 1, "must_rows": 0, "should_rows": 1,
+        "published_12mo": 100, "resolved_n": 1, "median_days_to_publish": 12,
+    }]))
+    # One of each state, for the same owner, which is the shape that crashed.
+    (tmp_path / "resolutions.json").write_text(json.dumps({"open": {}, "resolved": [
+        {"cve_id": "CVE-2026-1", "state": "PUBLISHED", "predicted_owner": "acme",
+         "published_assigner": "acme", "transferred": False, "owner": "acme",
+         "first_public": "2026-07-01", "published": "2026-07-13",
+         "days_to_publish": 12, "closed_on": "2026-08-20"},
+        {"cve_id": "CVE-2026-2", "state": "REJECTED", "predicted_owner": "acme",
+         "published_assigner": "", "transferred": False, "owner": "acme",
+         "first_public": "2026-07-01", "published": "2026-08-01",
+         "days_to_publish": None, "closed_on": "2026-08-20"},
+    ]}))
+
+    monkeypatch.setenv("RBP_LAUNCHED", "1")
+    importlib.reload(site)
+    try:
+        out = tmp_path / "site"
+        site.build(str(out), str(tmp_path / "snapshots"), str(tmp_path))
+
+        changes = (out / "changes.html").read_text()
+        cna = (out / "cna" / "acme.html").read_text()
+
+        # No bare None in a numeric column.
+        assert ">None<" not in changes and ">None<" not in cna
+
+        # The rejected block must not claim these rows published. Checking for
+        # the substring "published" is wrong: the block legitimately quotes the
+        # rule's own phrase "unused or unpublished CVE ID".
+        start = changes.index("Rejected, all time")
+        # Bound to this card only. A fixed window bleeds into the next card,
+        # which legitimately does say "have published".
+        nxt = changes.find('class="card-title"', start + 10)
+        block = changes[start:(nxt if nxt != -1 else len(changes))].lower()
+        for claim in ("have published", "has published", "since published",
+                      "therefore resolved", "days to publish"):
+            assert claim not in block, f"rejection block claims: {claim}"
+        assert "4.5.3.5" in block
+        assert "not failures to publish" in block
+    finally:
+        monkeypatch.delenv("RBP_LAUNCHED", raising=False)
+        importlib.reload(site)
+
+
+def test_a_transferred_closure_is_credited_to_the_tracked_owner(tmp_path, monkeypatch):
+    """reconcile sets `owner` to the post-transfer assigner, so keying the /cna
+    resolution table on it gave a CNA-LR that published someone else's overdue
+    record under 4.5.1.5 a resolution history it never had, while the median tile
+    beside it keyed on the tracked owner."""
+    ctx_resolutions = [{
+        "cve_id": "CVE-2026-1", "state": "PUBLISHED", "predicted_owner": "original",
+        "published_assigner": "mitre", "transferred": True, "owner": "mitre",
+        "first_public": "2026-07-01", "published": "2026-07-11",
+        "days_to_publish": 10, "closed_on": "2026-08-20"}]
+    mine = [r for r in ctx_resolutions
+            if (r.get("predicted_owner") or r.get("owner")) == "original"]
+    assert len(mine) == 1, "the tracked owner must keep its own resolution"
+    theirs = [r for r in ctx_resolutions
+              if (r.get("predicted_owner") or r.get("owner")) == "mitre"]
+    assert theirs == [], "the CNA-LR must not inherit it"

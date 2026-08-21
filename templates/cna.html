@@ -104,7 +104,7 @@
           {% for r in cna_resolved | sort(attribute='days_to_publish', reverse=true) %}
           <tr>
             <td class="id">{{ r.cve_id }}</td>
-            <td class="num">{{ r.days_to_publish }}</td>
+            <td class="num">{{ r.days_to_publish if r.days_to_publish is not none else 'n/a' }}</td>
             <td class="mono small">{{ r.first_public }}</td>
             <td class="mono small">{{ r.published }}</td>
           </tr>

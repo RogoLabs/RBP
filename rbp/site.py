@@ -160,6 +160,11 @@ def load(snap_root, data_dir):
     for c in cnas:
         c["slug"] = slug(c["cna"])
 
+    _closures = resolutions.get("resolved", [])
+    _published_closures = [r for r in _closures
+                           if r.get("state", "PUBLISHED") == "PUBLISHED"][-200:]
+    _rejected_closures = [r for r in _closures if r.get("state") == "REJECTED"][-200:]
+
     graded = grader.get("graded", [])
 
     # item 13: freshness measured, not asserted. The site claimed "Updated every
@@ -184,8 +189,25 @@ def load(snap_root, data_dir):
         "summary": summary,
         "cnas": cnas,
         "changes": changes,
-        "resolutions": resolutions.get("resolved", [])[-200:],
-        "resolutions_n": len(resolutions.get("resolved", [])),
+        # Split at the render boundary, not in the templates. Both states used
+        # to share one list that the templates sorted on days_to_publish, which
+        # is None for a rejection, and Jinja's sort filter calls sorted(), so one
+        # published plus one rejected closure raised TypeError and killed the
+        # whole build. changes.html is in PAGES, so that killed the pre-launch
+        # build too, the artefact never uploaded, deploy was skipped, and the
+        # next run re-derived the same rejection and failed identically. A
+        # self-sustaining outage, latent only because resolved is currently 0.
+        #
+        # Below the crash threshold the render was worse than the crash: a lone
+        # rejection printed under a "Resolved" heading with the prose "RBPs
+        # attributed here that have since published" and a cell reading None. A
+        # rule 4.5.3.5 rejection is the CNA complying with the rules.
+        "resolutions_published": _published_closures,
+        "resolutions_rejected": _rejected_closures,
+        # Counted from the same lists that render, not from an untruncated
+        # original, or the two diverge silently past the truncation point.
+        "resolutions_n": len(_published_closures),
+        "resolutions_rejected_n": len(_rejected_closures),
         "resolutions_tracked": len(resolutions.get("open", {})),
         "grader": {
             "graded": len(graded),
@@ -421,7 +443,13 @@ def build(out, snap_root, data_dir):
     tpl = env.get_template("cna.html")
     for c in (ctx["cnas"] if LAUNCHED else []):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
-        resolved = [r for r in ctx["resolutions"] if r.get("owner") == c["cna"]]
+        # Keyed on the TRACKED owner. reconcile sets `owner` to the post-transfer
+        # assigner, so keying on it gave a CNA-LR that published someone else's
+        # overdue record under 4.5.1.5 a resolution history it never had, while
+        # clock.by_owner keyed the median tile on the tracked owner. The same
+        # page showed two different parties' data.
+        resolved = [r for r in ctx["resolutions_published"]
+                    if (r.get("predicted_owner") or r.get("owner")) == c["cna"]]
         html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine, cna_resolved=resolved)
         open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
         written_cna += 1

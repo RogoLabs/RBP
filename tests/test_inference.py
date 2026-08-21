@@ -319,3 +319,32 @@ def test_graded_verdicts_are_never_withdrawn(tmp_path, corpus):
     assert len(g.state["graded"]) == 1
     g.withdraw(set())                      # withdraw everything still open
     assert len(g.state["graded"]) == 1     # the verdict survives
+
+
+def test_a_rejection_closes_a_prediction_without_scoring_it(tmp_path, corpus):
+    """Filtering grade() on PUBLISHED meant a prediction on an ID later rejected
+    could never be graded, sat in the public ledger forever, and biased precision
+    onto IDs that published, which is the opposite of where block inference is
+    weakest. A rejection reveals no assigner, so it closes without scoring."""
+    import pandas as pd
+    g = Grader(str(tmp_path / "p.json"))
+    g.record("CVE-2026-1", "acme", TIER_BLOCK, 3, "2026-08-20")
+    later = pd.concat([corpus, pd.DataFrame(
+        [("CVE-2026-1", "REJECTED", "", "", "")], columns=corpus.columns)])
+    newly, summary = g.grade(later, today="2026-08-21")
+    assert len(newly) == 1
+    assert newly[0]["state"] == "REJECTED"
+    assert newly[0]["scored"] is False
+    assert g.state["predictions"] == {}, "the prediction must not linger forever"
+    assert summary["graded"] == 0, "a rejection is not a scored verdict"
+    assert summary["closed_unscored"] == 1
+
+
+def test_a_published_mismatch_still_counts_against_precision(tmp_path, corpus):
+    import pandas as pd
+    g = Grader(str(tmp_path / "p.json"))
+    g.record("CVE-2026-1", "wrong-cna", TIER_BLOCK, 3, "2026-08-20")
+    later = pd.concat([corpus, pd.DataFrame(
+        [("CVE-2026-1", "PUBLISHED", "actual-cna", "", "")], columns=corpus.columns)])
+    _, summary = g.grade(later, today="2026-08-21")
+    assert summary["graded"] == 1 and summary["precision"] == 0.0

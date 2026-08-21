@@ -251,18 +251,38 @@ class Grader:
         """Mark every outstanding prediction whose ID now appears PUBLISHED in
         the corpus, and fold the result into the running score."""
         today = today or dt.date.today().isoformat()
-        pub = corpus_df[corpus_df["state"] == "PUBLISHED"]
-        truth = dict(zip(pub["cve_id"], pub["assigner"]))
+        # REJECTED closes a prediction too. Filtering on PUBLISHED only meant a
+        # prediction on an ID later rejected could never be graded, sat in the
+        # public ledger forever, and biased the precision figure onto IDs that
+        # published, which is the opposite of where block inference is weakest.
+        terminal = corpus_df[corpus_df["state"].isin(["PUBLISHED", "REJECTED"])]
+        truth = dict(zip(terminal["cve_id"], zip(terminal["assigner"], terminal["state"])))
 
         newly = []
         for cve_id, p in list(self.state["predictions"].items()):
-            actual = truth.get(cve_id)
-            if not actual:
+            hit = truth.get(cve_id)
+            if not hit:
                 continue
+            actual, state = hit
+            # Outcome, not just correct/wrong. A transfer is the policy's own
+            # remedy (4.5.1.5), so a correct inference on a transferred row used
+            # to publish as a named method miss in the /method misses table.
+            if not actual:
+                outcome = "unattributed-on-publish"
+            elif _same(p["predicted"], actual):
+                outcome = "correct"
+            else:
+                outcome = "wrong"
             newly.append({
                 "cve_id": cve_id, "predicted": p["predicted"], "actual": actual,
-                "correct": _same(p["predicted"], actual), "tier": p["tier"],
-                "k": p["k"], "predicted_on": p["on"], "graded_on": today,
+                "state": state, "outcome": outcome,
+                # Only a genuine mismatch on a PUBLISHED record counts against
+                # precision. A rejection reveals no assigner to have been right
+                # or wrong about.
+                "correct": outcome == "correct",
+                "scored": state == "PUBLISHED" and outcome in ("correct", "wrong"),
+                "tier": p["tier"], "k": p["k"],
+                "predicted_on": p["on"], "graded_on": today,
             })
             del self.state["predictions"][cve_id]
 
@@ -277,7 +297,10 @@ class Grader:
         return newly, summary
 
     def summary(self):
-        graded = self.state["graded"]
+        # Precision is computed over SCORED verdicts only. A rejection closes a
+        # prediction without revealing an assigner, so counting it as a miss
+        # would penalise the method for an outcome it never predicted.
+        graded = [g for g in self.state["graded"] if g.get("scored", True)]
         correct = sum(1 for g in graded if g["correct"])
         n = len(graded)
         by_tier = collections.defaultdict(lambda: [0, 0])
@@ -288,6 +311,8 @@ class Grader:
             "graded": n, "correct": correct,
             "precision": round(correct / n, 4) if n else None,
             "outstanding": len(self.state["predictions"]),
+            "closed_unscored": sum(1 for g in self.state["graded"]
+                                   if not g.get("scored", True)),
             "by_tier": {t: {"graded": a, "correct": b,
                             "precision": round(b / a, 4) if a else None}
                         for t, (a, b) in by_tier.items()},
