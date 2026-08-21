@@ -68,6 +68,11 @@ TIER_CORROBORATED = "block-corroborated"   # block inference + product map agree
 TIER_BLOCK = "block"                       # block inference alone
 TIER_NONE = "abstain"                      # not named
 
+# A product map verdict at or above this confidence, disagreeing with the block
+# inference, withholds the name. Set at the level where the map is a curated or
+# strong-majority signal rather than a weak corpus plurality.
+VETO_CONFIDENCE = 0.85
+
 
 class BlockInferencer:
     """Infer the assigner of an ID from its published neighbours in ID space."""
@@ -114,18 +119,36 @@ class BlockInferencer:
         candidates = set(left) | set(right)
         return candidates.pop() if len(candidates) == 1 else None
 
-    def attribute(self, cve_id, product_map_owner=None):
+    def attribute(self, cve_id, product_map_owner=None, product_map_confidence=0.0):
         """Full attribution for one RBP row.
 
         Returns (owner, tier, method). `owner` is None when the gate does not
         pass, the site renders those rows with an empty owner column and links
         to the method page, rather than guessing.
+
+        Three outcomes, not two. The product map can now also VETO a name, which
+        is the fix for the two worst rows the review panel found in the deployed
+        build: CVE-2026-16566 named WPScan on an Ansible flaw, CVE-2026-9238
+        named Wordfence on a QEMU flaw. Both are WordPress-ecosystem CNAs on
+        Linux distribution rows, both had a product map verdict of `redhat` at
+        0.85 and 0.9 confidence sitting right there, and both carried three
+        independent sources so a corroboration threshold would not have caught
+        them.
+
+        Agreement promotes to corroborated. Confident disagreement withholds the
+        name entirely. Silence leaves the block inference standing. Measured on
+        the live snapshot the veto fires on 11 of 282 named rows and costs 3.9%
+        of naming coverage, which is a cheap price for not defaming a third
+        party.
         """
         owner = self.infer(cve_id)
         if owner is None:
             return None, TIER_NONE, f"block-k{self.k}-abstain"
         if product_map_owner and _same(product_map_owner, owner):
             return owner, TIER_CORROBORATED, f"block-k{self.k}+product-map"
+        if (product_map_owner and product_map_confidence >= VETO_CONFIDENCE
+                and not _same(product_map_owner, owner)):
+            return None, TIER_NONE, f"block-k{self.k}-vetoed-by-product-map"
         return owner, TIER_BLOCK, f"block-k{self.k}"
 
     # -- self-validation ---------------------------------------------------
@@ -284,11 +307,16 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
     newly_graded, _ = grader.grade(corpus_df, today=today)
 
     named = collections.Counter()
+    vetoed = 0
     for row in backlog:
         owner, tier, method = inferencer.attribute(
-            row["cve_id"], product_map_owner=row.get("product_map_owner"))
+            row["cve_id"],
+            product_map_owner=row.get("product_map_owner"),
+            product_map_confidence=row.get("product_map_confidence") or 0.0)
         row["owner"], row["owner_tier"], row["owner_method"] = owner, tier, method
         named[tier] += 1
+        if "vetoed" in method:
+            vetoed += 1
         grader.record(row["cve_id"], owner, tier, k, today)
 
     grader.save()
@@ -301,7 +329,8 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
           f"{named[TIER_BLOCK]} block = "
           f"{named[TIER_CORROBORATED] + named[TIER_BLOCK]}/{len(backlog)} named "
           f"({100 * (total - named[TIER_NONE]) / total:.1f}%), "
-          f"{named[TIER_NONE]} abstained")
+          f"{named[TIER_NONE]} abstained"
+          + (f", {vetoed} name(s) vetoed by a contradicting product map" if vetoed else ""))
     print(f"  method precision (leave-one-out, {today[:4]}): {_pct(loo['precision'])} "
           f"[validation coverage {_pct(loo['coverage'])} over published IDs, "
           f"NOT this run's {_pct(run_coverage)}]")

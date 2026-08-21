@@ -1,6 +1,7 @@
 <!doctype html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
 <title>RBP Tracker</title>
 <style>
 :root{--bg:#f5f7f9;--fg:#0f151b;--mut:#4e5966;--acc:#0b6b72;--rule:#d8dee5}
@@ -8,37 +9,64 @@
 *{box-sizing:border-box}
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);
 padding:32px;font:16px/1.6 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:52ch}
-h1{font-size:clamp(28px,6vw,44px);line-height:1.05;letter-spacing:-.03em;margin:0 0 18px;text-wrap:balance}
+main{max-width:56ch}
+h1{font-size:clamp(26px,5vw,40px);line-height:1.1;letter-spacing:-.025em;margin:0 0 20px;text-wrap:balance}
 h1 span{color:var(--acc)}
 p{color:var(--mut);margin:0 0 14px}
 code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
 background:color-mix(in srgb,var(--fg) 8%,transparent);padding:.15em .4em;border-radius:3px}
+blockquote{margin:0 0 14px;padding:0 0 0 14px;border-left:2px solid var(--rule);color:var(--mut)}
 footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--rule);
 font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.05em;color:var(--mut)}
 a{color:var(--acc)}
 </style>
 <main>
-  <h1>Every reserved CVE<br>the List <span>won't show you.</span></h1>
+  <h1>Reserved, public, and <span>unpublished</span>.</h1>
+
   <p>A <em>Reserved but Public</em> CVE ID is one a CNA has reserved and that appears in a
   public advisory, while the CVE Record itself is still unpublished. Anyone pulling the
-  CVE List sees nothing; the world already knows.</p>
-  <p>On 13 August 2026 the CVE Board approved <strong>RBP Policy v2.0.0</strong>. It sets a
-  clear expectation. A record should be published <strong>within 72 hours</strong> of
-  disclosure. Then it hands enforcement entirely to discretion: warnings, reservation
-  caps, intervention, formal review, each of which <em>may</em> be applied.</p>
-  <p>Discretion exercised in private is indistinguishable from no enforcement at all.
-  There is no public list of RBPs, no public notification record, no public enforcement
-  log. The Program used to publish an RBP figure: a quarterly table appeared on the
-  <a href="https://www.cve.org/About/Metrics">CVE Metrics page</a> in February 2021, and
-  was <a href="https://github.com/CVEProject/cve-website/blob/main/src/views/About/Metrics.vue">commented
-  out of the page</a> on 7 February 2022. The block is still sitting in the site source,
-  frozen, its last column Q3&nbsp;2021. The Metrics page today reports published records
-  and reserved IDs, and nothing at all on the overlap between them.</p>
-  <p>And the accountability field is withheld. Ask the CVE Services API about a reserved
-  ID and it returns the state, then redacts the CNA that reserved it:
-  <code>"owning_cna": "[REDACTED]"</code>, though CNA Rule 4.5.1.7 lets the
-  Secretariat name that CNA 24 hours after public disclosure.</p>
-  <p>This site is being built to publish the outside view.</p>
-  <footer>rbptracker.org, soon · <a href="https://github.com/RogoLabs/RBP">RogoLabs/RBP</a></footer>
+  CVE List sees nothing. The advisory is already out there.</p>
+
+  <p>That is not our term. It is the CVE Program's own, and its
+  <a href="https://www.cve.org/ResourcesSupport/Glossary?activeTerm=glossaryRBP">glossary
+  definition</a> is what this site counts:</p>
+
+  <blockquote>A CVE ID in the &ldquo;Reserved&rdquo; state that is referenced in one or
+  more public sources but for which a CVE Record has not been published.</blockquote>
+
+  <p>RBP Policy v2.0.0, approved by the CVE Board on 13 August 2026, expects a record
+  within <strong>72 hours</strong> of disclosure, and sets out a real process: a Root
+  notifies the CNA with a remediation timeline, CNAs must prioritise requests to publish
+  critical RBPs, and repeat failures escalate up to decertification. None of that process
+  is observable from outside, so nobody can tell whether it ran.</p>
+
+  <p>The state itself is observable, and the CVE Services API will confirm it. What it
+  will not tell you is who reserved the ID:
+  <code>"owning_cna": "[REDACTED]"</code>. CNA Rule 4.5.1.7 both permits and limits
+  naming, and it binds the Secretariat rather than anyone else:</p>
+
+  <blockquote>The Secretariat MAY publicly identify the CNA who reserved the CVE ID 24
+  hours after a CVE ID has been Publicly Disclosed. Otherwise, the Secretariat SHOULD NOT
+  publicly identify the CNA until the CVE Record has been published.</blockquote>
+
+  <p>So this site reconstructs the owner from public data, publishes how often that
+  reconstruction is wrong, and asks for something narrower instead: unblind
+  <code>owning_cna</code> only for reserved IDs already publicly referenced for more than
+  24 hours. A blanket unblinding would be unsafe, and this project is the reason we know
+  that: the same block-boundary reasoning that recovers an owner would let anyone derive
+  pre-disclosure ownership across the whole reserved space.</p>
+
+  <p>The Program used to publish a count of these. A quarterly table ran on the CVE
+  Metrics page and was commented out in February 2022, as item 2 of a three-item
+  quarterly-to-annual table restructuring
+  (<a href="https://github.com/CVEProject/cve-website/issues/842">cve-website #842</a>),
+  a fortnight after the v1.0 policy PDF was withdrawn to be
+  &ldquo;replaced with a new version of the document at a later date&rdquo;
+  (<a href="https://github.com/CVEProject/cve-website/issues/835">#835</a>). That
+  replacement is now v2.0.0. The series never came back.</p>
+
+  <p>Our ask is that it does. Until then, this site is being built to publish the outside
+  view.</p>
+
+  <footer>rbptracker.org, soon &middot; <a href="https://github.com/RogoLabs/RBP">RogoLabs/RBP</a></footer>
 </main>

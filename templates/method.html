@@ -29,8 +29,11 @@
       endpoint returns 404 for a reserved ID, making it indistinguishable from an ID
       that was never allocated. Using the reservation endpoint instead means a row here
       is a confirmed reservation and not an inference about absence. IDs that were never
-      allocated return <span class="mono">CVE_ID_NOT_FOUND</span> and are excluded, so a
-      typo in a downstream advisory cannot inflate the count.
+      allocated return <span class="mono">CVE_ID_NOT_FOUND</span> and are excluded.
+      That screens IDs that do not exist. It does not screen a mistyped ID that happens
+      to land on a real reserved neighbour, which passes every check this site makes, so
+      some small number of rows are likely transcription errors in the citing advisory
+      rather than genuine RBPs.
     </p>
     <p class="mb-0">
       The bulk CVE List contains <strong>zero</strong> reserved records, and the

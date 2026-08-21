@@ -133,7 +133,21 @@ jobs:
         run: |
           cp data/precision.json .state/ 2>/dev/null || true
           cp data/resolutions.json .state/ 2>/dev/null || true
-          mkdir -p .state/snapshots && cp -r snapshots/. .state/snapshots/ 2>/dev/null || true
+          # Copy only the artefacts that are safe on a world-readable branch.
+          # backlog_full.json carries the ungated set, 724 rows including rows
+          # inside the buffer and undated ones, 85 of them named. report.md opens
+          # "Internal / pre-preview. Do not forward." Neither belongs here.
+          mkdir -p .state/snapshots
+          for d in snapshots/*/; do
+            [ -d "$d" ] || continue
+            dst=".state/snapshots/$(basename "$d")"
+            mkdir -p "$dst"
+            for f in backlog.json backlog.csv cnas.json summary.json; do
+              [ -f "$d$f" ] && cp "$d$f" "$dst/"
+            done
+          done
+          # Remove anything a previous run published before this rule existed.
+          rm -f .state/snapshots/*/backlog_full.json .state/snapshots/*/report.md
           cd .state
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

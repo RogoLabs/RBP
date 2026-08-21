@@ -148,3 +148,18 @@ def test_run_coverage_is_reported_separately_from_validation_coverage(backlog, c
     assert v["run_coverage"] == 0.5           # 1 of 2 rows named
     assert v["leave_one_out"]["coverage"] != v["run_coverage"]
     assert 0.0 <= v["run_coverage"] <= 1.0
+
+
+def test_published_rows_never_carry_the_ungated_product_map(backlog, corpus, tmp_path):
+    """112 of 553 published rows shipped an 85%-precision CNA name on a row the
+    site rendered as unattributed, because _gated spread the row with {**r} and
+    overwrote only four keys. /method promises that map can never create a name."""
+    bl, fresh = backlog
+    apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
+    sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
+                              ["debian"], min_age=14)
+    for name in ("backlog.json",):
+        for row in json.load(open(pathlib.Path(sdir) / name)):
+            leaked = [k for k in row if k.startswith("product_map")]
+            assert not leaked, f"{name} leaked {leaked}"
+            assert "owner_contested" in row

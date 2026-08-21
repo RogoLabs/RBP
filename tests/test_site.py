@@ -89,7 +89,36 @@ def test_prelaunch_dashboard_pages_are_noindex(built):
     for name in ("overview", "cves", "cnas", "method", "policy", "data", "changes"):
         html = (out / f"{name}.html").read_text()
         assert 'content="noindex, nofollow"' in html, name
-    assert 'content="noindex, nofollow"' in (out / "cna" / "acme.html").read_text()
+
+
+def test_prelaunch_emits_a_disallow_all_robots_txt(built):
+    """A meta tag cannot cover data/*.json and GitHub Pages cannot set
+    X-Robots-Tag, so robots.txt is the only lever that reaches the data files."""
+    out = built(False)
+    robots = (out / "robots.txt").read_text()
+    assert "User-agent: *" in robots and "Disallow: /" in robots
+    assert not (built(True) / "robots.txt").exists()
+
+
+def test_holding_page_itself_is_noindex(built):
+    """The holding page is the only surface a crawler or an unfurler can reach
+    pre-launch, and it carries the project's most pointed copy. The template
+    noindex covers the Jinja pages only, never this file."""
+    index = (built(False) / "index.html").read_text()
+    assert 'name="robots"' in index and "noindex" in index
+
+
+def test_prelaunch_withholds_the_per_cna_pages(built):
+    """report.py states the project's own rule that a named CNA gets a private
+    preview before any row naming it circulates. A six-hourly public deploy of
+    these pages breaks that rule on every run, and noindex does not help because
+    the page is still fetchable and linkable."""
+    pre = built(False)
+    assert not (pre / "cna").exists() or not list((pre / "cna").glob("*.html"))
+    assert not list((pre / "data" / "cna").glob("*.json"))
+    post = built(True)
+    assert (post / "cna" / "acme.html").exists()
+    assert (post / "data" / "cna" / "acme.json").exists()
 
 
 def test_launched_front_door_is_the_dashboard(built):
@@ -103,19 +132,19 @@ def test_launched_front_door_is_the_dashboard(built):
 def test_nav_follows_the_posture(built):
     pre = built(False)
     assert 'href="overview.html">Overview' in (pre / "cves.html").read_text()
-    assert 'href="../overview.html">Overview' in (pre / "cna" / "acme.html").read_text()
     post = built(True)
     assert 'href="index.html">Overview' in (post / "cves.html").read_text()
     assert 'href="../index.html">Overview' in (post / "cna" / "acme.html").read_text()
 
 
-def test_data_files_are_served_in_both_postures(built):
-    """The gate is on presentation, not on withholding data."""
+def test_aggregate_data_files_are_served_in_both_postures(built):
+    """The gate is on presentation, not on withholding the aggregate data. The
+    per-CNA files are the exception, because those are the ones that name a
+    single organisation."""
     for launched in (False, True):
         out = built(launched)
         for f in ("rbp.json", "rbp.csv", "summary.json", "cnas.json", "precision.json"):
             assert (out / "data" / f).exists(), (launched, f)
-        assert (out / "data" / "cna" / "acme.json").exists()
 
 
 def test_csv_is_the_gated_view(built):

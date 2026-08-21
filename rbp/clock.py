@@ -113,6 +113,13 @@ OWNER_FEEDS = {
 }
 
 
+def _same_name(a, b):
+    """CNA short names vary in punctuation across sources (GitHub_M vs GitHub-M)."""
+    def norm(s):
+        return (s or "").lower().replace("_", "").replace("-", "").replace(" ", "")
+    return norm(a) == norm(b)
+
+
 def self_disclosed(row):
     """Did the owning CNA's own feed carry this advisory?
 

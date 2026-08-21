@@ -199,7 +199,7 @@ def _write_data(out, ctx):
     # One file per CNA, so anyone can pull just their own rows.
     per = os.path.join(d, "cna")
     os.makedirs(per, exist_ok=True)
-    for c in ctx["cnas"]:
+    for c in (ctx["cnas"] if LAUNCHED else []):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
         json.dump({"cna": c["cna"], "summary": c, "rows": mine},
                   open(os.path.join(per, f"{c['slug']}.json"), "w"), indent=1)
@@ -229,6 +229,12 @@ def build(out, snap_root, data_dir):
         open(os.path.join(out, target), "w").write(html)
 
     if not LAUNCHED:
+        # GitHub Pages cannot set X-Robots-Tag, and a meta tag cannot cover the
+        # JSON and CSV under data/. robots.txt is the only lever that reaches them.
+        open(os.path.join(out, "robots.txt"), "w").write(
+            "# Pre-launch. The count is built on partial CNA coverage and is not\n"
+            "# ready to be indexed or cited. See PLAN.md launch gate.\n"
+            "User-agent: *\nDisallow: /\n")
         # The holding page becomes the front door. Kept as a standalone file
         # rather than a template: it shares nothing with the dashboard by
         # design, and it must not link into it before launch.
@@ -241,10 +247,16 @@ def build(out, snap_root, data_dir):
     # Per-CNA detail. This is the page a CNA lands on when someone sends them
     # the link, so it carries the full row list and the method caveats rather
     # than a summary line.
+    #
+    # Withheld entirely until launch. report.py states the project's own rule
+    # that a named CNA gets a private preview before any row naming it
+    # circulates, and a six-hourly public deploy of these pages breaks that rule
+    # on every run. The noindex meta tag is not sufficient: the pages are still
+    # fetchable and linkable.
     cna_dir = os.path.join(out, "cna")
     os.makedirs(cna_dir, exist_ok=True)
     tpl = env.get_template("cna.html")
-    for c in ctx["cnas"]:
+    for c in (ctx["cnas"] if LAUNCHED else []):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
         resolved = [r for r in ctx["resolutions"] if r.get("owner") == c["cna"]]
         html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine, cna_resolved=resolved)

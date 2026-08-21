@@ -247,3 +247,46 @@ def test_name_normalisation_across_sources():
     assert _same("GitHub_M", "github-m")
     assert _same("Red Hat", "redhat")
     assert not _same("redhat", "GitHub_M")
+
+
+# --------------------------------------------------------------------------
+# the product-map veto (REVIEW.md part 1 item 2)
+# --------------------------------------------------------------------------
+
+def test_a_confident_contradicting_product_map_withholds_the_name(inf):
+    """The two worst rows in the deployed build were CVE-2026-16566 named WPScan
+    on an Ansible flaw and CVE-2026-9238 named Wordfence on a QEMU flaw. Both had
+    a product map verdict of redhat at 0.85 and 0.9 sitting right there, and both
+    carried three independent sources so a corroboration threshold would not have
+    caught either."""
+    named = next(c for c in TRUTH if inf.infer(c) is not None)
+    owner, tier, method = inf.attribute(named, product_map_owner="definitely-not-this",
+                                        product_map_confidence=0.9)
+    assert owner is None
+    assert tier == TIER_NONE
+    assert "vetoed" in method
+
+
+def test_a_low_confidence_contradiction_does_not_veto(inf):
+    """A weak corpus plurality must not override a k=3 block agreement."""
+    named = next(c for c in TRUTH if inf.infer(c) is not None)
+    owner, tier, _ = inf.attribute(named, product_map_owner="something-else",
+                                   product_map_confidence=0.5)
+    assert owner is not None and tier == TIER_BLOCK
+
+
+def test_agreement_still_promotes_to_corroborated(inf):
+    named = next(c for c in TRUTH if inf.infer(c) is not None)
+    actual = inf.infer(named)
+    assert inf.attribute(named, product_map_owner=actual,
+                         product_map_confidence=0.9)[1] == TIER_CORROBORATED
+
+
+def test_silence_from_the_product_map_leaves_the_block_standing(inf):
+    named = next(c for c in TRUTH if inf.infer(c) is not None)
+    assert inf.attribute(named, product_map_owner=None, product_map_confidence=0.0)[1] == TIER_BLOCK
+
+
+def test_veto_threshold_is_explicit():
+    from rbp.inference import VETO_CONFIDENCE
+    assert VETO_CONFIDENCE == 0.85

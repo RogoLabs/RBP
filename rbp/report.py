@@ -171,11 +171,28 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
     def nameable(r):
         return r.get("owner") is not None
 
+    # The product map is an 85%-precision signal that /method promises can never
+    # create a name. Spreading the row with `{**r}` carried product_map_owner,
+    # product_map_confidence and product_map_method straight into backlog.json
+    # and from there into rbp.json and every per-CNA file: 112 of 553 published
+    # rows shipped an ungated CNA name on a row rendered as unattributed. Strip
+    # them on both branches and publish only a boolean.
+    _INTERNAL = ("product_map_owner", "product_map_confidence", "product_map_method")
+
+    def _publishable(r, **over):
+        out = {k: v for k, v in r.items() if k not in _INTERNAL}
+        pm = r.get("product_map_owner")
+        out["owner_contested"] = bool(
+            pm and r.get("owner") and not clock._same_name(pm, r["owner"]))
+        out.update(over)
+        return out
+
     def _gated(r):
         if nameable(r):
-            return {**r, "owner_nameable": True, "self_disclosed": clock.self_disclosed(r)}
-        return {**r, "owner": "unattributed", "owner_tier": "abstain",
-                "owner_nameable": False, "self_disclosed": False}
+            return _publishable(r, owner_nameable=True,
+                                self_disclosed=clock.self_disclosed(r))
+        return _publishable(r, owner="unattributed", owner_tier="abstain",
+                            owner_nameable=False, self_disclosed=False)
 
     cols = ["cve_id", "state", "vendor", "package", "ecosystem", "owner", "owner_nameable",
             "owner_tier", "owner_method", "self_disclosed", "rule", "rule_strength",
