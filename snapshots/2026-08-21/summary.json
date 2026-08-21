@@ -61,6 +61,178 @@
    "arch"
   ],
   "failures": [],
-  "attempts": 19
- }
+  "attempts": 9,
+  "detail": {
+   "alas": {
+    "status": "ok",
+    "detail": "11369 ids",
+    "rows": 11369,
+    "ok": true,
+    "truncated": false
+   },
+   "ubuntu": {
+    "status": "truncated",
+    "detail": "hit the 200-page cap; rows beyond it were not read",
+    "rows": 3995,
+    "ok": false,
+    "truncated": true
+   },
+   "debian": {
+    "status": "ok",
+    "detail": "17114 ids",
+    "rows": 17114,
+    "ok": true,
+    "truncated": false
+   },
+   "ghsa": {
+    "status": "ok",
+    "detail": "3321 ids",
+    "rows": 3321,
+    "ok": true,
+    "truncated": false
+   },
+   "redhat": {
+    "status": "ok",
+    "detail": "15987 ids",
+    "rows": 15987,
+    "ok": true,
+    "truncated": false
+   },
+   "alpine": {
+    "status": "ok",
+    "detail": "2537 ids",
+    "rows": 2537,
+    "ok": true,
+    "truncated": false
+   },
+   "osv": {
+    "parts": {
+     "PyPI": {
+      "status": "ok",
+      "detail": "2344 ids from 34MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "npm": {
+      "status": "ok",
+      "detail": "2896 ids from 220MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Go": {
+      "status": "ok",
+      "detail": "2217 ids from 11MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "crates.io": {
+      "status": "ok",
+      "detail": "358 ids from 3MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "RubyGems": {
+      "status": "ok",
+      "detail": "200 ids from 4MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Maven": {
+      "status": "ok",
+      "detail": "1310 ids from 10MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Packagist": {
+      "status": "ok",
+      "detail": "1775 ids from 10MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "NuGet": {
+      "status": "ok",
+      "detail": "376 ids from 3MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Pub": {
+      "status": "ok",
+      "detail": "1 ids from 0MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Hex": {
+      "status": "ok",
+      "detail": "145 ids from 0MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     }
+    },
+    "status": "ok",
+    "detail": "11622 ids",
+    "rows": 11622,
+    "ok": true,
+    "truncated": false
+   },
+   "mozilla": {
+    "status": "ok",
+    "detail": "607 ids",
+    "rows": 607,
+    "ok": true,
+    "truncated": false
+   },
+   "arch": {
+    "status": "ok",
+    "detail": "62 ids",
+    "rows": 62,
+    "ok": true,
+    "truncated": false
+   }
+  },
+  "truncated": [
+   "ubuntu"
+  ]
+ },
+ "coverage": {
+  "total_cnas": 434,
+  "covered_cnas": 159,
+  "pct_cnas": 36.6,
+  "pct_volume_attributable": 90.0,
+  "observed_pct": 20.82,
+  "observed_ids": 26890,
+  "total_pub": 129159,
+  "top_n": 50,
+  "top_covered": 37,
+  "top_missed": [
+   "dell",
+   "siemens",
+   "SamsungMobile",
+   "qualcomm",
+   "huawei",
+   "twcert",
+   "MediaTek",
+   "fortinet",
+   "HCL",
+   "qnap",
+   "juniper",
+   "Google_Devices",
+   "hpe"
+  ],
+  "recent_years": [
+   2024,
+   2025,
+   2026
+  ]
+ },
+ "generated_at": "2026-08-21T11:03:19+00:00"
 }
