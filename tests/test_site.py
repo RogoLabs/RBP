@@ -323,3 +323,24 @@ def test_production_precision_is_withheld_below_the_floor(tmp_path):
     ok = _minimal(tmp_path / "ok", graded=site.GRADER_MIN_N)
     assert ok["grader"]["precision"] == 1.0
     assert ok["grader"]["below_floor"] is False
+
+
+def test_snapshot_retention_keeps_recent_and_monthly(tmp_path):
+    """An unbounded public log of every row ever named, including names later
+    withdrawn, grows four times a day and no correction on the site reaches it."""
+    root = tmp_path / "snapshots"
+    for d in ("2026-06-01", "2026-06-15", "2026-07-02", "2026-07-20",
+              "2026-08-19", "2026-08-20"):
+        (root / d).mkdir(parents=True)
+    dropped = site.prune_snapshots(str(root), keep=2)
+    left = sorted(p.name for p in root.iterdir())
+    # two most recent, plus the last of each earlier month
+    assert left == ["2026-06-15", "2026-07-20", "2026-08-19", "2026-08-20"]
+    assert set(dropped) == {"2026-06-01", "2026-07-02"}
+
+
+def test_retention_is_a_noop_below_the_keep_count(tmp_path):
+    root = tmp_path / "snapshots"
+    (root / "2026-08-20").mkdir(parents=True)
+    assert site.prune_snapshots(str(root), keep=2) == []
+    assert [p.name for p in root.iterdir()] == ["2026-08-20"]

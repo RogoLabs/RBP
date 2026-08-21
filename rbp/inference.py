@@ -232,6 +232,21 @@ class Grader:
                 "predicted": predicted_owner, "tier": tier, "k": k, "on": today,
             }
 
+    def withdraw(self, keep_ids):
+        """Drop open predictions for rows the site no longer publishes.
+
+        A name can be withdrawn after it was recorded: the contradiction veto
+        starts firing on it, the buffer is raised, an epoch is set, or a CNA
+        disputes it. Without this the ledger keeps asserting a name the site has
+        already retracted, on a public branch, and no correction on the site can
+        reach it. Graded verdicts are never withdrawn: those rest on an
+        authoritative assigner from the published record, not on inference.
+        """
+        gone = [c for c in self.state["predictions"] if c not in keep_ids]
+        for c in gone:
+            del self.state["predictions"][c]
+        return gone
+
     def grade(self, corpus_df, today=None):
         """Mark every outstanding prediction whose ID now appears PUBLISHED in
         the corpus, and fold the result into the running score."""
@@ -321,6 +336,11 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
         if record_for is None or row["cve_id"] in record_for:
             grader.record(row["cve_id"], owner, tier, k, today)
 
+    # A retraction has to reach the ledger, not just the site.
+    withdrawn = grader.withdraw(record_for) if record_for is not None else []
+    if withdrawn:
+        print(f"  withdrew {len(withdrawn)} prediction(s) for rows no longer published")
+
     grader.save()
     live_score = grader.summary()
     loo = inferencer.validate_loo(year=today[:4], k=k)
@@ -356,6 +376,7 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
         "leave_one_out": loo,
         "live": live_score,
         "newly_graded": newly_graded,
+        "withdrawn": len(withdrawn),
     }
 
 

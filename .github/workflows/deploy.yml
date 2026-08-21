@@ -20,6 +20,10 @@ on:
         description: 'Days public before a row is reportable (blank uses the repo variable, then the code default of 7)'
         type: string
         default: ''
+      dry_run:
+        description: 'Run the pipeline and build the site, publish nothing. Rehearse an epoch, a gate flip or a buffer change against real data.'
+        type: boolean
+        default: false
 
 env:
   # Precedence: dispatch input, then repository variable RBP_MIN_AGE_DAYS, then
@@ -36,6 +40,11 @@ env:
   # the count retroactively. Held-back rows stay in the raw data and their count
   # is shown on /method.
   RBP_EPOCH: ${{ vars.RBP_EPOCH || '' }}
+  # Incident switch. Set the repository variable RBP_PAUSE to 1 and the pipeline
+  # still runs and still reports, but nothing is published and no state advances.
+  # There was previously no lever at all: no `if:` on any job, no dry run and no
+  # pause, so an unattended tick could not be held while a fix landed.
+  RBP_PAUSE: ${{ vars.RBP_PAUSE || '' }}
 
 # Least privilege at the top level. `contents: write` is needed only by the one
 # step that pushes the ledger to the data branch, so it is granted per job
@@ -151,7 +160,10 @@ jobs:
         with:
           path: site
 
-      - name: Persist durable state
+      # Always staged, even on a pause or a dry run: staging is local and
+      # publishes nothing, and it is what makes a dry run able to show what
+      # WOULD go out. Only the push below is gated.
+      - name: Stage durable state
         run: |
           cp data/precision.json .state/ 2>/dev/null || true
           cp data/resolutions.json .state/ 2>/dev/null || true
@@ -172,6 +184,15 @@ jobs:
               fi
             done
           done
+          # Retention. Keep the current snapshot, the previous one and a monthly
+          # archive. Without this the branch accumulates every row ever named,
+          # including names later withdrawn, four times a day, and no correction
+          # on the site can reach the history.
+          python -c "
+          from rbp.site import prune_snapshots
+          d = prune_snapshots('.state/snapshots', keep=2)
+          print('pruned %d old snapshot(s): %s' % (len(d), d) if d else 'nothing to prune')
+          "
           # Remove anything a previous run published before these rules existed.
           # Note that precision.json sits at the branch ROOT, so a
           # snapshots-scoped rule never touched it: its `predictions` map had
@@ -200,7 +221,58 @@ jobs:
                   json.dump(d, open(path, "w"), indent=1)
                   print("pruned %d unpublished predictions from the ledger"
                         % (before - len(d["predictions"])))
-          PRUNE
+          PRUNE      # Every path that leaves the runner is checked against an allowlist. The
+      # protection here used to be a copy loop plus a post-hoc `rm -f` for two
+      # filenames, on a branch that deliberately carries no .gitignore, and that
+      # branch's own history records a leak in each direction: workflow files
+      # that leaked in at creation, and a green state commit that silently
+      # dropped every snapshot.
+      - name: Check what is about to be published
+        run: |
+          python - <<'CHECK'
+          import glob, json, os, sys
+          ALLOWED_ROOT = {"README.md", "precision.json", "resolutions.json"}
+          ALLOWED_SNAP = {"backlog.json", "backlog.csv", "cnas.json", "summary.json",
+                          "held_back.json", "resolved.json"}
+          bad = []
+          for path in glob.glob(".state/**/*", recursive=True):
+              if os.path.isdir(path) or "/.git/" in path:
+                  continue
+              rel = os.path.relpath(path, ".state")
+              parts = rel.split(os.sep)
+              if len(parts) == 1:
+                  if rel not in ALLOWED_ROOT:
+                      bad.append(f"unexpected file at branch root: {rel}")
+              elif parts[0] == "snapshots" and len(parts) == 3:
+                  if parts[2] not in ALLOWED_SNAP:
+                      bad.append(f"not on the snapshot allowlist: {rel}")
+              else:
+                  bad.append(f"unexpected path: {rel}")
+          # And no published row may name a CNA on a row that is not counted.
+          for f in glob.glob(".state/snapshots/*/*.json"):
+              try:
+                  rows = json.load(open(f))
+              except Exception:
+                  continue
+              if not isinstance(rows, list):
+                  continue
+              for r in rows:
+                  if not isinstance(r, dict):
+                      continue
+                  named = r.get("owner") not in (None, "", "unattributed")
+                  if named and r.get("counted") is False:
+                      bad.append(f"{f}: {r.get('cve_id')} names a CNA on an uncounted row")
+          if bad:
+              print("REFUSING TO PUBLISH:")
+              for b in sorted(set(bad))[:40]:
+                  print("  " + b)
+              sys.exit(1)
+          print("publish check passed")
+          CHECK
+
+      - name: Persist durable state
+        if: ${{ vars.RBP_PAUSE != '1' && inputs.dry_run != true }}
+        run: |
           cd .state
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -210,6 +282,9 @@ jobs:
 
   deploy:
     needs: build
+    # Held by the incident switch and skipped on a dry run, so a configuration
+    # change can be rehearsed against real data without publishing it.
+    if: ${{ vars.RBP_PAUSE != '1' && inputs.dry_run != true }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:

@@ -328,6 +328,19 @@ instrument, and the closures prove the open rows are real.
 - **Phase 5: harden the loop** (1 day). Feed-health surfacing, history to `data` branch
   with compaction, failure alerting, staleness banner past 24h.
   *Done when* killing a feed produces a degraded-coverage banner, not a smaller count.
+- **Incident switch and rehearsal (round 3, items 1 and 2).** `RBP_PAUSE=1` as a
+  repository variable holds publication: the pipeline still runs and still reports, but
+  nothing is staged to the data branch and nothing deploys. The `dry_run` dispatch input
+  does the same for one run, so a candidate epoch, a gate flip or a buffer change can be
+  rehearsed against real data before it is published. There was previously no lever at
+  all, so an unattended six-hourly tick could not be held while a fix landed.
+  Every path leaving the runner is checked against an allowlist before the push, and the
+  check refuses any file off the list and any row naming a CNA on an uncounted row.
+  Verified against both historical leaks: it catches `backlog_full.json` by path and the
+  `held_back.json` named row by content.
+  Snapshot retention keeps the current snapshot, the previous one and one per month. An
+  unbounded public log of every row ever named, including names later withdrawn, grew four
+  times a day and no correction on the site could reach it.
 - **Pre-launch posture (in force now).** `/` serves the holding page and the dashboard
   sits at `/overview.html`, noindexed, with the holding page carrying no link into it.
   The dashboard is still built and the data files are still served, because the repo is

@@ -290,3 +290,32 @@ def test_silence_from_the_product_map_leaves_the_block_standing(inf):
 def test_veto_threshold_is_explicit():
     from rbp.inference import VETO_CONFIDENCE
     assert VETO_CONFIDENCE == 0.85
+
+
+def test_a_withdrawn_name_leaves_the_ledger(tmp_path):
+    """A name can be withdrawn after it was recorded: the contradiction veto
+    starts firing, the buffer is raised, an epoch is set, or a CNA disputes it.
+    Without this the ledger keeps asserting a name the site has retracted, on a
+    public branch, where no correction on the site can reach it."""
+    g = Grader(str(tmp_path / "p.json"))
+    g.record("CVE-2026-1", "acme", TIER_BLOCK, 3, "2026-08-20")
+    g.record("CVE-2026-2", "beta", TIER_BLOCK, 3, "2026-08-20")
+    assert set(g.state["predictions"]) == {"CVE-2026-1", "CVE-2026-2"}
+
+    gone = g.withdraw({"CVE-2026-1"})
+    assert gone == ["CVE-2026-2"]
+    assert set(g.state["predictions"]) == {"CVE-2026-1"}
+
+
+def test_graded_verdicts_are_never_withdrawn(tmp_path, corpus):
+    """Grading only happens once the true assigner is public in the CVE List, so
+    a graded row rests on an authoritative assigner rather than inference."""
+    import pandas as pd
+    g = Grader(str(tmp_path / "p.json"))
+    g.record("CVE-2026-1", "acme", TIER_BLOCK, 3, "2026-08-20")
+    later = pd.concat([corpus, pd.DataFrame(
+        [("CVE-2026-1", "PUBLISHED", "acme", "", "")], columns=corpus.columns)])
+    g.grade(later, today="2026-08-21")
+    assert len(g.state["graded"]) == 1
+    g.withdraw(set())                      # withdraw everything still open
+    assert len(g.state["graded"]) == 1     # the verdict survives
