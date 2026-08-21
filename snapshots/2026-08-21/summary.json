@@ -26,19 +26,19 @@
   "leave_one_out": {
    "method": "leave-one-out",
    "k": 3,
-   "decided": 29501,
-   "abstained": 17825,
-   "total": 47326,
-   "correct": 29317,
-   "wrong": 184,
-   "coverage": 0.6234,
+   "decided": 29502,
+   "abstained": 17830,
+   "total": 47332,
+   "correct": 29319,
+   "wrong": 183,
+   "coverage": 0.6233,
    "precision": 0.9938
   },
   "live": {
    "graded": 1,
    "correct": 1,
    "precision": 1.0,
-   "outstanding": 366,
+   "outstanding": 276,
    "by_tier": {
     "block": {
      "graded": 1,
@@ -79,8 +79,8 @@
    },
    "debian": {
     "status": "ok",
-    "detail": "17114 ids",
-    "rows": 17114,
+    "detail": "17115 ids",
+    "rows": 17115,
     "ok": true,
     "truncated": false
    },
@@ -210,7 +210,7 @@
   "pct_volume_attributable": 90.0,
   "observed_pct": 20.82,
   "observed_ids": 26890,
-  "total_pub": 129159,
+  "total_pub": 129165,
   "top_n": 50,
   "top_covered": 37,
   "top_missed": [
@@ -234,5 +234,5 @@
    2026
   ]
  },
- "generated_at": "2026-08-21T11:03:19+00:00"
+ "generated_at": "2026-08-21T11:56:07+00:00"
 }

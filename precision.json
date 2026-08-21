@@ -19,5 +19,6 @@
    "newly_correct": 1,
    "cumulative_precision": 1.0
   }
- ]
+ ],
+ "_note": "open predictions removed from history 2026-08-21: inferred CNA names should not have been published"
 }
