@@ -22,16 +22,16 @@
  },
  "inference": {
   "k": 3,
-  "run_coverage": 0.4923,
+  "run_coverage": 0.4916,
   "leave_one_out": {
    "method": "leave-one-out",
    "k": 3,
-   "decided": 29502,
-   "abstained": 17830,
-   "total": 47332,
-   "correct": 29319,
+   "decided": 29505,
+   "abstained": 17843,
+   "total": 47348,
+   "correct": 29322,
    "wrong": 183,
-   "coverage": 0.6233,
+   "coverage": 0.6232,
    "precision": 0.9938
   },
   "live": {
@@ -93,8 +93,8 @@
    },
    "redhat": {
     "status": "ok",
-    "detail": "15987 ids",
-    "rows": 15987,
+    "detail": "16054 ids",
+    "rows": 16054,
     "ok": true,
     "truncated": false
    },
@@ -209,8 +209,8 @@
   "pct_cnas": 36.6,
   "pct_volume_attributable": 90.0,
   "observed_pct": 20.82,
-  "observed_ids": 26890,
-  "total_pub": 129165,
+  "observed_ids": 26891,
+  "total_pub": 129181,
   "top_n": 50,
   "top_covered": 37,
   "top_missed": [
@@ -234,5 +234,5 @@
    2026
   ]
  },
- "generated_at": "2026-08-21T11:56:07+00:00"
+ "generated_at": "2026-08-21T12:52:23+00:00"
 }
