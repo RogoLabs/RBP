@@ -135,27 +135,40 @@
 <div class="card">
   <div class="card-header"><h2 class="card-title">Movement</h2></div>
   <div class="card-body">
-    {% if changes.have_previous %}
+    {% if not changes.have_previous %}
+    <p>First snapshot. Movement appears once there is a previous run to compare against.</p>
+    {% elif not changes.comparable %}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>Not comparable.</strong> {{ changes.incomparable_reason }}, so a
+        difference between these two snapshots would not mean anything. Movement resumes
+        once two runs share the same configuration.
+      </p>
+    </div>
+    {% else %}
     <div class="metric-grid">
       <div class="metric-card">
         <div class="metric-value">{{ changes.new | length | commafy }}</div>
         <div class="metric-label">New since {{ changes.previous_date }}</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value">{{ changes.resolved | length | commafy }}</div>
-        <div class="metric-label">Published, and therefore resolved</div>
+        <div class="metric-value">{{ changes.published | length | commafy }}</div>
+        <div class="metric-label">Published, verified against the CVE List</div>
       </div>
       <div class="metric-card">
-        <div class="metric-value">{{ changes.still_open | commafy }}</div>
-        <div class="metric-label">Still open</div>
+        <div class="metric-value">{{ changes.rejected | length | commafy }}</div>
+        <div class="metric-label">Rejected, no record will come</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ changes.no_longer_listed | length | commafy }}</div>
+        <div class="metric-label">No longer listed, cause unverified</div>
       </div>
     </div>
-    {% else %}
-    <p>First snapshot. Movement appears once there is a previous run to compare against.</p>
     {% endif %}
     <p class="small text-muted mb-0">
-      Rows that resolve are the point. The same pipeline that finds these watches them
-      get fixed, which is what makes the ones that do not move hard to explain away.
+      Rows that publish are the point, and they are counted only where the CVE List
+      confirms it. A row can leave this list for reasons that are not a publication, so
+      those are counted separately and never called resolved.
       <a href="changes.html">See what changed</a>.
     </p>
   </div>

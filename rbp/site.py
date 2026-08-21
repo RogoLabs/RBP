@@ -58,10 +58,54 @@ def _snapshots(snap_root):
 
 
 def _read(path, default):
+    """Tolerant read. Only for the two ledgers, where absence is a valid
+    first-run state."""
     try:
         return json.load(open(path))
-    except Exception:  # noqa: BLE001
+    except FileNotFoundError:
         return default
+    except Exception as e:  # noqa: BLE001
+        raise SystemExit(f"{path} exists but is unreadable: {e}. Refusing to "
+                         "publish from a corrupt ledger.") from e
+
+
+def _read_strict(path):
+    """A snapshot artefact the pages assert numbers from.
+
+    Previously these were tolerant, so a truncated backlog.json beside a good
+    summary.json published a front page reading 553 above an empty table, an
+    empty rbp.json, a header-only CSV, and per-CNA pages asserting rows above
+    none of them. The step exited 0, so the artifact uploaded, the deploy ran,
+    and the truncated snapshot became the next run's diff baseline.
+    """
+    try:
+        return json.load(open(path))
+    except Exception as e:  # noqa: BLE001
+        raise SystemExit(f"cannot read {path}: {e}") from e
+
+
+def _assert_consistent(rows, summary, cnas):
+    """One invariant, raised in one place, covering three separate defects:
+    the epoch applied to some writers and not others, a truncated artefact, and
+    an owner link pointing at a CNA page that was never generated."""
+    total = summary.get("total")
+    if total is not None and len(rows) != total:
+        raise SystemExit(
+            f"snapshot is inconsistent: backlog.json has {len(rows)} rows but "
+            f"summary.json reports total={total}. The published population must "
+            "be computed once. Refusing to publish contradictory numbers.")
+    known = {c["cna"] for c in cnas}
+    named = [r for r in rows if r.get("owner") and r["owner"] != "unattributed"]
+    orphans = sorted({r["owner"] for r in named} - known)
+    if orphans:
+        raise SystemExit(
+            f"rows name CNAs absent from cnas.json: {orphans}. Every owner link "
+            "would 404. Refusing to publish.")
+    counted = sum(c.get("outstanding", 0) for c in cnas)
+    if counted != len(named):
+        raise SystemExit(
+            f"per-CNA outstanding sums to {counted} but {len(named)} rows are "
+            "named. The per-CNA cards would contradict their own tables.")
 
 
 def load(snap_root, data_dir):
@@ -71,15 +115,16 @@ def load(snap_root, data_dir):
         raise SystemExit(f"no snapshots in {snap_root}; run the pipeline first")
     latest, prev = snaps[-1], (snaps[-2] if len(snaps) > 1 else None)
 
-    rows = _read(os.path.join(latest, "backlog.json"), [])
-    summary = _read(os.path.join(latest, "summary.json"), {})
-    cnas = _read(os.path.join(latest, "cnas.json"), [])
+    rows = _read_strict(os.path.join(latest, "backlog.json"))
+    summary = _read_strict(os.path.join(latest, "summary.json"))
+    cnas = _read_strict(os.path.join(latest, "cnas.json"))
+    _assert_consistent(rows, summary, cnas)
     grader = _read(os.path.join(data_dir, "precision.json"),
                    {"graded": [], "predictions": {}, "history": []})
     resolutions = _read(os.path.join(data_dir, "resolutions.json"),
                         {"resolved": [], "open": {}})
 
-    changes = _changes(rows, prev)
+    changes = _changes(rows, prev, latest)
     for c in cnas:
         c["slug"] = slug(c["cna"])
 
@@ -118,24 +163,73 @@ def load(snap_root, data_dir):
     }
 
 
-def _changes(rows, prev_dir):
-    """New, resolved and still-open against the previous snapshot.
+def _changes(rows, prev_dir, latest_dir):
+    """Movement against the previous snapshot, in three buckets that are never
+    merged.
 
-    Resolved rows matter as much as new ones. A tracker that only ever
-    accumulates reads as a grudge; one that visibly closes rows reads as an
-    instrument, and the closures are the strongest evidence the open rows are
-    real.
+    A set difference over two backlogs is NOT a publication event. A row leaves
+    the set for at least six other reasons: a transient oracle error, a failed
+    or truncated feed, a feed-profile change (one `deep` dispatch followed by the
+    next `weekly` cron drops every CSAF-only row), a raised buffer, a revised
+    `public_date`, and rejection. Labelling that difference "Published, and
+    therefore resolved" asserted a fact about a CNA that the site had not
+    checked, and the honest answer was already being computed and thrown away.
+
+      published      verified PUBLISHED in the corpus, from the ledger.
+      rejected       state REJECTED. Lawful under rule 4.5.3.5, and worse for a
+                     defender than an open RBP, so it is never called resolved.
+      no_longer_listed  unverified. The word "published" must not appear near it.
+
+    Two snapshots taken under different feed profiles or buffers are not
+    comparable at all, and saying so is better than showing a difference that
+    means nothing.
     """
+    empty = {"published": [], "rejected": [], "no_longer_listed": [], "new": [],
+             "still_open": 0, "have_previous": False, "comparable": True,
+             "incomparable_reason": None}
     if not prev_dir:
-        return {"new": [], "resolved": [], "still_open": 0, "have_previous": False}
-    before = {r["cve_id"] for r in _read(os.path.join(prev_dir, "backlog.json"), [])}
+        return empty
+
+    prev_rows = _read(os.path.join(prev_dir, "backlog.json"), [])
+    prev_sum = _read(os.path.join(prev_dir, "summary.json"), {})
+    now_sum = _read(os.path.join(latest_dir, "summary.json"), {})
+
+    # Refuse to diff snapshots that disagree on how they were produced.
+    for key, label in (("min_age_days", "buffer"), ("epoch", "epoch")):
+        if prev_sum.get(key) is not None and prev_sum.get(key) != now_sum.get(key):
+            return {**empty, "have_previous": True, "comparable": False,
+                    "previous_date": os.path.basename(prev_dir),
+                    "incomparable_reason":
+                        f"the {label} changed from {prev_sum.get(key)!r} to "
+                        f"{now_sum.get(key)!r} between these snapshots"}
+    a = set((prev_sum.get("feeds") or {}).get("requested") or [])
+    b = set((now_sum.get("feeds") or {}).get("requested") or [])
+    if a and b and a != b:
+        return {**empty, "have_previous": True, "comparable": False,
+                "previous_date": os.path.basename(prev_dir),
+                "incomparable_reason":
+                    "the feed set changed between these snapshots "
+                    f"(added {sorted(b - a)}, dropped {sorted(a - b)})"}
+
+    before = {r["cve_id"] for r in prev_rows}
     now = {r["cve_id"] for r in rows}
     by_id = {r["cve_id"]: r for r in rows}
+    gone = before - now
+
+    # The authoritative closures, written by the pipeline from the corpus.
+    resolved = {r["cve_id"]: r for r in _read(os.path.join(latest_dir, "resolved.json"), [])}
+    published = [resolved[c] for c in sorted(gone) if resolved.get(c, {}).get("state") == "PUBLISHED"]
+    rejected = [resolved[c] for c in sorted(gone) if resolved.get(c, {}).get("state") == "REJECTED"]
+    accounted = {r["cve_id"] for r in published + rejected}
     return {
         "new": [by_id[c] for c in sorted(now - before)],
-        "resolved": sorted(before - now),
+        "published": published,
+        "rejected": rejected,
+        "no_longer_listed": sorted(gone - accounted),
         "still_open": len(now & before),
         "have_previous": True,
+        "comparable": True,
+        "incomparable_reason": None,
         "previous_date": os.path.basename(prev_dir),
     }
 
@@ -198,7 +292,8 @@ def _write_data(out, ctx):
 
     # One file per CNA, so anyone can pull just their own rows.
     per = os.path.join(d, "cna")
-    os.makedirs(per, exist_ok=True)
+    if LAUNCHED:
+        os.makedirs(per, exist_ok=True)
     for c in (ctx["cnas"] if LAUNCHED else []):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
         json.dump({"cna": c["cna"], "summary": c, "rows": mine},
@@ -253,18 +348,26 @@ def build(out, snap_root, data_dir):
     # circulates, and a six-hourly public deploy of these pages breaks that rule
     # on every run. The noindex meta tag is not sufficient: the pages are still
     # fetchable and linkable.
+    written_cna = 0
     cna_dir = os.path.join(out, "cna")
-    os.makedirs(cna_dir, exist_ok=True)
+    if LAUNCHED:
+        os.makedirs(cna_dir, exist_ok=True)
     tpl = env.get_template("cna.html")
     for c in (ctx["cnas"] if LAUNCHED else []):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
         resolved = [r for r in ctx["resolutions"] if r.get("owner") == c["cna"]]
         html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine, cna_resolved=resolved)
         open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
+        written_cna += 1
 
     _write_data(out, ctx)
     posture = "LAUNCHED, / is the dashboard" if LAUNCHED else \
               "pre-launch, / is the holding page and the dashboard is /overview.html"
-    print(f"site: {len(PAGES)} pages + {len(ctx['cnas'])} CNA pages -> {out}")
+    # Report what was written, not what was available. Printing the available
+    # count while withholding the pages is the same class of untruth the review
+    # found elsewhere on this site.
+    print(f"site: {len(PAGES)} pages + {written_cna} CNA pages -> {out}"
+          + ("" if LAUNCHED else
+             f" ({len(ctx['cnas'])} CNA pages withheld until launch)"))
     print(f"      {posture}")
     return ctx

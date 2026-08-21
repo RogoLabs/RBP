@@ -142,8 +142,12 @@ jobs:
             [ -d "$d" ] || continue
             dst=".state/snapshots/$(basename "$d")"
             mkdir -p "$dst"
-            for f in backlog.json backlog.csv cnas.json summary.json; do
-              [ -f "$d$f" ] && cp "$d$f" "$dst/"
+            for f in backlog.json backlog.csv cnas.json summary.json held_back.json resolved.json; do
+              # Explicit if: a trailing failed test would set the loop's exit
+              # status and abort the step under `bash -e`.
+              if [ -f "$d$f" ]; then
+                cp "$d$f" "$dst/"
+              fi
             done
           done
           # Remove anything a previous run published before this rule existed.

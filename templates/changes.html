@@ -10,15 +10,33 @@
   </p>
 </div>
 
-{% if changes.have_previous %}
+{% if not changes.comparable and changes.have_previous %}
+<div class="caveat warn">
+  <p class="mb-0">
+    <strong>These two snapshots are not comparable.</strong>
+    {{ changes.incomparable_reason | capitalize }}. A difference computed across that
+    change would measure the change in method, not a change in CNA behaviour, so no
+    movement is shown. It resumes once two consecutive runs share the same feed set,
+    buffer and epoch.
+  </p>
+</div>
+{% elif changes.have_previous %}
 <div class="metric-grid">
   <div class="metric-card">
     <div class="metric-value">{{ changes.new | length | commafy }}</div>
     <div class="metric-label">New</div>
   </div>
   <div class="metric-card">
-    <div class="metric-value">{{ changes.resolved | length | commafy }}</div>
-    <div class="metric-label">Resolved, the record published</div>
+    <div class="metric-value">{{ changes.published | length | commafy }}</div>
+    <div class="metric-label">Published, verified in the CVE List</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ changes.rejected | length | commafy }}</div>
+    <div class="metric-label">Rejected under rule 4.5.3.5</div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ changes.no_longer_listed | length | commafy }}</div>
+    <div class="metric-label">No longer listed, cause unverified</div>
   </div>
   <div class="metric-card">
     <div class="metric-value">{{ changes.still_open | commafy }}</div>
@@ -27,18 +45,74 @@
 </div>
 
 <div class="caveat">
+  <p>
+    <strong>Only the first of those is good news.</strong> A row is counted as published
+    only where the CVE List confirms a published record, taken from the resolution ledger
+    rather than from the difference between two lists.
+  </p>
+  <p>
+    <strong>Rejected is not resolved.</strong> Rule 4.5.3.5 requires CNAs to reject unused
+    or unpublished IDs, so rejection is lawful and is the likely end state for the oldest
+    rows here. For anyone consuming the CVE List it is worse than an open RBP: the ID stays
+    cited in advisories and no record is ever coming.
+  </p>
   <p class="mb-0">
-    Resolutions are shown as prominently as additions on purpose. The same pipeline that
-    finds these watches roughly half of them get fixed, and that is exactly what makes
-    the ones that do not move difficult to explain as latency.
+    <strong>No longer listed means we do not know.</strong> A row leaves this list for
+    reasons that have nothing to do with a CNA: a transient API error, a feed that failed
+    or was truncated, a change to the feed set, a raised buffer, or a revised advisory
+    date. None of those are a publication and none are counted as one.
   </p>
 </div>
 
-{% if changes.resolved %}
+{% if changes.published %}
 <div class="card">
-  <div class="card-header"><h2 class="card-title">Resolved</h2></div>
+  <div class="card-header"><h2 class="card-title">Published</h2></div>
   <div class="card-body">
-    <p class="mono small">{{ changes.resolved | join(', ') }}</p>
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <thead><tr><th>CVE ID</th><th class="num">Days public before publishing</th>
+          <th>First public</th><th>Published</th><th>Assigner</th></tr></thead>
+        <tbody>
+          {% for r in changes.published %}
+          <tr>
+            <td class="id">{{ r.cve_id }}</td>
+            <td class="num">{{ r.days_to_publish if r.days_to_publish is not none else '&mdash;' }}</td>
+            <td class="mono small">{{ r.first_public }}</td>
+            <td class="mono small">{{ r.published }}</td>
+            <td>{{ r.published_assigner or r.owner }}{% if r.transferred %}
+              <span class="chip chip-none">transferred</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if changes.rejected %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Rejected</h2></div>
+  <div class="card-body">
+    <p class="small text-muted">
+      These IDs will never get a record. They remain cited in the advisories that
+      referenced them.
+    </p>
+    <p class="mono small">{{ changes.rejected | map(attribute='cve_id') | join(', ') }}</p>
+  </div>
+</div>
+{% endif %}
+
+{% if changes.no_longer_listed %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">No longer listed, cause unverified</h2></div>
+  <div class="card-body">
+    <p class="small text-muted">
+      Present in the previous snapshot and absent from this one, with no publication or
+      rejection found in the CVE List. Most likely a feed or lookup difference rather than
+      anything a CNA did.
+    </p>
+    <p class="mono small">{{ changes.no_longer_listed | join(', ') }}</p>
   </div>
 </div>
 {% endif %}

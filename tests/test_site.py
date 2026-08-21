@@ -167,3 +167,72 @@ def test_slug_is_url_safe():
 def test_build_fails_loudly_with_no_snapshots(tmp_path):
     with pytest.raises(SystemExit):
         site.build(str(tmp_path / "out"), str(tmp_path / "empty"), str(tmp_path))
+
+
+# --------------------------------------------------------------------------
+# fail loudly rather than publishing a hollow page (REVIEW.md part 1 item 6)
+# --------------------------------------------------------------------------
+
+def test_a_truncated_snapshot_raises_instead_of_publishing(tmp_path, monkeypatch):
+    """A truncated backlog.json beside a good summary.json used to publish a
+    front page reading 553 above an empty table, exit 0, upload the artifact,
+    deploy, and become the next run's diff baseline."""
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    (snaps / "backlog.json").write_text('[{"cve_id": "CVE-2026-1", "own')  # truncated
+    (snaps / "summary.json").write_text('{"total": 553}')
+    (snaps / "cnas.json").write_text("[]")
+    with pytest.raises(SystemExit, match="backlog.json"):
+        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+
+def test_row_count_must_match_the_headline(tmp_path):
+    """The epoch bug: it filtered summary.json and cnas.json but not the
+    backlog.json the table renders, so the front page and the table under it
+    disagreed."""
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    (snaps / "backlog.json").write_text(json.dumps(
+        [{"cve_id": f"CVE-2026-{i}", "owner": None} for i in range(5)]))
+    (snaps / "summary.json").write_text('{"total": 2}')
+    (snaps / "cnas.json").write_text("[]")
+    with pytest.raises(SystemExit, match="computed once"):
+        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+
+def test_an_owner_with_no_cna_page_raises(tmp_path):
+    """Every owner link must resolve. CNAs dropping out of cnas.json while
+    /cves still linked to them was an observed symptom of the epoch bug."""
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    (snaps / "backlog.json").write_text(json.dumps(
+        [{"cve_id": "CVE-2026-1", "owner": "ghost"}]))
+    (snaps / "summary.json").write_text('{"total": 1}')
+    (snaps / "cnas.json").write_text("[]")
+    with pytest.raises(SystemExit, match="absent from cnas.json"):
+        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+
+def test_per_cna_totals_must_match_the_named_rows(tmp_path):
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    (snaps / "backlog.json").write_text(json.dumps(
+        [{"cve_id": "CVE-2026-1", "owner": "acme"}]))
+    (snaps / "summary.json").write_text('{"total": 1}')
+    (snaps / "cnas.json").write_text(json.dumps([{"cna": "acme", "outstanding": 9}]))
+    with pytest.raises(SystemExit, match="contradict their own tables"):
+        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+
+def test_a_corrupt_ledger_raises_but_a_missing_one_does_not(tmp_path):
+    """Absence is a valid first-run state. Corruption is not, and starting empty
+    would silently zero the accountability record."""
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    (snaps / "backlog.json").write_text("[]")
+    (snaps / "summary.json").write_text('{"total": 0}')
+    (snaps / "cnas.json").write_text("[]")
+    site.load(str(tmp_path / "snapshots"), str(tmp_path))          # no ledgers, fine
+    (tmp_path / "precision.json").write_text("{trunc")
+    with pytest.raises(SystemExit, match="corrupt ledger"):
+        site.load(str(tmp_path / "snapshots"), str(tmp_path))

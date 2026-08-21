@@ -129,7 +129,17 @@ def _prev_snapshot(snap_root, today):
     return dirs[-1] if dirs else None
 
 
-def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, min_age=DEFAULT_MIN_AGE_DAYS, min_conf=0.7):
+def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
+          min_age=DEFAULT_MIN_AGE_DAYS, min_conf=0.7, rows=None, held_back=None):
+    """Write the snapshot.
+
+    `rows` is the published population, already filtered by the caller (buffer,
+    then epoch). When given, this function filters NOTHING: it previously
+    derived its own `reportable`, which meant the epoch applied to summary.json
+    and cnas.json but not to the backlog.json the site actually renders, so the
+    front page and the table it sat above disagreed. One population, computed
+    once, in cli.py.
+    """
     for r in backlog:
         # clock.annotate is the owner of this field; only fill gaps here so the
         # two stages cannot disagree.
@@ -139,7 +149,11 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
     # Buffer: only report RBPs we can PROVE have been public >= min_age days.
     # Younger-than-buffer and undated (age-unknown) entries are held back, not counted
     # against a CNA. That is what lets us say "not front-running; these are overdue."
-    reportable = [r for r in backlog if isinstance(r["days_public"], int) and r["days_public"] >= min_age]
+    if rows is None:
+        reportable = [r for r in backlog
+                      if isinstance(r["days_public"], int) and r["days_public"] >= min_age]
+    else:
+        reportable = list(rows)
     within_buffer = [r for r in backlog if isinstance(r["days_public"], int) and r["days_public"] < min_age]
     undated = [r for r in backlog if not isinstance(r["days_public"], int)]
 
@@ -205,6 +219,22 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None, m
         w.writeheader()
         w.writerows(_gated(r) for r in reportable)
     json.dump(backlog, open(os.path.join(sdir, "backlog_full.json"), "w"), indent=1)
+    # Excluded rows, with the reason. An epoch that removes the oldest and
+    # strongest evidence has to read as deliberate conservatism, not be
+    # discovered later as a discrepancy between two numbers.
+    counted = {r["cve_id"] for r in reportable}
+    held = []
+    for r in backlog:
+        if r["cve_id"] in counted:
+            continue
+        if not isinstance(r.get("days_public"), int):
+            reason = "undated"
+        elif r["days_public"] < min_age:
+            reason = "within-buffer"
+        else:
+            reason = "pre-epoch"
+        held.append(_publishable(r, counted=False, held_back_reason=reason))
+    json.dump(held, open(os.path.join(sdir, "held_back.json"), "w"), indent=1)
     json.dump([_gated(r) for r in reportable], open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
 
     # WoW diff: compare like-for-like (full backlog both sides, not full-vs-reportable)

@@ -95,8 +95,6 @@ def cmd_run(args):
     clock.annotate(backlog, today=today)
     ledger = clock.ResolutionLedger(RESOLUTIONS)
     closed = ledger.reconcile(corpus, today=today)
-    ledger.track(backlog)
-    ledger.save()
     _all = clock.summary(backlog, [], today=today)
     print(f"  clock: {_all['past_expectation']}/{_all['total']} past the "
           f"{clock.EXPECTATION_HOURS}h expectation | oldest {_all['oldest_days']}d | "
@@ -116,21 +114,42 @@ def cmd_run(args):
     cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr))
     print(f"  CNA coverage: {cov['covered_cnas']}/{cov['total_cnas']} CNAs "
           f"({cov['pct_cnas']}%); observed {cov['observed_pct']}% of CVEs")
-    sdir, md, kpi = report.build(backlog, fresh, SNAPS, today, years, sources, cov,
-                                 min_age=args.min_age_days, min_conf=args.min_confidence)
-
-    # Clock artefacts the site reads directly. Written after report.build so the
-    # per-CNA view reflects the same buffered, owner-gated rows the tables show.
+    # One population, computed once, then passed to every writer. Buffer, then
+    # epoch. report.build no longer derives its own.
     reportable = [r for r in backlog
                   if isinstance(r.get("days_public"), int)
                   and r["days_public"] >= args.min_age_days]
-    undated = sum(1 for r in backlog if not r.get("clock_known"))
-    # Launch epoch, if set: the published count starts from launch instead of
-    # carrying the backlog gathered while coverage was still changing.
     reportable, pre_epoch = clock.split_epoch(reportable)
     if pre_epoch:
+        oldest = max((r["days_public"] for r in pre_epoch), default=None)
         print(f"  launch epoch {clock.EPOCH}: {len(pre_epoch)} rows held back "
-              f"(public before the epoch), {len(reportable)} counted")
+              f"(public before the epoch, oldest {oldest}d), {len(reportable)} counted")
+        if not reportable:
+            raise SystemExit(
+                f"epoch {clock.EPOCH} excludes every reportable row. Refusing to "
+                "publish a site that reads 0 with no explanation. Move the epoch "
+                "back or unset it.")
+
+    sdir, md, kpi = report.build(backlog, fresh, SNAPS, today, years, sources, cov,
+                                 min_age=args.min_age_days, min_conf=args.min_confidence,
+                                 rows=reportable)
+
+    # Clock artefacts the site reads directly. Written after report.build so the
+    # per-CNA view reflects the same buffered, owner-gated rows the tables show.
+    undated = sum(1 for r in backlog if not r.get("clock_known"))
+    # Track the PUBLISHED population, not the whole backlog. Tracking everything
+    # meant the ledger held 724 open IDs against 553 published rows, so sourcing
+    # /changes from it would have closed 171 rows nobody ever counted, 84 of them
+    # rows the clock calls unreportable at any buffer.
+    ledger.track(reportable)
+    ledger.save()
+    if len(ledger.state["open"]) != len(reportable):
+        print(f"  NOTE: ledger tracks {len(ledger.state['open'])} open vs "
+              f"{len(reportable)} published rows (carry-over from earlier runs)")
+    # The authoritative closure record for this interval, committed with the
+    # snapshot so any diff is recomputable from artefacts rather than from
+    # whatever the mutable ledger happens to hold at render time.
+    json.dump(closed, open(os.path.join(sdir, "resolved.json"), "w"), indent=1)
     cnas = clock.per_cna(reportable, ledger, corpus, today=today)
     stats = clock.summary(reportable, cnas, today=today, undated_excluded=undated,
                           epoch_excluded=len(pre_epoch))

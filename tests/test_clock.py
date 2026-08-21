@@ -472,3 +472,52 @@ def test_undated_rows_are_never_epoch_excluded():
     assert r["public_date"] == ""
     counted, excluded = clock.split_epoch([r], "2026-09-01")
     assert len(counted) == 1 and excluded == []
+
+
+def test_an_unpadded_epoch_is_refused(monkeypatch):
+    """'2026-12-31' < '2026-8-20' is True, so one missing zero in a hand-typed
+    repository variable would classify every row as pre-epoch, report 0, and
+    exit successfully."""
+    assert '2026-12-31' < '2026-8-20'
+    with pytest.raises(SystemExit, match="zero-padded|not a valid ISO"):
+        clock._validated_epoch("2026-8-20")
+    with pytest.raises(SystemExit, match="not a valid ISO"):
+        clock._validated_epoch("garbage")
+    assert clock._validated_epoch("2026-09-01") == "2026-09-01"
+    assert clock._validated_epoch("") == ""
+    assert clock._validated_epoch(None) == ""
+
+
+def test_rejection_closes_a_row_but_is_never_called_resolved():
+    """Under rule 4.5.3.5 rejecting an unpublished ID is lawful and is the likely
+    end state for the oldest rows. For a defender it is worse than an open RBP:
+    the ID stays cited with no record ever coming."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        led = clock.ResolutionLedger(f"{d}/r.json")
+        led.track([row("CVE-2026-1", 30, public="2026-07-01")])
+        c = pd.DataFrame([("CVE-2026-1", "REJECTED", "acme", "2026-07-31", "", "")],
+                         columns=COLS)
+        closed = led.reconcile(c, TODAY)
+        assert len(closed) == 1
+        assert closed[0]["state"] == "REJECTED"
+        assert closed[0]["days_to_publish"] is None
+        assert led.by_owner() == {}      # never enters time-to-publish
+
+
+def test_a_transfer_is_recorded_not_collapsed():
+    """The policy's own remedy is for a Root to direct a CNA-LR to publish and
+    transfer ownership (4.5.1.4, 4.5.1.5), so the published assigner is often
+    not the CNA that reserved it. Collapsing them credits the wrong party."""
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        led = clock.ResolutionLedger(f"{d}/r.json")
+        led.track([row("CVE-2026-1", 30, owner="original", public="2026-07-01")])
+        c = pd.DataFrame([("CVE-2026-1", "PUBLISHED", "mitre", "2026-07-11", "", "")],
+                         columns=COLS)
+        closed = led.reconcile(c, TODAY)[0]
+        assert closed["predicted_owner"] == "original"
+        assert closed["published_assigner"] == "mitre"
+        assert closed["transferred"] is True
+        # charged to the tracked owner, not to whoever cleaned it up
+        assert led.by_owner() == {"original": [10]}

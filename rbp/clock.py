@@ -66,7 +66,34 @@ MIN_DENOMINATOR = 20
 # to be visible rather than quietly applied.
 #
 # Empty means no epoch, which is the state before launch.
-EPOCH = os.environ.get("RBP_EPOCH", "").strip()
+def _validated_epoch(raw):
+    """Parse RBP_EPOCH strictly, or refuse to run.
+
+    The comparison in `before_epoch` is lexicographic on ISO strings, which is
+    correct only for zero-padded dates. A single missing zero in a hand-typed
+    repository variable is silently catastrophic: '2026-12-31' < '2026-8-20' is
+    True, so every row classifies as pre-epoch, the site reports 0, and the run
+    exits successfully.
+    """
+    raw = (raw or "").strip()
+    if not raw:
+        return ""
+    try:
+        parsed = dt.date.fromisoformat(raw)
+    except ValueError as e:
+        raise SystemExit(
+            f"RBP_EPOCH={raw!r} is not a valid ISO date (YYYY-MM-DD): {e}. "
+            "Refusing to run: an unparseable epoch would silently zero the count."
+        ) from e
+    if parsed.isoformat() != raw:
+        raise SystemExit(
+            f"RBP_EPOCH={raw!r} must be zero-padded ISO (got {parsed.isoformat()!r}). "
+            "Lexicographic comparison on an unpadded date silently zeroes the count."
+        )
+    return raw
+
+
+EPOCH = _validated_epoch(os.environ.get("RBP_EPOCH"))
 
 
 def before_epoch(row, epoch=None):
@@ -252,24 +279,40 @@ class ResolutionLedger:
     def reconcile(self, corpus_df, today=None):
         """Close out every tracked ID that now has a published record."""
         today = today or dt.date.today().isoformat()
-        pub = corpus_df[corpus_df["state"] == "PUBLISHED"]
-        published = dict(zip(pub["cve_id"], zip(pub["assigner"], pub["date_published"])))
+        # REJECTED closes a row too, and it is a different outcome. Under rule
+        # 4.5.3.5 rejecting an unused or unpublished ID is lawful, it is the
+        # likely end state for the oldest rows, and for a defender it is WORSE
+        # than an open RBP: the ID stays cited in advisories with no record ever
+        # coming. It must never be reported as resolved.
+        terminal = corpus_df[corpus_df["state"].isin(["PUBLISHED", "REJECTED"])]
+        published = dict(zip(terminal["cve_id"],
+                             zip(terminal["assigner"], terminal["date_published"],
+                                 terminal["state"])))
 
         closed = []
         for cid, rec in list(self.state["open"].items()):
             hit = published.get(cid)
             if not hit:
                 continue
-            assigner, when = hit
+            assigner, when, state = hit
             days = _days_between(rec.get("first_public"), when or today)
             closed.append({
                 "cve_id": cid,
-                # The assigner is authoritative once published, so a resolved
-                # row never relies on inference.
+                "state": state,
+                # Kept as two fields, never collapsed. The policy's own remedy
+                # for an overdue record is for a Root to direct a CNA-LR to
+                # publish it and transfer ownership (4.5.1.4, 4.5.1.5), so the
+                # assigner on the published record is often NOT the CNA that
+                # reserved it. Collapsing them would credit the resolution to
+                # the wrong party and score a correct inference as a miss.
+                "predicted_owner": rec.get("owner"),
+                "published_assigner": assigner,
+                "transferred": bool(assigner and rec.get("owner")
+                                    and not _same_name(assigner, rec.get("owner"))),
                 "owner": assigner or rec.get("owner"),
                 "first_public": rec.get("first_public"),
                 "published": when or today,
-                "days_to_publish": days,
+                "days_to_publish": days if state == "PUBLISHED" else None,
                 "closed_on": today,
             })
             del self.state["open"][cid]
@@ -277,10 +320,17 @@ class ResolutionLedger:
         return closed
 
     def by_owner(self):
+        """Time-to-publish per owner. Keyed on the TRACKED owner, not the
+        post-transfer assigner: a row transferred to a CNA-LR under 4.5.1.5
+        would otherwise be charged to whoever cleaned it up. Rejections carry no
+        publish time and are excluded."""
         out = collections.defaultdict(list)
         for r in self.state["resolved"]:
-            if r["owner"] and isinstance(r["days_to_publish"], int):
-                out[r["owner"]].append(r["days_to_publish"])
+            if r.get("state") not in (None, "PUBLISHED"):
+                continue
+            owner = r.get("predicted_owner") or r.get("owner")
+            if owner and isinstance(r.get("days_to_publish"), int):
+                out[owner].append(r["days_to_publish"])
         return out
 
     def save(self):
@@ -380,6 +430,7 @@ def summary(rows, cnas, today=None, undated_excluded=0, epoch_excluded=0):
         "undated_excluded": undated_excluded,
         # Rows held back by the launch epoch. Disclosed, never silent.
         "epoch": EPOCH or None,
+        "min_age_days": None,   # set by the caller; present so a diff can compare it
         "epoch_excluded": epoch_excluded,
         "oldest_days": max(ages) if ages else None,
         "median_days": _median(ages),
