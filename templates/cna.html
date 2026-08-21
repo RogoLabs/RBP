@@ -72,6 +72,8 @@
         <td>
           <span class="chip {{ 'chip-must' if r.rule == rule_must else 'chip-should' }}">
             {{ r.rule }} {{ r.rule_strength }}</span>
+          <span class="qualifier">{{ r.rule_certainty or 'candidate' }}{% if r.rule_basis %},
+            {{ r.rule_basis | replace('-', ' ') }}{% endif %}</span>
         </td>
         <td>
           <span class="chip {{ 'chip-corrob' if r.owner_tier == 'block-corroborated' else 'chip-block' }}">

@@ -270,9 +270,17 @@ def _env():
 
 # Columns for the public CSV. Deliberately the gated view: an ungated owner
 # column in a shareable file was a real defect in the previous engine.
-CSV_COLS = ["cve_id", "days_public", "past_expectation", "rule", "rule_strength",
-            "owner", "owner_tier", "self_disclosed", "package", "vendor",
-            "public_date", "feed_count", "sources", "advisory_url", "description"]
+# `rule_strength` never travels without `rule_certainty`. clock.py states the
+# rule that the qualifier must accompany the strength wherever it appears, and it
+# was in no template and no CSV, so a consumer could not reconstruct it at all.
+# `indep_sources` ships too: 314 of 553 rows showed feed_count >= 2 with
+# indep_sources == 1, all of them GHSA plus its own OSV mirror.
+CSV_COLS = ["cve_id", "state", "days_public", "past_expectation",
+            "rule", "rule_strength", "rule_certainty", "rule_basis",
+            "owner", "owner_tier", "owner_nameable", "owner_contested",
+            "self_disclosed", "package", "vendor", "public_date",
+            "feed_count", "indep_sources", "sources", "clock_known",
+            "advisory_url", "description"]
 
 
 def _write_data(out, ctx):

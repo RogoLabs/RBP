@@ -163,3 +163,34 @@ def test_published_rows_never_carry_the_ungated_product_map(backlog, corpus, tmp
             leaked = [k for k in row if k.startswith("product_map")]
             assert not leaked, f"{name} leaked {leaked}"
             assert "owner_contested" in row
+
+
+def test_only_one_module_defines_an_owner_feed_mapping():
+    """A dead second copy in report.py mapped GitHub_M to {ghsa, osv}, the exact
+    inclusion clock.py rejects with a comment explaining why. Reconnecting it
+    would have moved roughly 200 rows from SHOULD to MUST on mirror evidence."""
+    import pathlib
+    rbp_dir = pathlib.Path(__file__).parent.parent / "rbp"
+    definers = [p.name for p in rbp_dir.glob("*.py")
+                if "OWNER_FEEDS = {" in p.read_text()]
+    assert definers == ["clock.py"], f"owner-feed mapping defined in {definers}"
+
+
+def test_no_published_artefact_carries_a_cna_rate():
+    """outstanding/published_12mo is arithmetically the quantity RBP Policy v1.0
+    attached its withdrawn 5% and 50% sanction triggers to. The v1.0 PDF still
+    circulates, so publishing that ratio against named CNAs would hand readers a
+    retired threshold to apply."""
+    from rbp import clock
+    import pandas as pd
+    rows = [{"cve_id": "CVE-2026-1", "owner": "acme", "days_public": 30,
+             "public_date": "2026-01-01", "sources": "debian"}]
+    clock.annotate(rows, "2026-08-20")
+    c = pd.DataFrame([(f"CVE-2025-{i}", "PUBLISHED", "acme", "2026-01-01", "", "")
+                      for i in range(50)],
+                     columns=["cve_id", "state", "assigner", "date_published",
+                              "vendor", "product"])
+    out = clock.per_cna(rows, clock.ResolutionLedger("/tmp/_x.json"), c, "2026-08-20")[0]
+    for banned in ("rate", "rate_wilson_lower", "rate_suppressed"):
+        assert banned not in out, f"{banned} is still published"
+    assert out["published_12mo"] == 50      # raw scale context is kept

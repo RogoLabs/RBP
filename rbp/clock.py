@@ -215,13 +215,20 @@ def age_days(public_date, today):
 def wilson_lower(k, n, z=1.96):
     """Lower bound of the Wilson score interval for k/n.
 
-    Used instead of the raw proportion wherever CNAs are ordered by rate, so a
-    small denominator cannot outrank a large one on noise alone. 2/5 beats
-    200/1000 on the point estimate and loses on this.
+    Valid only where k is genuinely a subset of n, so it is used on the grader's
+    correct/graded and nowhere else. It was previously applied to
+    outstanding_rbp / published_last_12mo, which are disjoint populations: an RBP
+    is by definition not a published record, so that ratio is not a proportion
+    and an interval over it means nothing. See per_cna.
+
+    Clamped because it is public and used to raise: wilson_lower(21, 20) gave
+    ValueError: math domain error, and k > n was reachable from live data by any
+    CNA holding more outstanding RBPs than it published in twelve months, which
+    is exactly the profile this site exists to surface.
     """
     if not n:
         return 0.0
-    p = k / n
+    p = min(k / n, 1.0)
     d = 1 + z * z / n
     centre = p + z * z / (2 * n)
     margin = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
@@ -386,7 +393,6 @@ def per_cna(rows, ledger, corpus_df, today=None):
         denom = volume.get(owner, 0)
         n = len(group)
         resolved = ttp.get(owner, [])
-        rate_shown = denom >= MIN_DENOMINATOR
         out.append({
             "cna": owner,
             "outstanding": n,
@@ -395,12 +401,15 @@ def per_cna(rows, ledger, corpus_df, today=None):
             "past_expectation": sum(1 for r in group if r.get("past_expectation")),
             "must_rows": sum(1 for r in group if r.get("rule") == RULE_MUST),
             "should_rows": sum(1 for r in group if r.get("rule") == RULE_SHOULD),
+            # Raw scale context, so a CNA with thousands of published records is
+            # not read the same way as one with fourteen. Deliberately NOT a
+            # ratio: outstanding/published_12mo is arithmetically the exact
+            # quantity RBP Policy v1.0 attached its withdrawn 5% and 50% sanction
+            # triggers to, and publishing it against named CNAs while the v1.0
+            # PDF still circulates would hand readers a threshold to apply that
+            # the Program has retired. PLAN 2a already forbids a leaderboard, and
+            # a rate column is a leaderboard whatever the caption says.
             "published_12mo": denom,
-            # Scale context only. None below the denominator floor, so a tiny
-            # CNA never shows a percentage at all.
-            "rate": round(n / denom, 4) if rate_shown else None,
-            "rate_wilson_lower": round(wilson_lower(n, denom), 4) if rate_shown else None,
-            "rate_suppressed": not rate_shown,
             "resolved_n": len(resolved),
             "median_days_to_publish": _median(resolved),
         })

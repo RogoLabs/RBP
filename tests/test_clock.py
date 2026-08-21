@@ -125,26 +125,32 @@ def test_wilson_is_bounded_and_safe_on_zero():
     assert clock.wilson_lower(100, 100) < 1.0
 
 
-def test_rate_suppressed_below_the_denominator_floor():
-    """OpenVPN reading 28.6% on 4 of 14 published was the motivating case."""
-    rows = [row(f"CVE-2026-{i}", 10, owner="tiny") for i in range(4)]
-    clock.annotate(rows, TODAY)
-    c = corpus([(f"CVE-2025-{i}", "PUBLISHED", "tiny", "2026-01-01", "", "")
-                for i in range(14)])
-    out = clock.per_cna(rows, clock.ResolutionLedger("/tmp/_none.json"), c, TODAY)
-    assert out[0]["rate"] is None
-    assert out[0]["rate_suppressed"] is True
-    assert out[0]["outstanding"] == 4      # the raw count is still shown
+def test_no_rate_is_published_at_any_denominator():
+    """The rate is gone entirely, not merely suppressed for small CNAs.
+    outstanding/published_12mo is arithmetically the quantity RBP Policy v1.0
+    attached its withdrawn 5% and 50% sanction triggers to, and the v1.0 PDF is
+    still mirrored and still ranks in search, which is how this project first
+    picked those thresholds up. Publishing the arithmetic against named CNAs
+    would hand a reader a retired threshold to apply."""
+    for n_pub in (14, 100, 5000):
+        rows = [row(f"CVE-2026-{i}", 10, owner="acme") for i in range(4)]
+        clock.annotate(rows, TODAY)
+        c = corpus([(f"CVE-2025-{i}", "PUBLISHED", "acme", "2026-01-01", "", "")
+                    for i in range(n_pub)])
+        out = clock.per_cna(rows, clock.ResolutionLedger("/tmp/_none.json"), c, TODAY)[0]
+        for banned in ("rate", "rate_wilson_lower", "rate_suppressed"):
+            assert banned not in out, f"{banned} published at denominator {n_pub}"
+        assert out["outstanding"] == 4
+        assert out["published_12mo"] == n_pub    # raw scale context is kept
 
 
-def test_rate_shown_above_the_floor():
-    rows = [row(f"CVE-2026-{i}", 10, owner="big") for i in range(5)]
-    clock.annotate(rows, TODAY)
-    c = corpus([(f"CVE-2025-{i}", "PUBLISHED", "big", "2026-01-01", "", "")
-                for i in range(100)])
-    out = clock.per_cna(rows, clock.ResolutionLedger("/tmp/_none.json"), c, TODAY)
-    assert out[0]["rate"] == pytest.approx(0.05)
-    assert out[0]["rate_suppressed"] is False
+def test_wilson_no_longer_raises_when_k_exceeds_n():
+    """wilson_lower(21, 20) raised ValueError: math domain error, reachable from
+    live data by any CNA holding more outstanding RBPs than it published in
+    twelve months, which is the profile this site exists to surface."""
+    assert clock.wilson_lower(21, 20) > 0
+    assert clock.wilson_lower(30, 25) > 0
+    assert clock.wilson_lower(1, 1) <= 1.0
 
 
 # --------------------------------------------------------------------------
@@ -178,7 +184,8 @@ def test_cnas_are_ranked_by_count_not_rate():
                   for i in range(30)])
     out = clock.per_cna(rows, clock.ResolutionLedger("/tmp/_none.json"), c, TODAY)
     assert [d["cna"] for d in out] == ["big", "small"]
-    assert out[0]["rate"] < out[1]["rate"], "big has the lower rate yet ranks first"
+    # big has far more published records, so any rate would have inverted this.
+    assert out[0]["published_12mo"] > out[1]["published_12mo"]
 
 
 # --------------------------------------------------------------------------

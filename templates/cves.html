@@ -49,7 +49,7 @@
         <th data-sort="rule">Rule</th>
         <th data-sort="owner">Inferred owner</th>
         <th data-sort="package">Package</th>
-        <th class="num" data-sort="feed_count">Feeds</th>
+        <th class="num" data-sort="indep_sources">Independent sources</th>
         <th data-sort="sources">Sources</th>
         <th>Advisory title</th>
       </tr>
@@ -106,9 +106,15 @@
   }
 
   function ruleChip(r) {
+    // The qualifier is a second line, not a title attribute (invisible on touch
+    // and to screen readers) and not crammed inside an 11.5px chip. Ownership is
+    // always inferred for a reserved ID, so a MUST is always a candidate.
     var must = r.rule === '{{ rule_must }}';
+    var cert = r.rule_certainty || 'candidate';
     return '<span class="chip ' + (must ? 'chip-must' : 'chip-should') + '">' +
-      esc(r.rule) + ' ' + esc(r.rule_strength) + '</span>';
+      esc(r.rule) + ' ' + esc(r.rule_strength) + '</span>' +
+      '<span class="qualifier">' + esc(cert) +
+      (r.rule_basis ? ', ' + esc(r.rule_basis).replace(/-/g, ' ') : '') + '</span>';
   }
 
   function ownerCell(r) {
@@ -164,7 +170,10 @@
         '<td>' + ruleChip(r) + '</td>' +
         ownerCell(r) +
         '<td>' + esc(r.package || r.vendor || '') + '</td>' +
-        '<td class="num">' + esc(r.feed_count) + '</td>' +
+        // The honest count. feed_count treats GHSA and its own OSV mirror as two.
+        '<td class="num">' + esc(r.indep_sources == null ? r.feed_count : r.indep_sources) +
+          (r.feed_count > (r.indep_sources == null ? r.feed_count : r.indep_sources)
+            ? ' <span class="qualifier">of ' + esc(r.feed_count) + ' feeds</span>' : '') + '</td>' +
         '<td class="mono small">' + esc(r.sources) + '</td>' +
         '<td class="desc">' + esc(r.description) + '</td>' +
       '</tr>';

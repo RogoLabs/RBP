@@ -236,3 +236,35 @@ def test_a_corrupt_ledger_raises_but_a_missing_one_does_not(tmp_path):
     (tmp_path / "precision.json").write_text("{trunc")
     with pytest.raises(SystemExit, match="corrupt ledger"):
         site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+
+# --------------------------------------------------------------------------
+# the candidate qualifier must travel with the strength (part 1 item 17)
+# --------------------------------------------------------------------------
+
+def test_rule_strength_never_ships_without_its_certainty(built):
+    """clock.py states the rule that the qualifier accompanies the strength
+    wherever it appears. It was in no template and no CSV column, so the chips
+    read a bare "4.5.1.4 MUST" and a consumer could not reconstruct the hedge at
+    all."""
+    out = built(True)
+    header = (out / "data" / "rbp.csv").read_text().splitlines()[0]
+    assert "rule_strength" in header
+    assert "rule_certainty" in header, "strength exported without its qualifier"
+    assert "rule_basis" in header
+
+    # Rendered: wherever a template prints the strength it prints the qualifier.
+    import pathlib
+    tpl_dir = pathlib.Path(__file__).parent.parent / "templates"
+    for name in ("cves.html", "cna.html"):
+        body = (tpl_dir / name).read_text()
+        if "rule_strength" in body:
+            assert "rule_certainty" in body, f"{name} shows strength without certainty"
+
+
+def test_independent_sources_is_exported(built):
+    """314 of 553 rows showed feed_count >= 2 with indep_sources == 1, all of them
+    GHSA plus its own OSV mirror, on a site whose method page explains in prose
+    that an OSV row is not evidence GitHub disclosed anything."""
+    out = built(True)
+    assert "indep_sources" in (out / "data" / "rbp.csv").read_text().splitlines()[0]

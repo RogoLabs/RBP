@@ -96,8 +96,12 @@ _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redha
            "msrc": "microsoft", "mozilla": "mozilla", "arch": "arch"}
 # A CNA may be NAMED as owner only when its own feed corroborates it (or it is the
 # authoritative RESERVED assigner), never on a bare product-map guess.
-_OWNER_FEEDS = {"redhat": {"redhat"}, "GitHub_M": {"ghsa", "osv"},
-                "microsoft": {"msrc"}, "mozilla": {"mozilla"}}
+# The owner-feed mapping lives in clock.OWNER_FEEDS and nowhere else. A dead
+# second copy used to sit here mapping GitHub_M to {"ghsa", "osv"}, which is the
+# exact inclusion clock.py deliberately rejects: OSV re-publishes GHSA, so an OSV
+# row is not evidence GitHub disclosed anything. Reconnecting it would have moved
+# roughly 200 rows from SHOULD to MUST on mirror evidence. tests/test_clock.py
+# pins the exclusion and tests/test_pipeline.py now pins the single definition.
 
 
 def _indep(sources_str):
@@ -208,10 +212,14 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
         return _publishable(r, owner="unattributed", owner_tier="abstain",
                             owner_nameable=False, self_disclosed=False)
 
+    # Kept deliberately identical in spirit to site.CSV_COLS: two published CSVs
+    # of the same rows with different column sets is a trap for a consumer.
     cols = ["cve_id", "state", "vendor", "package", "ecosystem", "owner", "owner_nameable",
-            "owner_tier", "owner_method", "self_disclosed", "rule", "rule_strength",
-            "rule_basis", "days_public", "hours_public", "past_expectation", "public_date",
-            "feed_count", "sources", "advisory_url", "refs", "description"]
+            "owner_tier", "owner_method", "owner_contested", "self_disclosed",
+            "rule", "rule_strength", "rule_certainty", "rule_basis",
+            "days_public", "hours_public", "past_expectation", "public_date",
+            "feed_count", "indep_sources", "sources", "clock_known",
+            "advisory_url", "refs", "description"]
     reportable.sort(key=lambda r: -r["days_public"])
     # backlog.csv = shareable, buffered, OWNER-GATED. Full inferred set kept in _full.json.
     with open(os.path.join(sdir, "backlog.csv"), "w", newline="") as f:

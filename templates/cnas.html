@@ -17,11 +17,13 @@
     threshold exists that would justify it.
   </p>
   <p class="mb-0">
-    The rate column is this site's own descriptive statistic for scale context,
-    not a program limit. It is withheld entirely below
-    {{ min_denominator }} published records in the trailing 12 months, because at
-    that size a rate is noise. Where shown, the Wilson lower bound is given
-    alongside so a small denominator cannot flatter or damn anyone.
+    <strong>There is deliberately no rate column.</strong> Outstanding RBPs divided by
+    records published is arithmetically the same quantity RBP Policy v1.0 attached its
+    5% and 50% sanction triggers to. Those thresholds were withdrawn with v2.0.0, but
+    the v1.0 document is still mirrored by third parties and still ranks in search, so
+    publishing that ratio against a named CNA would hand a reader a retired threshold to
+    apply. Published records in the last 12 months are shown raw, as scale context only,
+    so a CNA publishing thousands is not read the same way as one publishing fourteen.
   </p>
 </div>
 
@@ -35,7 +37,6 @@
         <th class="num">Median age</th>
         <th class="num">Candidate MUST</th>
         <th class="num">Published 12mo</th>
-        <th class="num">Rate</th>
         <th class="num">Time to publish</th>
       </tr>
     </thead>
@@ -50,13 +51,6 @@
           {% if c.must_rows %}<span class="chip chip-must">{{ c.must_rows }}</span>{% else %}0{% endif %}
         </td>
         <td class="num">{{ c.published_12mo | commafy }}</td>
-        <td class="num">
-          {% if c.rate_suppressed %}
-            <span class="text-muted small" title="fewer than {{ min_denominator }} published in 12 months">withheld</span>
-          {% else %}
-            {{ c.rate | pct }}<br><span class="text-muted small">&ge;{{ c.rate_wilson_lower | pct }}</span>
-          {% endif %}
-        </td>
         <td class="num">
           {% if c.resolved_n %}
             {{ c.median_days_to_publish }}d<br><span class="text-muted small">n={{ c.resolved_n }}</span>

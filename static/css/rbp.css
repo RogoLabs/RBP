@@ -199,3 +199,17 @@ pre.api {
    token, so it resolves correctly in both themes. */
 table.rbp tbody tr:nth-child(2n) { background-color: var(--color-bg-secondary); }
 table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover); }
+
+/* The certainty qualifier that must accompany every rule strength, and the
+   independent-source clarification. Deliberately a block rather than a title
+   attribute: a hedge that only appears on mouse hover is not a hedge. Sized and
+   coloured to pass AA against the card background rather than to disappear. */
+.qualifier {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: var(--color-text-secondary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: 0.02em;
+}
