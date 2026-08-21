@@ -1,0 +1,63 @@
+{
+ "date": "2026-08-21",
+ "expectation_hours": 72,
+ "total": 559,
+ "past_expectation": 559,
+ "clock_unknown": 0,
+ "undated_excluded": 84,
+ "oldest_days": 520,
+ "median_days": 43,
+ "named_cnas": 9,
+ "must_rows": 212,
+ "should_rows": 347,
+ "age_buckets": {
+  "7-30d": 136,
+  "30-90d": 387,
+  "90-180d": 24,
+  "180d+": 12
+ },
+ "min_age_days": 7,
+ "inference": {
+  "k": 3,
+  "run_coverage": 0.514,
+  "leave_one_out": {
+   "method": "leave-one-out",
+   "k": 3,
+   "decided": 29489,
+   "abstained": 17772,
+   "total": 47261,
+   "correct": 29305,
+   "wrong": 184,
+   "coverage": 0.624,
+   "precision": 0.9938
+  },
+  "live": {
+   "graded": 1,
+   "correct": 1,
+   "precision": 1.0,
+   "outstanding": 366,
+   "by_tier": {
+    "block": {
+     "graded": 1,
+     "correct": 1,
+     "precision": 1.0
+    }
+   }
+  }
+ },
+ "feeds": {
+  "requested": [
+   "alas",
+   "ubuntu",
+   "debian",
+   "ghsa",
+   "redhat",
+   "alpine",
+   "osv",
+   "mozilla",
+   "arch"
+  ],
+  "failures": [],
+  "attempts": 19
+ }
+}
