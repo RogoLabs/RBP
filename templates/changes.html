@@ -125,7 +125,7 @@
       <table class="rbp" style="min-width:0">
         <thead><tr><th>CVE ID</th><th class="num">Days public</th><th>Owner</th><th>Advisory title</th></tr></thead>
         <tbody>
-          {% for r in changes.new | sort(attribute='days_public', reverse=true) %}
+          {% for r in changes.new | sortnum('days_public') %}
           <tr>
             <td class="id"><a href="{{ r.advisory_url }}">{{ r.cve_id }}</a></td>
             <td class="num">{{ r.days_public }}</td>
@@ -186,7 +186,7 @@
       <table class="rbp" style="min-width:0">
         <thead><tr><th>CVE ID</th><th>Owner</th><th class="num">Days to publish</th><th>First public</th><th>Published</th></tr></thead>
         <tbody>
-          {% for r in resolutions_published | sort(attribute='days_to_publish', reverse=true) %}
+          {% for r in resolutions_published %}
           <tr>
             <td class="id">{{ r.cve_id }}</td>
             <td>{{ r.predicted_owner or r.owner }}{% if r.transferred %}

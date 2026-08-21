@@ -442,3 +442,30 @@ def test_a_transferred_closure_is_credited_to_the_tracked_owner(tmp_path, monkey
     theirs = [r for r in ctx_resolutions
               if (r.get("predicted_owner") or r.get("owner")) == "mitre"]
     assert theirs == [], "the CNA-LR must not inherit it"
+
+
+def test_sortnum_survives_nulls_in_both_directions():
+    """Jinja's sort calls sorted() with no key fallback and do_sort has no
+    `default` parameter, so one None in a numeric column is a build-killing
+    TypeError inside the Build site step. That took the site down twice during
+    review. Nulls sort last either way: a missing value is not a small value."""
+    env = site._env()
+    rows = [{"d": 10}, {"d": None}, {"d": 30}, {"d": 0}]
+    desc = env.from_string("{% for r in rows | sortnum('d') %}{{ r.d }}|{% endfor %}").render(rows=rows)
+    assert desc == "30|10|0|None|"
+    asc = env.from_string(
+        "{% for r in rows | sortnum('d', reverse=false) %}{{ r.d }}|{% endfor %}").render(rows=rows)
+    assert asc == "0|10|30|None|"
+    allnull = env.from_string("{% for r in rows | sortnum('d') %}x{% endfor %}").render(
+        rows=[{"d": None}, {"d": None}])
+    assert allnull == "xx"
+
+
+def test_no_template_uses_the_unsafe_jinja_sort_on_a_numeric_field():
+    """A grep-style guard, because this bug class reappeared in a second field
+    immediately after the first was fixed."""
+    import pathlib
+    for tpl in (pathlib.Path(__file__).parent.parent / "templates").glob("*.html"):
+        body = tpl.read_text()
+        assert "sort(attribute=" not in body, (
+            f"{tpl.name} uses Jinja's sort, which raises on a null. Use | sortnum().")

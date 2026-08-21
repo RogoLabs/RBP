@@ -161,8 +161,24 @@ def load(snap_root, data_dir):
         c["slug"] = slug(c["cna"])
 
     _closures = resolutions.get("resolved", [])
-    _published_closures = [r for r in _closures
-                           if r.get("state", "PUBLISHED") == "PUBLISHED"][-200:]
+
+    def _by_days_desc(rows):
+        """Sort here, never in Jinja.
+
+        The first attempt at this split left the sort in the template, and it
+        crashed again in CI: filtering to PUBLISHED is not enough, because a
+        published closure still carries days_to_publish None whenever the date
+        arithmetic failed on an unparseable feed date. Jinja's sort calls
+        sorted() with no key fallback and do_sort has no `default` parameter, so
+        any None in the column is a build-killing TypeError. Sorting in Python
+        with an explicit sentinel is the only version that cannot raise.
+        """
+        return sorted(rows,
+                      key=lambda r: (r.get("days_to_publish") is None,
+                                     -(r.get("days_to_publish") or 0)))
+
+    _published_closures = _by_days_desc(
+        [r for r in _closures if r.get("state", "PUBLISHED") == "PUBLISHED"])[:200]
     _rejected_closures = [r for r in _closures if r.get("state") == "REJECTED"][-200:]
 
     graded = grader.get("graded", [])
@@ -345,6 +361,24 @@ def _env():
     env.filters["commafy"] = lambda n: f"{n:,}" if isinstance(n, (int, float)) else n
     env.filters["pct"] = lambda x: "n/a" if x is None else f"{100 * x:.2f}%"
     env.filters["slug"] = slug
+
+    def sortnum(rows, attribute, reverse=True):
+        """Sort on a possibly-null numeric attribute without raising.
+
+        Jinja's built-in sort calls sorted() with no key fallback, and do_sort
+        has no `default` parameter, so a single None in the column raises
+        TypeError inside the Build site step. That took the whole site down twice
+        during this review: once on days_to_publish for a rejected closure, and
+        it was latent on days_public for an undated row. Nulls sort last in both
+        directions, because a missing value is not a small value.
+        """
+        return sorted(
+            rows,
+            key=lambda r: (r.get(attribute) is None,
+                           -(r.get(attribute) or 0) if reverse else (r.get(attribute) or 0)),
+        )
+
+    env.filters["sortnum"] = sortnum
     return env
 
 
@@ -450,6 +484,7 @@ def build(out, snap_root, data_dir):
         # page showed two different parties' data.
         resolved = [r for r in ctx["resolutions_published"]
                     if (r.get("predicted_owner") or r.get("owner")) == c["cna"]]
+        # already ordered by _by_days_desc; the template must not re-sort
         html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine, cna_resolved=resolved)
         open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
         written_cna += 1

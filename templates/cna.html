@@ -65,7 +65,7 @@
       </tr>
     </thead>
     <tbody>
-      {% for r in cna_rows | sort(attribute='days_public', reverse=true) %}
+      {% for r in cna_rows | sortnum('days_public') %}
       <tr>
         <td class="id"><a href="{{ r.advisory_url }}">{{ r.cve_id }}</a></td>
         <td class="num">{{ r.days_public }}{% if r.past_expectation %}
@@ -101,7 +101,7 @@
       <table class="rbp" style="min-width:0">
         <thead><tr><th>CVE ID</th><th class="num">Days to publish</th><th>First public</th><th>Published</th></tr></thead>
         <tbody>
-          {% for r in cna_resolved | sort(attribute='days_to_publish', reverse=true) %}
+          {% for r in cna_resolved %}
           <tr>
             <td class="id">{{ r.cve_id }}</td>
             <td class="num">{{ r.days_to_publish if r.days_to_publish is not none else 'n/a' }}</td>
