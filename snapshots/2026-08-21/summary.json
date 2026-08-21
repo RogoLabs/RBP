@@ -5,6 +5,8 @@
  "past_expectation": 559,
  "clock_unknown": 0,
  "undated_excluded": 84,
+ "epoch": null,
+ "epoch_excluded": 0,
  "oldest_days": 520,
  "median_days": 43,
  "named_cnas": 9,
