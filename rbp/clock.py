@@ -54,6 +54,48 @@ RULE_SHOULD = "4.5.1.6"    # a third party disclosed
 # leaderboard above Microsoft. Show the raw count instead.
 MIN_DENOMINATOR = 20
 
+# Launch epoch. Rows first observed before this date are excluded from the
+# reportable set, so the published count starts from launch rather than carrying
+# the backlog accumulated while feed coverage was still changing underneath it.
+#
+# What this does NOT do, and must not be described as doing: it does not make
+# those RBPs younger or less real. `days_public` derives from the advisory date,
+# so an ID that went public 519 days ago is 519 days old whether or not this site
+# counts it. The excluded rows stay in the raw data files and their count is
+# disclosed, because a filter that removes the oldest and strongest evidence has
+# to be visible rather than quietly applied.
+#
+# Empty means no epoch, which is the state before launch.
+EPOCH = os.environ.get("RBP_EPOCH", "").strip()
+
+
+def before_epoch(row, epoch=None):
+    """Did this ID go public before the launch epoch?
+
+    Keyed on the advisory date, NOT on when this site first saw the row. That
+    choice matters while feed coverage is still expanding: keying on first-seen
+    would let a newly added feed inject hundreds of years-old RBPs straight into
+    the headline count, which is the opposite of a stable measurement. Keyed on
+    the advisory date, the count means "RBPs that went public since launch and
+    are still unpublished", and adding a feed cannot inflate it retroactively.
+    """
+    epoch = EPOCH if epoch is None else epoch
+    if not epoch:
+        return False
+    when = row.get("public_date") or ""
+    return bool(when and when < epoch)
+
+
+def split_epoch(rows, epoch=None):
+    """(counted, excluded) against the launch epoch."""
+    epoch = EPOCH if epoch is None else epoch
+    if not epoch:
+        return list(rows), []
+    counted, excluded = [], []
+    for r in rows:
+        (excluded if before_epoch(r, epoch) else counted).append(r)
+    return counted, excluded
+
 # A CNA's OWN publication channel. Presence of the owner's own advisory is what
 # turns 4.5.1.6 (SHOULD) into 4.5.1.4 (MUST), because it shows the CNA itself
 # disclosed rather than a third party.
@@ -311,7 +353,7 @@ def per_cna(rows, ledger, corpus_df, today=None):
     return out
 
 
-def summary(rows, cnas, today=None, undated_excluded=0):
+def summary(rows, cnas, today=None, undated_excluded=0, epoch_excluded=0):
     """The numbers the front page leads with.
 
     `undated_excluded` carries the rows dropped before this point for having no
@@ -329,6 +371,9 @@ def summary(rows, cnas, today=None, undated_excluded=0):
         "past_expectation": sum(1 for r in rows if r.get("past_expectation")),
         "clock_unknown": len(rows) - len(dated),
         "undated_excluded": undated_excluded,
+        # Rows held back by the launch epoch. Disclosed, never silent.
+        "epoch": EPOCH or None,
+        "epoch_excluded": epoch_excluded,
         "oldest_days": max(ages) if ages else None,
         "median_days": _median(ages),
         "named_cnas": len(cnas),

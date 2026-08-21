@@ -55,6 +55,24 @@
       became aware of the disclosure, and that is not observable from outside. So the
       column reads <em>days public</em> and never <em>days overdue</em>.
     </p>
+    {% if summary.epoch %}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>Counting starts {{ summary.epoch }}.</strong> This site launched with a
+        deliberately clean slate, so the count covers CVE IDs that went public on or
+        after that date and are still unpublished.
+        {% if summary.epoch_excluded %}
+        A further <strong>{{ summary.epoch_excluded | commafy }}</strong> reserved IDs went
+        public before it and are held back from the count.
+        {% endif %}
+        Those rows are not less real and are not younger: age derives from the advisory
+        date, so an ID that went public 500 days ago is 500 days old whether or not it is
+        counted here. They remain in the <a href="data.html">raw data</a>. The epoch keys
+        on the advisory date rather than on when this site first saw a row, so adding a
+        feed cannot retroactively inflate the count.
+      </p>
+    </div>
+    {% endif %}
     {% if summary.undated_excluded %}
     <p class="mb-0">
       <strong>{{ summary.undated_excluded | commafy }} reserved IDs are excluded

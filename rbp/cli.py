@@ -125,8 +125,15 @@ def cmd_run(args):
                   if isinstance(r.get("days_public"), int)
                   and r["days_public"] >= args.min_age_days]
     undated = sum(1 for r in backlog if not r.get("clock_known"))
+    # Launch epoch, if set: the published count starts from launch instead of
+    # carrying the backlog gathered while coverage was still changing.
+    reportable, pre_epoch = clock.split_epoch(reportable)
+    if pre_epoch:
+        print(f"  launch epoch {clock.EPOCH}: {len(pre_epoch)} rows held back "
+              f"(public before the epoch), {len(reportable)} counted")
     cnas = clock.per_cna(reportable, ledger, corpus, today=today)
-    stats = clock.summary(reportable, cnas, today=today, undated_excluded=undated)
+    stats = clock.summary(reportable, cnas, today=today, undated_excluded=undated,
+                          epoch_excluded=len(pre_epoch))
     stats["min_age_days"] = args.min_age_days
     stats["inference"] = {
         "k": validation["k"],

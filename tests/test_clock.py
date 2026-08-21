@@ -417,3 +417,58 @@ def test_median_of_whole_days_stays_whole():
     assert clock._median([1, 2, 3]) == 2
     assert clock._median([1, 2]) == 1.5   # genuinely between days, keep it
     assert clock._median([]) is None
+
+
+# --------------------------------------------------------------------------
+# launch epoch
+# --------------------------------------------------------------------------
+
+def test_no_epoch_counts_everything():
+    rows = [row("CVE-2026-1", 500, public="2025-04-01"),
+            row("CVE-2026-2", 10, public="2026-08-10")]
+    counted, excluded = clock.split_epoch(rows, "")
+    assert len(counted) == 2 and excluded == []
+
+
+def test_epoch_holds_back_ids_public_before_launch():
+    rows = [row("CVE-2026-1", 500, public="2025-04-01"),
+            row("CVE-2026-2", 10, public="2026-09-10")]
+    counted, excluded = clock.split_epoch(rows, "2026-09-01")
+    assert [r["cve_id"] for r in counted] == ["CVE-2026-2"]
+    assert [r["cve_id"] for r in excluded] == ["CVE-2026-1"]
+
+
+def test_epoch_keys_on_the_advisory_date_not_first_sighting():
+    """Keying on first-seen would let a newly added feed inject years-old RBPs
+    into the headline count, which is the opposite of a stable measurement."""
+    r = row("CVE-2026-1", 500, public="2025-04-01")
+    r["first_seen"] = "2026-09-15"           # discovered after launch
+    counted, excluded = clock.split_epoch([r], "2026-09-01")
+    assert counted == [] and len(excluded) == 1
+
+
+def test_epoch_does_not_alter_ages():
+    """Excluding a row must not make it look younger. days_public derives from
+    the advisory date and is unaffected."""
+    rows = [row("CVE-2026-1", None, public="2025-04-01")]
+    clock.annotate(rows, TODAY)
+    age = rows[0]["days_public"]
+    clock.split_epoch(rows, "2026-09-01")
+    assert rows[0]["days_public"] == age == 506
+
+
+def test_summary_discloses_the_epoch_and_what_it_held_back():
+    rows = [row("CVE-2026-1", 10)]
+    clock.annotate(rows, TODAY)
+    s = clock.summary(rows, [], TODAY, epoch_excluded=542)
+    assert s["epoch_excluded"] == 542
+    assert "epoch" in s
+
+
+def test_undated_rows_are_never_epoch_excluded():
+    """A row with no date cannot be placed relative to the epoch, and guessing
+    would silently drop it from both the count and the disclosure."""
+    r = row("CVE-2026-1", None)
+    assert r["public_date"] == ""
+    counted, excluded = clock.split_epoch([r], "2026-09-01")
+    assert len(counted) == 1 and excluded == []

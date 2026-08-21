@@ -473,6 +473,10 @@ CSAF_PROVIDERS = (
     "https://cert-portal.siemens.com/productcert/csaf/provider-metadata.json",   # Siemens (ICS CNA)
     "https://www.cisa.gov/sites/default/files/csaf/provider-metadata.json",       # CISA (ICS)
     "https://sick.com/.well-known/csaf/provider-metadata.json",                   # SICK (ICS CNA)
+    # Not listed by any aggregator we read, found by probing .well-known. Both
+    # are high-volume CNAs in their own right.
+    "https://www.cisco.com/.well-known/csaf/provider-metadata.json",              # Cisco PSIRT
+    "https://www.suse.com/.well-known/csaf/provider-metadata.json",               # SUSE
 )
 
 # CSAF aggregators list many vendors' provider-metadata URLs in one file, one fetch
@@ -480,6 +484,83 @@ CSAF_PROVIDERS = (
 CSAF_AGGREGATORS = (
     "https://wid.cert-bund.de/.well-known/csaf-aggregator/aggregator.json",       # BSI CERT-Bund
 )
+
+# Cap on directory distributions consulted per provider. Some providers list one
+# directory per advisory rather than one root (Huawei lists 117), and without a
+# cap a single provider dominates the run.
+CSAF_MAX_DIRS = 12
+
+
+def _csaf_directory_entries(directory_url, years, cap):
+    """Recent advisory URLs from a CSAF *directory* distribution.
+
+    The spec allows two distribution shapes and this adapter originally handled
+    only one. ROLIE feeds are JSON and were supported; directory distributions
+    are a plain listing and were not, so every provider using them yielded
+    nothing. Red Hat, Huawei and Schneider Electric are all directory-only, which
+    is why Red Hat, one of the largest publishers, contributed zero.
+
+    `changes.csv` is preferred: it is newest-first with timestamps, so a recency
+    cap is meaningful. `index.txt` is the fallback, and carries no dates, so it
+    is filtered on the year in the file path instead.
+    """
+    base = directory_url.rstrip("/")
+    try:
+        raw = _get_text(f"{base}/changes.csv", timeout=90)
+        out = []
+        for line in raw.splitlines():
+            parts = [x.strip().strip('"') for x in line.split(",", 1)]
+            if len(parts) != 2:
+                continue
+            path, ts = parts
+            year = _date_year(ts)
+            if year is not None and year < min(years):
+                # changes.csv is newest-first, so the first out-of-window entry
+                # means everything after it is older too.
+                break
+            out.append((ts, f"{base}/{path.lstrip('/')}"))
+            if len(out) >= cap:
+                break
+        if out:
+            return out
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        raw = _get_text(f"{base}/index.txt", timeout=90)
+    except Exception:  # noqa: BLE001
+        return []
+    wanted = {str(y) for y in years}
+    paths = [p.strip() for p in raw.splitlines() if p.strip()]
+    # No timestamps here, so select on the year segment of the path and take the
+    # tail, which these listings order oldest-first.
+    keep = [p for p in paths if any(seg in wanted for seg in p.split("/"))]
+    return [("", f"{base}/{p.lstrip('/')}") for p in keep[-cap:]]
+
+
+def _csaf_directories(meta, max_dirs):
+    """Directory URLs from provider metadata, de-duplicated and de-noised.
+
+    Some providers list a directory per advisory rather than one root. Huawei
+    publishes 117, half of them `/zh` language duplicates of the `/en` ones, so
+    the language variants are dropped and the shortest paths are preferred on
+    the assumption that a root listing covers its children.
+    """
+    urls = []
+    for dist in (meta or {}).get("distributions", []):
+        u = dist.get("directory_url")
+        if u:
+            urls.append(u.rstrip("/"))
+    urls = [u for u in urls if not u.endswith("/zh")]
+    urls.sort(key=len)
+    out, seen = [], []
+    for u in urls:
+        if any(u.startswith(prefix + "/") for prefix in seen):
+            continue           # already covered by a shorter root
+        seen.append(u)
+        out.append(u)
+        if len(out) >= max_dirs:
+            break
+    return out
 
 
 def _expand_csaf_providers(providers, aggregators, max_providers):
@@ -523,6 +604,9 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                 if f.get("url"):
                     feed_urls.append(f["url"])
         entries = []
+        # Directory distributions, the half of the spec this adapter used to skip.
+        for durl in _csaf_directories(meta, max_dirs=CSAF_MAX_DIRS):
+            entries.extend(_csaf_directory_entries(durl, years, cap_per_provider))
         for furl in feed_urls:
             try:
                 fd, _, _ = _get(furl, timeout=90)

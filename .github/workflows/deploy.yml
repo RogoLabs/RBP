@@ -30,6 +30,12 @@ env:
   # /overview.html, noindexed. Set the repository variable RBP_LAUNCHED to 1 to
   # make / the dashboard. The gate is 50% CNA coverage (PLAN.md).
   RBP_LAUNCHED: ${{ vars.RBP_LAUNCHED || '' }}
+  # Launch epoch, YYYY-MM-DD. Set on launch day to start the count from zero
+  # instead of carrying the backlog accumulated while feed coverage was still
+  # changing. Keyed on the advisory date, so adding a feed later cannot inflate
+  # the count retroactively. Held-back rows stay in the raw data and their count
+  # is shown on /method.
+  RBP_EPOCH: ${{ vars.RBP_EPOCH || '' }}
 
 permissions:
   contents: write      # pushes the grader ledger to the data branch

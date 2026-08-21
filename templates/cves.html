@@ -73,6 +73,11 @@
     A further {{ summary.undated_excluded | commafy }} reserved IDs are excluded entirely
     because their feeds publish no date, so they cannot be aged at any threshold.
     {% endif %}
+    {% if summary.epoch_excluded %}
+    {{ summary.epoch_excluded | commafy }} more went public before this site started
+    counting on {{ summary.epoch }} and are held back from the count, though they remain
+    in the raw data.
+    {% endif %}
     <a href="method.html">Method</a>.
   </p>
 </div>

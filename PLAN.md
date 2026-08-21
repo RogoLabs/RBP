@@ -334,6 +334,19 @@ instrument, and the closures prove the open rows are real.
   public either way: the gate is on what the front door presents, not on hiding anything.
   Flip with the `RBP_LAUNCHED` repository variable, so launching is a settings change
   rather than a commit.
+- **Launch-day reset (decided 2026-08-20).** On launch the count starts from zero rather
+  than carrying the backlog gathered while coverage was still changing. Implemented as
+  `RBP_EPOCH`, a date set via repository variable, keyed on the **advisory date** and not
+  on when this site first saw a row. That choice is load-bearing: keyed on first-seen, a
+  newly added feed would inject hundreds of years-old RBPs into the headline count, which
+  is exactly the instability the reset exists to avoid. Keyed on the advisory date the
+  count means "went public since launch and still unpublished", and feed expansion cannot
+  inflate it retroactively.
+  Only the backlog resets. The grader ledger and the resolution ledger are explicitly NOT
+  reset, because zeroing the grader would drop the measured precision to n=0 on launch day
+  and turn the accuracy claim back into a promise. Held-back rows keep their real ages,
+  stay in the raw data, and their count is disclosed on `/method` and `/cves`: a filter
+  that removes the oldest and strongest evidence has to be visible.
 - **LAUNCH GATE: 50% CNA coverage.** Nothing is shared or promoted publicly until feeds
   touch at least **half of all CNAs**. Measured 36.4% (158 of 434) on 2026-08-20, so
   roughly 59 more CNAs need touching. The site stays live throughout; the gate is on
