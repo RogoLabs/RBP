@@ -37,10 +37,11 @@ env:
   # is shown on /method.
   RBP_EPOCH: ${{ vars.RBP_EPOCH || '' }}
 
+# Least privilege at the top level. `contents: write` is needed only by the one
+# step that pushes the ledger to the data branch, so it is granted per job
+# rather than to the whole workflow.
 permissions:
-  contents: write      # pushes the grader ledger to the data branch
-  pages: write
-  id-token: write
+  contents: read
 
 concurrency:
   group: pages
@@ -49,6 +50,14 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Measured wall times are 6.9 to 14.9 minutes against a 360-minute default,
+    # so a hung fetch would otherwise burn six hours and collide with the next
+    # scheduled tick.
+    timeout-minutes: 45
+    permissions:
+      contents: write     # the persist step pushes to the data branch
+      pages: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
@@ -135,6 +144,13 @@ jobs:
           fi
           cp CNAME site/CNAME
 
+      # Upload BEFORE persisting state. A failure in the persist step must
+      # not cost the publication too, and state should only advance once the
+      # artefact that state describes actually exists.
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
       - name: Persist durable state
         run: |
           cp data/precision.json .state/ 2>/dev/null || true
@@ -165,13 +181,13 @@ jobs:
           git diff --staged --quiet || git commit -q -m "state: run $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -q origin HEAD:data
 
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

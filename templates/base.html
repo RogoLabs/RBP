@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>{% block title %}RBP Tracker{% endblock %}</title>
-<meta name="description" content="{% block description %}Every CVE ID that is reserved, publicly referenced, and still unpublished. Updated every six hours.{% endblock %}">
+<meta name="description" content="{% block description %}Every CVE ID that is reserved, publicly referenced, and still unpublished.{% endblock %}">
 {% if launched %}
 <meta name="robots" content="index, follow">
 {% else %}
@@ -55,6 +55,16 @@
 </header>
 
 <main id="main" class="container">
+{% if very_stale %}
+<div class="stale-banner">
+  <strong>This data is {{ age_hours }} hours old.</strong> The pipeline normally runs every
+  six hours, so something has stopped. Treat every count below as stale.
+</div>
+{% elif stale %}
+<div class="stale-banner">
+  Last updated {{ age_hours }} hours ago, longer than the usual six-hour interval.
+</div>
+{% endif %}
 {% block content %}{% endblock %}
 </main>
 
@@ -68,6 +78,7 @@
           CVE Record is still unpublished. Counts are a floor: only configured
           feeds are read.<br>
           Snapshot {{ snapshot_date }} &middot; built {{ generated }}
+          {% if age_hours is not none %}({{ age_hours }}h ago){% endif %}
         </p>
       </div>
       <div style="flex:1;min-width:15rem">

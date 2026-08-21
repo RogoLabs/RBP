@@ -42,6 +42,11 @@ from . import clock
 # change rather than a commit. The launch gate is 50% CNA coverage (PLAN.md).
 LAUNCHED = os.environ.get("RBP_LAUNCHED", "").strip().lower() in ("1", "true", "yes")
 
+# Minimum graded predictions before a production precision figure is shown at
+# all. With n=1 the site rendered "100.00%" in a headline tile, which is a
+# stronger claim than the leave-one-out figure it sits beside.
+GRADER_MIN_N = 20
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 TEMPLATES = os.path.join(ROOT, "templates")
@@ -129,8 +134,21 @@ def load(snap_root, data_dir):
         c["slug"] = slug(c["cna"])
 
     graded = grader.get("graded", [])
-    live_precision = (sum(1 for g in graded if g.get("correct")) / len(graded)
-                      if graded else None)
+
+    # item 13: freshness measured, not asserted. The site claimed "Updated every
+    # six hours" as static copy while nothing anywhere computed staleness, and a
+    # scheduled workflow can stop silently (GitHub disables cron after 60 days of
+    # repository inactivity, and cron is best-effort regardless).
+    age_hours = None
+    stamped = summary.get("generated_at")
+    if stamped:
+        try:
+            then = dt.datetime.fromisoformat(stamped)
+            if then.tzinfo is None:
+                then = then.replace(tzinfo=dt.timezone.utc)
+            age_hours = round((dt.datetime.now(dt.timezone.utc) - then).total_seconds() / 3600, 1)
+        except ValueError:
+            age_hours = None
 
     return {
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
@@ -145,7 +163,13 @@ def load(snap_root, data_dir):
         "grader": {
             "graded": len(graded),
             "correct": sum(1 for g in graded if g.get("correct")),
-            "precision": live_precision,
+            # Below the floor this is None and the templates render a sentence
+            # rather than a metric tile. The project already applies exactly this
+            # discipline to other people's numbers via MIN_DENOMINATOR; applying
+            # it to its own claim is the same rule.
+            "precision": (sum(1 for g in graded if g.get("correct")) / len(graded)
+                          if len(graded) >= GRADER_MIN_N else None),
+            "below_floor": len(graded) < GRADER_MIN_N,
             "outstanding": len(grader.get("predictions", {})),
             "misses": [g for g in graded if not g.get("correct")][-25:],
             "history": grader.get("history", [])[-30:],
@@ -156,6 +180,13 @@ def load(snap_root, data_dir):
         "rule_should": clock.RULE_SHOULD,
         "owner_feeds": {k: sorted(v) for k, v in clock.OWNER_FEEDS.items()},
         "asset_v": _asset_versions(),
+        "age_hours": age_hours,
+        "stale": age_hours is not None and age_hours > 12,
+        "very_stale": age_hours is not None and age_hours > 24,
+        # item 11: a precision figure needs a minimum n before it is a figure at
+        # all. `pct` renders two decimals, so the first graded case published
+        # "100.00%" in a headline tile and on every per-CNA page.
+        "precision_floor": GRADER_MIN_N,
         "launched": LAUNCHED,
         # Where the dashboard actually lives, so the nav and the logo point at
         # it in both postures.

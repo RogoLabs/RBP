@@ -180,10 +180,16 @@
     <div class="metric-grid">
       <div class="metric-card">
         <div class="metric-value">
-          {% if grader.precision is not none %}{{ grader.precision | pct }}{% else %}&mdash;{% endif %}
+          {% if grader.precision is not none %}{{ grader.precision | pct }}
+          {% else %}n/a{% endif %}
         </div>
         <div class="metric-label">
-          Measured in production, n={{ grader.graded | commafy }}
+          {% if grader.precision is not none %}
+            Measured in production, n={{ grader.graded | commafy }}
+          {% else %}
+            Not yet measurable in production: {{ grader.graded | commafy }} of
+            {{ precision_floor }} graded predictions needed before a figure is shown
+          {% endif %}
         </div>
       </div>
       <div class="metric-card">

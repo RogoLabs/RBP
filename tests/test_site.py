@@ -268,3 +268,58 @@ def test_independent_sources_is_exported(built):
     that an OSV row is not evidence GitHub disclosed anything."""
     out = built(True)
     assert "indep_sources" in (out / "data" / "rbp.csv").read_text().splitlines()[0]
+
+
+# --------------------------------------------------------------------------
+# staleness and the precision floor (part 1 items 13, 11)
+# --------------------------------------------------------------------------
+
+def _minimal(tmp_path, generated_at=None, graded=0):
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    summary = {"total": 0}
+    if generated_at:
+        summary["generated_at"] = generated_at
+    (snaps / "backlog.json").write_text("[]")
+    (snaps / "summary.json").write_text(json.dumps(summary))
+    (snaps / "cnas.json").write_text("[]")
+    if graded:
+        (tmp_path / "precision.json").write_text(json.dumps({
+            "graded": [{"cve_id": f"CVE-2026-{i}", "correct": True} for i in range(graded)],
+            "predictions": {}, "history": []}))
+    return site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+
+def test_staleness_is_measured_not_asserted(tmp_path):
+    """The site claimed "Updated every six hours" as static copy while nothing
+    computed staleness, and a scheduled workflow can stop silently."""
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc)
+    fresh = _minimal(tmp_path / "a", (now - dt.timedelta(hours=1)).isoformat())
+    assert fresh["stale"] is False and fresh["very_stale"] is False
+    mid = _minimal(tmp_path / "b", (now - dt.timedelta(hours=18)).isoformat())
+    assert mid["stale"] is True and mid["very_stale"] is False
+    old = _minimal(tmp_path / "c", (now - dt.timedelta(hours=40)).isoformat())
+    assert old["very_stale"] is True
+    assert old["age_hours"] > 24
+
+
+def test_missing_or_bad_timestamp_does_not_claim_freshness(tmp_path):
+    for stamp in (None, "not-a-timestamp"):
+        ctx = _minimal(tmp_path / f"x{stamp}", stamp)
+        assert ctx["age_hours"] is None
+        assert ctx["stale"] is False      # unknown is not stale, and not fresh either
+
+
+def test_production_precision_is_withheld_below_the_floor(tmp_path):
+    """With n=1 the site rendered "100.00%" in a headline tile, a stronger claim
+    than the leave-one-out figure beside it. The project applies exactly this
+    discipline to other people's numbers via MIN_DENOMINATOR."""
+    low = _minimal(tmp_path / "low", graded=1)
+    assert low["grader"]["graded"] == 1
+    assert low["grader"]["precision"] is None
+    assert low["grader"]["below_floor"] is True
+
+    ok = _minimal(tmp_path / "ok", graded=site.GRADER_MIN_N)
+    assert ok["grader"]["precision"] == 1.0
+    assert ok["grader"]["below_floor"] is False

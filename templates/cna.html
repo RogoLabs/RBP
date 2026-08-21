@@ -19,7 +19,8 @@
     reserved one all share one assigner. That method is graded continuously against
     reality and currently measures
     {% if grader.precision is not none %}{{ grader.precision | pct }} on
-    n={{ grader.graded }}{% else %}too few resolved cases to report{% endif %},
+    n={{ grader.graded }}{% else %}too few resolved cases to report
+    ({{ grader.graded }} of {{ precision_floor }} needed){% endif %},
     with leave-one-out precision of
     {{ summary.inference.leave_one_out.precision | pct }} across the published corpus.
   </p>

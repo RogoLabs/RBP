@@ -134,9 +134,14 @@
     <div class="metric-grid">
       <div class="metric-card">
         <div class="metric-value">
-          {% if grader.precision is not none %}{{ grader.precision | pct }}{% else %}&mdash;{% endif %}
+          {% if grader.precision is not none %}{{ grader.precision | pct }}
+          {% else %}n/a{% endif %}
         </div>
-        <div class="metric-label">Production precision, n={{ grader.graded | commafy }}</div>
+        <div class="metric-label">
+          {% if grader.precision is not none %}Production precision, n={{ grader.graded | commafy }}
+          {% else %}Production precision withheld below n={{ precision_floor }}
+            (currently {{ grader.graded | commafy }}){% endif %}
+        </div>
       </div>
       <div class="metric-card">
         <div class="metric-value">{{ summary.inference.leave_one_out.precision | pct }}</div>
