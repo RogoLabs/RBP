@@ -1,19 +1,19 @@
 {
  "date": "2026-08-21",
  "expectation_hours": 72,
- "total": 559,
- "past_expectation": 559,
+ "total": 558,
+ "past_expectation": 558,
  "clock_unknown": 0,
  "undated_excluded": 84,
  "epoch": null,
  "epoch_excluded": 0,
  "oldest_days": 520,
  "median_days": 43,
- "named_cnas": 9,
- "must_rows": 212,
+ "named_cnas": 6,
+ "must_rows": 211,
  "should_rows": 347,
  "age_buckets": {
-  "7-30d": 136,
+  "7-30d": 135,
   "30-90d": 387,
   "90-180d": 24,
   "180d+": 12
@@ -21,16 +21,16 @@
  "min_age_days": 7,
  "inference": {
   "k": 3,
-  "run_coverage": 0.514,
+  "run_coverage": 0.4923,
   "leave_one_out": {
    "method": "leave-one-out",
    "k": 3,
-   "decided": 29489,
-   "abstained": 17772,
-   "total": 47261,
-   "correct": 29305,
+   "decided": 29497,
+   "abstained": 17822,
+   "total": 47319,
+   "correct": 29313,
    "wrong": 184,
-   "coverage": 0.624,
+   "coverage": 0.6234,
    "precision": 0.9938
   },
   "live": {
