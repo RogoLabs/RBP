@@ -5,12 +5,9 @@
   "oldest_days": 127,
   "median_days_public": 44,
   "past_expectation": 233,
-  "must_rows": 211,
-  "should_rows": 22,
+  "must_rows": 0,
+  "should_rows": 233,
   "published_12mo": 10302,
-  "rate": 0.0226,
-  "rate_wilson_lower": 0.0199,
-  "rate_suppressed": false,
   "resolved_n": 0,
   "median_days_to_publish": null
  },
@@ -23,9 +20,6 @@
   "must_rows": 0,
   "should_rows": 35,
   "published_12mo": 4463,
-  "rate": 0.0078,
-  "rate_wilson_lower": 0.0056,
-  "rate_suppressed": false,
   "resolved_n": 0,
   "median_days_to_publish": null
  },
@@ -38,9 +32,6 @@
   "must_rows": 0,
   "should_rows": 4,
   "published_12mo": 836,
-  "rate": 0.0048,
-  "rate_wilson_lower": 0.0019,
-  "rate_suppressed": false,
   "resolved_n": 0,
   "median_days_to_publish": null
  },
@@ -53,9 +44,6 @@
   "must_rows": 0,
   "should_rows": 2,
   "published_12mo": 2239,
-  "rate": 0.0009,
-  "rate_wilson_lower": 0.0002,
-  "rate_suppressed": false,
   "resolved_n": 0,
   "median_days_to_publish": null
  },
@@ -68,9 +56,6 @@
   "must_rows": 0,
   "should_rows": 1,
   "published_12mo": 2368,
-  "rate": 0.0004,
-  "rate_wilson_lower": 0.0001,
-  "rate_suppressed": false,
   "resolved_n": 0,
   "median_days_to_publish": null
  },
@@ -83,9 +68,6 @@
   "must_rows": 0,
   "should_rows": 1,
   "published_12mo": 85,
-  "rate": 0.0118,
-  "rate_wilson_lower": 0.0021,
-  "rate_suppressed": false,
   "resolved_n": 0,
   "median_days_to_publish": null
  }
