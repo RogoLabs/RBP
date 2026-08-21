@@ -35,16 +35,70 @@ _CHUNK = 1 << 20
 # fewer rows: counts are a floor, and a silent shrink reads as improvement.
 FEED_HEALTH = {}
 
+OK, TRUNCATED, FAILED = "ok", "truncated", "failed"
 
-def record_feed(name, ok, detail=""):
-    FEED_HEALTH.setdefault(name, []).append({"ok": ok, "detail": detail})
+
+def reset_health():
+    """Clear per-run state. A module global that survives between runs in the
+    same process reports a stale feed as healthy."""
+    FEED_HEALTH.clear()
+
+
+def record_feed(name, status, detail="", rows=None):
+    """Record one feed outcome in three states, not two.
+
+    A feed that hit a page cap is neither a success nor a failure: it returned
+    real rows AND silently dropped the rest. Recording it as ok made the method
+    page assert "all N feed fetches succeeded" on every single run, because the
+    Ubuntu 200-page cap fires every run. `status` accepts a bool for the old
+    call sites, where True means ok.
+    """
+    if status is True:
+        status = OK
+    elif status is False:
+        status = FAILED
+    FEED_HEALTH[name] = {"status": status, "detail": detail, "rows": rows,
+                         "ok": status == OK, "truncated": status == TRUNCATED}
 
 
 def health_summary():
-    """(failures, total) across every feed attempt this run."""
-    attempts = [a for lst in FEED_HEALTH.values() for a in lst]
-    return [f"{k}: {a['detail']}" for k, lst in FEED_HEALTH.items()
-            for a in lst if not a["ok"]], len(attempts)
+    """(failures, attempts) where an attempt is one FEED, not one sub-fetch.
+
+    The unit used to be wrong as well as the states: OSV recorded per ecosystem
+    and gather recorded again for `osv`, so "all 20 feed fetches succeeded"
+    described 10 feeds and any consumer check of the form
+    `failures == [] and attempts == len(requested)` was broken on arrival.
+    """
+    failures = [f"{k}: {v['detail']}" for k, v in FEED_HEALTH.items()
+                if v["status"] == FAILED]
+    top = [k for k in FEED_HEALTH if ":" not in k]
+    return failures, len(top)
+
+
+def health_detail():
+    """Structured per-feed health for summary.json. Sub-fetches (osv:npm) are
+    nested under their parent so the top-level count means what it says."""
+    out = {}
+    for name, v in FEED_HEALTH.items():
+        parent, _, child = name.partition(":")
+        if child:
+            out.setdefault(parent, {}).setdefault("parts", {})[child] = v
+        else:
+            out.setdefault(parent, {}).update(v)
+    for parent, v in out.items():
+        parts = v.get("parts") or {}
+        if parts and any(p["status"] != OK for p in parts.values()):
+            worst = FAILED if any(p["status"] == FAILED for p in parts.values()) else TRUNCATED
+            # A parent whose sub-fetches degraded is itself degraded, or the
+            # top-level number hides the hole.
+            if v.get("status") == OK:
+                v["status"] = worst
+                v["ok"] = False
+                v["truncated"] = worst == TRUNCATED
+                v["detail"] = (v.get("detail") or "") + \
+                    f" ({sum(1 for p in parts.values() if p['status'] != OK)} of "\
+                    f"{len(parts)} parts degraded)"
+    return out
 
 
 def _stream_zip(url):
@@ -261,6 +315,7 @@ def feed_ubuntu(years, page_cap=200):
         capped = True
     if capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
+        record_feed("ubuntu", TRUNCATED, f"hit the {page_cap}-page cap; rows beyond it were not read")
     return out
 
 
@@ -731,6 +786,7 @@ def gather(sources, years):
     returns nothing is recorded as a success with zero rows, which is a
     materially different thing and must not read the same way.
     """
+    reset_health()
     refs = {}
     for s in sources:
         try:
@@ -739,7 +795,11 @@ def gather(sources, years):
             record_feed(s, False, str(e)[:120])
             print(f"  [{s}] FAILED: {e}", file=sys.stderr)
             continue
-        record_feed(s, True, f"{len(rows)} ids")
+        # Do not overwrite a truncation an adapter already recorded for itself.
+        if FEED_HEALTH.get(s, {}).get("status") in (TRUNCATED, FAILED):
+            FEED_HEALTH[s]["rows"] = len(rows)
+        else:
+            record_feed(s, OK, f"{len(rows)} ids", rows=len(rows))
         print(f"  [{s}] {len(rows)} referenced IDs in scope")
         for r in rows:
             cid = r["cve_id"]

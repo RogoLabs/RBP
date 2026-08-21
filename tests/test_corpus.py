@@ -314,15 +314,56 @@ def test_archive_ceiling_refuses_to_truncate():
     assert feeds.MAX_ARCHIVE_BYTES > feeds.MAX_BYTES
 
 
-def test_feed_health_records_and_summarises(monkeypatch):
+def test_feed_health_counts_feeds_not_sub_fetches(monkeypatch):
+    """The unit was wrong as well as the states. OSV recorded per ecosystem AND
+    gather recorded again for `osv`, so "all 20 feed fetches succeeded" described
+    10 feeds, and any consumer check of the form
+    `failures == [] and attempts == len(requested)` was broken on arrival."""
     from rbp import feeds
     monkeypatch.setattr(feeds, "FEED_HEALTH", {})
-    feeds.record_feed("osv:npm", True, "2321 ids")
-    feeds.record_feed("osv:Hex", False, "connection reset")
-    feeds.record_feed("debian", True, "17058 ids")
+    feeds.record_feed("osv", feeds.OK, "8742 ids")
+    feeds.record_feed("osv:npm", feeds.OK, "2321 ids")
+    feeds.record_feed("osv:Hex", feeds.FAILED, "connection reset")
+    feeds.record_feed("debian", feeds.OK, "17058 ids")
     failures, attempts = feeds.health_summary()
-    assert attempts == 3
+    assert attempts == 2, "osv and debian are two feeds, not four fetches"
     assert failures == ["osv:Hex: connection reset"]
+
+
+def test_truncation_is_neither_success_nor_failure(monkeypatch):
+    """The Ubuntu 200-page cap fires on every run, and recording it as ok made
+    /method assert "all N feed fetches succeeded" every single time."""
+    from rbp import feeds
+    monkeypatch.setattr(feeds, "FEED_HEALTH", {})
+    feeds.record_feed("ubuntu", feeds.TRUNCATED, "hit the 200-page cap")
+    failures, attempts = feeds.health_summary()
+    assert failures == [], "truncation is not a failure"
+    detail = feeds.health_detail()
+    assert detail["ubuntu"]["status"] == feeds.TRUNCATED
+    assert detail["ubuntu"]["ok"] is False, "and it is not a success either"
+
+
+def test_a_degraded_sub_fetch_degrades_its_parent(monkeypatch):
+    """Otherwise the top-level number hides the hole: osv reads ok while one of
+    its ten ecosystems failed."""
+    from rbp import feeds
+    monkeypatch.setattr(feeds, "FEED_HEALTH", {})
+    feeds.record_feed("osv", feeds.OK, "8742 ids")
+    feeds.record_feed("osv:npm", feeds.OK, "2321 ids")
+    feeds.record_feed("osv:Hex", feeds.FAILED, "connection reset")
+    d = feeds.health_detail()
+    assert d["osv"]["status"] == feeds.FAILED
+    assert d["osv"]["ok"] is False
+    assert "1 of 2 parts degraded" in d["osv"]["detail"]
+
+
+def test_health_is_reset_per_run(monkeypatch):
+    """A module global surviving between runs in one process reports a stale
+    feed as healthy."""
+    from rbp import feeds
+    monkeypatch.setattr(feeds, "FEED_HEALTH", {"ghost": {"status": "failed"}})
+    feeds.reset_health()
+    assert feeds.FEED_HEALTH == {}
 
 
 def test_no_failures_reports_clean(monkeypatch):

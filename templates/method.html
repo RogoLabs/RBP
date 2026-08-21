@@ -201,9 +201,30 @@
     </div>
     {% else %}
     <p class="small text-muted">
-      All {{ summary.feeds.attempts }} feed fetches succeeded. A feed that fails is
-      reported here rather than simply yielding fewer rows, because counts are a floor
-      and a silent shrink would read as improvement.
+      No feed failed outright this run. A feed that fails is reported here rather than
+      simply yielding fewer rows, because counts are a floor and a silent shrink would
+      read as improvement.
+    </p>
+    {% endif %}
+    {% if summary.feeds.truncated %}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>Truncated this run:</strong>
+        {{ summary.feeds.truncated | join(', ') }}. These feeds returned real rows and
+        silently stopped at a page cap, so their contribution is incomplete and the count
+        is a lower floor than usual. Truncation is neither a success nor a failure and is
+        counted separately from both.
+      </p>
+    </div>
+    {% endif %}
+    {% if summary.coverage %}
+    <p class="small text-muted">
+      Feeds currently reach <strong>{{ summary.coverage.covered_cnas }} of
+      {{ summary.coverage.total_cnas }} CNAs</strong>
+      ({{ summary.coverage.pct_cnas }}%), and surfaced
+      {{ summary.coverage.observed_pct }}% of published CVEs in the window. An RBP held by
+      a CNA outside that set is invisible here, which is the single largest reason this
+      site understates the problem.
     </p>
     {% endif %}
     <p class="small text-muted mb-0">

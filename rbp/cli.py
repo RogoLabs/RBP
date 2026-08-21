@@ -160,7 +160,15 @@ def cmd_run(args):
         "leave_one_out": validation["leave_one_out"],
         "live": {k: v for k, v in validation["live"].items() if k != "misses"},
     }
-    stats["feeds"] = {"requested": sources, "failures": failures, "attempts": attempts}
+    stats["feeds"] = {"requested": sources, "failures": failures, "attempts": attempts,
+                      "detail": feeds.health_detail(),
+                      "truncated": [k for k, v in feeds.health_detail().items()
+                                    if v.get("status") == feeds.TRUNCATED]}
+    # item 14: coverage was computed every run, printed to a build log, and
+    # reached no artefact and no template. The launch gate depends on it.
+    stats["coverage"] = cov
+    stats["generated_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    stats["min_age_days"] = args.min_age_days
     json.dump(cnas, open(os.path.join(sdir, "cnas.json"), "w"), indent=1)
     json.dump(stats, open(os.path.join(sdir, "summary.json"), "w"), indent=1)
     print("\n" + "=" * 64)
