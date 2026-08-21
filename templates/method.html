@@ -15,8 +15,19 @@
   <div class="card-body">
     <p>
       A CVE ID in the <strong>Reserved</strong> state that is referenced in one or more
-      public sources while no CVE Record has been published. That is the CVE Program's
-      own definition, quoted from RBP Policy v2.0.0.
+      public sources while no CVE Record has been published. That is the CVE Program's own
+      definition, quoted from RBP Policy v2.0.0 and still
+      <a href="https://www.cve.org/ResourcesSupport/Glossary?activeTerm=glossaryRBP">live
+      in the cve.org glossary</a>.
+    </p>
+    <p>
+      <strong>RBP is a state, not a verdict.</strong> The policy defines the state on its
+      own terms, then separately conditions its notification steps on an RBP
+      &ldquo;in violation of Program Rules 4.5.1.4 or 4.5.1.6 exceeding the 72
+      hours&rdquo;, and assigns that determination to Roots, TL-Roots and the Secretariat.
+      The headline count on this site is the state, which makes it the Program's own
+      metric. Violation language is confined to the rule column, always marked candidate,
+      and never aggregated into the headline.
     </p>
     <p>
       State comes from the CVE Services reservation endpoint, which returns it directly:
@@ -47,10 +58,23 @@
   <div class="card-header"><h2 class="card-title">The clock</h2></div>
   <div class="card-body">
     <p>
-      Rows are reportable once provably public for at least
-      <strong>{{ summary.min_age_days }} days</strong>, a buffer past the
-      {{ expectation_hours }}-hour expectation that absorbs normal latency and short
-      coordinated-disclosure windows.
+      Rows are reportable once publicly referenced for at least
+      <strong>{{ summary.min_age_days }} days</strong>, more than twice the
+      {{ expectation_hours }}-hour window.
+    </p>
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>The buffer does not separate an overdue record from an embargo.</strong>
+        An earlier version of this page claimed it absorbed coordinated-disclosure
+        windows. It does not, and no buffer length could: a multi-party embargo and an
+        overdue record have identical signatures from outside, and the live median here is
+        around six weeks. Some listed rows are legitimately held. This site cannot tell
+        which, and says so rather than implying the buffer settled it.
+      </p>
+    </div>
+    <p>
+      What the buffer does is make latency an implausible explanation, which is a weaker
+      and more defensible claim.
     </p>
     <p>
       <strong>Days public is a floor, not a deadline measure.</strong> It counts from the

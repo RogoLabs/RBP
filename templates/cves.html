@@ -5,10 +5,11 @@
 <div class="page-header">
   <h1>Reserved but Public CVE IDs</h1>
   <p class="text-muted">
-    {{ summary.total | commafy }} rows, provably public for at least
-    {{ summary.min_age_days }} days and still unpublished, so every one is already past
-    the {{ expectation_hours }}-hour publication expectation. Sorted oldest first.
-    Filters are in the URL, so any view here can be linked.
+    {{ summary.total | commafy }} CVE IDs in the Reserved state, publicly referenced for at
+    least {{ summary.min_age_days }} days, with no published record. That is the CVE
+    Program's own definition of a Reserved but Public ID, so this is a count of a state and
+    not a count of violations. Sorted oldest first; filters are in the URL, so any view
+    here can be linked.
   </p>
 </div>
 

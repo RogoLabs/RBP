@@ -43,15 +43,27 @@
       by case by a TL-Root or Root.
     </p>
     <p>
-      There is no condition that triggers anything by itself. The previous policy had an
-      automatic arithmetic trigger tied to a CNA's share of unpublished IDs, which anyone
-      with the data could compute. <strong>Version 2.0.0 contains no numeric threshold
-      anywhere in its text.</strong>
+      Parts of it are mandatory, and quoting only the discretionary parts would be
+      selective. The policy says a Root <strong>will</strong> notify the CNA of the
+      affected IDs and the required remediation timeline; that CNAs
+      <strong>MUST</strong> prioritise requests from their Root to publish RBPs identified
+      as critical; and that repeated violations may escalate
+      <em>&ldquo;up to and including CNA decertification&rdquo;</em>.
+    </p>
+    <p>
+      So the accurate claim is narrower than &ldquo;no enforcement&rdquo;, and it is the
+      one that survives contact: <strong>the process exists and is entirely unobservable
+      from outside, so nobody can tell whether it ran.</strong> There is no public RBP
+      list, no public record that a CNA was notified, and no public enforcement log.
     </p>
     <p class="mb-0">
-      Discretion is defensible. Discretion exercised entirely in private is not
-      distinguishable from no enforcement at all, and there is no public RBP list, no
-      public record that a CNA was notified, and no public enforcement log.
+      One factual note for anyone searching: <strong>RBP Policy v1.0 is not in force.</strong>
+      It was removed from cve.org in January 2022 at the Program Lead's direction pending a
+      new version
+      (<a href="https://github.com/CVEProject/cve-website/issues/835">cve-website #835</a>),
+      and v2.0.0 is that replacement. Copies of v1.0 are still mirrored by third parties
+      and still rank in search, and its 5% and 50% thresholds should not be cited. This
+      project cited them itself before checking, which is how we know how easy that is.
     </p>
   </div>
 </div>
@@ -65,11 +77,31 @@
     <p>Ask about a reserved one and it does not:</p>
 <pre class="api">GET /api/cve-id/CVE-2026-2574
 {"state":"RESERVED","owning_cna":"<strong>[REDACTED]</strong>"}</pre>
+    <p>
+      The field is populated and served, and withheld for reserved IDs. Being precise
+      about scope: that redaction covers every reserved ID, on the order of tens of
+      thousands for 2026 alone, and the overwhelming majority of those are not RBP at all.
+      The endpoint cannot tell which are, so a blanket rule is the only rule it can apply.
+    </p>
+    <p>
+      CNA Rule <strong>4.5.1.7</strong> is worth quoting in full rather than in half,
+      because both sentences matter and the second one is the one that binds:
+    </p>
+    <blockquote class="caveat"><p class="mb-0">
+      The Secretariat MAY publicly identify the CNA who reserved the CVE ID 24 hours after
+      a CVE ID has been Publicly Disclosed. Otherwise, the Secretariat SHOULD NOT publicly
+      identify the CNA until the CVE Record has been published.
+    </p></blockquote>
     <p class="mb-0">
-      The field is populated and served. It is masked on exactly the population the
-      policy governs, even though CNA Rule <strong>4.5.1.7</strong> expressly permits the
-      Secretariat to publicly identify the CNA who reserved a CVE ID
-      <strong>24 hours</strong> after public disclosure.
+      That is a rule about the Secretariat's own conduct. It is not this site's permission
+      to name anyone, and the site does not claim it as one. What it does establish is that
+      the Program already contemplates naming a reserving CNA once an ID has been public
+      for 24 hours. So the ask is narrow and grantable:
+      <strong>unblind <span class="mono">owning_cna</span> only for reserved IDs already
+      publicly referenced for more than 24 hours.</strong> A blanket unblinding would be
+      unsafe, and this project is the reason we can say why: the same block-boundary
+      reasoning this site uses to recover one owner would let anyone derive pre-disclosure
+      ownership across the entire reserved space.
     </p>
   </div>
 </div>
@@ -82,13 +114,35 @@
       <a href="https://www.cve.org/About/Metrics">CVE Metrics page</a> in February 2021
       and was
       <a href="https://github.com/CVEProject/cve-website/blob/main/src/views/About/Metrics.vue">commented
-      out</a> on 7 February 2022, after roughly a year in public. The markup is still in
-      the site source, frozen, its final column Q3&nbsp;2021.
+      out</a> on 7 February 2022. The markup is still in the site source, frozen, its
+      final column already reading <span class="mono">N/A</span>.
+    </p>
+    <p>
+      The documented sequence is more mundane than it first looks, and the record is in the
+      repository this site already links.
+      <a href="https://github.com/CVEProject/cve-website/issues/835">Issue #835</a>
+      (25 January 2022) withdrew the v1.0 policy PDF, &ldquo;Per the Program Lead&rdquo;,
+      noting it &ldquo;will be replaced with a new version of the document at a later
+      date&rdquo;. Thirteen days later
+      <a href="https://github.com/CVEProject/cve-website/issues/842">issue #842</a>
+      commented out the RBP table as <em>item 2 of a three-item</em>
+      quarterly-to-annual table restructuring. That reads as routine maintenance, not
+      concealment, and the
+      <a href="https://www.cve.org/ResourcesSupport/Glossary?activeTerm=glossaryRBP">RBP
+      glossary entry</a> is still live on cve.org today.
+    </p>
+    <p>
+      Two corrections to earlier versions of this page. The table's public life was closer
+      to four months than a year, because cve.org itself did not launch publicly until
+      September 2021. And the archived series is not what this site publishes: it was a
+      quarterly <em>flow</em> of newly identified RBPs, from 4,326 in Q1 2017 down to 350
+      in Q3 2021, measured with authoritative internal access. The headline here is a live
+      <em>stock</em>, discovered from feeds that reach a minority of CNAs, with roughly half
+      the owners inferred. The two are not comparable and this site does not replace it.
     </p>
     <p class="mb-0">
-      RBP Policy v2.0.0 names &ldquo;Program metrics and audits&rdquo; as one of the ways
-      RBPs get identified. The public face of that channel has been switched off for four
-      and a half years. This site publishes what that table would show.
+      The replacement promised in 2022 has now arrived as v2.0.0.
+      <strong>Our ask is that the series comes back with it.</strong>
     </p>
   </div>
 </div>

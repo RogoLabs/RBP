@@ -22,10 +22,19 @@
 
 {% if summary.total %}
 <p class="text-muted">
-  Every row listed is already past the {{ expectation_hours }}-hour publication
-  expectation, because nothing appears here until it has been provably public for
-  {{ summary.min_age_days }} days. That buffer exists to absorb normal latency and short
-  coordinated-disclosure windows, so the count is deliberately conservative.
+  Nothing appears here until it has been publicly referenced for at least
+  {{ summary.min_age_days }} days, more than twice the {{ expectation_hours }}-hour window,
+  measured from the earliest advisory this site can see. The Program's own words on why
+  that matters: it
+  <em>&ldquo;does not condone any unnecessary, intentional, or routine delay between
+  Public Disclosure of vulnerability information (e.g., advisory or Fix) and CVE Record
+  publication&rdquo;</em>.
+</p>
+<p class="text-muted">
+  The buffer is conservatism, not proof of fault. It does <strong>not</strong> separate an
+  overdue record from a live coordinated-disclosure hold: those two look identical from
+  outside and no buffer length distinguishes them. Some rows here are legitimately held,
+  and this site cannot tell which. <a href="method.html">How this is measured</a>.
 </p>
 
 <div class="metric-grid">
@@ -123,11 +132,13 @@
       still in the site source, frozen, its last column Q3&nbsp;2021.
     </p>
     <p class="mb-0">
-      The Metrics page today reports published records and reserved IDs, and nothing on
-      the overlap between them. RBP Policy v2.0.0 names &ldquo;Program metrics and
-      audits&rdquo; as a way RBPs are identified, so the public face of that channel has
-      been switched off for four and a half years. That is the gap this site fills.
-      <a href="policy.html">Read the policy</a>.
+      The record shows routine maintenance rather than concealment: the v1.0 policy PDF
+      was withdrawn thirteen days earlier pending a replacement, and the table was
+      commented out as item 2 of a three-item table restructuring. The replacement has now
+      arrived as v2.0.0. The series has not. The Metrics page today reports published
+      records and reserved IDs and nothing on the overlap between them, which is the gap
+      this site fills until the Program's own series returns.
+      <a href="policy.html">The full sequence, with the issue numbers</a>.
     </p>
   </div>
 </div>
