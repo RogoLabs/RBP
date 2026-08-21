@@ -348,8 +348,9 @@ instrument, and the closures prove the open rows are real.
   stay in the raw data, and their count is disclosed on `/method` and `/cves`: a filter
   that removes the oldest and strongest evidence has to be visible.
 - **LAUNCH GATE: 50% CNA coverage.** Nothing is shared or promoted publicly until feeds
-  touch at least **half of all CNAs**. Measured 36.4% (158 of 434) on 2026-08-20, so
-  roughly 59 more CNAs need touching. The site stays live throughout; the gate is on
+  touch at least **half of all CNAs**. Progress: 36.4% (158 of 434) on the nine-feed
+  weekly profile, **40.6% (176 of 434) with CSAF added**, measured 2026-08-20. CSAF was
+  worth +18 CNAs, about a third of the gap. Reaching 217 needs roughly **41 more CNAs**. The site stays live throughout; the gate is on
   promotion, not deployment. Below half the landscape the backlog reads as a partial
   sample of whichever ecosystems happen to be instrumented, and a CNA absent from the
   site could fairly say the measurement never looked at it. Expansion targets are the
