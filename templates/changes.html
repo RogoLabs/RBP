@@ -70,8 +70,8 @@
   <div class="card-body">
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th>CVE ID</th><th class="num">Days public before publishing</th>
-          <th>First public</th><th>Published</th><th>Assigner</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days public before publishing</th>
+          <th scope="col">First public</th><th scope="col">Published</th><th scope="col">Assigner</th></tr></thead>
         <tbody>
           {% for r in changes.published %}
           <tr>
@@ -123,7 +123,7 @@
   <div class="card-body">
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th>CVE ID</th><th class="num">Days public</th><th>Owner</th><th>Advisory summary</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days public</th><th scope="col">Owner</th><th scope="col">Advisory summary</th></tr></thead>
         <tbody>
           {% for r in changes.new | sortnum('days_public') %}
           <tr>
@@ -157,7 +157,7 @@
     </div>
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th>CVE ID</th><th>First public</th><th>Rejected</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col">First public</th><th scope="col">Rejected</th></tr></thead>
         <tbody>
           {% for r in resolutions_rejected %}
           <tr>
@@ -184,7 +184,7 @@
     </p>
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th>CVE ID</th><th>Owner</th><th class="num">Days to publish</th><th>First public</th><th>Published</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col">Owner</th><th scope="col" class="num">Days to publish</th><th scope="col">First public</th><th scope="col">Published</th></tr></thead>
         <tbody>
           {% for r in resolutions_published %}
           <tr>
@@ -200,6 +200,30 @@
       </table>
     </div>
   </div>
+</div>
+{% endif %}
+
+{# An explicit empty state. This page shipped as an h1 plus one grey sentence,
+   167 characters of <main>, as item four of seven in the primary nav, and that is
+   also what launch day looks like: on the first run after an epoch flip every row
+   is new, so nothing published, nothing was rejected, and nothing is comparable.
+   index.html already handled the same condition correctly, so the pattern existed
+   and had not been applied. Empty is not a warning, so this is a plain bordered
+   block rather than .caveat warn. #}
+{% if not changes.published and not changes.rejected and not changes.no_longer_listed %}
+<div class="empty-state">
+  <strong>Nothing changed between these two snapshots.</strong><br>
+  {% if not changes.have_previous %}
+  This is the first snapshot, so there is nothing to compare it against yet. The
+  first diff appears on the next run.
+  {% elif not changes.comparable %}
+  The two snapshots are not comparable, so no diff is shown rather than a
+  misleading one. The reason is stated above.
+  {% else %}
+  No record published, none was rejected, and nothing left the list since
+  {{ changes.previous_date }}. On a six-hourly cadence that is the ordinary case,
+  not a fault.
+  {% endif %}
 </div>
 {% endif %}
 {% endblock %}

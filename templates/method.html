@@ -203,7 +203,7 @@
       a precision figure without its errors is marketing.</p>
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th>CVE ID</th><th>Predicted</th><th>Actual</th><th>Graded</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col">Predicted</th><th scope="col">Actual</th><th scope="col">Graded</th></tr></thead>
         <tbody>
           {% for m in grader.misses %}
           <tr><td class="id">{{ m.cve_id }}</td><td>{{ m.predicted }}</td>
@@ -258,7 +258,7 @@
     </p>
     <table class="table table-sm small">
       <thead>
-        <tr><th>Figure</th><th class="num">CNAs</th><th>What it means</th></tr>
+        <tr><th scope="col">Figure</th><th scope="col" class="num">CNAs</th><th scope="col">What it means</th></tr>
       </thead>
       <tbody>
         <tr>
@@ -479,7 +479,7 @@
     </p>
     <table class="table table-sm small">
       <thead>
-        <tr><th>#</th><th>Condition</th><th>State</th></tr>
+        <tr><th scope="col">#</th><th scope="col">Condition</th><th scope="col">State</th></tr>
       </thead>
       <tbody>
         {% for c in launch.conditions %}

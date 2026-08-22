@@ -77,7 +77,17 @@
 [data-theme="dark"] .chip-late { color: #f0c25a; }
 
 /* ---- tables ------------------------------------------------------------ */
-.tablewrap { overflow-x: auto; }
+/* A BOUNDED scrollport, so `position: sticky` on the header actually has
+   something to stick to. This was `overflow-x: auto` with no max-height, which
+   made the wrapper a scroll container on both axes bound to a scrollport that
+   never scrolls: at 4000px of page scroll the th sat at -3,630px, so a table
+   44,000px tall at live scale was read with no column labels visible at any
+   point. The first columns a reader loses are Inferred owner, Confidence and
+   Rule, which carry all the hedging. (Review item 17.) */
+.tablewrap {
+  max-height: calc(100vh - 8rem);
+  overflow: auto;
+}
 table.rbp {
   border-collapse: collapse;
   width: 100%;
@@ -289,4 +299,190 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
   font-weight: 400;
   opacity: 0.75;
   font-size: 0.92em;
+}
+
+/* ==========================================================================
+   Accessibility (review item 17)
+   ==========================================================================
+   Two reviewers measured ten AA failures and one called them disqualifying for a
+   federal reader: a documented WCAG failure on the primary data table is a bar to
+   citing a third-party resource from official guidance, whatever the data quality.
+
+   PROJECT-OWNED TEXT TOKENS, measured against every background they actually
+   render on. The inherited cve.icu tokens were never re-audited against the
+   striped-row background this project introduced, and auditing against white is
+   the mistake to avoid: half the rows are not white.
+
+   Measured worst-case ratios (the lowest across --color-bg-content,
+   --color-bg-secondary and --color-bg-hover), pinned in tests/test_a11y.py:
+
+     token            was (worst)   now (worst)
+     text-secondary   3.95 FAIL     6.07
+     text-muted       1.75 FAIL     5.44
+     link             3.80 FAIL     5.43
+
+   The 1.75 was td.unattributed, the site's own abstention marker, on the majority
+   of rows. The least certain cell on the page was the least legible one, so the
+   site's conservatism was the part a reader could not see. That is a semantic
+   failure as much as a standards one. */
+:root {
+  --rbp-text-secondary: #52585e;
+  --rbp-text-muted: #595f66;
+  --rbp-link: #0a58ca;
+  /* Two sticky offsets have to agree, so the header height is a token. */
+  --rbp-thead-h: 2.5rem;
+}
+[data-theme="dark"] {
+  --rbp-text-secondary: #b6bece;
+  --rbp-text-muted: #9aa3b2;
+  --rbp-link: #7cb0ff;
+}
+
+table.rbp th { color: var(--rbp-text-secondary); }
+table.rbp td.desc { color: var(--rbp-text-secondary); }
+table.rbp td.unattributed { color: var(--rbp-text-muted); }
+table.rbp a { color: var(--rbp-link); }
+.qualifier, .result-count, .filters label,
+.page-header p.text-muted, .text-muted { color: var(--rbp-text-secondary); }
+.metric-base { color: var(--rbp-text-muted); opacity: 1; }
+
+table.rbp thead th {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  /* Its own fill. It previously shared the even-row stripe token, so a sticky
+     header scrolled over rows of the same colour. */
+  background: var(--color-bg-content);
+  box-shadow: inset 0 -2px 0 var(--color-border);
+  height: var(--rbp-thead-h);
+}
+
+/* FOCUS. One outline rule existed in the entire project, so no focus treatment
+   was ever designed, on a site whose primary surface is a sortable table. */
+a:focus-visible,
+button:focus-visible,
+[tabindex]:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--rbp-link);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Sorting was a click listener on a non-focusable th: seven columns unreachable
+   without a pointer (SC 2.1.1, level A), while aria-sort was maintained
+   correctly, so the state was announceable and the control was inoperable. */
+table.rbp th button.sortbtn {
+  all: unset;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  width: 100%;
+}
+table.rbp th button.sortbtn:hover { color: var(--rbp-link); }
+
+table.rbp caption {
+  caption-side: top;
+  text-align: left;
+  padding: 0 0 var(--spacing-sm);
+  font-size: 0.85rem;
+  color: var(--rbp-text-secondary);
+  max-width: 90ch;
+}
+
+/* Empty is not a warning, so it does not get .caveat warn's amber. */
+.empty-state {
+  border: 1px dashed var(--color-border);
+  border-radius: var(--border-radius);
+  padding: var(--spacing-lg);
+  color: var(--rbp-text-secondary);
+  text-align: center;
+  margin: var(--spacing-lg) 0;
+}
+.empty-state strong { color: var(--color-text-primary); }
+
+/* BELOW 768px the table laid out at min-content 2,488px inside a 351px wrapper, a
+   7.1x overflow that `min-width: 940px` guarantees can never reflow, so 86% of
+   every row was off screen and Inferred owner was never visible on a phone. And
+   `.filters` wrapped between each label and its own control, so three visible
+   labels sat beside controls they did not describe.
+
+   rbp.css contained ZERO @media rules, so this is the first breakpoint in a layer
+   that had none. */
+@media (max-width: 767px) {
+  .filters { display: grid; grid-template-columns: 1fr; gap: var(--spacing-xs); }
+  .filters label { margin-bottom: -0.25rem; }
+  .filters input[type="search"], .filters select { width: 100%; min-width: 0; }
+
+  .tablewrap { max-height: none; overflow: visible; }
+  table.rbp { min-width: 0; }
+  table.rbp thead { display: none; }
+  table.rbp, table.rbp tbody, table.rbp tr, table.rbp td { display: block; width: auto; }
+  table.rbp tr {
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+  }
+  table.rbp td {
+    border: 0;
+    padding: 0.2rem 0;
+    text-align: left !important;
+  }
+  /* The label comes from the cell, so a hedge sits next to the claim it
+     qualifies rather than in a header row that is no longer on screen. */
+  table.rbp td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--rbp-text-muted);
+    display: block;
+  }
+  table.rbp td.desc { min-width: 0; }
+  .lead-count { word-break: break-word; }
+}
+
+/* PRINT stripped every hedge. The inherited print block forces
+   `color: #212529 !important` on td, th, span and a, which collapses the entire
+   certainty vocabulary to one ink: a candidate MUST becomes indistinguishable
+   from a SHOULD, and the abstention marker loses its distinction. It also never
+   reset .tablewrap's overflow or the table's min-width, so an overflow box with
+   no scrollbar clipped the page. */
+@media print {
+  .tablewrap { max-height: none !important; overflow: visible !important; }
+  table.rbp { min-width: 0 !important; font-size: 8pt; }
+  table.rbp thead th { position: static !important; }
+  /* Keep the vocabulary legible in one ink by giving each chip a border and a
+     visible label, rather than relying on colour that print flattens. */
+  .chip { border: 1px solid #212529 !important; background: transparent !important; }
+  .chip-must::after { content: " (MUST)"; }
+  .chip-unmeasured::after { content: " (not measurable)"; }
+  td.unattributed::after { content: " (no owner inferred)"; font-style: normal; }
+  .caveat, .empty-state, blockquote { border: 1px solid #212529 !important; }
+  /* A printed page cannot be scrolled to the caveats, so keep them with the table. */
+  .caveat, .bound-strip { page-break-inside: avoid; }
+  .nav, .theme-toggle, .nav-toggle, .skip-link, .chart-export-btn { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* The front page's h1. The lead count is the visual heading, so the h1 names the
+   thing and sits above it small: the page that will be ranked and linked most had
+   no h1 at all and an outline starting at H2. Not visually-hidden, because a
+   heading a sighted reader cannot see is its own problem. */
+h1.visually-quiet {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--rbp-text-muted);
+  margin: 0 0 var(--spacing-sm);
 }

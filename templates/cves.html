@@ -36,9 +36,9 @@
     <option value="90">90</option>
     <option value="180">180</option>
   </select>
-  <span class="result-count" id="count"></span>
-  <a class="chart-export-btn" href="data/rbp.csv" download>CSV</a>
-  <a class="chart-export-btn" href="data/rbp.json" download>JSON</a>
+  <span class="result-count" id="count" role="status" aria-live="polite"></span>
+  <span id="exports"><a class="chart-export-btn" href="data/rbp.csv" download>CSV</a>
+  <a class="chart-export-btn" href="data/rbp.json" download>JSON</a></span>
 </div>
 
   <p class="small text-muted mb-1">
@@ -46,18 +46,36 @@
     the first sentence, with URLs and tracker annotations removed. Not a title, and
     not analysis by this site. <a href="data.html">Details</a>.
   </p>
-<div class="tablewrap">
+{# tabindex + role + accessible name: the scroll container overflowed by 322px
+   with none of the three, so a keyboard user could not scroll it and a screen
+   reader announced nothing about it. #}
+<div class="tablewrap" tabindex="0" role="region"
+     aria-label="Reserved but Public CVE IDs, sortable and filterable">
   <table class="rbp" id="tbl">
+    {# The caption carries the certainty statement, so the qualifier travels with
+       the table into a copy, a print or a screen reader rather than living in a
+       caveat block below it. #}
+    <caption>
+      {{ summary.total | commafy }} reserved CVE IDs referenced publicly for at least
+      {{ summary.get('min_age_days', 7) }} days with no published record. Owner is
+      <strong>inferred</strong>, never authoritative, and is absent on rows where the
+      inference abstained. Days public is a floor on how long an ID has been public,
+      not a measure of lateness.
+    </caption>
     <thead>
       <tr>
-        <th data-sort="cve_id">CVE ID</th>
-        <th class="num" data-sort="days_public" aria-sort="descending">Days public</th>
-        <th data-sort="rule">Rule</th>
-        <th data-sort="owner">Inferred owner</th>
-        <th data-sort="package">Package</th>
-        <th class="num" data-sort="indep_sources">Independent sources</th>
-        <th data-sort="sources">Sources</th>
-        <th>Advisory summary</th>
+        {# A <button> inside each sortable th. Sorting was a click listener on a
+           non-focusable th, so seven columns were unreachable without a pointer
+           (SC 2.1.1, level A) while aria-sort was maintained correctly: the state
+           was announceable and the control was inoperable. #}
+        <th scope="col" data-sort="cve_id"><button type="button" class="sortbtn">CVE ID</button></th>
+        <th scope="col" class="num" data-sort="days_public" aria-sort="descending"><button type="button" class="sortbtn">Days public</button></th>
+        <th scope="col" data-sort="rule"><button type="button" class="sortbtn">Rule</button></th>
+        <th scope="col" data-sort="owner"><button type="button" class="sortbtn">Inferred owner</button></th>
+        <th scope="col" data-sort="package"><button type="button" class="sortbtn">Package</button></th>
+        <th scope="col" class="num" data-sort="indep_sources"><button type="button" class="sortbtn">Independent sources</button></th>
+        <th scope="col" data-sort="sources"><button type="button" class="sortbtn">Sources</button></th>
+        <th scope="col">Advisory summary</th>
       </tr>
     </thead>
     <tbody id="body"></tbody>
@@ -140,11 +158,11 @@
 
   function ownerCell(r) {
     if (!r.owner || r.owner === 'unattributed') {
-      return '<td class="unattributed">unattributed</td>';
+      return '<td class="unattributed" data-label="Inferred owner">unattributed</td>';
     }
     var tier = r.owner_tier === 'block-corroborated' ? 'chip-corrob' : 'chip-block';
     var label = r.owner_tier === 'block-corroborated' ? 'corroborated' : 'block';
-    return '<td><a href="cna/' + esc(slug(r.owner)) + '.html">' + esc(r.owner) + '</a> ' +
+    return '<td data-label="Inferred owner"><a href="cna/' + esc(slug(r.owner)) + '.html">' + esc(r.owner) + '</a> ' +
       '<span class="chip ' + tier + '">' + label + '</span></td>';
   }
 
@@ -185,20 +203,38 @@
       // a chip on all of them is noise; the page copy states it once instead.
       var late = (SHOW_LATE && r.past_expectation)
         ? ' <span class="chip chip-late">past ' + {{ expectation_hours }} + 'h</span>' : '';
+      // data-label on every cell. Below 768px the thead is hidden and each row
+      // becomes a card, so the label has to travel with the cell: the table laid
+      // out at 2,488px min-content in a 351px wrapper, a 7.1x overflow that
+      // min-width guaranteed could never reflow, so 86% of every row was off
+      // screen and Inferred owner was never visible on a phone.
       return '<tr>' +
-        '<td class="id"><a href="' + esc(r.advisory_url) + '">' + esc(r.cve_id) + '</a></td>' +
-        '<td class="num">' + esc(r.days_public) + late + '</td>' +
-        '<td>' + ruleChip(r) + '</td>' +
+        '<td class="id" data-label="CVE ID"><a href="' + esc(r.advisory_url) + '">' + esc(r.cve_id) + '</a></td>' +
+        '<td class="num" data-label="Days public">' + esc(r.days_public) + late + '</td>' +
+        '<td data-label="Rule">' + ruleChip(r) + '</td>' +
         ownerCell(r) +
-        '<td>' + esc(r.package || r.vendor || '') + '</td>' +
+        '<td data-label="Package">' + esc(r.package || r.vendor || '') + '</td>' +
         // The honest count. feed_count treats GHSA and its own OSV mirror as two.
-        '<td class="num">' + esc(r.indep_sources == null ? r.feed_count : r.indep_sources) +
+        '<td class="num" data-label="Independent sources">' + esc(r.indep_sources == null ? r.feed_count : r.indep_sources) +
           (r.feed_count > (r.indep_sources == null ? r.feed_count : r.indep_sources)
             ? ' <span class="qualifier">of ' + esc(r.feed_count) + ' feeds</span>' : '') + '</td>' +
-        '<td class="mono small">' + esc(r.sources) + '</td>' +
-        '<td class="desc">' + esc(r.description) + '</td>' +
+        '<td class="mono small" data-label="Sources">' + esc(r.sources) + '</td>' +
+        '<td class="desc" data-label="Advisory summary">' + esc(r.description) + '</td>' +
       '</tr>';
     }).join('');
+
+    // An explicit empty state. render() replaced innerHTML wholesale, so a filter
+    // matching nothing produced an empty tbody and announced nothing at all.
+    if (!rows.length) {
+      body.innerHTML = '<tr><td colspan="8">' +
+        '<div class="empty-state"><strong>No rows match these filters.</strong><br>' +
+        'The snapshot holds ' + ROWS.length + ' rows. Clear a filter to see them.' +
+        '</div></td></tr>';
+    }
+    // Export links on a zero-row table produce a header-only file.
+    var ex = document.getElementById('exports');
+    if (ex) ex.style.display = rows.length ? '' : 'none';
+
     countEl.textContent = rows.length + ' of ' + ROWS.length + ' rows';
     writeUrl();
   }
@@ -219,8 +255,13 @@
     if (p.get('sort')) { sortKey = p.get('sort'); sortDir = p.get('dir') === 'asc' ? 1 : -1; }
   }
 
+  // Bound to the BUTTON, not the th. The listener was on a non-focusable th, so
+  // seven columns were unreachable without a pointer (SC 2.1.1, level A) while
+  // aria-sort was maintained correctly: the state was announceable and the control
+  // was inoperable. A button gets keyboard activation, focus and a role for free.
   document.querySelectorAll('th[data-sort]').forEach(function (th) {
-    th.addEventListener('click', function () {
+    var btn = th.querySelector('button.sortbtn') || th;
+    btn.addEventListener('click', function () {
       var k = th.getAttribute('data-sort');
       if (k === sortKey) { sortDir = -sortDir; } else { sortKey = k; sortDir = -1; }
       document.querySelectorAll('th[data-sort]').forEach(function (o) {

@@ -1,8 +1,16 @@
 {% extends "base.html" %}
-{% block title %}RBP Tracker{% endblock %}
+{# The page that will be ranked and linked most was headingless (the outline
+   started at H2) and generically titled, with no og_title override, while every
+   other template had all three. #}
+{% block title %}Reserved but Public: {{ summary.total | commafy }} CVE IDs reserved, public, unpublished{% endblock %}
+{% block og_title %}Reserved but Public CVE IDs{% endblock %}
 
 {% block content %}
 <div class="page-header">
+  {# An h1. document.querySelectorAll('h1') was empty on this page and the outline
+     started at H2. Visually the lead count IS the heading, so the h1 carries the
+     name of the thing and the count sits beneath it as the figure. #}
+  <h1 class="visually-quiet">Reserved but Public CVE IDs</h1>
   {# Lead with the CORROBORATED figure, not the total.
      Measured: 350 of 522 rows rest on a single independent origin, and the site has
      computed the two-or-more subset since the beginning, printed it to the build
@@ -179,8 +187,8 @@
     </p>
     <table class="table table-sm small">
       <thead>
-        <tr><th>CNA</th><th class="num">Rows named</th>
-            <th class="num">Share of the {{ summary.named_cnas }} named CNAs' rows</th></tr>
+        <tr><th scope="col">CNA</th><th scope="col" class="num">Rows named</th>
+            <th scope="col" class="num">Share of the {{ summary.named_cnas }} named CNAs' rows</th></tr>
       </thead>
       <tbody>
         {% set named_total = cnas | sum(attribute='outstanding') %}

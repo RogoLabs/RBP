@@ -95,8 +95,8 @@
   <table class="rbp">
     <thead>
       <tr>
-        <th>CVE ID</th><th class="num">Days public</th><th>Rule</th>
-        <th>Confidence</th><th>Package</th><th>Sources</th><th>Advisory summary</th>
+        <th scope="col">CVE ID</th><th scope="col" class="num">Days public</th><th scope="col">Rule</th>
+        <th scope="col">Confidence</th><th scope="col">Package</th><th scope="col">Sources</th><th scope="col">Advisory summary</th>
       </tr>
     </thead>
     <tbody>
@@ -140,7 +140,7 @@
     </p>
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th>CVE ID</th><th class="num">Days to publish</th><th>First public</th><th>Published</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days to publish</th><th scope="col">First public</th><th scope="col">Published</th></tr></thead>
         <tbody>
           {% for r in cna_resolved %}
           <tr>
