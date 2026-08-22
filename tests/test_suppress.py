@@ -535,3 +535,41 @@ def test_a_closed_issue_is_not_read_at_all():
     import inspect
     src = inspect.getsource(suppress.from_issues)
     assert "state=open" in src
+
+
+def test_a_suppressed_row_is_dropped_from_the_published_count_not_just_the_files():
+    """The failure this replaced. Suppression was applied only inside report.build,
+    so backlog.json lost the withheld row while clock.summary still counted it, and
+    _assert_consistent refused to publish 521 rows under a headline of 522.
+
+    That guard did its job and the build failed closed rather than publishing
+    contradictory numbers. But the cause was cli.py's own stated rule being broken:
+    one population, computed once, and one writer filtered a population the others
+    did not. Grep-style, because the rule lives in a comment and comments do not
+    hold."""
+    import pathlib
+    src = (pathlib.Path(__file__).parent.parent / "rbp" / "cli.py").read_text()
+    start = src.index("reportable = [r for r in backlog")
+    # Bounded by the next statement rather than by the first "]", which the first
+    # version of this test used and which lands inside r["days_public"].
+    end = src.index("clock.split_epoch(reportable)", start)
+    block = src[start:end]
+    assert 'not r.get("suppressed")' in block, (
+        "cli.py builds `reportable` without excluding suppressed rows, so "
+        "clock.summary and backlog.json will disagree about the total again")
+
+
+def test_a_previously_named_suppressed_row_loses_its_ledger_prediction():
+    """grader.withdraw KEEPS whatever is in record_for. inference refuses to record
+    a NEW prediction for a suppressed row, but an old one from an earlier run would
+    have survived, leaving the CVE ID and the inferred CNA name in precision.json on
+    the public data branch. The withhold would have been complete everywhere a
+    reader looks and incomplete in the one file recording who this site accused."""
+    import pathlib
+    src = (pathlib.Path(__file__).parent.parent / "rbp" / "cli.py").read_text()
+    assert "_published_ids -= _suppressed_ids" in src, (
+        "suppressed ids are still inside record_for, so grader.withdraw will "
+        "retain their earlier predictions")
+    # And the subtraction must happen AFTER the lever is loaded, or it subtracts
+    # from a set that does not know what is suppressed yet.
+    assert src.index("sup = suppress.load(") < src.index("_published_ids -= ")

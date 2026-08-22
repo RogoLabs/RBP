@@ -164,6 +164,20 @@ def cmd_run(args):
     # 25 of 522 is nothing, 25 of 40 would be most of the site.
     sup = suppress.load(os.path.join(ROOT, suppress.DEFAULT_LIST),
                         backlog_size=len(_published_ids))
+    # Suppressed ids leave `record_for` as well as the artefacts.
+    #
+    # inference already refuses to RECORD a new prediction for a suppressed row,
+    # but `record_for` is also what grader.withdraw keeps: anything in the set is
+    # retained. So a row that was named on an earlier run and is withheld today
+    # would have kept its old prediction, CVE ID and inferred CNA name, alive in
+    # precision.json on the public data branch. The withhold would have been
+    # complete everywhere a reader looks and incomplete in the one file that
+    # records who this site accused.
+    _suppressed_ids = {c for c in _published_ids if c in sup}
+    _published_ids -= _suppressed_ids
+    if _suppressed_ids:
+        print(f"  dropped {len(_suppressed_ids)} suppressed id(s) from the grader "
+              "ledger scope, so any earlier prediction for them is withdrawn")
     validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
                                             suppressed=sup,
                                             record_for=_published_ids,
@@ -193,10 +207,20 @@ def cmd_run(args):
     print(f"  CNA coverage: {cov['covered_cnas']}/{cov['total_cnas']} CNAs "
           f"({cov['pct_cnas']}%); observed {cov['observed_pct']}% of CVEs")
     # One population, computed once, then passed to every writer. Buffer, then
-    # epoch. report.build no longer derives its own.
+    # epoch, then suppression. report.build no longer derives its own.
+    #
+    # Suppression belongs HERE and not only inside report.build. It was applied
+    # only there, so backlog.json lost the withheld row while clock.summary still
+    # counted it, and _assert_consistent refused to publish 521 rows under a
+    # headline of 522. That guard did its job: the numbers were contradictory and
+    # the build failed closed rather than publishing them. But the cause was this
+    # comment's own rule being broken, one writer filtering a population the
+    # others did not, which is the fifth time in this project that two stages have
+    # disagreed about which rows exist.
     reportable = [r for r in backlog
                   if isinstance(r.get("days_public"), int)
-                  and r["days_public"] >= args.min_age_days]
+                  and r["days_public"] >= args.min_age_days
+                  and not r.get("suppressed")]
     reportable, pre_epoch = clock.split_epoch(reportable)
     if pre_epoch:
         oldest = max((r["days_public"] for r in pre_epoch), default=None)
