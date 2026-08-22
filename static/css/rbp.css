@@ -55,6 +55,16 @@
 }
 .chip-must    { background: rgba(220, 53, 69, 0.12);  color: var(--color-danger); }
 .chip-should  { background: rgba(108, 117, 125, 0.14); color: var(--color-text-secondary); }
+/* The "we cannot tell" bucket. Deliberately an outline rather than a fill, so it
+   does not read as a third category of finding sitting alongside MUST and
+   SHOULD. It is the absence of a measurement, and it is the largest column on
+   the page, so it has to look like a gap and not like a verdict. */
+.chip-unmeasured {
+  background: transparent;
+  color: var(--color-text-secondary);
+  border: 1px dashed rgba(108, 117, 125, 0.55);
+  padding: calc(0.16em - 1px) calc(0.5em - 1px);
+}
 .chip-late    { background: rgba(255, 193, 7, 0.18);  color: #8a6100; }
 .chip-corrob  { background: rgba(25, 135, 84, 0.12);  color: var(--color-success); }
 .chip-block   { background: rgba(13, 110, 253, 0.10); color: var(--color-primary); }

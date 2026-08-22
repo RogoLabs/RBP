@@ -40,10 +40,21 @@ from . import clock
 #
 # Flip with RBP_LAUNCHED=1, wired to a repository variable so it is a settings
 # change rather than a commit. The launch gate is 50% CNA coverage (PLAN.md).
-# Minimum cnas_own_channel percentage before the front door may become the
-# dashboard. Gated on the STRICT coverage figure, not on the sighted count: a
-# single sighting through any feed used to credit a CNA as covered, so the gate
-# could clear while no critical-infrastructure CNA was measurable at all.
+# Minimum coverage before the front door may become the dashboard, measured on
+# cnas_effective: CNAs seen at least MIN_SIGHTINGS times, which is the same floor
+# inference uses before it will attach a name to a row.
+#
+# This was briefly gated on cnas_own_channel instead, reasoning that it was the
+# stricter figure. It is stricter, but it is bounded by the number of
+# hand-written owner-feed parsers, which is three, so the ceiling was 3/434 =
+# 0.7% against a 50% gate: the gate could never clear. A launch would have
+# produced a red check forever, with nothing to distinguish a threshold that was
+# merely distant from one that was unreachable. That was found by reading a
+# summary artefact, not by a test, so test_gate_threshold_is_reachable now
+# asserts the gate figure can in principle reach GATE_PCT.
+#
+# The objection that motivated own-channel still stands and is answered instead
+# by the floor: a single stray sighting no longer credits a CNA as covered.
 GATE_PCT = 50.0
 
 
@@ -115,29 +126,36 @@ def _read_strict(path):
 
 
 def _gate_status(summary):
-    """Is the launch gate cleared, on the strict coverage figure?
+    """Is the launch gate cleared, on the effective coverage figure?
 
     Reported whether or not the flag is set, so /method can state the position
-    truthfully at any time rather than only when someone tries to launch.
+    truthfully at any time rather than only when someone tries to launch. All
+    three coverage figures are returned, because a reader asking "can this site
+    see my CNA" and a reader asking "could this site ever call my CNA a 4.5.1.4
+    breach" are asking different questions with different answers.
     """
     cov = summary.get("coverage") or {}
     total = cov.get("total_cnas") or 0
-    own = cov.get("cnas_own_channel")
+    eff = cov.get("cnas_effective")
     sighted = cov.get("cnas_sighted", cov.get("covered_cnas"))
-    if not total or own is None:
+    if not total or eff is None:
         return {"cleared": False, "pct": None, "required": GATE_PCT,
                 "reason": "coverage was not measured in this snapshot"}
-    pct = round(100 * own / total, 1)
+    pct = round(100 * eff / total, 1)
+    floor = cov.get("min_sightings")
     return {
         "cleared": pct >= GATE_PCT,
         "pct": pct,
         "required": GATE_PCT,
-        "own_channel": own,
+        "effective": eff,
+        "min_sightings": floor,
+        "own_channel": cov.get("cnas_own_channel"),
         "sighted": sighted,
         "total": total,
         "profile": cov.get("profile"),
-        "reason": (f"own-channel coverage is {pct}% of {total} CNAs, "
-                   f"below the {GATE_PCT}% gate"),
+        "reason": (f"coverage is {pct}% of {total} CNAs seen at least "
+                   f"{floor if floor is not None else '?'} times, below the "
+                   f"{GATE_PCT}% gate"),
     }
 
 
@@ -299,6 +317,12 @@ def load(snap_root, data_dir):
         "summary": summary,
         "cnas": cnas,
         "changes": changes,
+        # _gate_status' own docstring said "reported whether or not the flag is
+        # set, so /method can state the position truthfully at any time", and then
+        # it was never passed to a template, so no page could state it at all.
+        # Same shape as days_public, self_disclosed, feed health, the epoch and
+        # PAGES-at-import: computed in one stage, read in none.
+        "gate": gate,
         # Split at the render boundary, not in the templates. Both states used
         # to share one list that the templates sorted on days_to_publish, which
         # is None for a rejection, and Jinja's sort filter calls sorted(), so one

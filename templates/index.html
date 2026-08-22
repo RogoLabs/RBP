@@ -90,21 +90,34 @@
   <div class="card-body">
     <p>
       RBP Policy v2.0.0 expects publication within {{ expectation_hours }} hours and points
-      at two CNA Operational Rules sections that are not interchangeable.
+      at two CNA Operational Rules sections that are not interchangeable. Which one
+      applies turns on who disclosed first, and for most rows that is not something
+      this site can see.
     </p>
+    {% set unmeasurable = summary.unmeasurable_rows or 0 %}
+    {% set third_party = (summary.candidate_rows or 0) - (summary.must_rows or 0) %}
     <div class="metric-grid">
       <div class="metric-card">
-        <div class="metric-value">{{ summary.should_rows | commafy }}</div>
+        <div class="metric-value">{{ unmeasurable | commafy }}</div>
+        <div class="metric-label">
+          <span class="chip chip-unmeasured">Not measurable</span><br>
+          Who disclosed first cannot be established from the feeds this site
+          reads. Counted under {{ rule_should }} because that is the weaker
+          reading, not because a third party was observed.
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ third_party | commafy }}</div>
         <div class="metric-label">
           <span class="chip chip-should">{{ rule_should }} SHOULD</span><br>
-          A third party disclosed. The ordinary distro case.
+          A third party was observed publishing first. The ordinary distro case.
         </div>
       </div>
       <div class="metric-card">
         <div class="metric-value">{{ summary.must_rows | commafy }}</div>
         <div class="metric-label">
           <span class="chip chip-must">{{ rule_must }} MUST</span><br>
-          The owning CNA's own advisory feed carried it.
+          The owning CNA's own advisory channel carried it first.
         </div>
       </div>
     </div>
@@ -113,8 +126,10 @@
         Every {{ rule_must }} reading here is a <strong>candidate</strong>, not an
         established breach. Ownership is always inferred for a reserved ID, because
         the reservation endpoint redacts it for exactly that population. Where the
-        owner is unknown, the weaker rule is the only honest reading, so
-        {{ rule_should }} is the default.
+        owner is unknown, or where the ordering cannot be seen, the weaker rule is
+        the only honest reading, so {{ rule_should }} is the default. The first
+        column is the size of that default: it is a statement about this site's
+        visibility, and nothing at all about the CNA.
       </p>
     </div>
   </div>

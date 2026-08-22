@@ -360,15 +360,37 @@ instrument, and the closures prove the open rows are real.
   and turn the accuracy claim back into a promise. Held-back rows keep their real ages,
   stay in the raw data, and their count is disclosed on `/method` and `/cves`: a filter
   that removes the oldest and strongest evidence has to be visible.
-- **LAUNCH GATE: 50% CNA coverage.** Nothing is shared or promoted publicly until feeds
-  touch at least **half of all CNAs**. Progress: 36.4% (158 of 434) on the nine-feed
-  weekly profile, **40.6% (176 of 434) with CSAF added**, measured 2026-08-20. CSAF was
-  worth +18 CNAs, about a third of the gap. Reaching 217 needs roughly **41 more CNAs**. The site stays live throughout; the gate is on
-  promotion, not deployment. Below half the landscape the backlog reads as a partial
-  sample of whichever ecosystems happen to be instrumented, and a CNA absent from the
-  site could fairly say the measurement never looked at it. Expansion targets are the
-  Tier A and Tier B lists in VISION.md; a generic CSAF ingester is the highest
-  value-per-effort item, since one fetch unlocks many vendor CNAs.
+- **LAUNCH GATE: 50% CNA coverage, on `cnas_effective`.** Nothing is shared or promoted
+  publicly until feeds touch at least **half of all CNAs**, counting a CNA as touched
+  only once at least `MIN_SIGHTINGS` (3) of its published CVEs have been seen. That is
+  deliberately the same floor `inference.attribute` requires before it will attach a
+  name, so the gate cannot clear on CNAs the site would then refuse to name.
+
+  **Three coverage figures exist and only one is the gate.** They differ by a factor of
+  sixty, so naming which one is being quoted matters more than the number:
+
+  | figure | means | 2026-08-21 |
+  |---|---|---|
+  | `cnas_sighted` | any one of its CVEs was seen, even once | 159 / 434 = **36.6%** |
+  | `cnas_effective` | seen >= 3 times. **This is the gate.** | 121 / 434 = **27.9%** |
+  | `cnas_own_channel` | its own advisory feed is ingested | 2 / 434 = **0.5%** |
+
+  Reaching the gate needs 217 effective, so roughly **96 more CNAs**.
+
+  Earlier revisions of this line quoted 36.4% and 40.6%: those were `cnas_sighted`,
+  where a single incidental reference credits a CNA. The gate was briefly *coded*
+  against `cnas_own_channel`, which is bounded by the number of hand-written owner-feed
+  parsers (three), giving a 0.7% ceiling against a 50% threshold: **the gate could never
+  clear**, and because failing a gate and not yet meeting one produce the identical
+  pre-launch site, nothing surfaced it. `test_gate_threshold_is_reachable` now asserts
+  the gate figure can reach its own threshold.
+
+  The site stays live throughout; the gate is on promotion, not deployment. Below half
+  the landscape the backlog reads as a partial sample of whichever ecosystems happen to
+  be instrumented, and a CNA absent from the site could fairly say the measurement never
+  looked at it. Expansion targets are the Tier A and Tier B lists in VISION.md; a generic
+  CSAF ingester is the highest value-per-effort item, since one fetch unlocks many
+  vendor CNAs.
 - **Phase 6: notify, then go loud**. Site is live throughout; before *promoting* it,
   send per-CNA row exports plus a note to the QWG and Secretariat. Not permission-seeking -
   a correction window that makes "you never told us" unavailable.
@@ -461,6 +483,57 @@ leaderboard is the evidence; the redaction is the story.
 
   85 rows come from undated feeds and can never be reportable at any buffer, which is its
   own honest limitation to state on `/method`.
+
+## 8b. Guard taxonomy (review r3 item 10)
+
+Every guard in this codebase answers one question: **what does it cost to be wrong in
+each direction?** Getting that backwards has now caused more outages than the bugs the
+guards were added for, so the rule is written down rather than re-derived each time.
+
+**Three kinds of guard, and only the first may stop a publication.**
+
+1. **Refuse: the data would make a false statement about a named third party.**
+   Publishing is worse than not publishing, so raise and fail the build. A name on an
+   uncounted row, a name absent from `cnas.json`, a name outside the covered set, an
+   ungated `product_map_*` field, a ledger prediction for an unpublished row. These are
+   `rbp.publish.check` and `site.assert_artefact`, and they must stay loud.
+
+2. **Clean: the data is correct but ugly.** Fix it at the publishable boundary and
+   continue. A description reading `NOTE: bookkeeping`, `[unknown]` or `security update`
+   is poor display text, not a misattribution. `report._clean_description` falls back to
+   the package name.
+
+3. **Report: the run is degraded but honest.** Publish, and publish the degradation
+   beside it. A failed feed, a truncated feed, an undated row, an unmeasurable disclosure
+   ordering, a precision figure below `GRADER_MIN_N`. Never silently drop, never block.
+
+**Never fail dark.** The deploy job is `needs: build` with no `if:`, so anything that
+exits non-zero in `build` skips the deploy and Pages serves the previous artefact
+indefinitely with no notification. A guard in class 1 is worth that cost. A guard in
+class 2 or 3 is not: it freezes the site four times a day over cosmetics, and it looks
+identical to a build problem.
+
+### The two mistakes this section exists to prevent
+
+Both happened on 2026-08-21, in opposite directions, and neither was caught by a test.
+
+- **A class-2 problem written as a class-1 guard.** `assert_artefact` was made to refuse
+  any description starting with `NOTE:`. Six such rows exist in live data, so the first
+  real gated deploy went red on data that was entirely correct. Fixed by cleaning
+  instead. *Tell: the guard's failure message could not name a third party who would be
+  harmed by publishing.*
+
+- **A guard that could never fire, and looked exactly like one that had not fired yet.**
+  The launch gate was keyed to `cnas_own_channel`, bounded by three hand-written
+  owner-feed parsers, so a 50% threshold had a 0.7% ceiling. Nothing failed: an
+  unreachable gate and a distant gate produce the identical pre-launch site. Found by
+  reading a summary artefact by hand. *Tell: no test asserted the guard's own threshold
+  was satisfiable.* `test_gate_threshold_is_reachable` now does.
+
+The second is the more dangerous shape, because the failure is silence. **A guard whose
+threshold is a number needs a test that the number is reachable**, and a guard whose
+"blocked" state is indistinguishable from its "not yet" state needs something that tells
+them apart.
 
 ## 9. Still open
 

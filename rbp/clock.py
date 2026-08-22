@@ -518,6 +518,19 @@ def summary(rows, cnas, today=None, undated_excluded=0, epoch_excluded=0):
         "top_owner_share": _top_share(cnas),
         "must_rows": sum(1 for r in rows if r.get("rule") == RULE_MUST),
         "should_rows": sum(1 for r in rows if r.get("rule") == RULE_SHOULD),
+        # The certainty split, published because without it the SHOULD count is
+        # read as a measurement. It is not: an unmeasurable ordering falls to
+        # SHOULD because SHOULD is the weaker claim, so the bucket mixes "a third
+        # party demonstrably disclosed first" with "who disclosed first cannot be
+        # seen from here". On live data that is 505 of 506 rows in the second
+        # group, and the site was rendering the whole bucket as "a third party
+        # disclosed", which is an assertion about third parties it cannot
+        # support. Counted from rule_certainty, which annotate() already set
+        # correctly; the defect was only ever in the display.
+        "unmeasurable_rows": sum(1 for r in rows
+                                 if r.get("rule_certainty") == "unmeasurable"),
+        "candidate_rows": sum(1 for r in rows
+                              if r.get("rule_certainty") == "candidate"),
         "age_buckets": _buckets(ages),
     }
 

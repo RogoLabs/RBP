@@ -121,8 +121,13 @@
     // and to screen readers) and not crammed inside an 11.5px chip. Ownership is
     // always inferred for a reserved ID, so a MUST is always a candidate.
     var must = r.rule === '{{ rule_must }}';
-    var cert = r.rule_certainty || 'candidate';
-    return '<span class="chip ' + (must ? 'chip-must' : 'chip-should') + '">' +
+    // Absence defaults to the WEAKER label. This read `|| 'candidate'`, so a row
+    // with no certainty field was captioned as a candidate finding, which is the
+    // stronger of the two readings, on the strength of a missing value.
+    var cert = r.rule_certainty || 'unmeasurable';
+    var cls = must ? 'chip-must'
+      : cert === 'unmeasurable' ? 'chip-unmeasured' : 'chip-should';
+    return '<span class="chip ' + cls + '">' +
       esc(r.rule) + ' ' + esc(r.rule_strength) + '</span>' +
       '<span class="qualifier">' + esc(cert) +
       (r.rule_basis ? ', ' + esc(r.rule_basis).replace(/-/g, ' ') : '') + '</span>';

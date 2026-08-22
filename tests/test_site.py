@@ -38,6 +38,7 @@ def built(tmp_path, monkeypatch):
     (snaps / "summary.json").write_text(json.dumps({
         "total": 1, "past_expectation": 1, "oldest_days": 30, "median_days": 30,
         "named_cnas": 1, "must_rows": 0, "should_rows": 1, "clock_unknown": 0,
+        "unmeasurable_rows": 1, "candidate_rows": 0,
         "undated_excluded": 4, "min_age_days": 7,
         "age_buckets": {"7-30d": 1},
         "inference": {"k": 3, "run_coverage": 1.0,
@@ -48,8 +49,10 @@ def built(tmp_path, monkeypatch):
         "feeds": {"requested": ["debian"], "failures": [], "attempts": 1},
         # Above the gate, so the launched posture can be tested at all. The gate
         # fails closed, so a fixture without coverage never launches.
-        "coverage": {"total_cnas": 10, "cnas_own_channel": 6, "cnas_sighted": 8,
-                     "pct_cnas": 80.0, "profile": "weekly"},
+        "coverage": {"total_cnas": 10, "cnas_effective": 6, "cnas_own_channel": 1,
+                     "cnas_sighted": 8, "min_sightings": 3, "pct_cnas": 80.0,
+                     "pct_effective": 60.0, "observed_pct": 12.5,
+                     "profile": "weekly"},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30,
@@ -78,6 +81,55 @@ def test_prelaunch_front_door_is_the_holding_page(built):
     assert "Reserved but Public" in index
     assert (out / "overview.html").exists()
     assert "lead-count" in (out / "overview.html").read_text()
+
+
+def test_the_rule_card_does_not_present_an_unmeasurable_ordering_as_measured(built):
+    """The card had two columns, SHOULD and MUST, and labelled the SHOULD count
+    "A third party disclosed. The ordinary distro case." On live data 505 of those
+    506 rows have rule_certainty "unmeasurable": the site cannot see who went
+    first and files them under the weaker rule for that reason. So the label was
+    an assertion about third parties on 505 rows that supported it on one.
+
+    The row-level data was always right. This is the display, which is where the
+    same class of error already appeared twice: a 100% precision headline on n=1,
+    and MUST on an unmeasurable ordering."""
+    dash = (built(False) / "overview.html").read_text()
+    assert "Not measurable" in dash
+    # The measured claim must not be attached to the unmeasurable count.
+    i_unmeasured = dash.index("Not measurable")
+    i_third = dash.index("A third party was observed")
+    seg = dash[i_unmeasured:i_third]
+    assert "cannot be established" in seg
+    assert "not because a third party was observed" in seg
+    # And the old unconditional wording is gone.
+    assert "A third party disclosed." not in dash
+
+
+def test_method_states_all_three_coverage_figures_and_the_gate(built):
+    """"Covered" does three different jobs and the three answers differ by a
+    factor of sixty on live data, so /method quoted the largest of them alone and
+    named neither the gate figure nor the gate position.
+
+    Asserted on the rendered digits, not on the keys. Jinja's default Undefined
+    renders as an empty string, so a renamed or missing coverage key does not
+    raise: it publishes a sentence with a hole where the number was. That is the
+    quiet version of the same failure as the null-sort crash, and the loud fix
+    (StrictUndefined) would kill the build over an optional block, which is the
+    mistake the NOTE: guard already made."""
+    import re
+    raw = (built(False) / "method.html").read_text()
+    # Tags out, whitespace collapsed, so an assertion can tie a figure to its own
+    # row rather than merely finding the digits somewhere on the page. Checking
+    # "60.0%" alone would pass on the gate sentence even with pct_effective gone.
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", raw))
+
+    assert "Sighted 8 / 10 (80.0%)" in text
+    assert "Effective 6 / 10 (60.0%)" in text
+    assert "Own channel 1 / 10" in text
+    assert "figure the launch gate uses" in text
+    assert "Launch gate: 60.0% of 50.0% required" in text
+    # The floor is stated as a number, not described in the abstract.
+    assert "Seen at least 3 times" in text
 
 
 def test_prelaunch_holding_page_does_not_link_into_the_dashboard(built):
@@ -349,6 +401,7 @@ def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
     (snaps / "summary.json").write_text(json.dumps({
         "total": 1, "past_expectation": 1, "oldest_days": 30, "median_days": 30,
         "named_cnas": 1, "must_rows": 0, "should_rows": 1, "clock_unknown": 0,
+        "unmeasurable_rows": 1, "candidate_rows": 0,
         "undated_excluded": 0, "min_age_days": 7, "age_buckets": {"7-30d": 1},
         "top_owner_share": 1.0,
         "inference": {"k": 3, "run_coverage": 1.0,
@@ -359,8 +412,10 @@ def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
                   "truncated": [], "detail": {}},
         # Above the gate: the gate fails closed, so a fixture without coverage
         # never reaches the launched posture.
-        "coverage": {"total_cnas": 10, "cnas_own_channel": 6, "cnas_sighted": 8,
-                     "pct_cnas": 80.0, "profile": "weekly"},
+        "coverage": {"total_cnas": 10, "cnas_effective": 6, "cnas_own_channel": 1,
+                     "cnas_sighted": 8, "min_sightings": 3, "pct_cnas": 80.0,
+                     "pct_effective": 60.0, "observed_pct": 12.5,
+                     "profile": "weekly"},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30, "median_days_public": 30,
@@ -454,11 +509,29 @@ def test_no_template_uses_the_unsafe_jinja_sort_on_a_numeric_field():
             f"{tpl.name} uses Jinja's sort, which raises on a null. Use | sortnum().")
 
 
+def test_no_template_defaults_an_absent_certainty_to_the_stronger_label():
+    """Both row templates defaulted a missing rule_certainty to 'candidate', which
+    is the stronger of the two readings, so absence of a measurement was captioned
+    as a measurement. Grep-style for the same reason as the sort guard: this went
+    wrong independently in two templates, so fixing both by hand is not enough."""
+    import pathlib, re
+    for tpl in (pathlib.Path(__file__).parent.parent / "templates").glob("*.html"):
+        body = tpl.read_text()
+        # Strip comments, which quote the old form deliberately.
+        body = re.sub(r"\{#.*?#\}", "", body, flags=re.S)
+        body = re.sub(r"//.*", "", body)
+        for bad in ("or 'candidate'", '|| "candidate"', "|| 'candidate'",
+                    'or "candidate"'):
+            assert bad not in body, (
+                f"{tpl.name} defaults an absent rule_certainty to 'candidate'. "
+                "Absence must fall to 'unmeasurable', the weaker label.")
+
+
 # --------------------------------------------------------------------------
 # the launch gate (r3 item 7)
 # --------------------------------------------------------------------------
 
-def _summary_with_coverage(total, own):
+def _summary_with_coverage(total, eff, own=0):
     return {"total": 0, "min_age_days": 7, "age_buckets": {},
             "inference": {"k": 3, "run_coverage": 0.0,
                           "leave_one_out": {"precision": 0.99, "coverage": 0.6,
@@ -467,16 +540,66 @@ def _summary_with_coverage(total, own):
                                    "outstanding": 0, "by_tier": {}}},
             "feeds": {"requested": [], "failures": [], "attempts": 0,
                       "truncated": [], "detail": {}},
-            "coverage": {"total_cnas": total, "cnas_own_channel": own,
-                         "cnas_sighted": own, "profile": "weekly"}}
+            "coverage": {"total_cnas": total, "cnas_effective": eff,
+                         "cnas_own_channel": own, "cnas_sighted": eff,
+                         "min_sightings": 3, "profile": "weekly"}}
 
 
-def test_gate_status_uses_the_strict_own_channel_figure():
-    """A single sighting through any feed used to credit a CNA as covered, so the
-    gate could clear while no critical-infrastructure CNA was measurable."""
+def test_gate_status_uses_the_effective_sighting_figure():
     assert site._gate_status(_summary_with_coverage(100, 60))["cleared"] is True
     assert site._gate_status(_summary_with_coverage(100, 40))["cleared"] is False
     assert site._gate_status(_summary_with_coverage(100, 50))["cleared"] is True
+
+
+def test_gate_threshold_is_reachable():
+    """The gate was briefly measured on cnas_own_channel, which is bounded by the
+    number of hand-written owner-feed parsers (three), so a 50% gate had a 0.7%
+    ceiling and could never clear. Nothing failed: the site published its
+    pre-launch posture forever, which is exactly what it does when the gate is
+    merely not yet met, so an unreachable gate was indistinguishable from a
+    distant one. The gate figure must be able to reach its own threshold."""
+    from rbp import clock, coverage as cov_mod
+
+    # The gate reads cnas_effective, which is bounded only by the CNA count.
+    assert site._gate_status(_summary_with_coverage(434, 434))["cleared"] is True
+    assert site._gate_status(
+        _summary_with_coverage(434, int(434 * site.GATE_PCT / 100) + 1))["cleared"] is True
+
+    # Whereas own-channel is bounded by len(OWNER_FEEDS), and the assertion that
+    # matters is that the gate is NOT keyed to it: were it, this would be the
+    # ceiling, and it is far below the threshold.
+    ceiling = round(100 * len(clock.OWNER_FEEDS) / 434, 1)
+    assert ceiling < site.GATE_PCT, (
+        "own-channel can reach the gate now, so this test no longer proves "
+        "anything; check what the gate is keyed to")
+    assert site._gate_status(
+        _summary_with_coverage(434, 0, own=len(clock.OWNER_FEEDS)))["cleared"] is False
+
+    # And the floor the gate counts against is the one inference names against,
+    # so the gate cannot clear on CNAs the site would refuse to name.
+    assert cov_mod.compute.__doc__ and "cnas_effective" in cov_mod.compute.__doc__
+
+
+def test_gate_counts_the_same_floor_inference_names_against(tmp_path):
+    """If coverage counted a lower floor than inference, the gate could clear on
+    CNAs the site then refused to name, and the launch would ship a dashboard
+    thinner than its own gate promised."""
+    import pandas as pd
+    from rbp import coverage as cov_mod
+    from rbp.inference import MIN_SIGHTINGS
+
+    assigners = ["seen"] * (MIN_SIGHTINGS + 1) + ["rare"] * 2
+    ids = [f"CVE-2025-{i:05d}" for i in range(len(assigners))]
+    df = pd.DataFrame({"cve_id": ids, "state": ["PUBLISHED"] * len(ids),
+                       "assigner": assigners})
+    # Every `seen` row is surfaced; `rare` is surfaced ONCE, so it is sighted but
+    # below the floor.
+    refs = set(ids[:MIN_SIGHTINGS + 1]) | {ids[MIN_SIGHTINGS + 1]}
+    cov = cov_mod.compute(df, refs, recent_years=(2025,))
+    assert cov["min_sightings"] == MIN_SIGHTINGS
+    assert cov["cnas_effective"] < cov["cnas_sighted"], (
+        "a CNA seen once must not count toward the gate")
+    assert cov["cnas_effective"] == 1
 
 
 def test_gate_is_not_cleared_when_coverage_was_not_measured():

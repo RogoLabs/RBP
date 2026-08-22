@@ -250,13 +250,51 @@
     </div>
     {% endif %}
     {% if summary.coverage %}
+    <p class="small text-muted mb-2">
+      <strong>How much of the CNA landscape this site can see.</strong> Three
+      different answers, because "covered" is doing three different jobs. They are
+      listed together because quoting the largest one alone would overstate what
+      the feeds actually reach.
+    </p>
+    <table class="table table-sm small">
+      <thead>
+        <tr><th>Figure</th><th class="num">CNAs</th><th>What it means</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Sighted</td>
+          <td class="num">{{ summary.coverage.cnas_sighted }} / {{ summary.coverage.total_cnas }}
+            ({{ summary.coverage.pct_cnas }}%)</td>
+          <td>At least one of its published CVEs was seen. Weakest reading: a
+            single incidental reference is enough.</td>
+        </tr>
+        <tr>
+          <td><strong>Effective</strong></td>
+          <td class="num"><strong>{{ summary.coverage.cnas_effective }} / {{ summary.coverage.total_cnas }}
+            ({{ summary.coverage.pct_effective }}%)</strong></td>
+          <td>Seen at least {{ summary.coverage.min_sightings }} times, the same
+            floor required before a CNA is named on any row. <strong>This is the
+            figure the launch gate uses.</strong></td>
+        </tr>
+        <tr>
+          <td>Own channel</td>
+          <td class="num">{{ summary.coverage.cnas_own_channel }} / {{ summary.coverage.total_cnas }}</td>
+          <td>Its own advisory feed is ingested. This bounds what can ever be read
+            as {{ rule_must }}, and nothing else.</td>
+        </tr>
+      </tbody>
+    </table>
+    {% if gate and gate.pct is not none %}
     <p class="small text-muted">
-      Feeds currently reach <strong>{{ summary.coverage.covered_cnas }} of
-      {{ summary.coverage.total_cnas }} CNAs</strong>
-      ({{ summary.coverage.pct_cnas }}%), and surfaced
-      {{ summary.coverage.observed_pct }}% of published CVEs in the window. An RBP held by
-      a CNA outside that set is invisible here, which is the single largest reason this
-      site understates the problem.
+      <strong>Launch gate:</strong> {{ gate.pct }}% of {{ gate.required }}% required.
+      {% if gate.cleared %}Cleared.{% else %}Not yet met, so the front page is a
+      holding page and these pages are not indexed.{% endif %}
+    </p>
+    {% endif %}
+    <p class="small text-muted">
+      Feeds surfaced {{ summary.coverage.observed_pct }}% of published CVEs in the
+      window. An RBP held by a CNA outside the sighted set is invisible here, which
+      is the single largest reason this site understates the problem.
     </p>
     {% endif %}
     <p class="small text-muted mb-0">

@@ -29,9 +29,25 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     products, so the gate could clear while zero critical-infrastructure CNAs
     were measurable.
 
-    So: `cnas_sighted` is the old number, honestly relabelled.
-    `cnas_own_channel` counts CNAs whose own advisory feed was actually ingested
-    this run, which is the strict figure the gate should use.
+    So there are three, and they answer different questions:
+
+        cnas_sighted      any published CVE of that CNA was seen, even once.
+                          The old number, honestly relabelled. Weak: one stray
+                          reference credits the CNA.
+        cnas_effective    at least MIN_SIGHTINGS of its CVEs were seen, the same
+                          floor at which inference is willing to NAME the CNA.
+                          This is the gate figure.
+        cnas_own_channel  that CNA's own advisory feed was ingested. Bounds what
+                          can ever be read as 4.5.1.4, and nothing else.
+
+    The gate was briefly built on own_channel, on the reasoning that it is the
+    strict figure. It is strict, but it is also bounded by the number of
+    hand-written owner-feed parsers, which is three, so a 50% gate on it had a
+    ceiling of 0.7% and could never clear: a launch would have failed the gate
+    check forever, and nothing measured that it could not be reached. The
+    sighting floor is the honest reading of "we can see this CNA", it is the
+    threshold the site already trusts enough to publish a name against, and it
+    moves as feeds are added, which is the whole point of a gate.
     """
     pub = corpus_df[corpus_df["state"] == "PUBLISHED"].copy()
     pub = pub[pub["cve_id"].map(lambda c: _year(c) in recent_years)]
@@ -62,7 +78,13 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     top = list(vol.head(top_n).index)
     top_covered = [c for c in top if c in covered]
 
-    # Strict figure: the CNA's own advisory channel was ingested this run.
+    # Gate figure: seen often enough that the site would be willing to name it.
+    # Deliberately the SAME constant inference uses to decide whether to attach a
+    # name, so the gate cannot clear on CNAs the site would refuse to name.
+    from .inference import MIN_SIGHTINGS
+    effective = {a for a, n in sightings.items() if a and n >= MIN_SIGHTINGS}
+
+    # Bounds 4.5.1.4 only: the CNA's own advisory channel was ingested this run.
     own_channels = own_channels or {}
     requested = set(sources or ())
     own_ingested = sorted(cna for cna, feeds in own_channels.items()
@@ -76,6 +98,9 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
         # denominator that moved. The window is derived from the run date, so
         # both sides of the ratio shift overnight on 1 January.
         "cnas_sighted": len(covered),
+        "cnas_effective": len(effective),
+        "pct_effective": round(100 * len(effective) / max(total_cnas, 1), 1),
+        "min_sightings": MIN_SIGHTINGS,
         # Returned rather than discarded. inference refuses to name a CNA whose
         # advisories this site does not read, which is one sentence that survives
         # a hostile reading. Before this, one published artefact said "we do not

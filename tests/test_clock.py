@@ -628,6 +628,29 @@ def test_an_unmeasurable_ordering_is_labelled_unmeasurable_not_candidate():
     assert rows[1]["rule_strength"] == "MUST"
 
 
+def test_summary_publishes_the_certainty_split():
+    """The SHOULD bucket mixes "a third party demonstrably went first" with "the
+    ordering is invisible from here", and on live data the second is 505 of 506.
+    Without these two counts the front page rendered the whole bucket as "a third
+    party disclosed", which is an assertion about third parties the site cannot
+    support. The split has to leave the pipeline, not just exist on the row."""
+    rows = [_order_row({}), _order_row({}),
+            _order_row({"redhat": "2026-01-01", "debian": "2026-02-01"}),
+            _order_row({"debian": "2026-01-01", "redhat": "2026-02-01"},
+                       sources="debian,redhat")]
+    clock.annotate(rows, TODAY)
+    s = clock.summary(rows, [], TODAY)
+
+    assert s["unmeasurable_rows"] + s["candidate_rows"] == len(rows)
+    # The identity the template's arithmetic depends on: an unmeasurable row is
+    # counted under SHOULD, so measured-third-party = candidates - MUSTs, and the
+    # three displayed columns must sum to the row count.
+    assert s["unmeasurable_rows"] + (s["candidate_rows"] - s["must_rows"]) \
+        == s["should_rows"]
+    assert s["unmeasurable_rows"] == 2
+    assert s["must_rows"] == 1
+
+
 def test_self_disclosed_is_computed_in_exactly_one_place():
     """annotate and report._gated both computed it while only annotate derived
     `rule` from it, so a divergence could publish self_disclosed true beside rule
