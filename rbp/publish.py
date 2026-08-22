@@ -207,9 +207,17 @@ def gate(site_dir):
     status = site_mod._gate_status(summary)
     requested = site_mod.LAUNCHED
     cov = summary.get("coverage") or {}
-    print(f"gate: own-channel {status.get('own_channel')}/{status.get('total')} "
-          f"= {status.get('pct')}% (need {status['required']}%), "
-          f"sighted {status.get('sighted')}, profile {cov.get('profile')!r}")
+    # Label the figure the percentage actually came from. This read "own-channel
+    # {own}/{total} = {pct}%" after the gate moved to cnas_effective, so CI logged
+    # "own-channel 2/434 = 27.9%", pairing one figure's count with another's
+    # percentage. 2/434 is 0.5%. Anyone reading this line to work out why a launch
+    # did not happen would have been reading a contradiction.
+    print(f"gate: effective {status.get('effective')}/{status.get('total')} "
+          f"= {status.get('pct')}% (need {status['required']}%, "
+          f"seen >= {status.get('min_sightings')} times); "
+          f"sighted {status.get('sighted')}, "
+          f"own-channel {status.get('own_channel')}; "
+          f"profile {cov.get('profile')!r}")
     if requested and not status["cleared"]:
         print(f"FAIL: launch requested but {status['reason']}. The site was "
               "published in its pre-launch posture, which is correct, but the "
