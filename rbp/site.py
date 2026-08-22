@@ -139,7 +139,7 @@ def _read_strict(path):
 _LEGACY_OWNER = "unattributed"
 
 
-def _normalise_legacy(rows):
+def _normalise_legacy(rows, source="snapshot"):
     """Bring a snapshot written under an older schema up to the current contract.
 
     Two coercions, both idempotent, so applying them to a current snapshot is a
@@ -166,11 +166,14 @@ def _normalise_legacy(rows):
                 r["description"] = cleaned or (r.get("package") or "")
                 descs += 1
     if owners:
-        print(f"  note: coerced {owners} legacy {_LEGACY_OWNER!r} owner value(s) to "
-              "null (snapshot predates schema v1)")
+        print(f"  note: {source}: coerced {owners} legacy {_LEGACY_OWNER!r} owner "
+              "value(s) to null (predates schema v1)")
     if descs:
-        print(f"  note: sanitised {descs} legacy description(s) on read "
-              "(snapshot predates the description sanitiser)")
+        # Naming the source matters. "sanitised 170 legacy description(s)" on a run
+        # whose own snapshot is clean reads as the pipeline failing to sanitise;
+        # every one of the 170 was in YESTERDAY's snapshot, read for the diff.
+        print(f"  note: {source}: sanitised {descs} legacy description(s) on read "
+              "(predates the description sanitiser)")
     return rows
 
 
@@ -331,12 +334,14 @@ def load(snap_root, data_dir):
         raise SystemExit(f"no snapshots in {snap_root}; run the pipeline first")
     latest, prev = snaps[-1], (snaps[-2] if len(snaps) > 1 else None)
 
-    rows = _normalise_legacy(_read_strict(os.path.join(latest, "backlog.json")))
+    rows = _normalise_legacy(_read_strict(os.path.join(latest, "backlog.json")),
+                             source=f"{os.path.basename(latest)}/backlog.json")
     summary = _read_strict(os.path.join(latest, "summary.json"))
     cnas = _read_strict(os.path.join(latest, "cnas.json"))
     # Tolerant: a snapshot written before held_back.json existed is a valid input,
     # and an absent archive must not stop a publication.
-    held_back = _normalise_legacy(_read(os.path.join(latest, "held_back.json"), []))
+    held_back = _normalise_legacy(_read(os.path.join(latest, "held_back.json"), []),
+                                  source=f"{os.path.basename(latest)}/held_back.json")
     _assert_consistent(rows, summary, cnas)
 
     # The launch gate, enforced here but deliberately NOT by refusing to build.
@@ -521,7 +526,9 @@ def _changes(rows, prev_dir, latest_dir):
     # `comparable` stays True. A diff computed against nothing is the one output
     # that must never be published as a diff.
     prev_backlog = os.path.join(prev_dir, "backlog.json")
-    prev_rows = (_normalise_legacy(_read_strict(prev_backlog))
+    prev_rows = (_normalise_legacy(_read_strict(prev_backlog),
+                                   source=f"{os.path.basename(prev_dir)}/backlog.json "
+                                          "(previous, for the diff)")
                  if os.path.exists(prev_backlog) else None)
     if prev_rows is None:
         return {**empty, "have_previous": True, "comparable": False,

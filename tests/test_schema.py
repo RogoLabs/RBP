@@ -185,3 +185,35 @@ def test_the_field_dictionary_states_one_absence_spelling_per_field():
     for name, (typ, absent, meaning) in schema.FIELDS.items():
         assert typ and absent and meaning, name
         assert len(meaning) > 20, f"{name}: meaning is too thin to be useful"
+
+
+def test_the_sanitiser_is_idempotent_on_a_real_snapshot():
+    """The property the legacy coercion relies on. If display_description were not
+    idempotent, `_normalise_legacy` would rewrite descriptions on every read and
+    the "sanitised N legacy" note would fire forever on freshly written data.
+
+    Checked because a CI run reported "sanitised 170 legacy description(s)" and
+    that reads exactly like the pipeline failing to sanitise. It was not: all 170
+    were in the PREVIOUS snapshot, read for the diff. The note now names its source
+    so a correct coercion cannot be mistaken for a broken pipeline."""
+    import glob
+    from rbp.classify import display_description
+    snaps = sorted(glob.glob(str(ROOT / "snapshots" / "*" / "backlog.json")))
+    if not snaps:
+        pytest.skip("no local snapshot")
+    rows = json.loads(pathlib.Path(snaps[-1]).read_text())
+    changed = [r["cve_id"] for r in rows
+               if display_description(r.get("description") or "")
+               != (r.get("description") or "")]
+    assert not changed, (
+        f"{len(changed)} descriptions change on a second pass, so the sanitiser is "
+        f"not idempotent: {changed[:3]}")
+
+
+def test_the_legacy_note_names_which_file_it_came_from():
+    """A coercion message without a source reads as an accusation against the
+    current run."""
+    import inspect
+    src = inspect.getsource(site._normalise_legacy)
+    assert "source" in src
+    assert '{source}' in src, "the note does not interpolate its source"
