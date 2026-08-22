@@ -28,6 +28,14 @@ on:
         description: 'Deliberately fail the build to exercise the failure notification. Publishes nothing. Safe: a failed build skips deploy, so the site keeps serving the previous good artefact.'
         type: boolean
         default: false
+      rehearse_launch:
+        description: 'DRY RUN ONLY. Build the LAUNCHED posture against real data without publishing it. Refused unless dry_run is also true.'
+        type: boolean
+        default: false
+      rehearse_epoch:
+        description: 'DRY RUN ONLY. Rehearse an epoch flip (YYYY-MM-DD) without setting the repository variable. Refused unless dry_run is also true.'
+        type: string
+        default: '' 
 
 env:
   # Precedence: dispatch input, then repository variable RBP_MIN_AGE_DAYS, then
@@ -37,13 +45,21 @@ env:
   # Pre-launch by default: / serves the holding page and the dashboard sits at
   # /overview.html, noindexed. Set the repository variable RBP_LAUNCHED to 1 to
   # make / the dashboard. The gate is 50% CNA coverage (PLAN.md).
-  RBP_LAUNCHED: ${{ vars.RBP_LAUNCHED || '' }}
+  # A rehearsal override, and it is DRY-RUN ONLY, enforced by a step that fails the
+  # job if the two are combined wrongly. Condition 9 asks for the launch state to be
+  # rehearsed against real data, and rehearsing it by setting the repository variable
+  # would mean going live to find out whether going live works.
+  #
+  # The override cannot launch the site: `deploy` is skipped on a dry run, so the
+  # rehearsal builds the artefact and throws it away. Belt and braces on top of the
+  # coverage gate, which already fails closed on the flag.
+  RBP_LAUNCHED: ${{ (inputs.dry_run == true && inputs.rehearse_launch == true) && '1' || (vars.RBP_LAUNCHED || '') }}
   # Launch epoch, YYYY-MM-DD. Set on launch day to start the count from zero
   # instead of carrying the backlog accumulated while feed coverage was still
   # changing. Keyed on the advisory date, so adding a feed later cannot inflate
   # the count retroactively. Held-back rows stay in the raw data and their count
   # is shown on /method.
-  RBP_EPOCH: ${{ vars.RBP_EPOCH || '' }}
+  RBP_EPOCH: ${{ (inputs.dry_run == true && inputs.rehearse_epoch != '') && inputs.rehearse_epoch || (vars.RBP_EPOCH || '') }}
   # Incident switch. Set the repository variable RBP_PAUSE to 1 and the pipeline
   # still runs and still reports, but nothing is published and no state advances.
   # There was previously no lever at all: no `if:` on any job, no dry run and no
@@ -104,6 +120,19 @@ jobs:
       # Safe by construction. `deploy` is `needs: build` with no `if:`, so a failed
       # build skips the deploy and Pages keeps serving the previous good artefact.
       # Nothing publishes and no state advances.
+      # The rehearsal levers exist so nobody has to go live to find out whether
+      # going live works. They must never be usable to actually go live, so this
+      # refuses the combination rather than quietly ignoring it: silently dropping
+      # an override the operator asked for is how a rehearsal gets mistaken for a
+      # launch, or a launch for a rehearsal.
+      - name: Refuse a rehearsal outside a dry run
+        if: ${{ inputs.dry_run != true && (inputs.rehearse_launch == true || inputs.rehearse_epoch != '') }}
+        run: |
+          echo "::error::rehearse_launch / rehearse_epoch are DRY RUN ONLY."
+          echo "Set dry_run=true, or set the repository variables RBP_LAUNCHED /"
+          echo "RBP_EPOCH deliberately if you actually intend to launch."
+          exit 1
+
       - name: Fire drill
         if: ${{ inputs.fire_drill == true }}
         run: |
@@ -255,8 +284,18 @@ jobs:
       # closed on the flag and served the pre-launch page, so the site is never
       # frozen by this; the point of the step is that a launch attempted below
       # gate produces a red check instead of silently not launching.
+      # Report-only on a rehearsal. The gate exists so an attempted launch below
+      # coverage produces a red check rather than silently not launching, and that
+      # is right for a real run. On a dry run the whole point is to SEE the launched
+      # posture below the gate, so failing here would make the rehearsal impossible
+      # and leave launch day as the first execution of the launched code path.
       - name: Launch gate
-        run: python -m rbp.publish gate --site site
+        run: |
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            python -m rbp.publish gate --site site ||               echo "::notice::gate not cleared, which is expected on a rehearsal"
+          else
+            python -m rbp.publish gate --site site
+          fi
 
       - name: Persist durable state
         if: ${{ vars.RBP_PAUSE != '1' && inputs.dry_run != true }}
