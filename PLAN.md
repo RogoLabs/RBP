@@ -535,6 +535,52 @@ threshold is a number needs a test that the number is reachable**, and a guard w
 "blocked" state is indistinguishable from its "not yet" state needs something that tells
 them apart.
 
+## 8c. Disclosure decisions (2026-08-22)
+
+Deliberately de-identified. Naming the organisations here would republish the pairing
+being retracted, in the document that records it as false, which is review finding C1.
+The specifics stay recoverable from the archived mirror described in
+`docs/github-support-request.md`.
+
+### The two misattributed rows: decided not to notify
+
+Two rows carried a **WordPress-plugin-ecosystem CNA named on a core Linux platform
+vulnerability**, surfaced only through distro advisory feeds that such a CNA's scope
+never touches. Item 3's covered-set gate and bulk-reporter rule were built to stop
+exactly this. Both rows now read `unattributed` / `abstain` / `owner_nameable: false`,
+and zero WordPress-ecosystem CNAs are named anywhere in production.
+
+**Decision: do not notify the two CNAs. Jerry, 2026-08-22.**
+
+Measured exposure, which is what the decision turns on:
+
+| | |
+|---|---|
+| Window the names were public | **~2h55m**, across 7 commits |
+| Served by rbptracker.org | **No.** Never a page; the ungated file was git-branch only |
+| Repo reach in that window | 0 stars, 0 forks, repo under 3 hours old |
+| Now | removed from branch history; reachable only by exact blob SHA |
+
+**Why.** The notification principle in `report.py` exists so a CNA is never *publicly*
+accused without a way to respond. It is the right principle and it is why the per-CNA
+pages stay withheld pre-launch. It does not fit this case: there was no public
+accusation surface, the window was under three hours, and there is no correction for
+them to make, because the error was ours and it is fixed. Writing to them would mean
+disclosing reserved-CVE analysis to two organisations not otherwise party to it, in
+order to report a mistake they were never harmed by and cannot act on. Same reasoning
+as the GitHub ticket in the same session: do not manufacture an incident.
+
+**The counterargument, recorded because it is real.** The blobs stay fetchable by exact
+SHA until GitHub garbage collects. The retraction is closed against discovery and open
+against replay. If that residual is ever judged to outweigh the above, notifying becomes
+defensible and this decision should be revisited rather than treated as settled.
+
+**What this decision is not.** It is not a precedent for a named row after launch. Once
+`/` is the dashboard and the per-CNA pages are live, a misattribution has a public
+accusation surface by definition, the reasoning above inverts, and the notification
+principle applies in full. Phase 6's correction channel is the mechanism for that and is
+still unbuilt, which is the strongest argument for keeping the launch gate where it is.
+
 ## 9. Still open
 
 - **"Days out of scope", confirm the metric.** Built here as *days in RBP state*: days

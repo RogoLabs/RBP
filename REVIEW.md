@@ -106,6 +106,19 @@ external circulation", in a document that is itself published on the branch.
 **BLOCKER. The two known-wrong rows are still named. Raised by all eight disciplines;
 the veto-inert finding was reached independently five times.**
 
+> **CLOSED 2026-08-22.** Covered-set gate, three-sighting floor, bulk-reporter
+> second-signal rule and the grader withdrawal path all shipped. Both rows now read
+> `unattributed` / `abstain` / `owner_nameable: false`, and zero WordPress-ecosystem
+> CNAs are named anywhere in production. The notification question this item asked to be
+> decided either way is decided: **do not notify**, recorded with its measured exposure
+> and its counterargument in PLAN.md 8c.
+>
+> Two corrections to this item's own text, both found while closing it. Its headline
+> claim that the rows "are still named" was already false when written: it came from a
+> narrow-feed local snapshot, and both rows were vetoed in production. And the sighting
+> floor it asks for was added to *naming* but not to *coverage counting*, so the launch
+> gate still credited a CNA on one incidental sighting until that was fixed separately.
+
 The product-map contradiction gate (`rbp/inference.py:149-151`) is inert on exactly the
 population it was written for. Its only input is `attributor.attribute(e.get("product",
 ""), ...)` and `rbp/attribution.py:89-101` matches the product field only, while
