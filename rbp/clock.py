@@ -341,15 +341,33 @@ class ResolutionLedger:
             except Exception:  # noqa: BLE001
                 pass
 
-    def track(self, rows):
-        """Remember when each currently-open RBP was first seen public."""
+    def track(self, rows, suppressed=()):
+        """Remember when each currently-open RBP was first seen public.
+
+        `suppressed` both stops new entries and REMOVES existing ones. This ledger
+        is published at the root of the data branch, so a withheld id sitting in
+        `open` keeps it listed after every other artefact has dropped it. Found by
+        checking the branch rather than the site after the first live withhold: the
+        row was gone from rbp.json, rbp.csv, summary.json, cnas.json and
+        precision.json, and still in resolutions.json.
+
+        No CNA name was attached there, so this was never a misattribution. But for
+        an embargo the id IS the sensitive fact, which is the whole reason the row
+        leaves rather than merely losing its owner.
+        """
+        drop = {c for c in (suppressed or ()) if c in self.state["open"]}
+        for cid in drop:
+            del self.state["open"][cid]
         for r in rows:
             cid = r["cve_id"]
+            if cid in (suppressed or ()) or r.get("suppressed"):
+                continue
             if cid not in self.state["open"]:
                 self.state["open"][cid] = {
                     "first_public": r.get("public_date"),
                     "owner": r.get("owner"),
                 }
+        return len(drop)
 
     def reconcile(self, corpus_df, today=None):
         """Close out every tracked ID that now has a published record."""

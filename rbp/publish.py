@@ -35,6 +35,76 @@ ALLOWED_SNAPSHOT = {"backlog.json", "backlog.csv", "cnas.json", "summary.json",
                     "held_back.json", "resolved.json"}
 
 
+def _suppressed(data_dir):
+    """Ids this run withheld, as recorded by the pipeline. Empty on any problem.
+
+    Read from a runner-local file rather than re-queried, so staging never depends
+    on a live API call: a transient GitHub error must not stop state advancing.
+    """
+    try:
+        return set(json.load(open(os.path.join(data_dir, ".suppressed.json"))))
+    except Exception:  # noqa: BLE001
+        return set()
+
+
+def _scrub(path, ids):
+    """Remove withheld ids from one staged artefact. Returns rows removed.
+
+    Applied to EVERY staged snapshot, not just the newest. The first live withhold
+    left the row absent from rbp.json, rbp.csv, summary.json, cnas.json and
+    precision.json, and still present in the previous day's snapshot on the data
+    branch, where retention keeps it for up to a month. A withhold that only
+    applies going forward is not a withhold: the id stays fetchable from yesterday.
+    """
+    if not ids or not os.path.exists(path):
+        return 0
+    if path.endswith(".json"):
+        try:
+            rows = json.load(open(path))
+        except Exception:  # noqa: BLE001
+            return 0
+        if isinstance(rows, list):
+            keep = [r for r in rows
+                    if not (isinstance(r, dict) and r.get("cve_id") in ids)]
+            if len(keep) != len(rows):
+                json.dump(keep, open(path, "w"), indent=1)
+                return len(rows) - len(keep)
+        elif isinstance(rows, dict):
+            # resolutions.json shape: {"open": {cve_id: {...}}, "resolved": [...]}
+            n = 0
+            op = rows.get("open")
+            if isinstance(op, dict):
+                for cid in [c for c in op if c in ids]:
+                    del op[cid]
+                    n += 1
+            res = rows.get("resolved")
+            if isinstance(res, list):
+                keep = [r for r in res
+                        if not (isinstance(r, dict) and r.get("cve_id") in ids)]
+                n += len(res) - len(keep)
+                rows["resolved"] = keep
+            preds = rows.get("predictions")
+            if isinstance(preds, dict):
+                for cid in [c for c in preds if c in ids]:
+                    del preds[cid]
+                    n += 1
+            if n:
+                json.dump(rows, open(path, "w"), indent=1)
+            return n
+        return 0
+    # CSV: drop any line containing a withheld id. Crude and correct, because the
+    # id is the first column and appears nowhere else in a row.
+    try:
+        lines = open(path).read().splitlines(keepends=True)
+    except Exception:  # noqa: BLE001
+        return 0
+    keep = [ln for ln in lines if not any(i in ln for i in ids)]
+    if len(keep) != len(lines):
+        open(path, "w").writelines(keep)
+        return len(lines) - len(keep)
+    return 0
+
+
 def stage(snap_root, state_dir, data_dir):
     """Copy the allowlisted artefacts into the data-branch checkout."""
     os.makedirs(state_dir, exist_ok=True)
@@ -46,6 +116,7 @@ def stage(snap_root, state_dir, data_dir):
     dest_root = os.path.join(state_dir, "snapshots")
     os.makedirs(dest_root, exist_ok=True)
     copied = 0
+    withheld = _suppressed(data_dir)
     for d in sorted(glob.glob(os.path.join(snap_root, "*"))):
         if not os.path.isdir(d):
             continue
@@ -55,6 +126,19 @@ def stage(snap_root, state_dir, data_dir):
             if f in ALLOWED_SNAPSHOT:
                 shutil.copyfile(os.path.join(d, f), os.path.join(dst, f))
                 copied += 1
+    # Scrub AFTER copying, over every staged file including the root ledgers and
+    # every retained prior snapshot, so a withhold reaches history and not only
+    # today.
+    scrubbed = 0
+    if withheld:
+        targets = [os.path.join(state_dir, n)
+                   for n in ("precision.json", "resolutions.json")]
+        targets += glob.glob(os.path.join(dest_root, "*", "*"))
+        for t in targets:
+            scrubbed += _scrub(t, withheld)
+        if scrubbed:
+            print(f"scrubbed {scrubbed} withheld row(s) from staged artefacts, "
+                  "including prior snapshots")
     return copied
 
 

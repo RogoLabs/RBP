@@ -573,3 +573,109 @@ def test_a_previously_named_suppressed_row_loses_its_ledger_prediction():
     # And the subtraction must happen AFTER the lever is loaded, or it subtracts
     # from a set that does not know what is suppressed yet.
     assert src.index("sup = suppress.load(") < src.index("_published_ids -= ")
+
+
+# --------------------------------------------------------------------------
+# a withhold has to reach history, not only today
+# --------------------------------------------------------------------------
+
+def test_stage_scrubs_withheld_ids_from_prior_snapshots(tmp_path):
+    """The first live withhold left the row absent from rbp.json, rbp.csv,
+    summary.json, cnas.json and precision.json, and still present in the PREVIOUS
+    day's snapshot on the data branch, where retention keeps it for up to a month.
+
+    A withhold that only applies going forward is not a withhold: the id stays
+    fetchable from yesterday. Found by checking the branch rather than the site."""
+    from rbp import publish
+
+    victim = "CVE-2026-4242"
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / ".suppressed.json").write_text(json.dumps([victim]))
+
+    snaps = tmp_path / "snapshots"
+    for date in ("2026-08-21", "2026-08-22"):
+        d = snaps / date
+        d.mkdir(parents=True)
+        (d / "backlog.json").write_text(json.dumps(
+            [{"cve_id": victim, "owner": None}, {"cve_id": "CVE-2026-4243"}]))
+        (d / "backlog.csv").write_text(
+            f"cve_id,owner\n{victim},\nCVE-2026-4243,\n")
+        (d / "summary.json").write_text(json.dumps({"total": 2}))
+
+    state = tmp_path / ".state"
+    publish.stage(str(snaps), str(state), str(data))
+
+    for date in ("2026-08-21", "2026-08-22"):
+        for f in ("backlog.json", "backlog.csv"):
+            body = (state / "snapshots" / date / f).read_text()
+            assert victim not in body, f"{date}/{f} still holds the withheld id"
+            assert "CVE-2026-4243" in body, "scrub removed the wrong rows"
+
+
+def test_stage_scrubs_both_root_ledgers(tmp_path):
+    """resolutions.json sits at the branch ROOT, so every snapshot-scoped rule
+    misses it. On the first live withhold the row was gone from every snapshot
+    artefact and still in resolutions.json under `open`."""
+    from rbp import publish
+
+    victim = "CVE-2026-4242"
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / ".suppressed.json").write_text(json.dumps([victim]))
+    (data / "resolutions.json").write_text(json.dumps(
+        {"open": {victim: {"first_public": "2025-03-19", "owner": None},
+                  "CVE-2026-4243": {"first_public": "2026-01-01", "owner": None}},
+         "resolved": [{"cve_id": victim}, {"cve_id": "CVE-2026-9"}]}))
+    (data / "precision.json").write_text(json.dumps(
+        {"predictions": {victim: {"predicted": "acme"}}, "graded": []}))
+    (tmp_path / "snapshots").mkdir()
+
+    state = tmp_path / ".state"
+    publish.stage(str(tmp_path / "snapshots"), str(state), str(data))
+
+    res = json.loads((state / "resolutions.json").read_text())
+    assert victim not in res["open"]
+    assert "CVE-2026-4243" in res["open"]
+    assert not any(r.get("cve_id") == victim for r in res["resolved"])
+    prec = json.loads((state / "precision.json").read_text())
+    assert victim not in prec["predictions"]
+
+
+def test_stage_is_unaffected_when_nothing_is_withheld(tmp_path):
+    """The scrub must be a no-op on the normal path, not a rewrite of every file."""
+    from rbp import publish
+    data = tmp_path / "data"
+    data.mkdir()
+    snaps = tmp_path / "snapshots" / "2026-08-22"
+    snaps.mkdir(parents=True)
+    original = json.dumps([{"cve_id": "CVE-2026-1"}])
+    (snaps / "backlog.json").write_text(original)
+    state = tmp_path / ".state"
+    publish.stage(str(tmp_path / "snapshots"), str(state), str(data))
+    assert (state / "snapshots" / "2026-08-22" / "backlog.json").read_text() == original
+
+
+def test_a_missing_handoff_file_does_not_break_staging(tmp_path):
+    """data/ is gitignored and the file is runner-local, so a `publish stage` run
+    without a preceding pipeline must still work rather than crash."""
+    from rbp import publish
+    (tmp_path / "data").mkdir()
+    (tmp_path / "snapshots").mkdir()
+    assert publish._suppressed(str(tmp_path / "data")) == set()
+    publish.stage(str(tmp_path / "snapshots"), str(tmp_path / ".state"),
+                  str(tmp_path / "data"))
+
+
+def test_the_resolution_ledger_drops_and_refuses_suppressed_rows():
+    """ResolutionLedger.track both stops new entries and removes existing ones."""
+    from rbp import clock
+    import tempfile
+    with tempfile.TemporaryDirectory() as d:
+        led = clock.ResolutionLedger(os.path.join(d, "r.json"))
+        led.state["open"]["CVE-2026-1"] = {"first_public": "2026-01-01", "owner": None}
+        dropped = led.track([{"cve_id": "CVE-2026-2", "public_date": "2026-02-01"}],
+                            suppressed={"CVE-2026-1", "CVE-2026-2"})
+        assert dropped == 1, "an existing entry was not removed"
+        assert "CVE-2026-1" not in led.state["open"]
+        assert "CVE-2026-2" not in led.state["open"], "a new entry was added anyway"

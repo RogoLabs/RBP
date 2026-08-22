@@ -35,6 +35,8 @@ CACHE = os.path.join(DATA, ".api_cache.json")
 PRECISION = os.path.join(DATA, "precision.json")
 RESOLUTIONS = os.path.join(DATA, "resolutions.json")
 BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
+# Runner-local handoff from `run` to `publish stage`. Never published.
+SUPPRESSED_IDS = os.path.join(DATA, ".suppressed.json")
 
 
 def ensure_corpus(force=False):
@@ -173,6 +175,19 @@ def cmd_run(args):
     # precision.json on the public data branch. The withhold would have been
     # complete everywhere a reader looks and incomplete in the one file that
     # records who this site accused.
+    # Handed to `publish` through a runner-local file rather than a second network
+    # read. `publish stage` runs as its own CLI invocation and has to scrub PRIOR
+    # snapshots too; re-reading the issues there would make staging depend on a
+    # live API call, so a transient GitHub error would stop state advancing. This
+    # file records what THIS run actually decided, which is also the honest input.
+    # data/ is gitignored, so it is never published.
+    try:
+        os.makedirs(DATA, exist_ok=True)
+        json.dump(sorted(sup.auto | {c for c in _published_ids if c in sup}),
+                  open(SUPPRESSED_IDS, "w"))
+    except OSError as e:
+        print(f"  NOTE: could not write {SUPPRESSED_IDS} ({e}); prior snapshots "
+              "will not be scrubbed this run")
     _suppressed_ids = {c for c in _published_ids if c in sup}
     _published_ids -= _suppressed_ids
     if _suppressed_ids:
@@ -243,7 +258,9 @@ def cmd_run(args):
     # meant the ledger held 724 open IDs against 553 published rows, so sourcing
     # /changes from it would have closed 171 rows nobody ever counted, 84 of them
     # rows the clock calls unreportable at any buffer.
-    ledger.track(reportable)
+    dropped_res = ledger.track(reportable, suppressed=sup)
+    if dropped_res:
+        print(f"  removed {dropped_res} suppressed id(s) from the resolution ledger")
     ledger.save()
     if len(ledger.state["open"]) != len(reportable):
         print(f"  NOTE: ledger tracks {len(ledger.state['open'])} open vs "
