@@ -719,3 +719,49 @@ def test_no_caller_iterates_the_suppression_set():
         for bad in ("for c in suppressed", "for cid in suppressed",
                     "set(suppressed)", "list(suppressed)", "sorted(suppressed)"):
             assert bad not in body, f"{f.name} iterates the suppression set: {bad}"
+
+
+def test_a_withhold_reaches_the_dated_archive(tmp_path):
+    """"The archive is immutable" and "a withhold removes a row from it" are in
+    tension. The resolution is that the archive is REBUILT from the staged snapshots
+    on every run rather than appended to, so scrubbing the snapshots is what reaches
+    it. Verified rather than assumed, because the alternative failure is an archive
+    that quietly becomes the reason a withhold does not work."""
+    from rbp import site as site_mod
+
+    victim = "CVE-2026-8888"
+    snaps = tmp_path / "snapshots" / "2026-08-22"
+    snaps.mkdir(parents=True)
+    keep = {"cve_id": "CVE-2026-9999", "owner": None, "owner_nameable": False,
+            "counted": True, "days_public": 30, "public_date": "2026-07-01",
+            "description": "a flaw", "sources": "debian"}
+    # The staged snapshot has already been scrubbed by publish.stage, so the
+    # withheld row is simply not in it. The archive must not resurrect it.
+    (snaps / "backlog.json").write_text(json.dumps([keep]))
+    (snaps / "cnas.json").write_text("[]")
+    (snaps / "summary.json").write_text(json.dumps({
+        "total": 1, "past_expectation": 1, "oldest_days": 30, "median_days": 30,
+        "named_cnas": 0, "must_rows": 0, "should_rows": 1, "clock_unknown": 0,
+        "unmeasurable_rows": 1, "candidate_rows": 0, "undated_excluded": 0,
+        "min_age_days": 7, "age_buckets": {}, "epoch": None,
+        "inference": {"k": 3, "run_coverage": 0.0,
+                      "leave_one_out": {"precision": 0.99, "coverage": 0.6,
+                                        "decided": 100},
+                      "live": {"graded": 0, "correct": 0, "precision": None,
+                               "below_floor": True, "outstanding": 0, "by_tier": {}}},
+        "feeds": {"requested": [], "failures": [], "attempts": 0, "truncated": [],
+                  "detail": {}},
+        "coverage": {"total_cnas": 539, "cnas_effective": 1, "cnas_own_channel": 0,
+                     "cnas_sighted": 1, "min_sightings": 3, "pct_cnas": 0.2,
+                     "pct_effective": 0.2, "observed_pct": 1.0, "profile": "weekly",
+                     "top_n": 50, "top_covered": 1, "roster_pinned": True},
+    }))
+    (tmp_path / "data").mkdir()
+    out = tmp_path / "site"
+    site_mod.build(str(out), str(tmp_path / "snapshots"), str(tmp_path / "data"))
+
+    dated = out / "data" / "archive" / "2026-08-22" / "rbp.json"
+    assert dated.exists()
+    body = dated.read_text()
+    assert victim not in body, "the archive resurrected a withheld row"
+    assert "CVE-2026-9999" in body, "the archive dropped a row it should carry"

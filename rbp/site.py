@@ -414,6 +414,8 @@ def load(snap_root, data_dir):
     return {
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "snapshot_date": os.path.basename(latest),
+        "snap_root": snap_root,
+        "archive": None,          # filled by _write_data, read by /data
         "rows": rows,
         "summary": summary,
         "cnas": cnas,
@@ -734,6 +736,62 @@ def _write_data(out, ctx):
     w.writerows(ctx["rows"])
     open(os.path.join(d, "rbp.csv"), "w").write(buf.getvalue())
 
+    # THE DATED ARCHIVE (Part 2 condition 7).
+    #
+    # /data/rbp.json is the only target a citation could use, and it changes every
+    # six hours. After the epoch flip its numbers change entirely, so anything cited
+    # before launch resolves afterwards to a file that no longer says what was cited.
+    #
+    # Every retained snapshot is now also published at a dated path, so a citation
+    # can point at /data/2026-08-22/rbp.json and keep meaning what it meant. Written
+    # from the snapshot on disk rather than from the current context, so a dated file
+    # is that day's numbers and not today's wearing that day's name.
+    #
+    # HONESTY ABOUT "IMMUTABLE": it is not. A withhold request removes a row from
+    # every published artefact including these, which is the whole point of the
+    # suppression lever. So the archive is STABLE rather than immutable: a figure can
+    # go down if someone asks for a row to be withheld, and /data says so rather than
+    # promising permanence this project deliberately does not offer.
+    arch_root = os.path.join(d, "archive")
+    archive = []
+    for snap in _snapshots(ctx["snap_root"]):
+        date = os.path.basename(snap)
+        rows_path = os.path.join(snap, "backlog.json")
+        sum_path = os.path.join(snap, "summary.json")
+        if not (os.path.exists(rows_path) and os.path.exists(sum_path)):
+            continue
+        try:
+            snap_rows = _normalise_legacy(json.load(open(rows_path)),
+                                          source=f"archive/{date}")
+            snap_sum = json.load(open(sum_path))
+        except Exception:  # noqa: BLE001
+            continue
+        # Same invariants as any other published artefact. An archive is not a
+        # place where the naming rules stop applying.
+        assert_artefact(snap_rows, f"archive/{date}/rbp.json", ctx["cnas"], covered)
+        dd = os.path.join(arch_root, date)
+        os.makedirs(dd, exist_ok=True)
+        json.dump(_schema.envelope(snap_rows, snap_sum, launched=launched,
+                                   snapshot_date=date, kind="backlog"),
+                  open(os.path.join(dd, "rbp.json"), "w"), indent=1)
+        archive.append({
+            "date": date,
+            "url": f"data/archive/{date}/rbp.json",
+            "rows": len(snap_rows),
+            "epoch": snap_sum.get("epoch"),
+            "min_age_days": snap_sum.get("min_age_days"),
+            "corroborated": snap_sum.get("corroborated"),
+        })
+    archive_index = sorted(archive, key=lambda a: a["date"], reverse=True)
+    json.dump({"schema_version": _schema.SCHEMA_VERSION,
+               "stable_not_immutable": True,
+               "note": ("A withhold request removes a row from every published "
+                        "artefact including these, so a figure can go down. This "
+                        "archive is stable, not immutable."),
+               "snapshots": archive_index},
+              open(os.path.join(d, "archive.json"), "w"), indent=1)
+    _archive_index = archive_index
+
     # One file per CNA, so anyone can pull just their own rows.
     per = os.path.join(d, "cna")
     if launched:
@@ -742,6 +800,10 @@ def _write_data(out, ctx):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
         json.dump({"cna": c["cna"], "summary": c, "rows": mine},
                   open(os.path.join(per, f"{c['slug']}.json"), "w"), indent=1)
+
+    # Returned so /data can render the citable routes. The pages render AFTER the
+    # data files for exactly this reason.
+    return _archive_index
 
 
 # Page targets depend on the EFFECTIVE posture, which is not the same as the
@@ -780,6 +842,10 @@ def build(out, snap_root, data_dir):
         shutil.copytree(STATIC, os.path.join(out, "static"), dirs_exist_ok=True)
 
     launched = ctx["launched"]
+    # The archive index is built by _write_data, which runs after the pages. /data
+    # needs it while rendering, so the data files are written first and the list is
+    # put back into the context before the templates run.
+    ctx["archive"] = _write_data(out, ctx)
     pages = pages_for(launched)
     for template, target in pages:
         # `page_file` is the page's own path, for a per-page og:url and canonical.
@@ -872,7 +938,6 @@ def build(out, snap_root, data_dir):
         open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
         written_cna += 1
 
-    _write_data(out, ctx)
     posture = "LAUNCHED, / is the dashboard" if launched else \
               "pre-launch, / is the holding page and the dashboard is /overview.html"
     # Report what was written, not what was available. Printing the available

@@ -217,3 +217,58 @@ def test_the_legacy_note_names_which_file_it_came_from():
     src = inspect.getsource(site._normalise_legacy)
     assert "source" in src
     assert '{source}' in src, "the note does not interpolate its source"
+
+
+# --------------------------------------------------------------------------
+# the citable archive (Part 2 condition 7)
+# --------------------------------------------------------------------------
+
+def test_a_dated_route_exists_for_every_retained_snapshot(built):
+    """/data/rbp.json was the only target a citation could use and it changes every
+    six hours, so a figure quoted from it resolves later to a file that no longer
+    says what was quoted. After an epoch flip the count changes entirely."""
+    idx = json.loads((built / "archive.json").read_text())
+    assert idx["snapshots"], "the archive index is empty"
+    for entry in idx["snapshots"]:
+        p = built.parent / entry["url"]
+        assert p.exists(), entry["url"]
+        payload = json.loads(p.read_text())
+        assert payload["snapshot_date"] == entry["date"]
+        assert payload["schema_version"] == schema.SCHEMA_VERSION
+
+
+def test_a_dated_file_carries_that_days_numbers_not_todays(built):
+    """Written from the snapshot on disk, so a dated file is that day's data rather
+    than today's wearing that day's name."""
+    idx = json.loads((built / "archive.json").read_text())
+    for entry in idx["snapshots"]:
+        payload = json.loads((built.parent / entry["url"]).read_text())
+        assert len(payload["rows"]) == entry["rows"]
+        assert payload["snapshot_date"] == entry["date"]
+
+
+def test_the_archive_is_described_as_stable_not_immutable(built):
+    """A withhold removes a row from every published artefact including these, so a
+    dated figure can go down. Promising permanence would mean either breaking the
+    promise on the first withhold or letting the archive defeat the withhold."""
+    idx = json.loads((built / "archive.json").read_text())
+    assert idx["stable_not_immutable"] is True
+    assert "can go down" in idx["note"] or "stable, not immutable" in idx["note"].lower()
+    page = (ROOT / "templates" / "data.html").read_text()
+    assert "Stable, not immutable" in page
+    assert "can go" in page and "down" in page
+
+
+def test_the_archive_obeys_the_same_naming_invariants(built):
+    """An archive is not a place where the naming rules stop applying."""
+    import inspect
+    src = inspect.getsource(site._write_data)
+    i = src.index("arch_root")
+    assert "assert_artefact" in src[i:], (
+        "dated archive files are written without the artefact invariants")
+
+
+def test_data_page_tells_readers_not_to_cite_the_moving_file(built):
+    page = (built.parent / "data.html").read_text()
+    assert "Do not cite" in page
+    assert "data/archive/" in page

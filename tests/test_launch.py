@@ -138,8 +138,8 @@ def test_plan_and_site_publish_the_same_number_of_conditions():
 
 
 @pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (4, True), (5, True),
-                                          (6, True),
-                                          (7, False), (8, False), (9, False)])
+                                          (6, True), (7, True),
+                                          (8, False), (9, False)])
 def test_declared_statuses_match_what_is_actually_built(n, expect_met):
     """Pins today's honest position so a status cannot drift silently. When one of
     these genuinely lands, this test is the thing that has to be updated

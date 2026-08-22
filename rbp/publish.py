@@ -34,6 +34,13 @@ ALLOWED_ROOT = {"README.md", "precision.json", "resolutions.json"}
 ALLOWED_SNAPSHOT = {"backlog.json", "backlog.csv", "cnas.json", "summary.json",
                     "held_back.json", "resolved.json"}
 
+# The dated archive at /data/archive/<date>/ is built by rbp.site from these same
+# staged snapshots, so scrubbing them here is what makes a withhold reach the
+# archive. Nothing extra to allowlist: the archive is a site artefact, not a branch
+# one, and it is regenerated from the staged snapshots on every build. Worth stating
+# because "the archive is immutable" and "a withhold removes a row from it" are in
+# tension, and the resolution is that the archive is rebuilt rather than appended.
+
 
 def _suppressed(data_dir):
     """Ids this run withheld, as recorded by the pipeline. Empty on any problem.

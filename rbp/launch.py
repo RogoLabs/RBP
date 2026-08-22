@@ -180,11 +180,24 @@ _DECLARED = [
     {
         "n": 7,
         "title": "A dated immutable archive, resolvable after the epoch flip",
-        "detail": ("Anything cited before launch has to stay resolvable afterwards. "
-                   "The epoch flip zeroes the count, and snapshot retention prunes, "
-                   "so a pre-launch citation currently has no durable target."),
-        "status": UNMET,
-        "blocks": "no versioned, dated archive target exists.",
+        "detail": ("Anything cited before launch stays resolvable afterwards at "
+                   "/data/archive/<date>/rbp.json, with /data/archive.json as the "
+                   "index. Stable rather than immutable: a withhold removes a row "
+                   "from the archive too, and /data states that rather than promising "
+                   "permanence this project would not honour."),
+        "status": MET,
+        "blocks": None,
+        # /data/archive/<YYYY-MM-DD>/rbp.json per retained snapshot, plus
+        # /data/archive.json as the index. Written from that day's snapshot rather
+        # than from today's numbers wearing that day's name, and through the same
+        # envelope and the same assert_artefact invariants as every other artefact:
+        # an archive is not a place where the naming rules stop applying.
+        #
+        # Described as STABLE rather than immutable, deliberately. A withhold request
+        # removes a row from every published artefact including these, so a dated
+        # figure can go down. Promising permanence would mean either breaking the
+        # promise on the first withhold, or letting the archive become the reason the
+        # withhold does not work. /data says which of those this project chose.
         "item": "2, 14",
     },
     {

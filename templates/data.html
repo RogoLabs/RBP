@@ -51,6 +51,63 @@
 
 <div class="card">
   <div class="card-header">
+    <h2 class="card-title">Citing a number so it stays resolvable</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      <strong>Do not cite <span class="mono">data/rbp.json</span>.</strong> It is the
+      latest build and it changes every six hours, so a figure quoted from it resolves
+      later to a file that no longer says what was quoted. On the day this site sets a
+      launch epoch, the count in it changes entirely.
+    </p>
+    <p>
+      Cite a <strong>dated</strong> path instead. Every retained snapshot is published
+      at its own URL, written from that day's snapshot rather than from today's numbers
+      wearing that day's name:
+    </p>
+<pre class="api">https://rbptracker.org/data/archive/&lt;YYYY-MM-DD&gt;/rbp.json
+https://rbptracker.org/data/archive.json        <em>the index of what exists</em></pre>
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>Stable, not immutable, and the difference is deliberate.</strong> A
+        withhold request removes a row from every published artefact including these,
+        because that is the entire point of having a
+        <a href="method.html">correction channel</a>. So a dated figure can go
+        <em>down</em> later. This project will not promise permanence it is unwilling
+        to honour at the expense of someone asking to be delisted, and an archive that
+        kept rows a CNA had contested would become the reason the withhold did not
+        work. Retention also prunes: the current snapshot, the previous one, and one
+        per month survive.
+      </p>
+    </div>
+    {% if archive %}
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <caption>Snapshots currently resolvable. Rows can decrease on a withhold.</caption>
+        <thead>
+          <tr><th scope="col">Date</th><th scope="col" class="num">Rows</th>
+              <th scope="col" class="num">Corroborated</th><th scope="col">Epoch</th>
+              <th scope="col">URL</th></tr>
+        </thead>
+        <tbody>
+          {% for a in archive %}
+          <tr>
+            <td class="mono small" data-label="Date">{{ a.date }}</td>
+            <td class="num" data-label="Rows">{{ a.rows | commafy }}</td>
+            <td class="num" data-label="Corroborated">{{ a.corroborated if a.corroborated is not none else 'n/a' }}</td>
+            <td class="mono small" data-label="Epoch">{{ a.epoch or 'none' }}</td>
+            <td class="mono small" data-label="URL"><a href="{{ a.url }}">{{ a.url }}</a></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
     <h2 class="card-title">The contract</h2>
   </div>
   <div class="card-body">
