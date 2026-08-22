@@ -115,14 +115,26 @@ _DECLARED = [
                    "silently. The fast path is a public withhold request carrying "
                    "no reason, which is auditable from outside; two private routes "
                    "reach a person for anyone who prefers them."),
-        "status": UNMET,
-        "blocks": ("built and published, but never exercised. The public request "
-                   "route, the two private routes, the suppression lever and the "
-                   "aggregate count all exist and need no credential. What is "
-                   "missing is a single end-to-end rehearsal: file a withhold "
-                   "request naming a real row and confirm it leaves every artefact. "
-                   "Until that has happened once, this is a mechanism that has only "
-                   "ever been tested against fixtures."),
+        "status": MET,
+        "blocks": None,
+        # Rehearsed in both directions on 2026-08-22 against CVE-2025-30083, a live
+        # row 519 days public. Withheld: absent from backlog.json, backlog.csv,
+        # rbp.json, rbp.csv, summary.json, cnas.json, held_back.json,
+        # backlog_full.json, precision.json, resolutions.json and both retained
+        # prior snapshots. Revoked by closing the issue: row restored on the next
+        # build. Verified on the data branch rather than on the site, which is where
+        # the first two attempts turned out to be incomplete.
+        #
+        # ONE DELIBERATE DEVIATION from the review's wording, recorded so a reader
+        # can judge it rather than discover it. The panel asked for a "non-public"
+        # channel. The AUTOMATIC route is a public issue carrying no reason, because
+        # the private advisory form asks for affected versions, severity and CWE and
+        # would have turned a one-line request into a form nobody finishes, and
+        # because a public request makes the withheld count auditable from outside.
+        # Two private routes exist for anyone who prefers them, human-reviewed
+        # rather than automatic. The disclosure that worried the panel is answered
+        # by asking for no reason: a request naming only an id does not distinguish
+        # an embargo from a wrong owner.
         "item": "4",
     },
     {
