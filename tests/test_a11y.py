@@ -157,10 +157,35 @@ def test_export_links_are_hidden_on_a_zero_row_table():
 
 
 def test_every_table_header_cell_declares_a_scope():
+    """`<th` is a prefix of `<thead`, which is exactly how the bulk edit that added
+    these attributes broke 14 thead tags across 7 templates into
+    `<th scope="col"ead>`. So this pattern requires a word boundary, and the next
+    test asserts the tags survived, because a source-text check cannot see a
+    malformed tag the parser then discards."""
     for tpl in TEMPLATES.glob("*.html"):
         body = tpl.read_text()
-        unscoped = [m.group(0)[:60] for m in re.finditer(r"<th(?![^>]*\bscope=)", body)]
+        unscoped = [m.group(0)[:60]
+                    for m in re.finditer(r"<th(?![a-z])(?![^>]*\bscope=)", body)]
         assert not unscoped, f"{tpl.name}: {len(unscoped)} th without scope"
+
+
+def test_no_template_has_a_malformed_table_tag():
+    """The bug the browser caught and every source-level test missed.
+
+    A regex that edits markup needs a check on the PARSED result, not on the text
+    it just wrote. `<th scope="col"ead>` renders, passes every string assertion, and
+    silently breaks sticky positioning, screen-reader table semantics and the mobile
+    `thead { display: none }` rule all at once, because the parser discards the
+    thead and reparents the cells."""
+    for tpl in TEMPLATES.glob("*.html"):
+        body = tpl.read_text()
+        assert 'scope="col"ead' not in body, f"{tpl.name}: mangled thead"
+        # Every opening thead/tbody must be a bare tag, and they must balance.
+        for tag in ("thead", "tbody", "table"):
+            opens = len(re.findall(rf"<{tag}[ >]", body))
+            closes = len(re.findall(rf"</{tag}>", body))
+            assert opens == closes, (
+                f"{tpl.name}: {opens} <{tag}> vs {closes} </{tag}>")
 
 
 def test_the_primary_table_has_a_caption_carrying_the_hedge():
