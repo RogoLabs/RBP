@@ -6,7 +6,7 @@
   <h1>Reserved but Public CVE IDs</h1>
   <p class="text-muted">
     {{ summary.total | commafy }} CVE IDs in the Reserved state, publicly referenced for at
-    least {{ summary.min_age_days }} days, with no published record. That is the CVE
+    least {{ summary.get('min_age_days', 7) }} days, with no published record. That is the CVE
     Program's own definition of a Reserved but Public ID, so this is a count of a state and
     not a count of violations. Sorted oldest first; filters are in the URL, so any view
     here can be linked.
@@ -89,7 +89,7 @@
 <script>
 (function () {
   var ROWS = JSON.parse(document.getElementById('rows').textContent);
-  var SHOW_LATE = {{ 'true' if summary.min_age_days * 24 <= expectation_hours else 'false' }};
+  var SHOW_LATE = {{ 'true' if summary.get('min_age_days', 7) * 24 <= expectation_hours else 'false' }};
   var body = document.getElementById('body');
   var countEl = document.getElementById('count');
   var els = {

@@ -122,7 +122,12 @@ def cmd_run(args):
               f"{len(ledger.state['resolved'])} resolved all-time)")
 
     cyr = int(today[:4])
-    cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr))
+    cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr),
+                           sources=sources, own_channels=clock.OWNER_FEEDS)
+    # The profile is part of the measurement: `weekly` and `deep` produce
+    # materially different coverage from the same code, and a figure without it
+    # cannot be compared to another figure.
+    cov["profile"] = args.profile if not args.sources else "custom"
     print(f"  CNA coverage: {cov['covered_cnas']}/{cov['total_cnas']} CNAs "
           f"({cov['pct_cnas']}%); observed {cov['observed_pct']}% of CVEs")
     # One population, computed once, then passed to every writer. Buffer, then

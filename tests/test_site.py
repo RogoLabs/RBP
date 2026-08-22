@@ -46,6 +46,10 @@ def built(tmp_path, monkeypatch):
                       "live": {"graded": 0, "correct": 0, "precision": None,
                                "outstanding": 1, "by_tier": {}}},
         "feeds": {"requested": ["debian"], "failures": [], "attempts": 1},
+        # Above the gate, so the launched posture can be tested at all. The gate
+        # fails closed, so a fixture without coverage never launches.
+        "coverage": {"total_cnas": 10, "cnas_own_channel": 6, "cnas_sighted": 8,
+                     "pct_cnas": 80.0, "profile": "weekly"},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30,
@@ -353,6 +357,10 @@ def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
                                "outstanding": 0, "by_tier": {}}},
         "feeds": {"requested": ["debian"], "failures": [], "attempts": 1,
                   "truncated": [], "detail": {}},
+        # Above the gate: the gate fails closed, so a fixture without coverage
+        # never reaches the launched posture.
+        "coverage": {"total_cnas": 10, "cnas_own_channel": 6, "cnas_sighted": 8,
+                     "pct_cnas": 80.0, "profile": "weekly"},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30, "median_days_public": 30,
@@ -444,3 +452,75 @@ def test_no_template_uses_the_unsafe_jinja_sort_on_a_numeric_field():
         body = tpl.read_text()
         assert "sort(attribute=" not in body, (
             f"{tpl.name} uses Jinja's sort, which raises on a null. Use | sortnum().")
+
+
+# --------------------------------------------------------------------------
+# the launch gate (r3 item 7)
+# --------------------------------------------------------------------------
+
+def _summary_with_coverage(total, own):
+    return {"total": 0, "min_age_days": 7, "age_buckets": {},
+            "inference": {"k": 3, "run_coverage": 0.0,
+                          "leave_one_out": {"precision": 0.99, "coverage": 0.6,
+                                            "decided": 0},
+                          "live": {"graded": 0, "correct": 0, "precision": None,
+                                   "outstanding": 0, "by_tier": {}}},
+            "feeds": {"requested": [], "failures": [], "attempts": 0,
+                      "truncated": [], "detail": {}},
+            "coverage": {"total_cnas": total, "cnas_own_channel": own,
+                         "cnas_sighted": own, "profile": "weekly"}}
+
+
+def test_gate_status_uses_the_strict_own_channel_figure():
+    """A single sighting through any feed used to credit a CNA as covered, so the
+    gate could clear while no critical-infrastructure CNA was measurable."""
+    assert site._gate_status(_summary_with_coverage(100, 60))["cleared"] is True
+    assert site._gate_status(_summary_with_coverage(100, 40))["cleared"] is False
+    assert site._gate_status(_summary_with_coverage(100, 50))["cleared"] is True
+
+
+def test_gate_is_not_cleared_when_coverage_was_not_measured():
+    st = site._gate_status({"total": 0})
+    assert st["cleared"] is False
+    assert "not measured" in st["reason"]
+
+
+def test_launching_below_gate_fails_closed_and_still_publishes(tmp_path, monkeypatch):
+    """The obvious enforcement, a SystemExit in site.load, would have been worse
+    than the problem: it lands in the Build site step, deploy is `needs: build`
+    with no `if:`, so the deploy job is skipped and Pages serves the previous
+    artefact indefinitely with no notification. After a launch cleared on a
+    manual deep run, every scheduled weekly run would trip it and the site would
+    freeze four times a day while still serving a count."""
+    import importlib
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    (snaps / "backlog.json").write_text("[]")
+    (snaps / "summary.json").write_text(json.dumps(_summary_with_coverage(100, 10)))
+    (snaps / "cnas.json").write_text("[]")
+
+    monkeypatch.setenv("RBP_LAUNCHED", "1")
+    importlib.reload(site)
+    try:
+        out = tmp_path / "site"
+        # Publishes. Does not raise. Does not launch.
+        site.build(str(out), str(tmp_path / "snapshots"), str(tmp_path))
+        assert (out / "index.html").exists(), "the site must still publish"
+        assert (out / "overview.html").exists(), "pre-launch posture retained"
+        assert "lead-count" not in (out / "index.html").read_text()
+        assert (out / "robots.txt").exists()
+    finally:
+        monkeypatch.delenv("RBP_LAUNCHED", raising=False)
+        importlib.reload(site)
+
+
+def test_launched_flag_is_validated_strictly():
+    """A bare truthiness test read `on`, `y` and `enabled` as not-launched, so a
+    deliberate launch could look like a no-op and be debugged as a build bug."""
+    assert site._validated_launched("1") is True
+    assert site._validated_launched("true") is True
+    assert site._validated_launched("") is False
+    assert site._validated_launched("0") is False
+    for bad in ("on", "y", "enabled", "yes please"):
+        with pytest.raises(SystemExit, match="not a recognised boolean"):
+            site._validated_launched(bad)

@@ -59,7 +59,7 @@
   <div class="card-body">
     <p>
       Rows are reportable once publicly referenced for at least
-      <strong>{{ summary.min_age_days }} days</strong>, more than twice the
+      <strong>{{ summary.get('min_age_days', 7) }} days</strong>, more than twice the
       {{ expectation_hours }}-hour window.
     </p>
     <div class="caveat warn">

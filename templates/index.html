@@ -23,7 +23,7 @@
 {% if summary.total %}
 <p class="text-muted">
   Nothing appears here until it has been publicly referenced for at least
-  {{ summary.min_age_days }} days, more than twice the {{ expectation_hours }}-hour window,
+  {{ summary.get('min_age_days', 7) }} days, more than twice the {{ expectation_hours }}-hour window,
   measured from the earliest advisory this site can see. The Program's own words on why
   that matters: it
   <em>&ldquo;does not condone any unnecessary, intentional, or routine delay between

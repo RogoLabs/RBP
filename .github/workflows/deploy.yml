@@ -180,6 +180,13 @@ jobs:
       - name: Check what is about to be published
         run: python -m rbp.publish check --state .state
 
+      # Fail LOUD, separately from the publication. site.py already failed
+      # closed on the flag and served the pre-launch page, so the site is never
+      # frozen by this; the point of the step is that a launch attempted below
+      # gate produces a red check instead of silently not launching.
+      - name: Launch gate
+        run: python -m rbp.publish gate --site site
+
       - name: Persist durable state
         if: ${{ vars.RBP_PAUSE != '1' && inputs.dry_run != true }}
         run: |

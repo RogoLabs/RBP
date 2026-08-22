@@ -17,14 +17,30 @@ def _year(cid):
         return None
 
 
-def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50):
+def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
+            sources=(), own_channels=None):
+    """Coverage, as three numbers rather than one.
+
+    The single `pct_cnas` figure credited a CNA as covered on ONE sighting of one
+    of its CVEs through any feed. Nothing required the site to read that CNA's own
+    channel, or any channel that systematically carries its products, which is
+    the property the launch gate exists to guarantee. The nine-feed weekly
+    profile is distro and OSS package feeds, which never carry ICS or OT
+    products, so the gate could clear while zero critical-infrastructure CNAs
+    were measurable.
+
+    So: `cnas_sighted` is the old number, honestly relabelled.
+    `cnas_own_channel` counts CNAs whose own advisory feed was actually ingested
+    this run, which is the strict figure the gate should use.
+    """
     pub = corpus_df[corpus_df["state"] == "PUBLISHED"].copy()
     pub = pub[pub["cve_id"].map(lambda c: _year(c) in recent_years)]
     vol = pub["assigner"].value_counts()
     total_vol = int(vol.sum())
-    total_cnas = int((vol > 0).sum())
+    # value_counts() never emits a zero, so the old `(vol > 0).sum()` filter was
+    # a no-op dressed as a guard.
+    total_cnas = int(vol.size)
 
-    state = dict(zip(corpus_df["cve_id"], corpus_df["state"]))
     assigner = dict(zip(corpus_df["cve_id"], corpus_df["assigner"]))
     pub_ids = set(pub["cve_id"])
     surfaced_ids = {c for c in refs if c in pub_ids}          # published CVEs we actually saw
@@ -38,10 +54,24 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50):
     top = list(vol.head(top_n).index)
     top_covered = [c for c in top if c in covered]
 
+    # Strict figure: the CNA's own advisory channel was ingested this run.
+    own_channels = own_channels or {}
+    requested = set(sources or ())
+    own_ingested = sorted(cna for cna, feeds in own_channels.items()
+                          if feeds & requested)
+
     return {
         "total_cnas": total_cnas,
         "covered_cnas": len(covered),
         "pct_cnas": round(100 * len(covered) / max(total_cnas, 1), 1),
+        # Three separate integers, so a percentage is never trended over a
+        # denominator that moved. The window is derived from the run date, so
+        # both sides of the ratio shift overnight on 1 January.
+        "cnas_sighted": len(covered),
+        "cnas_own_channel": len(own_ingested),
+        "own_channel_cnas": own_ingested,
+        "window": list(recent_years),
+        "sources": sorted(requested),
         "pct_volume_attributable": round(100 * covered_vol / max(total_vol, 1), 1),
         "observed_pct": round(100 * len(surfaced_ids) / max(total_vol, 1), 2),
         "observed_ids": len(surfaced_ids),

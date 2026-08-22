@@ -168,13 +168,45 @@ def check(state_dir):
     return problems
 
 
+def gate(site_dir):
+    """Fail the run when a launch was requested below the coverage gate.
+
+    Deliberately separate from the publication. rbp.site already fails closed on
+    the flag and serves the pre-launch page, so the site is never frozen by this
+    check; what this adds is that an attempted launch below gate produces a red
+    check rather than silently not launching, which would otherwise look like a
+    build problem.
+    """
+    from . import site as site_mod
+    path = os.path.join(site_dir, "data", "summary.json")
+    if not os.path.exists(path):
+        print(f"no {path}; nothing to gate")
+        return 0
+    summary = json.load(open(path))
+    status = site_mod._gate_status(summary)
+    requested = site_mod.LAUNCHED
+    cov = summary.get("coverage") or {}
+    print(f"gate: own-channel {status.get('own_channel')}/{status.get('total')} "
+          f"= {status.get('pct')}% (need {status['required']}%), "
+          f"sighted {status.get('sighted')}, profile {cov.get('profile')!r}")
+    if requested and not status["cleared"]:
+        print(f"FAIL: launch requested but {status['reason']}. The site was "
+              "published in its pre-launch posture, which is correct, but the "
+              "launch did not happen and should not look like it did.")
+        return 1
+    print("launch requested and gate cleared" if requested
+          else "not launched; gate not required")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="rbp.publish")
-    ap.add_argument("action", choices=["stage", "check"])
+    ap.add_argument("action", choices=["stage", "check", "gate"])
     ap.add_argument("--state", default=".state")
     ap.add_argument("--snapshots", default="snapshots")
     ap.add_argument("--data", default="data")
     ap.add_argument("--keep", type=int, default=2)
+    ap.add_argument("--site", default="site")
     args = ap.parse_args(argv)
 
     if args.action == "stage":
@@ -185,6 +217,9 @@ def main(argv=None):
         stale = prune_ledger(args.state, args.snapshots)
         print(f"dropped {stale} stale ledger prediction(s)")
         return 0
+
+    if args.action == "gate":
+        return gate(args.site)
 
     problems = check(args.state)
     if problems:

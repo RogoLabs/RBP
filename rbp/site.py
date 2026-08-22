@@ -40,7 +40,32 @@ from . import clock
 #
 # Flip with RBP_LAUNCHED=1, wired to a repository variable so it is a settings
 # change rather than a commit. The launch gate is 50% CNA coverage (PLAN.md).
-LAUNCHED = os.environ.get("RBP_LAUNCHED", "").strip().lower() in ("1", "true", "yes")
+# Minimum cnas_own_channel percentage before the front door may become the
+# dashboard. Gated on the STRICT coverage figure, not on the sighted count: a
+# single sighting through any feed used to credit a CNA as covered, so the gate
+# could clear while no critical-infrastructure CNA was measurable at all.
+GATE_PCT = 50.0
+
+
+def _validated_launched(raw):
+    """Parse RBP_LAUNCHED strictly, the way the epoch is parsed.
+
+    A bare truthiness test silently read `on`, `y` and `enabled` as
+    not-launched, so a deliberate launch could look like a no-op and be
+    debugged as a build problem.
+    """
+    raw = (raw or "").strip().lower()
+    if raw in ("", "0", "false", "no"):
+        return False
+    if raw in ("1", "true", "yes"):
+        return True
+    raise SystemExit(
+        f"RBP_LAUNCHED={raw!r} is not a recognised boolean. Use 1 or 0. "
+        "Refusing to guess: a misread flag either publishes a site that should "
+        "be held or holds one that should be published.")
+
+
+LAUNCHED = _validated_launched(os.environ.get("RBP_LAUNCHED"))
 
 # Minimum graded predictions before a production precision figure is shown at
 # all. With n=1 the site rendered "100.00%" in a headline tile, which is a
@@ -89,6 +114,33 @@ def _read_strict(path):
         raise SystemExit(f"cannot read {path}: {e}") from e
 
 
+def _gate_status(summary):
+    """Is the launch gate cleared, on the strict coverage figure?
+
+    Reported whether or not the flag is set, so /method can state the position
+    truthfully at any time rather than only when someone tries to launch.
+    """
+    cov = summary.get("coverage") or {}
+    total = cov.get("total_cnas") or 0
+    own = cov.get("cnas_own_channel")
+    sighted = cov.get("cnas_sighted", cov.get("covered_cnas"))
+    if not total or own is None:
+        return {"cleared": False, "pct": None, "required": GATE_PCT,
+                "reason": "coverage was not measured in this snapshot"}
+    pct = round(100 * own / total, 1)
+    return {
+        "cleared": pct >= GATE_PCT,
+        "pct": pct,
+        "required": GATE_PCT,
+        "own_channel": own,
+        "sighted": sighted,
+        "total": total,
+        "profile": cov.get("profile"),
+        "reason": (f"own-channel coverage is {pct}% of {total} CNAs, "
+                   f"below the {GATE_PCT}% gate"),
+    }
+
+
 def _assert_consistent(rows, summary, cnas):
     """One invariant, raised in one place, covering three separate defects:
     the epoch applied to some writers and not others, a truncated artefact, and
@@ -124,6 +176,24 @@ def load(snap_root, data_dir):
     summary = _read_strict(os.path.join(latest, "summary.json"))
     cnas = _read_strict(os.path.join(latest, "cnas.json"))
     _assert_consistent(rows, summary, cnas)
+
+    # The launch gate, enforced here but deliberately NOT by refusing to build.
+    # A SystemExit in this function lands in the Build site step, and deploy is
+    # `needs: build` with no `if:`, so the whole deploy job would be skipped and
+    # Pages would serve the previous artefact indefinitely with no notification.
+    # Worse, after a launch cleared on a manual `deep` run, every scheduled
+    # `weekly` run would trip the refusal and the site would freeze permanently
+    # four times a day while still serving a count and a six-hour cadence claim.
+    #
+    # So: fail CLOSED on the flag (ignore RBP_LAUNCHED and keep serving the
+    # pre-launch page), and let a separate workflow step fail loud in CI. Never
+    # fail dark on the publication itself.
+    launched = LAUNCHED
+    gate = _gate_status(summary)
+    if launched and not gate["cleared"]:
+        print(f"REFUSING TO LAUNCH: {gate['reason']}. "
+              "Serving the pre-launch page instead.")
+        launched = False
     grader = _read(os.path.join(data_dir, "precision.json"),
                    {"graded": [], "predictions": {}, "history": []})
     resolutions = _read(os.path.join(data_dir, "resolutions.json"),
@@ -225,10 +295,11 @@ def load(snap_root, data_dir):
         # all. `pct` renders two decimals, so the first graded case published
         # "100.00%" in a headline tile and on every per-CNA page.
         "precision_floor": GRADER_MIN_N,
-        "launched": LAUNCHED,
+        "launched": launched,
+        "gate": gate,
         # Where the dashboard actually lives, so the nav and the logo point at
         # it in both postures.
-        "home": "index.html" if LAUNCHED else "overview.html",
+        "home": "index.html" if launched else "overview.html",
     }
 
 
@@ -371,6 +442,7 @@ CSV_COLS = ["cve_id", "state", "days_public", "past_expectation",
 
 
 def _write_data(out, ctx):
+    launched = ctx["launched"]
     d = os.path.join(out, "data")
     os.makedirs(d, exist_ok=True)
 
@@ -387,16 +459,21 @@ def _write_data(out, ctx):
 
     # One file per CNA, so anyone can pull just their own rows.
     per = os.path.join(d, "cna")
-    if LAUNCHED:
+    if launched:
         os.makedirs(per, exist_ok=True)
-    for c in (ctx["cnas"] if LAUNCHED else []):
+    for c in (ctx["cnas"] if launched else []):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
         json.dump({"cna": c["cna"], "summary": c, "rows": mine},
                   open(os.path.join(per, f"{c['slug']}.json"), "w"), indent=1)
 
 
-PAGES = [
-    ("index.html", "index.html" if LAUNCHED else "overview.html"),
+# Page targets depend on the EFFECTIVE posture, which is not the same as the
+# environment flag: the launch gate can demote a requested launch. Computing this
+# at import time meant the demotion never reached the page targets, so a launch
+# attempted below gate still wrote the dashboard to index.html. That is precisely
+# the outcome the gate exists to prevent.
+_PAGE_TEMPLATES = [
+    ("index.html", None),
     ("cves.html", "cves.html"),
     ("cnas.html", "cnas.html"),
     ("method.html", "method.html"),
@@ -404,6 +481,12 @@ PAGES = [
     ("data.html", "data.html"),
     ("changes.html", "changes.html"),
 ]
+
+
+def pages_for(launched):
+    """Template to output filename, for the given effective posture."""
+    return [(t, ("index.html" if launched else "overview.html") if o is None else o)
+            for t, o in _PAGE_TEMPLATES]
 
 
 def build(out, snap_root, data_dir):
@@ -414,11 +497,13 @@ def build(out, snap_root, data_dir):
     if os.path.isdir(STATIC):
         shutil.copytree(STATIC, os.path.join(out, "static"), dirs_exist_ok=True)
 
-    for template, target in PAGES:
+    launched = ctx["launched"]
+    pages = pages_for(launched)
+    for template, target in pages:
         html = env.get_template(template).render(**ctx, page=target)
         open(os.path.join(out, target), "w").write(html)
 
-    if not LAUNCHED:
+    if not launched:
         # GitHub Pages cannot set X-Robots-Tag, and a meta tag cannot cover the
         # JSON and CSV under data/. robots.txt is the only lever that reaches them.
         open(os.path.join(out, "robots.txt"), "w").write(
@@ -445,10 +530,10 @@ def build(out, snap_root, data_dir):
     # fetchable and linkable.
     written_cna = 0
     cna_dir = os.path.join(out, "cna")
-    if LAUNCHED:
+    if launched:
         os.makedirs(cna_dir, exist_ok=True)
     tpl = env.get_template("cna.html")
-    for c in (ctx["cnas"] if LAUNCHED else []):
+    for c in (ctx["cnas"] if launched else []):
         mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
         # Keyed on the TRACKED owner. reconcile sets `owner` to the post-transfer
         # assigner, so keying on it gave a CNA-LR that published someone else's
@@ -463,13 +548,13 @@ def build(out, snap_root, data_dir):
         written_cna += 1
 
     _write_data(out, ctx)
-    posture = "LAUNCHED, / is the dashboard" if LAUNCHED else \
+    posture = "LAUNCHED, / is the dashboard" if launched else \
               "pre-launch, / is the holding page and the dashboard is /overview.html"
     # Report what was written, not what was available. Printing the available
     # count while withholding the pages is the same class of untruth the review
     # found elsewhere on this site.
-    print(f"site: {len(PAGES)} pages + {written_cna} CNA pages -> {out}"
-          + ("" if LAUNCHED else
+    print(f"site: {len(pages)} pages + {written_cna} CNA pages -> {out}"
+          + ("" if launched else
              f" ({len(ctx['cnas'])} CNA pages withheld until launch)"))
     print(f"      {posture}")
     return ctx
