@@ -83,18 +83,38 @@ def test_coverage_condition_reports_the_profile_the_cron_actually_ran():
 
 def test_the_gate_and_the_checklist_are_not_the_same_question():
     """Conflating them is the specific error Part 2 was written about: five review
-    findings had assumed coverage was the only gate. A cleared coverage gate must
-    not clear the checklist."""
+    findings had assumed coverage was the only gate.
+
+    This used to assert that something OTHER than coverage was outstanding, which
+    was true while five conditions were open and expired the moment they landed.
+    Eight of nine are now met and coverage is the only one left, so the checklist
+    legitimately coincides with the gate today. That is a fact about progress, not
+    an invariant, and a test that pins it would fail on the next thing we fix.
+
+    What IS invariant: `cleared` is true only when every condition is met, and the
+    coverage condition is DERIVED, so a cleared gate cannot clear the checklist by
+    itself while any other condition is unmet.
+    """
+    # A cleared gate, with the coverage condition's other requirements unmet
+    # (the fixture has no pinned roster), must not clear the checklist.
     st = launch.status(_summary(effective=434), _gate(pct=100.0, cleared=True))
     assert st["cleared"] is False
-    # The PROPERTY, not a count. This asserted `unmet >= 5` and went stale the first
-    # time a condition legitimately landed, which is the fourth time today a test of
-    # mine has pinned a shape instead of the thing it cared about.
-    assert st["unmet"] > 0, "a cleared coverage gate cleared the whole checklist"
-    unmet_numbers = {int(b.split(".")[0]) for b in st["blocking"]}
-    assert unmet_numbers - {1}, (
-        "coverage (condition 1) is the only thing left, so the checklist has "
-        "collapsed into the gate it was written to be broader than")
+    assert st["unmet"] >= 1
+    assert 1 in {int(b.split(".")[0]) for b in st["blocking"]}, (
+        "coverage is reported as met despite an unpinned roster")
+
+    # And `cleared` tracks the count rather than being set independently.
+    assert st["cleared"] is (st["unmet"] == 0)
+    assert st["met"] + st["unmet"] == st["total"]
+
+
+def test_cleared_requires_every_condition_not_just_most():
+    """The roll-up must not round up. With one condition outstanding the answer is
+    no, whatever the other eight say."""
+    st = launch.status(_summary(), _gate())
+    if st["unmet"]:
+        assert st["cleared"] is False
+    assert st["cleared"] == (st["unmet"] == 0)
 
 
 def test_declared_conditions_carry_a_review_item_reference():
@@ -139,7 +159,7 @@ def test_plan_and_site_publish_the_same_number_of_conditions():
 
 @pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (4, True), (5, True),
                                           (6, True), (7, True),
-                                          (8, False), (9, False)])
+                                          (8, True), (9, True)])
 def test_declared_statuses_match_what_is_actually_built(n, expect_met):
     """Pins today's honest position so a status cannot drift silently. When one of
     these genuinely lands, this test is the thing that has to be updated

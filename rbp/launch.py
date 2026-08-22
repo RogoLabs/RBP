@@ -203,23 +203,53 @@ _DECLARED = [
     {
         "n": 8,
         "title": "A failure notification exists, and has been exercised once",
-        "detail": ("The pipeline publishes four times a day unattended. A silent "
-                   "stop looks identical to a quiet week, and the site would keep "
-                   "serving a stale count with a freshness claim attached."),
-        "status": UNMET,
-        "blocks": ("nothing notifies on failure beyond the default Actions email to "
-                   "the commit author, and it has never been deliberately tripped."),
+        "detail": ("One issue per failure episode, opened on the first failure, "
+                   "commented on subsequent ones so the duration is visible, and "
+                   "closed automatically on the next success. A fire_drill input "
+                   "exercises the path on demand without breaking the build."),
+        "status": MET,
+        "blocks": None,
+        # Exercised for real on 2026-08-22, and not by the fire drill: a bug of mine
+        # failed the build and the notification opened RogoLabs/RBP#2 with the run
+        # link and the statement that nothing published and no state advanced. The
+        # next successful run closed it. Both halves of the cycle observed.
+        #
+        # Deduplicated to one issue per failure episode, because a pipeline broken
+        # for two days would otherwise file eight issues and eight issues from a bot
+        # is indistinguishable from noise, which is the same muted-alert failure as
+        # having no alert at all.
         "item": "10",
     },
     {
         "n": 9,
         "title": "The launch state rehearsed via dry_run against real data",
-        "detail": ("The dry_run input runs the pipeline and builds the site while "
-                   "publishing nothing, so the launched posture and the epoch flip "
-                   "can both be exercised against live data before either is real."),
-        "status": UNMET,
-        "blocks": ("the lever exists and has never been pulled. Launch day would "
-                   "otherwise be the first execution of the launched code path."),
+        "detail": ("dry_run plus rehearse_launch and rehearse_epoch build the "
+                   "launched posture and an epoch flip against live data while "
+                   "publishing nothing, so launch day is not the first execution of "
+                   "the launched code path. Refused outside a dry run rather than "
+                   "silently ignored."),
+        "status": MET,
+        "blocks": None,
+        # Rehearsed 2026-08-22 against live data, on the third attempt. The first two
+        # attempts are the reason this is worth recording rather than ticking:
+        #
+        #   1. Impossible. RBP_LAUNCHED and RBP_EPOCH were repository variables, so
+        #      the only way to see the launched posture was to set them, which means
+        #      going live to find out whether going live works. Added dry-run-only
+        #      dispatch overrides.
+        #   2. Green and did not rehearse. publish.gate went report-only on a dry run
+        #      but site.load's demotion is a SECOND check, so the run built the
+        #      holding page while every lever said LAUNCHED. Added RBP_REHEARSE as a
+        #      separate lever.
+        #   3. Broke the suite. RBP_REHEARSE was in the workflow's top-level env, so
+        #      it reached the test job and switched off the demotion a test asserts.
+        #      Scoped it to the build job and made the suite hermetic.
+        #
+        # What the passing rehearsal produced, from the pipeline rather than the
+        # suite: LAUNCHED posture built, / is the dashboard, 8 pages + 1 CNA page,
+        # epoch 2026-08-01 holding back 442 rows with the oldest at 521 days and 80
+        # counted, headline core 50, gate reported at 21.7% without failing the run,
+        # deploy skipped and no state persisted.
         "item": "1",
     },
 ]
