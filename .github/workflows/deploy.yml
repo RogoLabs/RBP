@@ -60,12 +60,6 @@ env:
   # the count retroactively. Held-back rows stay in the raw data and their count
   # is shown on /method.
   RBP_EPOCH: ${{ (inputs.dry_run == true && inputs.rehearse_epoch != '') && inputs.rehearse_epoch || (vars.RBP_EPOCH || '') }}
-  # Lets rbp.site build the LAUNCHED posture below the coverage gate. Set ONLY on a
-  # dry run with rehearse_launch, where deploy is skipped and the artefact is thrown
-  # away. Without it the first rehearsal built the holding page while every other
-  # lever said LAUNCHED, so the launched code path stayed unexercised and condition 9
-  # would have been satisfied by a run that did not test the thing it names.
-  RBP_REHEARSE: ${{ (inputs.dry_run == true && inputs.rehearse_launch == true) && '1' || '' }}
   # Incident switch. Set the repository variable RBP_PAUSE to 1 and the pipeline
   # still runs and still reports, but nothing is published and no state advances.
   # There was previously no lever at all: no `if:` on any job, no dry run and no
@@ -109,6 +103,18 @@ jobs:
     # so a hung fetch would otherwise burn six hours and collide with the next
     # scheduled tick.
     timeout-minutes: 45
+    env:
+      # SCOPED TO THIS JOB, not the workflow.
+      #
+      # It was in the top-level env block, so it leaked into the `test` job and
+      # switched off the very demotion that test_launching_below_gate_fails_closed
+      # exists to assert. The rehearsal then failed at `test` with the suite
+      # reporting "LAUNCHED, / is the dashboard" from a temp directory, which is the
+      # test being told by its environment to expect the opposite of its own point.
+      #
+      # A lever that changes behaviour must not be visible to the job that verifies
+      # that behaviour.
+      RBP_REHEARSE: ${{ (inputs.dry_run == true && inputs.rehearse_launch == true) && '1' || '' }}
     permissions:
       contents: write     # the persist step pushes to the data branch
       issues: read        # the suppression lever reads `withhold`-labelled issues
