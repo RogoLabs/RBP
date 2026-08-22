@@ -78,6 +78,15 @@ VETO_CONFIDENCE = 0.85
 # gate keyed on a single sighting reopens on any stray row with no code change.
 MIN_SIGHTINGS = 3
 
+# Minimum graded verdicts before a precision figure is published at all, globally
+# or per stratum. At n=1 the site rendered "100.00%" in a headline tile, which is a
+# stronger claim than the leave-one-out figure over 29,000 decisions beside it.
+#
+# Owned here rather than in site.py, because whoever computes the number has to be
+# the one that floors it. Split across two modules, the raw value reached
+# summary.json while the floored one reached precision.json, and both published.
+MIN_GRADED = 20
+
 
 class BlockInferencer:
     """Infer the assigner of an ID from its published neighbours in ID space."""
@@ -114,6 +123,48 @@ class BlockInferencer:
         if len(left) < k or len(right) < k:
             return None, None
         return [owners[x] for x in left], [owners[x] for x in right]
+
+    def run_length(self, cve_id, cap=60):
+        """How many contiguous published neighbours agree on one assigner.
+
+        Recorded per prediction because it CANNOT be backfilled: it is a property
+        of the corpus at prediction time and the corpus moves. Without it there is
+        no way to separate "the method is accurate" from "the method is accurate on
+        wide blocks and has never been tested on narrow ones", which matters because
+        the entire precision warrant is dominated by one CNA whose blocks are very
+        wide.
+
+        Counts outward from the ID in both directions while the assigner holds, so a
+        prediction resting on 3 neighbours either side is distinguishable from one
+        resting on 40. Capped, because walking a 10,000-ID block per row would cost
+        more than the signal is worth.
+        """
+        try:
+            _, year, num = cve_id.split("-")
+            num = int(num)
+        except ValueError:
+            return None
+        if year not in self.index:
+            return None
+        ids, owners = self.index[year]
+        i = bisect.bisect_left(ids, num)
+        left = [x for x in ids[max(0, i - cap):i]]
+        right = [x for x in ids[i:i + cap + 1] if x != num]
+        if not left or not right:
+            return 0
+        who = owners[left[-1]]
+        if owners[right[0]] != who:
+            return 0
+        n = 0
+        for x in reversed(left):
+            if owners[x] != who:
+                break
+            n += 1
+        for x in right:
+            if owners[x] != who:
+                break
+            n += 1
+        return n
 
     def infer(self, cve_id, k=None):
         """Return the unanimous assigner of the k neighbours each side, or None."""
@@ -198,24 +249,70 @@ class BlockInferencer:
         k = self.k if k is None else k
         years = [year] if year else list(self.index)
         correct = wrong = abstain = 0
+        # STRATIFIED BY TRUE OWNER, which is the point.
+        #
+        # The out-of-sample warrant was 100% on n=224 and 213 of those 224 were one
+        # CNA, so eleven cases informed every other CNA in the Program. A global
+        # figure can clear a 97% floor while the tail error rate is 2 in 3, and both
+        # known-wrong rows were in the tail. A single number cannot express that; a
+        # distribution can.
+        per = collections.defaultdict(lambda: [0, 0, 0])   # [correct, wrong, abstain]
         for y in years:
             ids, owners = self.index.get(y, ([], {}))
             for idx, num in enumerate(ids):
+                truth = owners[num]
                 left = ids[max(0, idx - k):idx]
                 right = ids[idx + 1:idx + 1 + k]
                 if len(left) < k or len(right) < k:
                     abstain += 1
+                    per[truth][2] += 1
                     continue
                 cands = {owners[x] for x in left} | {owners[x] for x in right}
                 if len(cands) != 1:
                     abstain += 1
+                    per[truth][2] += 1
                     continue
                 pred = cands.pop()
-                if pred == owners[num]:
+                if pred == truth:
                     correct += 1
+                    per[truth][0] += 1
                 else:
                     wrong += 1
-        return _score(correct, wrong, abstain, k, "leave-one-out")
+                    per[truth][1] += 1
+
+        out = _score(correct, wrong, abstain, k, "leave-one-out")
+        # Per-CNA, floored. Below the floor a CNA reads "not separately measurable"
+        # rather than inheriting the global figure, which is what a single shared
+        # number silently does.
+        strata = {}
+        for cna, (c, w, a) in per.items():
+            decided = c + w
+            strata[cna] = {
+                "decided": decided, "correct": c, "wrong": w, "abstained": a,
+                "precision": round(c / decided, 4) if decided >= MIN_GRADED else None,
+                "below_floor": decided < MIN_GRADED,
+                "coverage": round(decided / (decided + a), 4) if (decided + a) else None,
+            }
+        ranked = sorted(strata.items(), key=lambda kv: -kv[1]["decided"])
+        out["by_cna"] = dict(ranked[:40])
+        out["strata"] = len(strata)
+        out["measurable_strata"] = sum(1 for v in strata.values() if not v["below_floor"])
+        # THE COMPOSITION, published beside the figure rather than twelve lines
+        # away. This is the number that makes the global precision readable.
+        top = ranked[0] if ranked else None
+        out["largest_stratum"] = top[0] if top else None
+        out["largest_stratum_share"] = (
+            round(top[1]["decided"] / max(correct + wrong, 1), 4) if top else None)
+        # The tail: every stratum outside the largest, taken together.
+        tail_c = sum(v["correct"] for c_, v in ranked[1:])
+        tail_w = sum(v["wrong"] for c_, v in ranked[1:])
+        out["tail"] = {
+            "decided": tail_c + tail_w, "correct": tail_c, "wrong": tail_w,
+            "precision": (round(tail_c / (tail_c + tail_w), 4)
+                          if (tail_c + tail_w) >= MIN_GRADED else None),
+            "below_floor": (tail_c + tail_w) < MIN_GRADED,
+        }
+        return out
 
 
 def _same(a, b):
@@ -262,12 +359,21 @@ class Grader:
             except Exception:  # noqa: BLE001
                 pass
 
-    def record(self, cve_id, predicted_owner, tier, k, today):
+    def record(self, cve_id, predicted_owner, tier, k, today, run_length=None):
         """Log a prediction so a future run can mark it. First prediction for
-        an ID wins: re-recording would let a late correction hide an early miss."""
+        an ID wins: re-recording would let a late correction hide an early miss.
+
+        `run_length` is how many contiguous published IDs on either side agreed,
+        recorded NOW because it cannot be backfilled: it is a property of the
+        corpus at prediction time, and the corpus moves. Density bands are the only
+        way to tell "the method is accurate" from "the method is accurate on wide
+        blocks and untested on narrow ones", and the whole precision warrant is
+        dominated by one CNA with very wide blocks.
+        """
         if predicted_owner and cve_id not in self.state["predictions"]:
             self.state["predictions"][cve_id] = {
                 "predicted": predicted_owner, "tier": tier, "k": k, "on": today,
+                "run_length": run_length,
             }
 
     def withdraw(self, keep_ids):
@@ -335,31 +441,81 @@ class Grader:
         return newly, summary
 
     def summary(self):
-        # Precision is computed over SCORED verdicts only. A rejection closes a
-        # prediction without revealing an assigner, so counting it as a miss
-        # would penalise the method for an outcome it never predicted.
-        graded = [g for g in self.state["graded"] if g.get("scored", True)]
-        correct = sum(1 for g in graded if g["correct"])
-        n = len(graded)
-        by_tier = collections.defaultdict(lambda: [0, 0])
-        for g in graded:
-            by_tier[g["tier"]][0] += 1
-            by_tier[g["tier"]][1] += int(g["correct"])
-        return {
-            "graded": n, "correct": correct,
-            "precision": round(correct / n, 4) if n else None,
-            "outstanding": len(self.state["predictions"]),
-            "closed_unscored": sum(1 for g in self.state["graded"]
-                                   if not g.get("scored", True)),
-            "by_tier": {t: {"graded": a, "correct": b,
-                            "precision": round(b / a, 4) if a else None}
-                        for t, (a, b) in by_tier.items()},
-            "misses": [g for g in graded if not g["correct"]][-25:],
-        }
+        """The live accuracy record for this grader's state."""
+        return summarise_state(self.state)
 
     def save(self):
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
         json.dump(self.state, open(self.path, "w"), indent=1)
+
+
+def summarise_state(state):
+    """The live accuracy record, FLOORED here and nowhere else.
+
+    The floor used to live only in site.py, applied while building the derived
+    file, so Grader.summary published the raw value straight into summary.json.
+    Two files from the same run then said different things about the site's own
+    accuracy: summary.json carried `precision: 1.0` on a single graded case while
+    precision.json carried `precision: null, below_floor: true`. A consumer reading
+    the first got "100% accurate" from n=1, a stronger claim than the leave-one-out
+    figure over 29,000 decisions sitting beside it.
+
+    A module-level function over raw state, so the site can floor a ledger it loaded
+    from disk without either recomputing the rule or depending on a summary block
+    that may be absent. One implementation, two callers.
+
+    Precision is over SCORED verdicts only. A rejection closes a prediction without
+    revealing an assigner, so counting it as a miss would penalise the method for an
+    outcome it never predicted.
+    """
+    graded = [g for g in (state.get("graded") or []) if g.get("scored", True)]
+    correct = sum(1 for g in graded if g.get("correct"))
+    n = len(graded)
+
+    by_tier = collections.defaultdict(lambda: [0, 0])
+    # Per-CNA strata. The out-of-sample warrant was 100% on n=224 and 213 of those
+    # 224 were one CNA, so eleven cases informed every other CNA in the Program. A
+    # global figure that clears a floor while the tail error rate is 2 in 3 is not
+    # a measurement of the tail, and the tail is where both known-wrong rows were.
+    by_cna = collections.defaultdict(lambda: [0, 0])
+    for g in graded:
+        by_tier[g.get("tier", "?")][0] += 1
+        by_tier[g.get("tier", "?")][1] += int(bool(g.get("correct")))
+        who = g.get("actual") or g.get("predicted") or "unknown"
+        by_cna[who][0] += 1
+        by_cna[who][1] += int(bool(g.get("correct")))
+
+    def floored(a, b):
+        """(precision, below_floor). The floor applies per stratum, not just
+        globally: a CNA below it reads "not separately measurable" rather than
+        inheriting the global figure, which is what one shared number silently
+        does."""
+        if a < MIN_GRADED:
+            return None, True
+        return round(b / a, 4), False
+
+    prec, below = floored(n, correct)
+    return {
+        "graded": n,
+        "correct": correct,
+        "precision": prec,
+        "below_floor": below,
+        "floor": MIN_GRADED,
+        "outstanding": len(state.get("predictions") or {}),
+        "closed_unscored": sum(1 for g in (state.get("graded") or [])
+                               if not g.get("scored", True)),
+        "by_tier": {t: {"graded": a, "correct": b,
+                        "precision": floored(a, b)[0],
+                        "below_floor": floored(a, b)[1]}
+                    for t, (a, b) in sorted(by_tier.items())},
+        "by_cna": {c: {"graded": a, "correct": b,
+                       "precision": floored(a, b)[0],
+                       "below_floor": floored(a, b)[1]}
+                   for c, (a, b) in sorted(by_cna.items(), key=lambda kv: -kv[1][0])},
+        "strata": len(by_cna),
+        "misses": [g for g in graded if not g.get("correct")][-25:],
+    }
+
 
 
 # --------------------------------------------------------------------------
@@ -423,7 +579,8 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
         if "vetoed" in method:
             vetoed += 1
         if record_for is None or row["cve_id"] in record_for:
-            grader.record(row["cve_id"], owner, tier, k, today)
+            grader.record(row["cve_id"], owner, tier, k, today,
+                          run_length=inferencer.run_length(row["cve_id"]))
 
     # A retraction has to reach the ledger, not just the site.
     withdrawn = grader.withdraw(record_for) if record_for is not None else []

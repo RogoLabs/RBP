@@ -79,10 +79,13 @@ def _validated_launched(raw):
 
 LAUNCHED = _validated_launched(os.environ.get("RBP_LAUNCHED"))
 
-# Minimum graded predictions before a production precision figure is shown at
-# all. With n=1 the site rendered "100.00%" in a headline tile, which is a
-# stronger claim than the leave-one-out figure it sits beside.
-GRADER_MIN_N = 20
+# The precision floor now lives in inference.MIN_GRADED, because whoever computes
+# the number has to be the one that floors it. Split across two modules, the raw
+# value reached summary.json while the floored one reached precision.json, and both
+# published. Re-exported for the tests that reference it.
+from . import inference as _inference
+
+GRADER_MIN_N = _inference.MIN_GRADED
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -457,18 +460,23 @@ def load(snap_root, data_dir):
         "resolutions_n": len(_published_closures),
         "resolutions_rejected_n": len(_rejected_closures),
         "resolutions_tracked": len(resolutions.get("open", {})),
+        # Read from the run's own accuracy block, NOT recomputed here.
+        #
+        # This block used to recompute precision with the floor applied, while
+        # Grader.summary published the unfloored value into summary.json. Two files
+        # from the same run then disagreed about the site's own accuracy:
+        # summary.json said precision 1.0 at graded 1, precision.json said null with
+        # below_floor true, and both were live. The floor now lives in
+        # Grader.summary, and this reads what it produced.
+        # Floored by inference.summarise_state, the one implementation of the rule.
+        #
+        # This block used to recompute precision with the floor applied while
+        # Grader.summary published the unfloored value into summary.json. Two files
+        # from the same run then disagreed about the site's own accuracy:
+        # summary.json said precision 1.0 at graded 1, precision.json said null with
+        # below_floor true, and both were live on the data branch.
         "grader": {
-            "graded": len(graded),
-            "correct": sum(1 for g in graded if g.get("correct")),
-            # Below the floor this is None and the templates render a sentence
-            # rather than a metric tile. The project already applies exactly this
-            # discipline to other people's numbers via MIN_DENOMINATOR; applying
-            # it to its own claim is the same rule.
-            "precision": (sum(1 for g in graded if g.get("correct")) / len(graded)
-                          if len(graded) >= GRADER_MIN_N else None),
-            "below_floor": len(graded) < GRADER_MIN_N,
-            "outstanding": len(grader.get("predictions", {})),
-            "misses": [g for g in graded if not g.get("correct")][-25:],
+            **_inference.summarise_state(grader),
             "history": grader.get("history", [])[-30:],
         },
         "expectation_hours": clock.EXPECTATION_HOURS,
@@ -480,10 +488,9 @@ def load(snap_root, data_dir):
         "age_hours": age_hours,
         "stale": age_hours is not None and age_hours > 12,
         "very_stale": age_hours is not None and age_hours > 24,
-        # item 11: a precision figure needs a minimum n before it is a figure at
-        # all. `pct` renders two decimals, so the first graded case published
-        # "100.00%" in a headline tile and on every per-CNA page.
-        "precision_floor": GRADER_MIN_N,
+        # The floor, for templates that explain why a figure is withheld. Sourced
+        # from inference so there is exactly one definition of it.
+        "precision_floor": _inference.MIN_GRADED,
         "launched": launched,
         "gate": gate,
         # Where the dashboard actually lives, so the nav and the logo point at

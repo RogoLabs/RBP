@@ -229,7 +229,11 @@ def test_grader_counts_a_miss(tmp_path, corpus):
         [("CVE-2026-999001", "PUBLISHED", "actual-cna", "", "")], columns=corpus.columns)])
     newly, summary = g.grade(later, today="2026-08-20")
     assert len(newly) == 1 and newly[0]["correct"] is False
-    assert summary["precision"] == 0.0
+    # The COUNTS are exact at any n; the RATIO is withheld below the floor. A
+    # precision of 0.0 from one graded case is as unpublishable as 1.0 from one,
+    # and it used to be published into summary.json either way.
+    assert summary["graded"] == 1 and summary["correct"] == 0
+    assert summary["precision"] is None and summary["below_floor"] is True
     assert summary["misses"][0]["cve_id"] == "CVE-2026-999001"
 
 
@@ -348,7 +352,8 @@ def test_a_published_mismatch_still_counts_against_precision(tmp_path, corpus):
     later = pd.concat([corpus, pd.DataFrame(
         [("CVE-2026-1", "PUBLISHED", "actual-cna", "", "")], columns=corpus.columns)])
     _, summary = g.grade(later, today="2026-08-21")
-    assert summary["graded"] == 1 and summary["precision"] == 0.0
+    assert summary["graded"] == 1 and summary["correct"] == 0
+    assert summary["precision"] is None, "a ratio from n=1 must not be published"
 
 
 # --------------------------------------------------------------------------

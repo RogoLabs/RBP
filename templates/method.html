@@ -333,6 +333,88 @@
 
 <div class="card">
   <div class="card-header">
+    <h2 class="card-title">How accurate the owner reconstruction is, and on whom</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      <strong>Three different accuracy figures exist and they rest on very different
+      samples.</strong> A single number would hide that, and the composition is the part
+      that makes any of them readable. So all three are here with theirs.
+    </p>
+    {% set loo = summary.inference.leave_one_out %}
+    <table class="table table-sm small">
+      <thead>
+        <tr><th scope="col">Figure</th><th scope="col" class="num">n</th>
+            <th scope="col" class="num">Precision</th><th scope="col">Composition</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Leave-one-out</strong>, this build</td>
+          <td class="num">{{ loo.decided | commafy }}</td>
+          <td class="num">{{ loo.precision | pct }}</td>
+          <td>Every published {{ summary.date[:4] if summary.date else '' }} ID, hidden
+            and predicted from its neighbours.
+            {% if loo.get('strata') %}
+            Spread across <strong>{{ loo.strata }}</strong> CNAs,
+            {{ loo.measurable_strata }} of them above the n={{ precision_floor }} floor.
+            The largest single CNA is
+            {{ (100 * loo.largest_stratum_share) | round(1) }}% of decisions, so this
+            figure is <strong>not</strong> carried by one assigner.
+            {% endif %}</td>
+        </tr>
+        {% if loo.get('tail') %}
+        <tr>
+          <td>Leave-one-out, <strong>excluding the largest CNA</strong></td>
+          <td class="num">{{ loo.tail.decided | commafy }}</td>
+          <td class="num">{{ loo.tail.precision | pct }}</td>
+          <td>The tail on its own: {{ loo.tail.wrong | commafy }} wrong out of
+            {{ loo.tail.decided | commafy }}. This is the number to read if you are a
+            CNA that is not the largest one, and it is the check a global figure
+            cannot give you.</td>
+        </tr>
+        {% endif %}
+        <tr>
+          <td>Live grading, cumulative</td>
+          <td class="num">{{ grader.graded | commafy }}</td>
+          <td class="num">
+            {% if grader.precision is not none %}{{ grader.precision | pct }}
+            {% else %}not yet measurable{% endif %}
+          </td>
+          <td>Real predictions this site published, graded when the record finally
+            published.
+            {% if grader.below_floor %}
+            Withheld until n={{ precision_floor }}: a ratio from
+            {{ grader.graded }} case(s) is a weaker claim than the
+            {{ loo.decided | commafy }}-decision figure above, not a stronger one.
+            {% endif %}</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>The out-of-sample probe is the lopsided one.</strong> The 100% figure
+        this project quotes from its original validation was measured on 224 IDs that
+        were reserved and later published, and <strong>213 of those 224 were a single
+        CNA</strong>. Eleven cases informed every other CNA in the Program, and both
+        rows this project is known to have got wrong were outside the 213. That figure
+        is kept in the plan for provenance and is not the number on this page. The
+        leave-one-out figure above is measured over
+        {{ loo.decided | commafy }} decisions across
+        {{ loo.get('strata') or 'many' }} CNAs, which is why it is the one shown.
+      </p>
+    </div>
+    <p class="small text-muted mb-0">
+      Contiguous-run length is recorded on every prediction from now on, so a future
+      build can report accuracy by block width. Without it there is no way to separate
+      "the method is accurate" from "the method is accurate on wide blocks and has never
+      been tested on narrow ones", and it cannot be backfilled: it is a property of the
+      corpus at prediction time and the corpus moves.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
     <h2 class="card-title">Why one CNA holds most of the named rows</h2>
   </div>
   <div class="card-body">

@@ -154,15 +154,27 @@ _DECLARED = [
     {
         "n": 6,
         "title": "One precision figure, stratified, with its sample composition",
-        "detail": ("The out-of-sample warrant is dominated by a single CNA, so a "
-                   "headline precision figure would rest on a sample that never "
-                   "tested the tail. Needs stratification by CNA and the "
-                   "composition stated in the same sentence as the number."),
-        "status": UNMET,
-        "blocks": ("not stratified. Production precision is withheld below n=20 "
-                   "today, which hides the problem rather than solving it: crossing "
-                   "that threshold on the current ledger would license exactly the "
-                   "unstratified figure this condition forbids."),
+        "detail": ("One floored figure, computed in one place, stratified by CNA with "
+                   "the floor applied per stratum, and published with its composition "
+                   "beside it. A CNA below the floor reads \"not separately "
+                   "measurable\" rather than inheriting the global value."),
+        "status": MET,
+        "blocks": None,
+        # The floor moved into inference.summarise_state, so there is one
+        # implementation and the two-answers bug is gone: summary.json used to carry
+        # precision 1.0 at graded 1 beside precision.json's null, both live.
+        #
+        # Leave-one-out is stratified by true owner with the floor per stratum, and
+        # publishes its composition: 345 CNAs, 56 above the floor, largest 24.3% of
+        # decisions, tail 99.19% over 22,413. /cna renders that CNA's own row or says
+        # "not separately measurable" rather than inheriting the global figure.
+        #
+        # One correction to the item's premise, recorded because it changes the
+        # conclusion: the LEAVE-ONE-OUT figure is NOT dominated by one CNA. The n=224
+        # out-of-sample probe is (213 of 224), and the live ledger is, and both now
+        # carry that composition wherever they appear including PLAN.md. Reporting
+        # the LOO figure as equally lopsided would have been repeating the review
+        # rather than checking it.
         "item": "21",
     },
     {

@@ -24,6 +24,29 @@
     with leave-one-out precision of
     {{ summary.inference.leave_one_out.precision | pct }} across the published corpus.
   </p>
+  {# THIS CNA's own stratum, not the global figure.
+     A shared number silently lends one CNA's accuracy to every other, which is
+     exactly the objection a CNA reading this page would make first. Below the floor
+     it says so rather than inheriting the global value. #}
+  {% set mine = (summary.inference.leave_one_out.get('by_cna') or {}).get(cna.cna) %}
+  <p{% if not mine %} class="mb-0"{% endif %}>
+    <strong>Measured on {{ cna.cna }} specifically:</strong>
+    {% if mine and mine.precision is not none %}
+    leave-one-out precision <strong>{{ mine.precision | pct }}</strong> over
+    {{ mine.decided | commafy }} decisions on this CNA's own published IDs
+    ({{ mine.wrong | commafy }} wrong). That is the figure to hold this page to, not
+    the global one.
+    {% elif mine %}
+    <strong>not separately measurable.</strong> Only {{ mine.decided | commafy }} of
+    this CNA's published IDs fall inside a block wide enough to test, below the
+    n={{ precision_floor }} floor this site applies to its own claims. The global
+    figure above is <em>not</em> evidence about {{ cna.cna }}, and this page does not
+    pretend otherwise.
+    {% else %}
+    <strong>not separately measurable</strong> from this build. The global figure above
+    is not evidence about {{ cna.cna }}.
+    {% endif %}
+  </p>
   <p>
     <strong>Some of these may be IDs delegated to you, not withheld by you.</strong>
     RBP Policy v2.0.0 lets a Root direct a CNA-LR to publish an overdue record and

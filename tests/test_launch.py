@@ -87,7 +87,14 @@ def test_the_gate_and_the_checklist_are_not_the_same_question():
     not clear the checklist."""
     st = launch.status(_summary(effective=434), _gate(pct=100.0, cleared=True))
     assert st["cleared"] is False
-    assert st["unmet"] >= 5
+    # The PROPERTY, not a count. This asserted `unmet >= 5` and went stale the first
+    # time a condition legitimately landed, which is the fourth time today a test of
+    # mine has pinned a shape instead of the thing it cared about.
+    assert st["unmet"] > 0, "a cleared coverage gate cleared the whole checklist"
+    unmet_numbers = {int(b.split(".")[0]) for b in st["blocking"]}
+    assert unmet_numbers - {1}, (
+        "coverage (condition 1) is the only thing left, so the checklist has "
+        "collapsed into the gate it was written to be broader than")
 
 
 def test_declared_conditions_carry_a_review_item_reference():
@@ -131,8 +138,8 @@ def test_plan_and_site_publish_the_same_number_of_conditions():
 
 
 @pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (4, True), (5, True),
-                                          (6, False), (7, False),
-                                          (8, False), (9, False)])
+                                          (6, True),
+                                          (7, False), (8, False), (9, False)])
 def test_declared_statuses_match_what_is_actually_built(n, expect_met):
     """Pins today's honest position so a status cannot drift silently. When one of
     these genuinely lands, this test is the thing that has to be updated

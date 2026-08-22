@@ -130,6 +130,18 @@ Leave-one-out across all 32,267 published 2026 IDs corroborates: k=3 → 60.6% /
 Self-validating: every RBP that later publishes reveals its true owner, so precision is
 re-measured on every build and printed on the site.
 
+> **The n=224 figure is lopsided, and this is where that is stated.** 213 of those 224
+> cases were a single CNA (GitHub_M), so eleven cases informed every other CNA in the
+> Program, and both rows this project is known to have got wrong were outside the 213.
+> Quote it only with that composition attached.
+>
+> The **leave-one-out** figure is the broadly based one and is what the site publishes:
+> measured 2026-08-22 at 99.39% over 29,614 decisions spread across 345 CNAs, with 56
+> above the n=20 floor, the largest single CNA accounting for 24.3% of decisions, and the
+> tail excluding that CNA at 99.19% over 22,413 decisions. Those two figures are not
+> interchangeable and neither is a substitute for the live graded figure, which stays
+> withheld below n=20.
+
 ### F6: persistence is real; this is not publication lag
 Re-queried all 456 IDs from the 2026-07-19 snapshot, 32 days later (already ≥14 days
 public when captured):

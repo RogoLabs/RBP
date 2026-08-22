@@ -105,7 +105,11 @@ def test_predictions_persist_for_a_later_run_to_grade(backlog, corpus, tmp_path)
         [(RBP_NAMEABLE, "PUBLISHED", "acme", "Acme", "widget")], columns=corpus.columns)])
     v = apply_to_backlog([], later, str(path), today="2026-09-01")
     assert v["live"]["graded"] == 1
-    assert v["live"]["precision"] == 1.0
+    assert v["live"]["correct"] == 1
+    # The ratio is withheld below the floor, now at the source rather than only in
+    # the derived file. Publishing 1.0 from one graded case is a stronger claim than
+    # the leave-one-out figure over 29,000 decisions beside it.
+    assert v["live"]["precision"] is None and v["live"]["below_floor"] is True
     assert v["live"]["outstanding"] == 0
 
 
