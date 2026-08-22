@@ -766,9 +766,24 @@ def _write_data(out, ctx):
             snap_sum = json.load(open(sum_path))
         except Exception:  # noqa: BLE001
             continue
-        # Same invariants as any other published artefact. An archive is not a
-        # place where the naming rules stop applying.
-        assert_artefact(snap_rows, f"archive/{date}/rbp.json", ctx["cnas"], covered)
+        # Validated against ITS OWN covered set and cnas.json, not today's.
+        #
+        # The first version passed the current snapshot's, which fails the moment a
+        # CNA named in an older snapshot is absent from today's cnas.json, or falls
+        # outside today's covered set because a feed moved. Reproduced immediately in
+        # CI: the archive refused to publish a historical row that was correct when
+        # it was written.
+        #
+        # A historical artefact has to be judged by the rules that applied when it
+        # was produced, and the site published its own covered set alongside it for
+        # exactly that reason. Checking it against today's is a category error, and
+        # the version that fails closed on correct history is still failing.
+        try:
+            snap_cnas = json.load(open(os.path.join(snap, "cnas.json")))
+        except Exception:  # noqa: BLE001
+            snap_cnas = []
+        snap_covered = set((snap_sum.get("coverage") or {}).get("covered") or [])
+        assert_artefact(snap_rows, f"archive/{date}/rbp.json", snap_cnas, snap_covered)
         dd = os.path.join(arch_root, date)
         os.makedirs(dd, exist_ok=True)
         json.dump(_schema.envelope(snap_rows, snap_sum, launched=launched,

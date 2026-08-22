@@ -272,3 +272,62 @@ def test_data_page_tells_readers_not_to_cite_the_moving_file(built):
     page = (built.parent / "data.html").read_text()
     assert "Do not cite" in page
     assert "data/archive/" in page
+
+
+def test_the_archive_is_judged_by_the_rules_that_applied_when_it_was_written(tmp_path):
+    """The first version validated every historical snapshot against TODAY's covered
+    set and cnas.json, which fails the moment a CNA named in an older snapshot is
+    absent from today's list, or falls outside today's covered set because a feed
+    moved. CI reproduced it on the first run: the archive refused to publish a
+    historical row that was correct when it was written.
+
+    A historical artefact has to be judged by the rules that applied when it was
+    produced, and the site publishes its own covered set alongside each snapshot for
+    exactly that reason. Failing closed on correct history is still failing."""
+    from rbp import site as site_mod
+
+    def snap(date, owner, covered, cnas):
+        d = tmp_path / "snapshots" / date
+        d.mkdir(parents=True)
+        (d / "backlog.json").write_text(json.dumps([{
+            "cve_id": "CVE-2026-1", "owner": owner, "owner_nameable": bool(owner),
+            "counted": True, "days_public": 30, "public_date": "2026-07-01",
+            "description": "a flaw", "sources": "debian"}]))
+        (d / "cnas.json").write_text(json.dumps(cnas))
+        (d / "summary.json").write_text(json.dumps({
+            "total": 1, "past_expectation": 1, "oldest_days": 30, "median_days": 30,
+            "named_cnas": len(cnas), "must_rows": 0, "should_rows": 1,
+            "clock_unknown": 0, "unmeasurable_rows": 1, "candidate_rows": 0,
+            "undated_excluded": 0, "min_age_days": 7, "age_buckets": {}, "epoch": None,
+            "inference": {"k": 3, "run_coverage": 0.0,
+                          "leave_one_out": {"precision": 0.99, "coverage": 0.6,
+                                            "decided": 100},
+                          "live": {"graded": 0, "correct": 0, "precision": None,
+                                   "below_floor": True, "outstanding": 0,
+                                   "by_tier": {}}},
+            "feeds": {"requested": [], "failures": [], "attempts": 0,
+                      "truncated": [], "detail": {}},
+            "coverage": {"total_cnas": 539, "cnas_effective": 1, "cnas_own_channel": 0,
+                         "cnas_sighted": 1, "min_sightings": 3, "pct_cnas": 0.2,
+                         "pct_effective": 0.2, "observed_pct": 1.0,
+                         "profile": "weekly", "top_n": 50, "top_covered": 1,
+                         "roster_pinned": True, "covered": covered},
+        }))
+
+    def cna_row(name):
+        return {"cna": name, "outstanding": 1, "oldest_days": 30,
+                "median_days_public": 30, "past_expectation": 1, "must_rows": 0,
+                "should_rows": 1, "published_12mo": 50, "resolved_n": 0,
+                "median_days_to_publish": None}
+
+    # Yesterday named a CNA that today does not list at all.
+    snap("2026-08-21", "goneaway", ["goneaway"], [cna_row("goneaway")])
+    snap("2026-08-22", None, ["stillhere"], [])
+    (tmp_path / "data").mkdir()
+
+    site_mod.build(str(tmp_path / "out"), str(tmp_path / "snapshots"),
+                   str(tmp_path / "data"))          # must not raise
+    dated = (tmp_path / "out" / "data" / "archive" / "2026-08-21" / "rbp.json")
+    assert dated.exists()
+    assert "goneaway" in dated.read_text(), (
+        "a row that was correct when written was dropped from its own archive")
