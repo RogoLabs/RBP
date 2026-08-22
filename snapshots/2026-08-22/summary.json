@@ -208,6 +208,28 @@
   "total_cnas": 434,
   "covered_cnas": 159,
   "pct_cnas": 36.6,
+  "cnas_sighted": 159,
+  "cnas_own_channel": 2,
+  "own_channel_cnas": [
+   "mozilla",
+   "redhat"
+  ],
+  "window": [
+   2024,
+   2025,
+   2026
+  ],
+  "sources": [
+   "alas",
+   "alpine",
+   "arch",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "osv",
+   "redhat",
+   "ubuntu"
+  ],
   "pct_volume_attributable": 90.0,
   "observed_pct": 20.87,
   "observed_ids": 26991,
@@ -233,7 +255,8 @@
    2024,
    2025,
    2026
-  ]
+  ],
+  "profile": "weekly"
  },
- "generated_at": "2026-08-22T00:31:46+00:00"
+ "generated_at": "2026-08-22T00:39:42+00:00"
 }
