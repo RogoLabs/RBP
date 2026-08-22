@@ -2675,6 +2675,10 @@
   "CVE-2025-30081": {
    "first_public": "2025-03-19",
    "owner": null
+  },
+  "CVE-2025-30083": {
+   "first_public": "2025-03-19",
+   "owner": null
   }
  },
  "resolved": [
