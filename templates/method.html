@@ -356,6 +356,33 @@
         <div class="metric-label">Withheld by reviewed entry</div>
       </div>
     </div>
+    {% if sup.get('requested') %}
+    <p class="small text-muted mb-2">
+      <strong>{{ sup.requested }} request(s) from {{ sup.authors }} author(s) this
+      run</strong>{% if sup.get('deferred') %},
+      of which <strong>{{ sup.deferred }} deferred</strong> by the anti-abuse limits
+      below{% endif %}{% if sup.get('confirmed') %},
+      {{ sup.confirmed }} reviewed and confirmed{% endif %}.
+    </p>
+    {% endif %}
+    <p class="small text-muted">
+      <strong>Because the channel is unauthenticated, the removal is bounded.</strong>
+      Nobody should have to prove who they are to ask that a row about them not be
+      listed, and the cost is that a bot could file requests. Note what that would
+      achieve: rows leave, so the count goes <em>down</em>. It is defacement rather
+      than exploitation, and the damage is proportional to rows removed, so the
+      defence is bounding the number rather than authenticating the asker.
+      At most <strong>{{ sup.get('ceiling') or 25 }}</strong> rows may be withheld
+      automatically per run and at most <strong>5 per author</strong>, and the ceiling
+      is also capped at a share of the backlog so it stays sane if the backlog is
+      small. <strong>Oldest requests are honoured first</strong>, so a flood filed
+      today cannot displace a request filed last week: a cap that could starve the
+      request it exists to protect would turn vandalism against this site into denial
+      of its correction channel, which is the more serious of the two. A reviewed
+      request carries a <span class="mono">confirmed</span> label and bypasses every
+      limit. Closing an issue revokes it, and takes effect on the next read rather
+      than waiting for anything.
+    </p>
     <p class="small text-muted{% if not sup.get('degraded') %} mb-0{% endif %}">
       Counts, never identifiers: publishing which rows are withheld would undo the
       withholding. Publishing nothing would make this a quiet way to shrink the headline,

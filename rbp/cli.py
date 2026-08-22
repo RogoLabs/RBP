@@ -159,7 +159,11 @@ def cmd_run(args):
     }
     # The suppression lever. Loaded BEFORE inference, because a suppressed row
     # must never reach the grader ledger, not merely be hidden from the site.
-    sup = suppress.load(os.path.join(ROOT, suppress.DEFAULT_LIST))
+    # backlog_size bounds the auto-withhold as a SHARE of the backlog as well as
+    # an absolute count, so the ceiling stays sane if the backlog is ever small:
+    # 25 of 522 is nothing, 25 of 40 would be most of the site.
+    sup = suppress.load(os.path.join(ROOT, suppress.DEFAULT_LIST),
+                        backlog_size=len(_published_ids))
     validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
                                             suppressed=sup,
                                             record_for=_published_ids,

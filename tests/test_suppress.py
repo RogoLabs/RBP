@@ -117,9 +117,11 @@ def test_cve_ids_are_extracted_from_issue_text(monkeypatch):
     class P:
         returncode, stdout, stderr = 0, payload, ""
     monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
-    ids, err = suppress.from_issues()
+    reqs, err = suppress.from_issues()
     assert err is None
-    assert ids == {"CVE-2026-1111", "CVE-2026-2222"}
+    assert {r["cve_id"] for r in reqs} == {"CVE-2026-1111", "CVE-2026-2222"}
+    # The records carry who asked and when, which every anti-abuse decision needs.
+    assert all({"author", "created_at", "issue", "confirmed"} <= set(r) for r in reqs)
 
 
 def test_a_pull_request_is_not_read_as_a_withhold_request(monkeypatch):
@@ -133,31 +135,35 @@ def test_a_pull_request_is_not_read_as_a_withhold_request(monkeypatch):
     class P:
         returncode, stdout, stderr = 0, payload, ""
     monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
-    ids, _ = suppress.from_issues()
-    assert ids == {"CVE-2026-2222"}
+    reqs, _ = suppress.from_issues()
+    assert {r["cve_id"] for r in reqs} == {"CVE-2026-2222"}
 
 
 def test_the_auto_path_is_capped(tmp_path, monkeypatch):
     """No verification of who may ask is the right call, and it means anyone with a
     GitHub account can remove a row. One issue naming 500 ids would empty the site,
     which is a denial of service against the project's whole purpose."""
-    many = {f"CVE-2026-{3000 + i}" for i in range(suppress.MAX_AUTO + 12)}
+    many = [{"cve_id": f"CVE-2026-{3000 + i}", "author": f"a{i}",
+             "created_at": f"2026-08-01T00:00:{i:02d}Z", "issue": i,
+             "confirmed": False} for i in range(suppress.MAX_AUTO + 12)]
     monkeypatch.setattr(suppress, "from_issues", lambda **kw: (many, None))
     s = suppress.load(str(tmp_path / "none.txt"))
     assert len(s.auto) == suppress.MAX_AUTO
-    assert s.report["capped"] == 12
+    assert s.report["deferred"] == 12
     assert s.report["from_reports"] == suppress.MAX_AUTO
 
 
 def test_the_published_report_carries_counts_and_never_ids(tmp_path, monkeypatch):
     monkeypatch.setattr(suppress, "from_issues",
-                        lambda **kw: ({"CVE-2026-1111"}, None))
+                        lambda **kw: ([{"cve_id": "CVE-2026-1111", "author": "a",
+                                        "created_at": "2026-08-01T00:00:00Z",
+                                        "issue": 1, "confirmed": False}], None))
     p = tmp_path / "s.txt"
     p.write_text(suppress.digest("CVE-2026-2222", KEY) + "\n")
     rep = suppress.load(str(p)).report
     assert rep["committed"] == 1
     assert rep["from_reports"] == 1
-    assert rep["capped"] == 0
+    assert rep["deferred"] == 0
     assert rep["degraded"] is False and rep["detail"] is None
     # The property that actually matters, asserted over the whole serialised
     # payload rather than a field list, so a NEW key cannot smuggle an id in.
@@ -428,3 +434,104 @@ def test_a_suppressed_id_appears_in_no_file_report_writes(tmp_path):
     # And the row that was NOT suppressed is still published, or the test would
     # pass trivially on an empty snapshot.
     assert any("CVE-2026-4243" in (sdir / n).read_text() for n in written)
+
+
+# --------------------------------------------------------------------------
+# anti-abuse
+# --------------------------------------------------------------------------
+
+def _req(cid, author="stranger", created="2026-08-01T00:00:00Z", issue=1,
+         confirmed=False):
+    return {"cve_id": cid, "author": author, "created_at": created,
+            "issue": issue, "confirmed": confirmed}
+
+
+def test_the_cap_honours_the_oldest_requests_first():
+    """The bug this replaced. `sorted(found)[:MAX_AUTO]` sorts by CVE ID string, so
+    an attacker naming low-numbered ids sorts ahead of a genuine request filed days
+    earlier and silently displaces it.
+
+    A cap that can starve the request it exists to protect is worse than no cap: it
+    converts vandalism against the site into denial of the correction channel,
+    which is the more serious of the two."""
+    genuine = _req("CVE-2026-9999", author="cna", created="2026-08-01T00:00:00Z",
+                   issue=1)
+    flood = [_req(f"CVE-2020-{1000 + i}", author=f"bot{i}",
+                  created="2026-08-20T00:00:00Z", issue=100 + i)
+             for i in range(suppress.MAX_AUTO + 10)]
+    ids, rep = suppress.triage([genuine] + flood)
+    assert "CVE-2026-9999" in ids, "the earlier genuine request was displaced"
+    assert rep["deferred_ceiling"] > 0
+    assert len(ids) <= suppress.MAX_AUTO
+
+
+def test_one_author_cannot_consume_the_whole_budget():
+    reqs = [_req(f"CVE-2026-{5000 + i}", author="bot", issue=i)
+            for i in range(suppress.MAX_PER_AUTHOR + 8)]
+    ids, rep = suppress.triage(reqs)
+    assert len(ids) == suppress.MAX_PER_AUTHOR
+    assert rep["deferred_per_author"] == 8
+
+
+def test_a_flood_from_one_author_cannot_crowd_out_another_author():
+    """The per-author limit is what makes the global ceiling fair rather than
+    first-past-the-post."""
+    bot = [_req(f"CVE-2026-{6000 + i}", author="bot",
+                created="2026-08-01T00:00:00Z", issue=i) for i in range(20)]
+    cna = _req("CVE-2026-7777", author="realcna",
+               created="2026-08-02T00:00:00Z", issue=99)
+    ids, _ = suppress.triage(bot + [cna])
+    assert "CVE-2026-7777" in ids
+
+
+def test_the_ceiling_is_proportional_when_the_backlog_is_small():
+    """25 of 522 rows is nothing. 25 of 40 would be most of the site."""
+    reqs = [_req(f"CVE-2026-{7000 + i}", author=f"a{i}", issue=i) for i in range(30)]
+    ids, rep = suppress.triage(reqs, backlog_size=40)
+    assert rep["ceiling"] == 2, rep
+    assert len(ids) == 2
+
+
+def test_the_ceiling_never_drops_below_one():
+    """A tiny backlog must not make the channel unusable."""
+    _, rep = suppress.triage([_req("CVE-2026-1")], backlog_size=3)
+    assert rep["ceiling"] >= 1
+
+
+def test_a_confirmed_request_bypasses_every_limit():
+    """The caps exist to bound an anonymous stranger, not to stop a reviewed
+    decision. A genuine mass report must not be held back by a ceiling designed
+    for strangers."""
+    reqs = [_req(f"CVE-2026-{8000 + i}", author="bot", issue=i, confirmed=True)
+            for i in range(60)]
+    ids, rep = suppress.triage(reqs, backlog_size=100)
+    assert len(ids) == 60
+    assert rep["confirmed"] == 60
+    assert rep["deferred_per_author"] == 0 and rep["deferred_ceiling"] == 0
+
+
+def test_the_triage_report_is_published_so_abuse_is_visible():
+    """"The count went down" is indistinguishable from abuse unless the site says
+    how many requests it received and how many it declined."""
+    reqs = [_req(f"CVE-2026-{9000 + i}", author="bot", issue=i) for i in range(9)]
+    _, rep = suppress.triage(reqs)
+    assert rep["requested"] == 9
+    assert rep["honoured"] == suppress.MAX_PER_AUTHOR
+    assert rep["authors"] == 1
+    assert rep["deferred_per_author"] == 9 - suppress.MAX_PER_AUTHOR
+
+
+def test_the_published_report_still_carries_no_identifiers(tmp_path, monkeypatch):
+    monkeypatch.setattr(suppress, "from_issues",
+                        lambda **kw: ([_req("CVE-2026-1111")], None))
+    rep = suppress.load(str(tmp_path / "none.txt")).report
+    assert "CVE" not in json.dumps(rep).upper()
+    assert rep["requested"] == 1 and rep["from_reports"] == 1
+
+
+def test_a_closed_issue_is_not_read_at_all():
+    """Revocation is instant and does not wait for a build: the query asks for open
+    issues only, so closing one takes effect on the next read."""
+    import inspect
+    src = inspect.getsource(suppress.from_issues)
+    assert "state=open" in src
