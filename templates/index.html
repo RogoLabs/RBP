@@ -38,7 +38,7 @@
 {% if summary.total %}
 <p class="text-muted">
   Nothing appears here until it has been publicly referenced for at least
-  {{ summary.get('min_age_days', 7) }} days, {{ (summary.get('min_age_days', 7) * 24 // expectation_hours) }}x the {{ expectation_hours }}-hour window,
+  {{ summary.get('min_age_days', 7) }} days, {{ ((summary.get('min_age_days', 7) * 24 / expectation_hours) | round(1)) }}x the {{ expectation_hours }}-hour window,
   measured from the earliest advisory this site can see. The Program's own words on why
   that matters: it
   <em>&ldquo;does not condone any unnecessary, intentional, or routine delay between
@@ -200,7 +200,7 @@
       <strong>Taking those seriously changes what this site can claim, and it already
       has.</strong> Nothing is listed until it has been public for
       {{ summary.get('min_age_days', 7) }} days, which is
-      {{ (summary.get('min_age_days', 7) * 24 // expectation_hours) }}x the
+      {{ ((summary.get('min_age_days', 7) * 24 / expectation_hours) | round(1)) }}x the
       {{ expectation_hours }}-hour window and well past any short delay or live incident
       response. The median row here has been public
       <strong>{{ summary.median_days }} days</strong>, and
