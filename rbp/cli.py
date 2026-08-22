@@ -16,7 +16,8 @@ import glob
 import json
 import os
 
-from . import cvelist, feeds, classify, report, attribution, coverage, inference, clock, site
+from . import (cvelist, feeds, classify, report, attribution, coverage, inference,
+               clock, site, suppress)
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
 # (CSAF aggregator + Microsoft) move to a deeper monthly cadence.
@@ -156,7 +157,11 @@ def cmd_run(args):
         and clock.age_days(r.get("public_date"), today) >= args.min_age_days
         and not clock.before_epoch(r)
     }
+    # The suppression lever. Loaded BEFORE inference, because a suppressed row
+    # must never reach the grader ledger, not merely be hidden from the site.
+    sup = suppress.load(os.path.join(ROOT, suppress.DEFAULT_LIST))
     validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
+                                            suppressed=sup,
                                             record_for=_published_ids,
                                             covered=_covered, sightings=_sightings,
                                             bulk_reporters=attribution.BULK_REPORTER_NAMES,
@@ -239,14 +244,23 @@ def cmd_run(args):
     # from outside, and the brownout shrank the headline.
     stats["oracle"] = oracle
     stats["corpus_lag_days"] = corpus_lag
+    # Counts only, never ids. Publishing which rows are withheld would undo the
+    # withholding; publishing nothing would make the lever a quiet way to shrink
+    # the count, which is exactly what the site promised it was not.
+    stats["suppression"] = sup.report
     # One flag any consumer can branch on, rather than three they have to combine
     # correctly. True whenever this run's count is a lower floor than usual.
-    stats["degraded"] = bool(failures or truncated or oracle["dropped"])
+    stats["degraded"] = bool(failures or truncated or oracle["dropped"]
+                             or sup.report["degraded"])
     stats["degraded_reasons"] = (
         [f"{len(failures)} feed(s) failed" for _ in [0] if failures]
         + [f"{len(truncated)} feed(s) truncated" for _ in [0] if truncated]
         + [f"{oracle['dropped']} id(s) unresolved and not carried forward"
-           for _ in [0] if oracle["dropped"]])
+           for _ in [0] if oracle["dropped"]]
+        # A correction route that has silently stopped working is exactly the
+        # failure shape this project keeps hitting, so it is a visible one.
+        + ["correction reports could not be read this run"
+           for _ in [0] if sup.report["degraded"]])
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.
     stats["coverage"] = cov

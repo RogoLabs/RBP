@@ -1,0 +1,19 @@
+# Suppression list. One HMAC-SHA256 digest per line, lowercase hex.
+#
+# NEVER put a CVE ID in this file. A plaintext id in a public repository is a
+# permanent, git-archived statement that a specific reserved CVE ID was reported
+# as sensitive, which is strictly worse than the row it removes. Entries are
+# HMAC-SHA256(RBP_SUPPRESS_KEY, "CVE-YYYY-NNNNN"), so without the key this file
+# can neither be enumerated nor used to confirm a guess.
+#
+# To add an entry:
+#     RBP_SUPPRESS_KEY=<the secret> python -c \
+#       "from rbp.suppress import digest; print(digest('CVE-2026-1234'))"
+#
+# Reports filed through GitHub private vulnerability reporting are honoured
+# automatically and do NOT need an entry here. This file is for reviewed,
+# durable suppressions: a report that arrived by email, or one that exceeded the
+# per-run automatic ceiling.
+#
+# A non-empty list with no RBP_SUPPRESS_KEY configured FAILS the build, because
+# the alternative is publishing every row someone reported as wrong or embargoed.

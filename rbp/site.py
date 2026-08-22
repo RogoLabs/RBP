@@ -232,6 +232,15 @@ def assert_artefact(rows, label, cnas=None, covered=None):
         if any(k.startswith("product_map") for k in r):
             problems.append(f"{label}:{cid} carries an ungated product-map field")
 
+        # Review item 4. A suppressed row is withheld because someone reported it
+        # as wrong or under embargo, so its presence in ANY published artefact
+        # defeats the lever. Class 1: publishing it is a false statement about, or
+        # a disclosure concerning, a named third party. Blocks.
+        if r.get("suppressed"):
+            problems.append(
+                f"{label}:{cid} is suppressed and must not appear in a published "
+                "artefact at all")
+
         # Review item 18. A backstop, not a policy gate, and the distinction
         # matters under PLAN 8b. Cleaning happens deterministically upstream in
         # classify.display_description, so this can only fire if that sanitiser
@@ -624,6 +633,27 @@ def build(out, snap_root, data_dir):
             "# Pre-launch. The count is built on partial CNA coverage and is not\n"
             "# ready to be indexed or cited. See PLAN.md launch gate.\n"
             "User-agent: *\nDisallow: /\n")
+    # /.well-known/security.txt (RFC 9116). The site names organisations and
+    # invites embargo reports, so the one machine-readable place a security team
+    # looks for a contact route must not be empty. Expires is required by the RFC.
+    wk = os.path.join(out, ".well-known")
+    os.makedirs(wk, exist_ok=True)
+    _expires = (dt.datetime.now(dt.timezone.utc)
+                + dt.timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    open(os.path.join(wk, "security.txt"), "w").write(
+        "# rbptracker.org\n"
+        "# This site lists reserved CVE IDs that appear in public advisories.\n"
+        "# To report that a listed row is under embargo, use the private route\n"
+        "# below and send the CVE ID and the word embargo. Nothing else: no\n"
+        "# detail, no confirmation that a vulnerability exists. It is withheld\n"
+        "# on the next build, which runs every six hours.\n"
+        "Contact: https://github.com/RogoLabs/RBP/security/advisories/new\n"
+        "Contact: mailto:rbp@rogolabs.net\n"
+        f"Expires: {_expires}\n"
+        "Preferred-Languages: en\n"
+        "Canonical: https://rbptracker.org/.well-known/security.txt\n"
+        "Policy: https://rbptracker.org/method.html\n")
+
     # The holding page, always written, at a permanent route.
     #
     # It used to be copied over index.html only in the `not launched` branch, so

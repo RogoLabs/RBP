@@ -150,6 +150,30 @@ jobs:
 
       - name: Run pipeline
         env:
+          # The suppression lever (review item 4).
+          #
+          # RBP_ADVISORY_TOKEN reads this repo's PRIVATE security advisories, which
+          # is how an embargo report filed at 09:00 is honoured by the 12:00 build
+          # with nobody in the loop. GITHUB_TOKEN cannot do it: repository security
+          # advisories need a token with `repo` scope, so this is a separate
+          # fine-grained PAT with read access to Repository security advisories.
+          #
+          # If it is absent or expired the run does NOT fail. It is reported as a
+          # degraded run, which puts a banner on every page saying reports are not
+          # being honoured. A correction channel that has quietly stopped working
+          # is worse than one that never existed, so the failure is visible rather
+          # than silent, and a credential does not get to freeze a publication
+          # that happens four times a day.
+          RBP_ADVISORY_TOKEN: ${{ secrets.RBP_ADVISORY_TOKEN }}
+          # Keys the committed suppression list. That file holds HMAC digests
+          # rather than CVE IDs, because a plaintext list in a public repository
+          # would be a permanent, git-archived statement that a specific reserved
+          # ID was reported as sensitive: strictly worse than the row it removes.
+          #
+          # Unlike the token, a MISSING key with a non-empty list DOES fail the
+          # run, because the alternative is publishing every row that someone
+          # reported as wrong or under embargo (PLAN 8b class 1).
+          RBP_SUPPRESS_KEY: ${{ secrets.RBP_SUPPRESS_KEY }}
           # Without this the pipeline made up to 45 anonymous api.github.com
           # calls per run against a 60/hour shared-runner-IP budget, and a 403
           # from cvelist._releases propagates through ensure_corpus to kill the

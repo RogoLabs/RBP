@@ -114,9 +114,12 @@ _DECLARED = [
                    "withholds it while contested, and a published aggregate count "
                    "of what is withheld so the lever cannot be used silently."),
         "status": UNMET,
-        "blocks": ("no channel exists. This is the condition that most directly "
-                   "protects the people named by the site, and it is the one "
-                   "furthest from done."),
+        "blocks": ("built and published, but not yet proven. The private route, the "
+                   "email route, the suppression lever and the aggregate count all "
+                   "exist; what is missing is RBP_ADVISORY_TOKEN in repository "
+                   "secrets, without which the automatic withhold cannot read a "
+                   "report and every run is marked degraded. Flip this to met only "
+                   "after a real run reads the endpoint cleanly."),
         "item": "4",
     },
     {

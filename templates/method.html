@@ -305,6 +305,71 @@
   </div>
 </div>
 
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Reporting a row, and what gets withheld</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      <strong>A row under embargo:</strong>
+      <a href="https://github.com/RogoLabs/RBP/security/advisories/new">file a private
+      report</a>. It is withheld on the next build, which runs every six hours, with no
+      human in the loop. <strong>Send the CVE ID and the word embargo, nothing
+      else</strong>: no detail, no explanation, and no confirmation that a vulnerability
+      exists. Reporting through a public issue would mean disclosing an embargo in public
+      in order to ask for it to be respected, which is why the private route exists.
+      Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> works too.
+    </p>
+    <p>
+      <strong>A wrong owner:</strong>
+      <a href="https://github.com/RogoLabs/RBP/issues/new">a public issue</a>, because a
+      correction to a claim this site made should be auditable. The private route works
+      if you would rather it were not. The authoritative
+      <span class="mono">owning_cna</span> is held by the reserving CNA's Root and the
+      Secretariat and can only be inferred here, so the
+      <a href="https://cveform.mitre.org/">CVE Program request form</a> is also a route.
+    </p>
+    <p>
+      No proof of affiliation is required, deliberately. A genuine embargo report should
+      not need anyone to prove who they are first, and the cost of that openness is that
+      anyone can withhold a row. Which is why the count is published:
+    </p>
+    {% set sup = summary.suppression or {} %}
+    <div class="metric-grid">
+      <div class="metric-card">
+        <div class="metric-value">{{ (sup.get('from_reports') or 0) | commafy }}</div>
+        <div class="metric-label">Withheld on report this run</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-value">{{ (sup.get('committed') or 0) | commafy }}</div>
+        <div class="metric-label">Withheld by reviewed entry</div>
+      </div>
+    </div>
+    <p class="small text-muted{% if not sup.get('degraded') %} mb-0{% endif %}">
+      Counts, never identifiers: publishing which rows are withheld would undo the
+      withholding. Publishing nothing would make this a quiet way to shrink the headline,
+      which is the one thing a suppression lever must not be. A withheld row is removed
+      from every published artefact including the accuracy ledger, not merely stripped of
+      its owner, because for an embargo the listing itself is the disclosure.
+      {% if sup.get('capped') %}
+      <strong>{{ sup.capped }} further report(s) exceeded the per-run ceiling</strong> and
+      need a reviewed entry; the ceiling exists so a single report cannot empty the site.
+      {% endif %}
+    </p>
+    {% if sup.get('degraded') %}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>Reports could not be read on this run.</strong> {{ sup.detail }}. Any
+        report filed through the private route is <strong>not</strong> being honoured
+        until this is fixed. Stated here rather than failing silently, because a
+        correction channel that has quietly stopped working is worse than one that never
+        existed.
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
 {% if launch %}
 <div class="card">
   <div class="card-header">
