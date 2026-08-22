@@ -275,3 +275,109 @@ def test_the_about_route_exists_in_both_postures(tmp_path, monkeypatch):
             f"about route missing with launched={launched}")
     monkeypatch.delenv("RBP_LAUNCHED", raising=False)
     importlib.reload(site_mod)
+
+
+# --------------------------------------------------------------------------
+# the lead screen (items 19 and 20)
+# --------------------------------------------------------------------------
+
+def test_the_lead_never_claims_corroboration_it_cannot_show(built):
+    """The version-skew trap, and the third instance today of absence defaulting
+    to the stronger reading.
+
+    The first draft read `corroborated or total`, so a snapshot written before that
+    key existed rendered "506 CVE IDs are referenced in two or more independent
+    public advisories" when only ~172 were. On the lead sentence."""
+    import re as _re
+    from jinja2 import Environment, FileSystemLoader, select_autoescape
+    env = Environment(loader=FileSystemLoader(str(TEMPLATES)),
+                      autoescape=select_autoescape(["html"]),
+                      trim_blocks=True, lstrip_blocks=True)
+    src = (TEMPLATES / "index.html").read_text()
+    # The guard must test the VALUE, not truthiness, and must not use `or`.
+    lead = src[src.index("lead-count"):src.index("</p>", src.index("lead-unit"))]
+    assert "is not none" in lead, (
+        "the lead sentence does not guard on the value existing")
+    assert "corroborated') or " not in lead, (
+        "`or` in the lead figure silently upgrades a missing key to the total")
+
+
+def test_the_bound_strip_guards_on_values_not_on_the_parent_dict(built):
+    """`summary.coverage` existing does not mean cnas_effective does, and Jinja
+    renders a missing key as empty, so the unguarded version produced "Feeds reach
+    of 434 CNAs (%)": a sentence with holes where the numbers go."""
+    src = (TEMPLATES / "index.html").read_text()
+    strip = src[src.index("bound-strip"):src.index("</ul>")]
+    assert "cnas_effective') is not none" in strip
+
+
+def test_no_page_leads_with_a_single_cna_share(built):
+    """A lead-screen tile reporting that one CNA holds the majority is a leaderboard
+    with one entrant, which PLAN 2a forbids and which clock.per_cna deliberately
+    refuses to build in the per-CNA view. It belongs on /method as an instrument
+    reading."""
+    front = _text(built / "overview.html")
+    assert "Share of named rows held by the single largest" not in front
+    assert "largest single holder accounts for" in _text(built / "method.html")
+
+
+def test_every_lead_tile_states_its_base(built):
+    """Four tiles previously carried four different unstated denominators, and a
+    reader takes them all as shares of the headline."""
+    front = (built / "overview.html").read_text()
+    assert front.count("metric-base") >= 4, (
+        "at least one lead tile does not state its own base")
+
+
+def test_the_framing_sentence_is_on_the_lead_screen(built):
+    """Item 19: said once, in the lead block, not buried on /method."""
+    front = _text(built / "overview.html")
+    assert "Program-level transparency measurement, not a CNA scorecard" in front
+    assert "block" in front and "feed" in front
+
+
+def test_the_delegation_caveat_reaches_every_page_that_names_a_cna(built):
+    """A row may be an ID delegated TO a CNA rather than withheld BY it, and nothing
+    observable distinguishes them."""
+    for page in ("method.html", "overview.html"):
+        assert "CNA-LR" in _text(built / page), page
+
+
+def test_the_hostile_question_is_answered_on_the_site(built):
+    """"So is the largest holder the worst offender?" is the headline that writes
+    itself. The answer has to already be on the page rather than in a maintainer's
+    head."""
+    m = _text(built / "method.html")
+    assert "worst offender" in m
+    assert "most visible holder" in m
+
+
+def test_link_previews_do_not_carry_the_count_before_launch(built):
+    """Unfurlers do not read robots.txt, so a noindex page pasted into Slack still
+    renders og:description. The gate is on promotion, and an unfurl in someone
+    else's channel is promotion."""
+    import re as _re
+    for page in ("overview.html", "cves.html"):
+        raw = (built / page).read_text()
+        m = _re.search(r'og:description" content="([^"]*)"', raw)
+        assert m, page
+        assert not _re.match(r"^\d", m.group(1)), (
+            f"{page} unfurls with a bare count pre-launch: {m.group(1)[:60]}")
+
+
+def test_every_page_has_its_own_og_url_and_canonical(built):
+    """One hard-coded root og:url on all seven pages meant every paste unfurled as
+    the front page regardless of what was shared."""
+    for page in ("overview.html", "cves.html", "method.html"):
+        raw = (built / page).read_text()
+        assert f'og:url" content="https://rbptracker.org/{page}"' in raw, page
+        assert f'rel="canonical" href="https://rbptracker.org/{page}"' in raw, page
+
+
+def test_the_holding_page_unfurls_as_more_than_a_bare_link():
+    """It is the only page anyone can reach pre-launch."""
+    body = PLACEHOLDER.read_text()
+    for tag in ('name="description"', 'property="og:title"',
+                'property="og:description"', 'rel="canonical"'):
+        assert tag in body, tag
+    assert "og:description" in body and "not yet published" in body

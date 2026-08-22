@@ -22,10 +22,22 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/style.css?v={{ asset_v['style.css'] }}">
 <link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/rbp.css?v={{ asset_v['rbp.css'] }}">
+{# Link previews. Unfurlers do not read robots.txt, so a noindex page pasted into
+   Slack or Teams still renders whatever is here. This block was one hard-coded
+   root og:url on all seven pages, and an og:description that published the raw
+   pre-gate count with no qualifier: the single most-travelled string on the site,
+   unguarded, while the count was still built on 27.9% CNA coverage. #}
 <meta property="og:title" content="{% block og_title %}RBP Tracker{% endblock %}">
-<meta property="og:description" content="{{ summary.total }} CVE IDs are in the state the CVE Program calls Reserved but Public: reserved, referenced publicly, and still unpublished. A count of a state, not of violations.">
+{% if launched %}
+<meta property="og:description" content="{{ summary.get('corroborated') if summary.get('corroborated') is not none else summary.total }} CVE IDs are in the state the CVE Program calls Reserved but Public: reserved, referenced publicly, still unpublished. A count of a state, not of violations, and a floor: feeds reach {{ summary.coverage.pct_effective if summary.coverage and summary.coverage.get('pct_effective') is not none else 'a minority of' }}% of CNAs.">
+{% else %}
+{# Pre-launch a paste must not carry the count at all. The gate is on promotion,
+   and an unfurl in someone else's channel is promotion by any reading. #}
+<meta property="og:description" content="Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This tracker is being built and is not yet published.">
+{% endif %}
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://rbptracker.org">
+<meta property="og:url" content="https://rbptracker.org/{{ page_file }}">
+<link rel="canonical" href="https://rbptracker.org/{{ page_file }}">
 </head>
 <body>
 <script>

@@ -210,3 +210,46 @@ def test_a_non_integer_buffer_is_refused():
     for bad in ("seven", None, "", "3.5"):
         with pytest.raises(SystemExit):
             validate_min_age(bad)
+
+
+def test_the_delegation_sentence_is_pinned():
+    """Load-bearing for the site's own caveats, so it is pinned like every other
+    quotation the site depends on.
+
+    RBP Policy v2.0.0 lets a Root direct a CNA-LR to publish an overdue record and
+    transfer ownership. That means a Root, TL-Root or CNA-LR can hold reserved IDs
+    precisely BECAUSE it is the remedy the policy defines, and this site cannot
+    distinguish an ID delegated to a CNA from one withheld by it: the reservation
+    endpoint publishes no role, no requester and no delegation record.
+
+    The caveat built on this sentence appears on /method and on every /cna page. If
+    the policy text ever changes, the caveat becomes a misquotation of a document
+    the site's whole authority rests on quoting accurately."""
+    import re
+    flat = re.sub(r"\s+", " ", POLICY["full_text"])
+    # The source uses a typographic apostrophe (U+2019) in "CNA\u2019s", not ASCII.
+    # The first version of this test asserted the ASCII form and failed, which is how
+    # I noticed the site was quoting it with a straight apostrophe: a silently
+    # altered quotation on a page whose authority rests on quoting accurately.
+    # Normalised here so the pin survives a typographic change, and the site copy
+    # was corrected to match the source.
+    norm = flat.replace("\u2019", "'").replace("\u2018", "'")
+    assert ("the CNA's Root MAY direct the appropriate CNA-LR to publish a CVE "
+            "Record for the assigned CVE ID") in norm
+    assert "Ownership of the CVE Record MAY be transferred" in norm
+    # And the raw form is what it is, pinned so a change is visible.
+    assert "CNA\u2019s Root MAY direct" in flat
+
+
+def test_the_site_quotes_the_delegation_sentence_where_it_matters():
+    """Pinning the source is half of it. The caveat has to actually be on the pages
+    that name a CNA, or the pin protects a quotation nobody reads."""
+    import pathlib
+    tpl = pathlib.Path(__file__).parent.parent / "templates"
+    method = (tpl / "method.html").read_text()
+    cna = (tpl / "cna.html").read_text()
+    assert "CNA-LR to publish a CVE Record" in method, (
+        "/method does not quote the delegation sentence")
+    for page, body in (("method.html", method), ("cna.html", cna)):
+        assert "CNA-LR" in body, page
+        assert "delegat" in body.lower(), page

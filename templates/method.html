@@ -307,6 +307,61 @@
 
 <div class="card">
   <div class="card-header">
+    <h2 class="card-title">Why one CNA holds most of the named rows</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      <strong>Because of block width and feed coverage, not behaviour.</strong> A CNA is
+      nameable here when its published CVE IDs form runs wide enough for the
+      {{ summary.inference.k }}-either-side test to resolve <em>and</em> this site reads
+      its advisories. A CNA that assigns from large contiguous blocks and publishes
+      through a feed we ingest will dominate this list. A CNA that assigns sparsely, or
+      publishes only through a channel we do not read, is invisible here no matter how
+      long it sits on a record.
+    </p>
+    {% if summary.get('top_owner_share') is not none %}
+    <p>
+      On this run the largest single holder accounts for
+      <strong>{{ summary.top_owner_share | pct }}</strong> of named rows. That is an
+      instrument reading about this site, and it belongs here rather than on the front
+      page: a lead-screen tile reporting that one CNA holds the majority is a leaderboard
+      with one entrant, which this project's own plan forbids.
+    </p>
+    {% endif %}
+    <div class="caveat warn">
+      <p>
+        <strong>A row may be an ID delegated TO a CNA rather than withheld BY it.</strong>
+        RBP Policy v2.0.0, quoting CNA Rule 4.5.1.4:
+      </p>
+      <blockquote>
+        <p class="mb-0">
+          &ldquo;If the CNA does not publish within 72 hours, then the CNA&rsquo;s Root
+          MAY direct the appropriate CNA-LR to publish a CVE Record for the assigned CVE
+          ID. Ownership of the CVE Record MAY be transferred.&rdquo;
+        </p>
+      </blockquote>
+      <p class="mb-0">
+        So a Root, TL-Root or CNA-LR can end up holding IDs precisely <em>because</em> it
+        is the mechanism the policy defines as the remedy. Nothing observable from outside
+        distinguishes an ID a CNA-LR accepted for a third-party requester from one a
+        vendor reserved for its own advisory: the reservation endpoint redacts the owner
+        and publishes no role, no requester and no delegation record. This site does not
+        infer one, because the data does not support it.
+      </p>
+    </div>
+    <p class="mb-0">
+      <strong>So is the largest holder the worst offender?</strong> No, and this site
+      cannot support that reading. It is the CNA whose ID blocks are widest and whose
+      advisories this site reads best, which makes it the most <em>visible</em> holder
+      rather than the largest one. Any CNA outside the
+      {{ summary.coverage.cnas_effective if summary.coverage and summary.coverage.get('cnas_effective') is not none else '' }}
+      CNAs these feeds reach could hold more and never appear here at all.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
     <h2 class="card-title">Reporting a row, and what gets withheld</h2>
   </div>
   <div class="card-body">

@@ -522,7 +522,10 @@ def _env():
         lstrip_blocks=True,
     )
     env.filters["commafy"] = lambda n: f"{n:,}" if isinstance(n, (int, float)) else n
-    env.filters["pct"] = lambda x: "n/a" if x is None else f"{100 * x:.2f}%"
+    # One decimal, not two. Two decimals on a 223-row base implies a precision of
+    # one part in ten thousand from a measurement that cannot support one part in
+    # a hundred. The raw ratio stays in the JSON for anyone who wants it.
+    env.filters["pct"] = lambda x: "n/a" if x is None else f"{100 * x:.1f}%"
     env.filters["slug"] = slug
 
     def sortnum(rows, attribute, reverse=True):
@@ -623,7 +626,12 @@ def build(out, snap_root, data_dir):
     launched = ctx["launched"]
     pages = pages_for(launched)
     for template, target in pages:
-        html = env.get_template(template).render(**ctx, page=target)
+        # `page_file` is the page's own path, for a per-page og:url and canonical.
+        # A single hard-coded root og:url on all seven pages meant every paste
+        # unfurled as the front page regardless of what was actually shared.
+        html = env.get_template(template).render(
+            **ctx, page=target,
+            page_file="" if target == "index.html" else target)
         open(os.path.join(out, target), "w").write(html)
 
     if not launched:
@@ -702,7 +710,9 @@ def build(out, snap_root, data_dir):
         resolved = [r for r in ctx["resolutions_published"]
                     if (r.get("predicted_owner") or r.get("owner")) == c["cna"]]
         # already ordered by _by_days_desc; the template must not re-sort
-        html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine, cna_resolved=resolved)
+        html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine,
+                          cna_resolved=resolved,
+                          page_file=f"cna/{c['slug']}.html")
         open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
         written_cna += 1
 

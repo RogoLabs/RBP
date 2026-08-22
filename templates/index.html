@@ -3,11 +3,64 @@
 
 {% block content %}
 <div class="page-header">
-  <span class="lead-count">{{ summary.total | commafy }}</span>
+  {# Lead with the CORROBORATED figure, not the total.
+     Measured: 350 of 522 rows rest on a single independent origin, and the site has
+     computed the two-or-more subset since the beginning, printed it to the build
+     log, and rendered it nowhere. So the front page led with the least defensible
+     number available while the more defensible one existed one variable away. The
+     total is still here, second, because it is the real floor. #}
+  {# A MISSING key must never produce the stronger claim.
+     The first version of this read `corroborated or total`, so a snapshot written
+     before that key existed rendered "506 CVE IDs are referenced in two or more
+     independent public advisories" when only ~172 were. That is the
+     absence-defaults-to-the-stronger-reading bug, for the third time today, and on
+     the lead sentence. If the figure is not there, say the weaker true thing. #}
+  {% set corrob = summary.get('corroborated') %}
+  <span class="lead-count">{{ (corrob if corrob is not none else summary.total) | commafy }}</span>
   <p class="lead-unit">
-    CVE IDs are reserved, referenced in a public advisory, and still have no
-    published record in the CVE List.
+    {% if corrob is not none %}
+    CVE IDs are reserved, referenced in <strong>two or more independent</strong> public
+    advisories, and still have no published record in the CVE List.
+    {% if summary.total > corrob %}
+    A further <strong>{{ (summary.total - corrob) | commafy }}</strong> are referenced
+    in one.
+    {% endif %}
+    {% else %}
+    CVE IDs are reserved, referenced in a public advisory, and still have no published
+    record in the CVE List.
+    {% endif %}
   </p>
+  {# The bound strip. Generated from `summary`, never written, so it cannot drift
+     from the run it describes. Every qualifier that makes the count safe to use
+     lived in HTML three clicks away or in a sibling file; the count is the whole
+     product and it carried none of them. #}
+  <ul class="bound-strip">
+    {# Guarded on the VALUE, not on the parent dict. `summary.coverage` existing
+       does not mean cnas_effective does, and Jinja renders a missing key as an
+       empty string, so the unguarded version produced "Feeds reach of 434 CNAs
+       (%)": a sentence with holes where the numbers should be. #}
+    {% if summary.coverage and summary.coverage.get('cnas_effective') is not none %}
+    <li>Feeds reach <strong>{{ summary.coverage.cnas_effective }} of
+      {{ summary.coverage.total_cnas }} CNAs</strong>
+      ({{ summary.coverage.pct_effective }}%), so this is a
+      <strong>floor</strong>, not a census. <a href="method.html">Coverage</a></li>
+    {% endif %}
+    {% if summary.undated_excluded %}
+    <li><strong>{{ summary.undated_excluded | commafy }}</strong> excluded entirely:
+      their feeds publish no date, so they cannot be aged at any threshold.
+      <a href="method.html">Why</a></li>
+    {% endif %}
+    {% if summary.epoch_excluded %}
+    <li><strong>{{ summary.epoch_excluded | commafy }}</strong> held back as public
+      before {{ summary.epoch }}. <a href="backlog-at-launch.html">The backlog at
+      launch</a></li>
+    {% endif %}
+    {% if summary.feeds and summary.feeds.truncated %}
+    <li><strong>{{ summary.feeds.truncated | length }}</strong> feed(s) truncated this
+      run, so the count is lower than usual.
+      <a href="method.html">Feed health</a></li>
+    {% endif %}
+  </ul>
   <div class="lead-sub">
     {# Legitimacy before accusation. The site's strongest sentence was the second
        paragraph of /method, four items along the nav, while the lead screen's
@@ -21,7 +74,7 @@
       has not been published. RBP is a <em>state</em>, not a verdict, and the count above
       is that state. Which makes it the Program's own metric, measured from outside.
     </p>
-    <p class="mb-0">
+    <p>
       The Program will confirm the state and withhold the owner. Ask its API and it
       returns <span class="mono">"owning_cna":</span>
       <span class="redacted">[REDACTED]</span> for exactly this population, so the owner
@@ -31,6 +84,23 @@
       <strong>{{ ((1 - summary.inference.run_coverage) * 100) | round | int }}% of these
       rows carry no owner at all</strong>, because the reconstruction abstained rather
       than guess. Rendered from the run, not written down, so it cannot go stale.
+    </p>
+    {# Item 19. Said once, here, and load-bearing.
+       Whichever CNA happens to hold the most rows, the count is concentrated by
+       block width and feed coverage, not by behaviour: a CNA with large contiguous
+       ID blocks and advisories this site reads is nameable, and a CNA with neither
+       is invisible. The headline that writes itself ("X is the largest violator of
+       X's own publication policy") is not supported by this data, and printing a
+       one-CNA share as the first metric tile was handing it over. #}
+    <p class="mb-0">
+      <strong>This is a Program-level transparency measurement, not a CNA scorecard.</strong>
+      Which CNAs appear here is decided by how wide their ID blocks are and whether this
+      site reads their advisories, not by how they behave: a CNA with large contiguous
+      blocks and feeds we ingest is nameable, and one with neither is invisible no matter
+      what it does. RBP Policy v2.0.0 also lets a Root direct a CNA-LR to publish an
+      overdue record, so a row may be an ID <em>delegated to</em> a CNA rather than
+      withheld <em>by</em> it, and nothing observable from outside distinguishes the two.
+      <a href="method.html">The limits, in full</a>.
     </p>
   </div>
 </div>
@@ -52,26 +122,86 @@
   and this site cannot tell which. <a href="method.html">How this is measured</a>.
 </p>
 
+{# Every tile states its own BASE on a second line.
+   The four tiles previously had four different unstated denominators, and a reader
+   takes them all as shares of the headline. The one-CNA share tile is gone
+   entirely: a lead-screen tile reporting that a single CNA holds the majority is a
+   leaderboard with one entrant, which PLAN 2a forbids and which clock.per_cna
+   deliberately refuses to build in the per-CNA view. It moves to /method as an
+   instrument reading, captioned as a property of block width and feed coverage. #}
 <div class="metric-grid">
   <div class="metric-card">
-    <div class="metric-value">{{ summary.get('top_owner_share') | pct }}</div>
+    <div class="metric-value">{{ summary.oldest_days | commafy }}</div>
     <div class="metric-label">
-      Share of named rows held by the single largest CNA
+      Days public, oldest<br>
+      <span class="metric-base">of {{ (summary.total - (summary.undated_excluded or 0)) | commafy }}
+      rows that can be aged{% if summary.undated_excluded %};
+      {{ summary.undated_excluded | commafy }} cannot{% endif %}</span>
     </div>
   </div>
   <div class="metric-card">
-    <div class="metric-value">{{ summary.oldest_days | commafy }}</div>
-    <div class="metric-label">Days, oldest outstanding</div>
+    <div class="metric-value">{{ summary.median_days | commafy }}</div>
+    <div class="metric-label">
+      Days public, median<br>
+      <span class="metric-base">same base as oldest</span>
+    </div>
   </div>
   <div class="metric-card">
-    <div class="metric-value">{{ summary.median_days | commafy }}</div>
-    <div class="metric-label">Days, median</div>
+    <div class="metric-value">{{ summary.get('corroborated') | commafy }}</div>
+    <div class="metric-label">
+      Referenced by two or more independent sources<br>
+      <span class="metric-base">of {{ summary.total | commafy }} rows in this snapshot</span>
+    </div>
   </div>
   <div class="metric-card">
     <div class="metric-value">{{ summary.named_cnas | commafy }}</div>
-    <div class="metric-label">CNAs with at least one row named</div>
+    <div class="metric-label">
+      CNAs with at least one row named<br>
+      <span class="metric-base">of {{ summary.coverage.total_cnas if summary.coverage else '?' }}
+      CNAs in the Program</span>
+    </div>
   </div>
 </div>
+
+{# The distribution, not a single share. Ordered by count, and captioned as an
+   instrument reading rather than a ranking, because it is one. #}
+{% if cnas %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Where the named rows sit</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      <strong>This is a picture of what this site can see, not of who is slowest.</strong>
+      A CNA appears here when its published CVE IDs form blocks wide enough to infer
+      ownership <em>and</em> this site reads its advisories. Concentration in one row of
+      this table is a property of those two things.
+    </p>
+    <table class="table table-sm small">
+      <thead>
+        <tr><th>CNA</th><th class="num">Rows named</th>
+            <th class="num">Share of the {{ summary.named_cnas }} named CNAs' rows</th></tr>
+      </thead>
+      <tbody>
+        {% set named_total = cnas | sum(attribute='outstanding') %}
+        {% for c in cnas | sortnum('outstanding') %}
+        <tr>
+          <td><a href="cna/{{ c.slug }}.html">{{ c.cna }}</a></td>
+          <td class="num">{{ c.outstanding | commafy }}</td>
+          <td class="num">{{ ((100 * c.outstanding / named_total) | round(1)) if named_total else 0 }}%</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="small text-muted mb-0">
+      Shares are of the <strong>{{ named_total | commafy }} named rows</strong>, not of the
+      {{ summary.total | commafy }} in this snapshot. The other
+      {{ (summary.total - named_total) | commafy }} carry no owner, because the
+      reconstruction abstained.
+    </p>
+  </div>
+</div>
+{% endif %}
 
 <div class="card">
   <div class="card-header"><h2 class="card-title">How long these have been public</h2></div>

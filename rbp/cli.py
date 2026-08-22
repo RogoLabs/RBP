@@ -273,6 +273,13 @@ def cmd_run(args):
     stats = clock.summary(reportable, cnas, today=today, undated_excluded=undated,
                           epoch_excluded=len(pre_epoch))
     stats["min_age_days"] = args.min_age_days
+    # The corroborated subset: rows referenced by two or more INDEPENDENT origins,
+    # collapsing feeds that share a source (OSV re-publishes GHSA, ALAS is a RHEL
+    # rebuild). Computed by report.build since the beginning, printed to the build
+    # log, and published nowhere, so the front page led with the least defensible
+    # figure while the more defensible one existed one variable away.
+    stats["corroborated"] = len(kpi)
+    stats["single_origin"] = stats["total"] - len(kpi)
     stats["inference"] = {
         "k": validation["k"],
         "run_coverage": validation["run_coverage"],
