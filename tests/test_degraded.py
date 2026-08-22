@@ -293,3 +293,126 @@ def test_the_canary_is_what_actually_stops_a_frozen_corpus():
     frozen = pd.DataFrame({"cve_id": ["CVE-1"], "date_published": ["2026-06-01"]})
     with pytest.raises(SystemExit):
         cvelist.assert_corpus_current(frozen, today="2026-08-22")
+
+
+# --------------------------------------------------------------------------
+# the silent shrink that actually happened (review item 15, deferred bullet)
+# --------------------------------------------------------------------------
+
+def test_the_live_ubuntu_collapse_is_flagged():
+    """The real incident, with the real numbers.
+
+    2026-08-21: ubuntu status `truncated`, 3,995 ids, headline 558.
+    2026-08-22: ubuntu status `ok`,        1,079 ids, headline 458.
+
+    The status signal IMPROVED while the data got worse, undated rows rose 84 to
+    147, and `degraded` was False. This is the exact failure the project calls the
+    one direction of error it cannot afford, because a shrinking count reads as the
+    CVE Program improving.
+
+    I deferred this guard on the reasoning that it needed per-feed id-set recording
+    that did not exist. It did exist: record_feed has carried `rows` all along and
+    it reaches summary.json. The work was comparing two numbers."""
+    prev = {"ubuntu": {"rows": 3995, "status": "truncated"},
+            "debian": {"rows": 17115, "status": "ok"},
+            "alas": {"rows": 11369, "status": "ok"}}
+    cur = {"ubuntu": {"rows": 1079, "status": "ok"},
+           "debian": {"rows": 17328, "status": "ok"},
+           "alas": {"rows": 11470, "status": "ok"}}
+    found = feeds.compare_magnitudes(prev, cur)
+    assert len(found) == 1
+    assert "ubuntu" in found[0] and "73% fewer" in found[0]
+
+
+def test_normal_day_to_day_movement_is_not_flagged():
+    """Real figures across the same two runs: debian +1.2%, alas +0.9%. A guard
+    that fires on those would be noise and would be ignored within a week."""
+    prev = {"debian": {"rows": 17115}, "alas": {"rows": 11369},
+            "osv": {"rows": 11651}, "arch": {"rows": 62}}
+    cur = {"debian": {"rows": 17328}, "alas": {"rows": 11470},
+           "osv": {"rows": 11600}, "arch": {"rows": 60}}
+    assert feeds.compare_magnitudes(prev, cur) == []
+
+
+def test_a_feed_that_grows_is_never_flagged():
+    assert feeds.compare_magnitudes({"a": {"rows": 100}}, {"a": {"rows": 500}}) == []
+
+
+def test_a_first_run_with_no_previous_snapshot_is_not_flagged():
+    """Everything looks like a change against nothing."""
+    assert feeds.compare_magnitudes({}, {"a": {"rows": 100}}) == []
+    assert feeds.compare_magnitudes(None, {"a": {"rows": 100}}) == []
+
+
+def test_a_new_feed_is_not_flagged():
+    """Adding a source must not read as a collapse of a feed that was never there."""
+    assert feeds.compare_magnitudes({"a": {"rows": 100}},
+                                    {"a": {"rows": 100}, "b": {"rows": 5}}) == []
+
+
+def test_sub_fetches_are_not_compared_separately():
+    """osv:npm rolls up to osv. Comparing both double-counts one feed and lets a
+    single ecosystem's normal variation trip the guard."""
+    prev = {"osv": {"rows": 11651}, "osv:npm": {"rows": 5000}}
+    cur = {"osv": {"rows": 11600}, "osv:npm": {"rows": 100}}
+    assert feeds.compare_magnitudes(prev, cur) == []
+
+
+def test_a_magnitude_drop_marks_the_run_degraded_in_the_cli():
+    """Grep-style: the finding has to reach `degraded`, or it is a log line nobody
+    reads. Every other health signal on this project was computed and then not
+    wired to anything at least once."""
+    import pathlib
+    src = (pathlib.Path(__file__).parent.parent / "rbp" / "cli.py").read_text()
+    assert "compare_magnitudes" in src
+    i = src.index('stats["degraded"] = ')
+    assert "shrunk" in src[i:i + 260], (
+        "a magnitude drop does not reach stats['degraded'], so no banner renders")
+
+
+# --------------------------------------------------------------------------
+# why pagination ended
+# --------------------------------------------------------------------------
+
+def test_ubuntu_records_truncation_when_the_year_heuristic_fires(monkeypatch):
+    """`if stop: break` exited without setting `capped`, so the else-clause never
+    ran and gather stamped `ok`. The heuristic assumes the feed is ordered by
+    publish date descending; when it fires, rows beyond that page were not read,
+    which is truncation whether or not the assumption held."""
+    pages = [
+        {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
+        {"cves": [{"id": "CVE-2019-9", "published": "2019-01-01T00:00:00Z"}]},
+    ]
+    calls = {"n": 0}
+
+    def fake_get(url, timeout=None):
+        i = calls["n"]
+        calls["n"] += 1
+        return (pages[i] if i < len(pages) else {"cves": []}), 200, {}
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    feeds.feed_ubuntu({2026})
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") == feeds.TRUNCATED, h
+    assert "year heuristic" in (h.get("detail") or "")
+
+
+def test_ubuntu_does_not_launder_a_404_into_the_end_of_data(monkeypatch):
+    """`_get` returns (None, 404, {}) on a retired path or a WAF block, and every
+    paginated caller bound `code` and never read it, so a 404 ended pagination
+    through the ordinary empty-page branch and was recorded as a healthy feed."""
+    monkeypatch.setattr(feeds, "_get", lambda url, timeout=None: (None, 404, {}))
+    feeds.feed_ubuntu({2026})
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") == feeds.TRUNCATED, h
+    assert "404" in (h.get("detail") or "")
+
+
+def test_a_genuine_end_of_data_is_still_recorded_as_healthy(monkeypatch):
+    """The guard must not turn every normal run into a degraded one, which is the
+    class-2-as-class-1 mistake this project has already made twice."""
+    monkeypatch.setattr(feeds, "_get",
+                        lambda url, timeout=None: ({"cves": []}, 200, {}))
+    feeds.feed_ubuntu({2026})
+    assert "ubuntu" not in feeds.health_detail(), (
+        "a clean exhaustion recorded a health entry it should not have")

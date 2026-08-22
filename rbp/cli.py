@@ -287,6 +287,26 @@ def cmd_run(args):
     # build log and discarded, so `unresolved` and `never_allocated` reached no
     # artefact: a brownout at the endpoint and a quiet week were indistinguishable
     # from outside, and the brownout shrank the headline.
+    # A feed can shrink hard without failing or truncating, which is the
+    # silent-shrink signature and is invisible to a status field. Compared against
+    # the previous snapshot's per-feed id counts.
+    _prev_detail = {}
+    try:
+        _pd = sorted(d for d in glob.glob(os.path.join(SNAPS, "*"))
+                     if os.path.isdir(d) and os.path.basename(d) < today)
+        if _pd:
+            _prev_detail = ((json.load(open(os.path.join(_pd[-1], "summary.json")))
+                             .get("feeds") or {}).get("detail") or {})
+    except Exception:  # noqa: BLE001
+        _prev_detail = {}
+    shrunk = feeds.compare_magnitudes(_prev_detail, feeds.health_detail())
+    if shrunk:
+        print("  DEGRADED: a feed returned far fewer ids than last run, without "
+              "failing or truncating. This is the silent shrink; the count below "
+              "is NOT comparable to the previous run.")
+        for line in shrunk:
+            print(f"    - {line}")
+    stats["feeds"]["shrunk"] = shrunk
     stats["oracle"] = oracle
     stats["corpus_lag_days"] = corpus_lag
     # Counts only, never ids. Publishing which rows are withheld would undo the
@@ -296,7 +316,7 @@ def cmd_run(args):
     # One flag any consumer can branch on, rather than three they have to combine
     # correctly. True whenever this run's count is a lower floor than usual.
     stats["degraded"] = bool(failures or truncated or oracle["dropped"]
-                             or sup.report["degraded"])
+                             or sup.report["degraded"] or shrunk)
     stats["degraded_reasons"] = (
         [f"{len(failures)} feed(s) failed" for _ in [0] if failures]
         + [f"{len(truncated)} feed(s) truncated" for _ in [0] if truncated]
@@ -305,7 +325,9 @@ def cmd_run(args):
         # A correction route that has silently stopped working is exactly the
         # failure shape this project keeps hitting, so it is a visible one.
         + ["correction reports could not be read this run"
-           for _ in [0] if sup.report["degraded"]])
+           for _ in [0] if sup.report["degraded"]]
+        + [f"{len(shrunk)} feed(s) returned far fewer ids than last run"
+           for _ in [0] if shrunk])
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.
     stats["coverage"] = cov

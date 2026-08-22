@@ -86,6 +86,43 @@ def health_summary():
     return failures, truncated, len(top)
 
 
+# A feed returning far fewer ids than last run is the silent-shrink signature,
+# and it is invisible to a status field. Ubuntu went 3,995 -> 1,079 ids overnight
+# while its status went from `truncated` to `ok`, and the headline fell 558 -> 458
+# with nothing marked degraded.
+#
+# 0.4 because normal day-to-day movement on these feeds is 1-3% (debian 17,115 ->
+# 17,328, alas 11,369 -> 11,470 across the same two runs), so a 40% drop is not
+# weather. Compared per feed rather than on the total, because one feed collapsing
+# while others grow can leave the total looking merely flat.
+MAGNITUDE_DROP = 0.4
+
+
+def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
+    """Feeds whose id count fell sharply since the previous run.
+
+    Takes two `health_detail()`-shaped dicts and returns a list of human-readable
+    findings. Empty means no feed shrank beyond the threshold.
+
+    This is the guard the review asked for and I deferred, on the reasoning that it
+    needed per-feed id-set recording that did not exist. It did exist:
+    `record_feed` has carried a `rows` count all along, and it reaches summary.json.
+    The work was comparing two numbers.
+    """
+    out = []
+    for name, cur in sorted((current or {}).items()):
+        if ":" in name:
+            continue                      # sub-fetches roll up to their parent
+        was = ((previous or {}).get(name) or {}).get("rows")
+        now = cur.get("rows")
+        if not isinstance(was, int) or not isinstance(now, int) or was <= 0:
+            continue
+        if now < was * (1 - threshold):
+            pct = round(100 * (was - now) / was)
+            out.append(f"{name}: {was:,} -> {now:,} ids ({pct}% fewer)")
+    return out
+
+
 def health_detail():
     """Structured per-feed health for summary.json. Sub-fetches (osv:npm) are
     nested under their parent so the top-level count means what it says."""
@@ -299,14 +336,30 @@ def feed_alas(years):
 
 def feed_ubuntu(years, page_cap=200):
     out, offset, limit, capped = [], 0, 20, False  # Ubuntu API caps limit at 20
+    # WHY the loop ended, not just that it ended. Three different exits used to
+    # look identical from outside: the natural end of the data, an error response
+    # laundered into an empty page, and the year heuristic firing early. Only the
+    # page cap recorded anything, so the other two published a short feed as `ok`.
+    # Measured consequence: ubuntu returned 3,995 ids on 2026-08-21 and 1,079 the
+    # next day, the status went from `truncated` to `ok`, and the site's headline
+    # fell from 558 to 458 with every health surface green. The health signal
+    # improved while the data got worse.
+    ended = "exhausted"
     while offset < page_cap * limit:
         try:
             data, code, _ = _get(f"https://ubuntu.com/security/cves.json?limit={limit}&offset={offset}", timeout=60)
         except Exception as e:  # noqa: BLE001, keep partial results
             print(f"  [ubuntu] stopped at offset {offset}: {e}", file=sys.stderr)
+            ended = f"error at offset {offset}: {str(e)[:80]}"
             break
         rows = (data or {}).get("cves", []) if isinstance(data, dict) else []
         if not rows:
+            # An empty page is only the end of the data if the request SUCCEEDED.
+            # `_get` returns (None, 404, {}) on a retired path or a WAF block, and
+            # every caller bound `code` and never read it, so a 404 ended
+            # pagination through this branch and was recorded as a healthy feed.
+            if code and code != 200:
+                ended = f"HTTP {code} at offset {offset}, treated as end of data"
             break
         stop = False
         for r in rows:
@@ -320,6 +373,11 @@ def feed_ubuntu(years, page_cap=200):
             if py is not None and py < min(years):
                 stop = True
         if stop:
+            # The year heuristic assumes the feed is ordered by publish date
+            # descending. When it fires, rows beyond this page were NOT read, which
+            # is truncation whether or not the assumption held.
+            ended = (f"year heuristic stopped pagination at offset {offset}; rows "
+                     "beyond it were not read")
             break
         offset += limit
     else:
@@ -327,6 +385,9 @@ def feed_ubuntu(years, page_cap=200):
     if capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
         record_feed("ubuntu", TRUNCATED, f"hit the {page_cap}-page cap; rows beyond it were not read")
+    elif ended != "exhausted":
+        print(f"  [ubuntu] {ended}", file=sys.stderr)
+        record_feed("ubuntu", TRUNCATED, ended)
     return out
 
 
