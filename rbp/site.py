@@ -62,33 +62,6 @@ def _snapshots(snap_root):
     return sorted(d for d in glob.glob(os.path.join(snap_root, "*")) if os.path.isdir(d))
 
 
-def prune_snapshots(snap_root, keep=2, keep_monthly=True):
-    """Keep the current snapshot, the previous one, and one per month.
-
-    An unbounded public log of every row ever named, including names later
-    withdrawn, is a standing liability that grows four times a day and that no
-    correction on the site can reach. The diff only ever needs the previous
-    snapshot; the monthly archive is for the historical record.
-    """
-    snaps = _snapshots(snap_root)
-    if len(snaps) <= keep:
-        return []
-    recent = set(snaps[-keep:])
-    monthly = set()
-    if keep_monthly:
-        by_month = {}
-        for d in snaps:
-            by_month[os.path.basename(d)[:7]] = d      # last of each month wins
-        monthly = set(by_month.values())
-    dropped = []
-    for d in snaps:
-        if d in recent or d in monthly:
-            continue
-        shutil.rmtree(d, ignore_errors=True)
-        dropped.append(os.path.basename(d))
-    return dropped
-
-
 def _read(path, default):
     """Tolerant read. Only for the two ledgers, where absence is a valid
     first-run state."""

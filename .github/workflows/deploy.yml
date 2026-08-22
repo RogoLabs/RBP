@@ -163,112 +163,22 @@ jobs:
       # Always staged, even on a pause or a dry run: staging is local and
       # publishes nothing, and it is what makes a dry run able to show what
       # WOULD go out. Only the push below is gated.
+      # Staging, retention and ledger pruning all live in rbp/publish.py.
+      # They used to be shell loops and heredocs here, which failed on their
+      # first real execution: a YAML block scalar plus an indented heredoc
+      # terminator produced `NameError: name 'PRUNE' is not defined`. Logic that
+      # gates a publication should also be testable, which shell inside YAML is
+      # not. Always runs, even paused, so a dry run can show what would go out.
       - name: Stage durable state
-        run: |
-          cp data/precision.json .state/ 2>/dev/null || true
-          cp data/resolutions.json .state/ 2>/dev/null || true
-          # Copy only the artefacts that are safe on a world-readable branch.
-          # backlog_full.json carries the ungated set, 724 rows including rows
-          # inside the buffer and undated ones, 85 of them named. report.md opens
-          # "Internal / pre-preview. Do not forward." Neither belongs here.
-          mkdir -p .state/snapshots
-          for d in snapshots/*/; do
-            [ -d "$d" ] || continue
-            dst=".state/snapshots/$(basename "$d")"
-            mkdir -p "$dst"
-            for f in backlog.json backlog.csv cnas.json summary.json held_back.json resolved.json; do
-              # Explicit if: a trailing failed test would set the loop's exit
-              # status and abort the step under `bash -e`.
-              if [ -f "$d$f" ]; then
-                cp "$d$f" "$dst/"
-              fi
-            done
-          done
-          # Retention. Keep the current snapshot, the previous one and a monthly
-          # archive. Without this the branch accumulates every row ever named,
-          # including names later withdrawn, four times a day, and no correction
-          # on the site can reach the history.
-          python -c "
-          from rbp.site import prune_snapshots
-          d = prune_snapshots('.state/snapshots', keep=2)
-          print('pruned %d old snapshot(s): %s' % (len(d), d) if d else 'nothing to prune')
-          "
-          # Remove anything a previous run published before these rules existed.
-          # Note that precision.json sits at the branch ROOT, so a
-          # snapshots-scoped rule never touched it: its `predictions` map had
-          # 366 CVE-to-CNA name pairs on a public branch, a larger exposure than
-          # any snapshot file. The pipeline now only records published rows, but
-          # the historical entries have to be pruned here too.
-          rm -f .state/snapshots/*/backlog_full.json .state/snapshots/*/report.md
-          python - <<'PRUNE'
-          import json, os
-          # Keep the graded history: that IS the accountability record and it
-          # only ever names CNAs whose records have since published, so the
-          # assigner is authoritative rather than inferred. Prune the open
-          # predictions to the rows the current run actually publishes.
-          try:
-              pub = {r["cve_id"] for r in json.load(open("snapshots/%s/backlog.json"
-                     % sorted(os.listdir("snapshots"))[-1]))}
-          except Exception:
-              pub = None
-          path = ".state/precision.json"
-          if pub is not None and os.path.exists(path):
-              d = json.load(open(path))
-              before = len(d.get("predictions", {}))
-              d["predictions"] = {k: v for k, v in d.get("predictions", {}).items()
-                                  if k in pub}
-              if len(d["predictions"]) != before:
-                  json.dump(d, open(path, "w"), indent=1)
-                  print("pruned %d unpublished predictions from the ledger"
-                        % (before - len(d["predictions"])))
-          PRUNE      # Every path that leaves the runner is checked against an allowlist. The
-      # protection here used to be a copy loop plus a post-hoc `rm -f` for two
-      # filenames, on a branch that deliberately carries no .gitignore, and that
-      # branch's own history records a leak in each direction: workflow files
-      # that leaked in at creation, and a green state commit that silently
-      # dropped every snapshot.
+        run: python -m rbp.publish stage --state .state --snapshots snapshots --data data
+
+      # The backstop. Refuses any file off the allowlist, any row naming a CNA
+      # on an uncounted row, and any ledger prediction for an unpublished row.
+      # Verified against both real leaks: it catches backlog_full.json by path
+      # and the held_back.json named row by content, which the path check alone
+      # could not, because that file IS allowlisted and its rows were the problem.
       - name: Check what is about to be published
-        run: |
-          python - <<'CHECK'
-          import glob, json, os, sys
-          ALLOWED_ROOT = {"README.md", "precision.json", "resolutions.json"}
-          ALLOWED_SNAP = {"backlog.json", "backlog.csv", "cnas.json", "summary.json",
-                          "held_back.json", "resolved.json"}
-          bad = []
-          for path in glob.glob(".state/**/*", recursive=True):
-              if os.path.isdir(path) or "/.git/" in path:
-                  continue
-              rel = os.path.relpath(path, ".state")
-              parts = rel.split(os.sep)
-              if len(parts) == 1:
-                  if rel not in ALLOWED_ROOT:
-                      bad.append(f"unexpected file at branch root: {rel}")
-              elif parts[0] == "snapshots" and len(parts) == 3:
-                  if parts[2] not in ALLOWED_SNAP:
-                      bad.append(f"not on the snapshot allowlist: {rel}")
-              else:
-                  bad.append(f"unexpected path: {rel}")
-          # And no published row may name a CNA on a row that is not counted.
-          for f in glob.glob(".state/snapshots/*/*.json"):
-              try:
-                  rows = json.load(open(f))
-              except Exception:
-                  continue
-              if not isinstance(rows, list):
-                  continue
-              for r in rows:
-                  if not isinstance(r, dict):
-                      continue
-                  named = r.get("owner") not in (None, "", "unattributed")
-                  if named and r.get("counted") is False:
-                      bad.append(f"{f}: {r.get('cve_id')} names a CNA on an uncounted row")
-          if bad:
-              print("REFUSING TO PUBLISH:")
-              for b in sorted(set(bad))[:40]:
-                  print("  " + b)
-              sys.exit(1)
-          print("publish check passed")
-          CHECK
+        run: python -m rbp.publish check --state .state
 
       - name: Persist durable state
         if: ${{ vars.RBP_PAUSE != '1' && inputs.dry_run != true }}
