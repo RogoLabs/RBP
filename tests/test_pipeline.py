@@ -54,8 +54,9 @@ def backlog(corpus, refs, monkeypatch, tmp_path):
     # endpoint does for the population this project reports on.
     monkeypatch.setattr(classify, "_get",
                         lambda cid, attempts=3: {"state": "RESERVED", "assigner": "[REDACTED]"})
-    bl, fresh = classify.classify(refs, corpus, Attributor(corpus),
-                                  str(tmp_path / "cache.json"), workers=2, today="2026-08-20")
+    bl, fresh, _oracle = classify.classify(refs, corpus, Attributor(corpus),
+                                           str(tmp_path / "cache.json"), workers=2,
+                                           today="2026-08-20")
     return bl, fresh
 
 

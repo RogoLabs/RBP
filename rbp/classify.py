@@ -39,6 +39,7 @@ import concurrent.futures
 import datetime as dt
 import json
 import os
+import random
 import re
 import time
 import urllib.error
@@ -58,6 +59,115 @@ _NOT_FOUND = "NOT_ALLOCATED"
 # ~94 req/s, i.e. ~5,600/min: roughly 22% of the ceiling. Do not raise this
 # without re-reading the live header; there is no upside in going faster.
 DEFAULT_WORKERS = 24
+
+# --------------------------------------------------------------------------
+# Description sanitising (review item 18)
+# --------------------------------------------------------------------------
+# The published description is the only identifier a defender has on many rows:
+# 52 of 96 named rows carried an empty package and CSAF rows carry no package at
+# all. So the field stays. What comes out of it are the vulnerability-tracker
+# annotations that Debian and others append, of which the load-bearing case is
+#
+#     NOTE: Introduced with: https://.../commit/90ca4e03c27dc8ac821a2e1686
+#
+# An "Introduced with" pointer is not a description of a flaw, it is a pointer to
+# the vulnerable code, reproduced inside a curated list of CVE IDs selected
+# precisely because no record has been published. That Debian publishes it first
+# is true, and is exactly the "aggregation of public facts creates new exposure"
+# argument this whole site rests on, so the defence does not survive contact with
+# the site's own thesis. It is also gratuitous: the annotation identifies nothing
+# a defender needs.
+#
+# Everything from the first annotation marker onward is dropped, rather than the
+# marker alone, because these annotations are appended in a trailing block and
+# what follows one is never prose.
+_ANNOTATION_RE = re.compile(
+    r"\s*(?:NOTE\s*:|DEBIANBUG\s*:?|Introduced\s+(?:with|in)\s*:|Fixed\s+by\s*:"
+    r"|Bug\s*:|References?\s*:)",
+    re.I)
+# Stops at whitespace OR a closing bracket, rather than eating everything
+# non-space. `\S+` swallowed the `)` of a markdown link, so
+# `[PhotoSwipe](https://photoswipe.com/)` was left as `[PhotoSwipe](` with an
+# unclosed paren on the page.
+_URL_RE = re.compile(r"\b(?:https?://|www\.|git://|ftp://)[^\s<>()\[\]]*", re.I)
+# Wreckage left behind once a URL is removed from the middle of prose: an empty
+# markdown target, empty brackets, a stranded connective, doubled punctuation.
+_EMPTY_LINK_RE = re.compile(r"\[([^\]]*)\]\s*\(\s*\)")
+_EMPTY_BRACKETS_RE = re.compile(r"\(\s*\)|\[\s*\]")
+_STRANDED_LEAD_RE = re.compile(
+    r"^(?:From|See|Ref(?:erence)?|Source|At|Via|Per)\b[\s,;:.\-]*(?=[A-Z])")
+# Sentence end: terminator, whitespace, then something that starts a new sentence.
+# Requires two characters before the terminator so "e.g. foo" and "v1.2. bar" are
+# not read as boundaries.
+_SENTENCE_RE = re.compile(r"(?<=[a-z0-9)\"'\]]{2})([.!?])(?=\s+[A-Z(\"']|\s*$)")
+# Backstop only. A description that reaches this without a sentence boundary is
+# almost always an advisory title, which has no terminal punctuation at all.
+MAX_DESCRIPTION = 240
+
+
+def display_description(text):
+    """Feed description to publishable display text.
+
+    Order matters and is the point: annotations and URLs come out BEFORE any
+    length cut, so a pointer can never survive as a truncated fragment. Then cut
+    at the first sentence boundary, which replaces a raw 180-character slice that
+    left 518 of 522 rows ending mid-word.
+
+    Returns "" when nothing usable survives. The caller decides the fallback;
+    report._clean_description substitutes the package name.
+    """
+    t = (text or "").replace("\n", " ").replace("\r", " ")
+    t = _ANNOTATION_RE.split(t, maxsplit=1)[0]
+    had_url = bool(_URL_RE.search(t))
+    t = _URL_RE.sub("", t)
+    if had_url:
+        # Tidy the hole the URL left. "[PhotoSwipe](https://...)" must not become
+        # "[PhotoSwipe]()", and "From https://..., The server option" must not
+        # become "From , The server option".
+        t = _EMPTY_LINK_RE.sub(r"\1", t)
+        t = _EMPTY_BRACKETS_RE.sub("", t)
+        t = re.sub(r"\s+([,.;:])", r"\1", t)
+        t = re.sub(r"([,;:])\s*([,.;:])", r"\2", t)
+        t = re.sub(r"\s+", " ", t).strip(" ;,:-–")
+        t = _STRANDED_LEAD_RE.sub("", t)
+    t = re.sub(r"\s+", " ", t).strip()
+    t = t.strip(" ;,:-–")
+    if not t:
+        return ""
+    # Removing a URL can leave a stub that reads like prose but says nothing:
+    # "See https://.../advisory for details" becomes "See for details". Below a
+    # floor of real words, return nothing and let the caller fall back to the
+    # package name, which is genuinely more useful to a defender than a fragment.
+    if had_url and (len(t) < 25 or len(t.split()) < 4):
+        return ""
+    m = _SENTENCE_RE.search(t)
+    if m:
+        return t[:m.end()].strip()
+    if len(t) <= MAX_DESCRIPTION:
+        return t
+    cut = t[:MAX_DESCRIPTION].rsplit(" ", 1)[0].rstrip(" ;,:-")
+    return cut or t[:MAX_DESCRIPTION]
+
+
+# 429s seen this run. A rate limit is a capacity signal about a shared endpoint,
+# not an error, and it was previously invisible: the retry succeeded and nothing
+# recorded that the ceiling had been touched.
+RATE_LIMITED = []
+
+
+def _backoff(attempt, retry_after=None):
+    """Exponential backoff with jitter, honouring Retry-After when offered.
+
+    Jitter is not decoration here. 24 workers ran `time.sleep(2 ** i)` in
+    lockstep, so one 429 produced 24 synchronised retries, which is the shape
+    that turns a soft rate limit into a hard one.
+    """
+    if retry_after:
+        try:
+            return max(0.0, min(float(retry_after), 30.0))
+        except (TypeError, ValueError):
+            pass
+    return (2 ** attempt) * (0.5 + random.random())
 
 
 def _valid(cid):
@@ -79,12 +189,18 @@ def _get(cid, attempts=3):
             if e.code == 400:
                 return {"state": "MALFORMED", "assigner": ""}
             if e.code == 429 and i < attempts - 1:
-                time.sleep(2 ** i)
+                RATE_LIMITED.append(cid)
+                # Honour Retry-After when the endpoint sends one, and jitter
+                # otherwise. 24 workers previously executed `2 ** i` in lockstep,
+                # so a single 429 became 24 simultaneous retries at t+1s, t+2s,
+                # t+4s against an endpoint this project depends on and does not
+                # own. Jitter breaks the convoy.
+                time.sleep(_backoff(i, e.headers.get("Retry-After")))
                 continue
             return {"state": f"HTTP{e.code}", "assigner": ""}
         except Exception:  # noqa: BLE001
             if i < attempts - 1:
-                time.sleep(2 ** i)
+                time.sleep(_backoff(i))
                 continue
             return {"state": "ERROR", "assigner": ""}
     return {"state": "ERROR", "assigner": ""}
@@ -103,12 +219,25 @@ def _lookup(cid, cache):
 
 
 def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
-             today=None, ttl=None):
+             today=None, ttl=None, previous_reserved=()):
     """Partition referenced IDs into RBP backlog vs. resolved.
+
+    Returns `(backlog, fresh_resolved, health)`. The third value used to not
+    exist: the state tally was printed to a log and thrown away, so `unresolved`
+    and `never_allocated` never reached summary.json and no consumer could tell a
+    quiet week from a brownout at the endpoint.
+
+    `previous_reserved` is the set of CVE IDs that were RESERVED in the previous
+    snapshot. It exists so an id the endpoint fails to resolve this run can be
+    carried forward rather than silently dropped. Defaults to empty, which is the
+    correct first-run behaviour and also means a caller that forgets to pass it
+    degrades to the old drop behaviour rather than crashing; tests pin that the
+    real caller passes it.
 
     `ttl` is accepted and ignored, it belonged to the old dual-oracle cache,
     where RESERVED was expensive to re-check. It no longer is.
     """
+    previous_reserved = set(previous_reserved or ())
     today = today or dt.date.today().isoformat()
     state_map = dict(zip(corpus_df["cve_id"], corpus_df["state"]))
 
@@ -145,6 +274,7 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
 
     backlog = []
     tally = {"PUBLISHED": 0, "REJECTED": 0, _NOT_FOUND: 0, "RESERVED": 0, "ERROR": 0}
+    carried = []
     for cid, res in api.items():
         st = res["state"]
         if st in _IMMUTABLE:
@@ -159,16 +289,61 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
             # defect in the citing advisory. Counted, never published as RBP.
             tally[_NOT_FOUND] += 1
         else:
-            tally["ERROR"] += 1  # transient; not cached, retried next run
+            # Unresolved this run: transient, not cached, retried next run.
+            #
+            # CARRY FORWARD. This branch used to only increment a counter, so an
+            # ERROR'd id was never appended to `backlog` and simply vanished from
+            # the snapshot. That is the one direction of error this project cannot
+            # afford: it shrinks the headline AND manufactures a fake departure in
+            # _changes.no_longer_listed, while the row stays open in the ledger
+            # forever. A brownout at the endpoint would have read as the CVE
+            # Program improving.
+            #
+            # A bare abort would be the wrong fix (a single flaky id must not stop
+            # a publication), so the primitive is carry-forward: if the id was
+            # RESERVED in the previous snapshot, keep it, count it, and mark it
+            # unverified so every surface can see the count is partly inherited.
+            tally["ERROR"] += 1
+            if cid in previous_reserved:
+                row = _row(cid, refs[cid], "RESERVED", attributor)
+                row["state_verified_this_run"] = False
+                backlog.append(row)
+                carried.append(cid)
+
+    # Verified rows are marked too, so `state_verified_this_run` is never absent
+    # on some rows and False on others, which is how a missing field gets read as
+    # a healthy default.
+    for r in backlog:
+        r.setdefault("state_verified_this_run", True)
 
     print(f"  states: {tally['RESERVED']} RESERVED (RBP) | "
           f"{tally['PUBLISHED']} published | {tally['REJECTED']} rejected | "
           f"{tally[_NOT_FOUND]} never allocated | {tally['ERROR']} unresolved")
     if tally["ERROR"]:
-        print(f"  WARNING: {tally['ERROR']} ids unresolved (transient), counts are a floor")
+        print(f"  WARNING: {tally['ERROR']} ids unresolved (transient); "
+              f"{len(carried)} carried forward from the previous snapshot, "
+              f"{tally['ERROR'] - len(carried)} genuinely dropped")
+    if RATE_LIMITED:
+        print(f"  note: {len(RATE_LIMITED)} lookups were rate limited and retried")
 
-    fresh_resolved = tally["PUBLISHED"] + tally["REJECTED"]
-    return backlog, fresh_resolved
+    health = {
+        "lookups_attempted": len(unknown),
+        "lookups_live": live,
+        "cached_terminal": reused,
+        "published": tally["PUBLISHED"],
+        "rejected": tally["REJECTED"],
+        "reserved": tally["RESERVED"],
+        # A genuinely valuable data-quality population that was printed to a log
+        # and discarded: ids cited by a downstream advisory that were never
+        # allocated at all.
+        "never_allocated": tally[_NOT_FOUND],
+        "unresolved": tally["ERROR"],
+        "carried_forward": len(carried),
+        "dropped": tally["ERROR"] - len(carried),
+        "rate_limited": len(RATE_LIMITED),
+        "malformed": malformed,
+    }
+    return backlog, tally["PUBLISHED"] + tally["REJECTED"], health
 
 
 def _row(cid, e, state, attributor):
@@ -186,5 +361,11 @@ def _row(cid, e, state, attributor):
         "sources": ",".join(sorted(e["sources"])), "feed_count": len(e["sources"]),
         "dates": dict(e.get("dates") or {}),
         "refs": ";".join(sorted(e["refs"]))[:250],
-        "description": e["description"][:180].replace("\n", " "),
+        # Sanitised BEFORE the length cut, not after. The old code was
+        # `[:180]`, which sliced the raw feed string and left several rows ending
+        # in half a commit URL: the annotation was already gone from view but the
+        # pointer was still in the data. Cutting first and cleaning second cannot
+        # fix that, because by then the URL is a fragment that no longer matches a
+        # URL pattern. See display_description.
+        "description": display_description(e["description"]),
     }

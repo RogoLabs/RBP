@@ -8,6 +8,7 @@ import json
 import os
 from collections import Counter
 
+from . import classify
 from . import clock
 
 
@@ -146,11 +147,47 @@ def _indep(sources_str):
 
 
 
+def _clean_description(text, package):
+    """Make the description fit to display, or drop it.
+
+    Two different problems, handled differently.
+
+    A row that arrives as bare vulnerability-tracker bookkeeping ("NOTE: this is
+    fixed in ...") tells a reader nothing and reads like leaked internal text. Six
+    such rows were in the live snapshot. Cleaning beats asserting: a useless
+    description is bad display text, not a false statement about anyone, so it
+    must not be able to stop a publication (PLAN 8b, class 2).
+
+    A row carrying an introducing-commit pointer is a different kind of problem
+    and is handled upstream by classify.display_description, before the length
+    cut. Running that sanitiser again here is deliberate belt and braces: it is
+    idempotent, and it means a row reaching this function by any path that skipped
+    classify still cannot publish a URL.
+
+    Module level, not nested inside build(): it is pure, it now has two callers,
+    and a nested function cannot be tested directly, which is why the NOTE: bug it
+    was written to fix reached production twice.
+    """
+    t = classify.display_description(text)
+    low = t.lower()
+    if not t or low.startswith(("[unknown", "unknown")) or low in (
+            "security update", "security fix"):
+        return package or ""
+    return t
+
+
 def _summary(r):
-    """Clean a display summary; blank out NOTE-fragments / unknown / empty titles."""
-    d = (r.get("description") or "").strip()
+    """Clean a display summary for the markdown report.
+
+    Was a third independent copy of the cleaning rules, with its own NOTE: check
+    and its own "unknown" list that had already drifted from the other two (it
+    omitted "security fix"). Now delegates to the one sanitiser, so a rule added
+    for the site cannot silently fail to apply to the report.
+    """
+    d = classify.display_description(r.get("description"))
     low = d.lower()
-    if not d or low.startswith(("note:", "[unknown", "unknown")) or low in ("security update",):
+    if not d or low.startswith(("[unknown", "unknown")) or low in (
+            "security update", "security fix"):
         return r.get("package") or "-"
     return _trunc(d, 56)
 
@@ -234,23 +271,6 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # rows shipped an ungated CNA name on a row rendered as unattributed. Strip
     # them on both branches and publish only a boolean.
     _INTERNAL = ("product_map_owner", "product_map_confidence", "product_map_method")
-
-    def _clean_description(text, package):
-        """Make the description fit to display, or drop it.
-
-        The field is the first 180 characters of whatever the feed supplied, so
-        some rows arrive as bare vulnerability-tracker bookkeeping ("NOTE: this
-        is fixed in ...") which tells a reader nothing and reads like leaked
-        internal text. Six such rows were in the live snapshot. Cleaning beats
-        asserting: a useless description is bad display text, not a false
-        statement about anyone, so it must not be able to stop a publication.
-        """
-        t = (text or "").strip()
-        low = t.lower()
-        if not t or low.startswith(("note:", "[unknown", "unknown")) or low in (
-                "security update", "security fix"):
-            return package or ""
-        return t
 
     def _publishable(r, **over):
         out = {k: v for k, v in r.items() if k not in _INTERNAL}

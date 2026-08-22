@@ -304,4 +304,49 @@
     </p>
   </div>
 </div>
+
+{% if launch %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">What has to be true before this is promoted</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      Coverage is one of nine conditions, not the only one. An adversarial review of
+      this project found that several of its own findings had assumed the coverage
+      gate was the whole test, so the full list is published here rather than kept
+      internally. <strong>{{ launch.met }} of {{ launch.total }} are met.</strong>
+      Promotion means announcing this site and its numbers; it does not describe
+      deployment, which happens continuously and is what you are reading now.
+    </p>
+    <table class="table table-sm small">
+      <thead>
+        <tr><th>#</th><th>Condition</th><th>State</th></tr>
+      </thead>
+      <tbody>
+        {% for c in launch.conditions %}
+        <tr>
+          <td class="num">{{ c.n }}</td>
+          <td>
+            <strong>{{ c.title }}</strong><br>
+            <span class="text-muted">{{ c.detail }}</span>
+            {% if c.blocks %}<br><span class="text-muted"><em>Blocked: {{ c.blocks }}</em></span>{% endif %}
+          </td>
+          <td>
+            {% if c.status == 'met' %}<span class="chip chip-ok">met</span>
+            {% else %}<span class="chip chip-unmeasured">not yet</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="small text-muted mb-0">
+      This list is advisory to a human and does not stop a build. Nine conditions
+      each able to halt a publication that runs four times a day would freeze the
+      site over paperwork, which is the failure this project has already made once
+      in a smaller way.
+    </p>
+  </div>
+</div>
+{% endif %}
 {% endblock %}

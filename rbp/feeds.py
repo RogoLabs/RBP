@@ -62,7 +62,16 @@ def record_feed(name, status, detail="", rows=None):
 
 
 def health_summary():
-    """(failures, attempts) where an attempt is one FEED, not one sub-fetch.
+    """(failures, truncated, attempts) where an attempt is one FEED, not one
+    sub-fetch.
+
+    Returns truncation SEPARATELY rather than folding it into neither bucket.
+    This used to return only FAILED entries, so `cli`'s `if failures:` could never
+    fire on truncation. Ubuntu truncates on every single run, so the live snapshot
+    published `failures: []` beside `truncated: ["ubuntu"]` on a run with known
+    data loss and the DEGRADED warning never printed once. A truncated feed
+    returned real rows AND silently dropped the rest, which is a floor on a floor
+    and the one direction of error this project cannot afford.
 
     The unit used to be wrong as well as the states: OSV recorded per ecosystem
     and gather recorded again for `osv`, so "all 20 feed fetches succeeded"
@@ -71,8 +80,10 @@ def health_summary():
     """
     failures = [f"{k}: {v['detail']}" for k, v in FEED_HEALTH.items()
                 if v["status"] == FAILED]
+    truncated = [f"{k}: {v['detail']}" for k, v in FEED_HEALTH.items()
+                 if v["status"] == TRUNCATED]
     top = [k for k in FEED_HEALTH if ":" not in k]
-    return failures, len(top)
+    return failures, truncated, len(top)
 
 
 def health_detail():

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import glob
 import json
 import os
 
@@ -42,6 +43,31 @@ def ensure_corpus(force=False):
     return cvelist.refresh_corpus(BASELINE, INDEX, force=force)
 
 
+def _previous_reserved(snap_root, today):
+    """CVE IDs that were RESERVED in the most recent snapshot before `today`.
+
+    The input to carry-forward. Reads the previous backlog rather than the ledger
+    because the ledger holds only rows that were *published*, and a row can be in
+    the backlog while held back by the buffer or the epoch; dropping those on a
+    brownout would still shrink the count once they aged in.
+
+    Tolerant on purpose: no previous snapshot is the normal first-run state, and a
+    corrupt one must not stop a publication. The cost of returning empty is that
+    unresolved ids drop, which is the old behaviour, and `oracle["dropped"]`
+    reports it.
+    """
+    try:
+        dirs = sorted(d for d in glob.glob(os.path.join(snap_root, "*"))
+                      if os.path.isdir(d) and os.path.basename(d) < today)
+        if not dirs:
+            return set()
+        rows = json.load(open(os.path.join(dirs[-1], "backlog.json")))
+        return {r["cve_id"] for r in rows if isinstance(r, dict) and r.get("cve_id")}
+    except Exception as e:  # noqa: BLE001
+        print(f"  NOTE: no usable previous snapshot for carry-forward ({e})")
+        return set()
+
+
 def cmd_build(args):
     site.build(args.out, SNAPS, DATA)
 
@@ -67,6 +93,10 @@ def cmd_run(args):
 
     corpus, prod_cna = ensure_corpus(force=args.reindex)
     print(f"corpus: {len(corpus):,} records | product->CNA: {len(prod_cna):,}")
+    # The canary, immediately after the corpus is in hand. Everything downstream
+    # trusts the corpus as ground truth for closure detection, so a stale one is
+    # the one failure that makes every other health surface lie.
+    corpus_lag = cvelist.assert_corpus_current(corpus, today=today)
 
     refs = feeds.gather(sources, years)
     print(f"  total unique referenced IDs: {len(refs)}")
@@ -75,18 +105,33 @@ def cmd_run(args):
     # so a silent shrink looks like progress; this is the failure mode most
     # likely to actually happen (PLAN.md R4). The OSV npm ecosystem was dropped
     # from every run for exactly this reason before it was caught.
-    failures, attempts = feeds.health_summary()
-    if failures:
-        print(f"  DEGRADED: {len(failures)} of {attempts} feed fetches failed. "
-              f"This run's counts are a lower floor than usual and are NOT "
-              f"comparable to the previous run.")
-        for f in failures:
+    # `if failures:` could never fire on truncation, because health_summary
+    # returned only FAILED entries. Every run truncates ubuntu, so the live
+    # snapshot published `failures: []` beside `truncated: ["ubuntu"]` on a run
+    # with known data loss, and the DEGRADED line never printed once.
+    failures, truncated, attempts = feeds.health_summary()
+    if failures or truncated:
+        what = []
+        if failures:
+            what.append(f"{len(failures)} of {attempts} feeds failed")
+        if truncated:
+            what.append(f"{len(truncated)} truncated")
+        print(f"  DEGRADED: {', '.join(what)}. This run's counts are a lower "
+              f"floor than usual and are NOT comparable to the previous run.")
+        for f in failures + truncated:
             print(f"    - {f}")
 
     attributor = attribution.Attributor(corpus)
-    backlog, fresh = classify.classify(refs, corpus, attributor, CACHE, workers=args.workers,
-                                       today=today, ttl=args.cache_ttl_days)
+    # The ids that were RESERVED last run, so an id the endpoint cannot resolve
+    # this run is carried forward instead of vanishing from the count.
+    prev_reserved = _previous_reserved(SNAPS, today)
+    backlog, fresh, oracle = classify.classify(
+        refs, corpus, attributor, CACHE, workers=args.workers, today=today,
+        ttl=args.cache_ttl_days, previous_reserved=prev_reserved)
     print(f"  RBP backlog: {len(backlog)}  (published-since-baseline: {fresh})")
+    if oracle["carried_forward"]:
+        print(f"  carried forward {oracle['carried_forward']} unverified row(s) "
+              f"from the previous snapshot")
 
     # The covered set has to exist before inference, because inference refuses
     # to name a CNA outside it. It needs only the corpus and the refs, both of
@@ -188,6 +233,20 @@ def cmd_run(args):
                       "detail": feeds.health_detail(),
                       "truncated": [k for k, v in feeds.health_detail().items()
                                     if v.get("status") == feeds.TRUNCATED]}
+    # The reservation oracle's own health. Previously the tally was printed to a
+    # build log and discarded, so `unresolved` and `never_allocated` reached no
+    # artefact: a brownout at the endpoint and a quiet week were indistinguishable
+    # from outside, and the brownout shrank the headline.
+    stats["oracle"] = oracle
+    stats["corpus_lag_days"] = corpus_lag
+    # One flag any consumer can branch on, rather than three they have to combine
+    # correctly. True whenever this run's count is a lower floor than usual.
+    stats["degraded"] = bool(failures or truncated or oracle["dropped"])
+    stats["degraded_reasons"] = (
+        [f"{len(failures)} feed(s) failed" for _ in [0] if failures]
+        + [f"{len(truncated)} feed(s) truncated" for _ in [0] if truncated]
+        + [f"{oracle['dropped']} id(s) unresolved and not carried forward"
+           for _ in [0] if oracle["dropped"]])
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.
     stats["coverage"] = cov

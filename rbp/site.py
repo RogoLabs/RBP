@@ -28,6 +28,7 @@ import shutil
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import clock
+from . import launch as launch_mod
 
 # Pre-launch posture. The dashboard is built and reachable either way, because
 # the repo is public and the data files are served regardless; the gate is on
@@ -195,6 +196,12 @@ def _assert_consistent(rows, summary, cnas):
             "named. The per-CNA cards would contradict their own tables.")
 
 
+# A URL, by scheme. Deliberately not the bare substring "http": protocol names
+# appear legitimately inside software identifiers (NIOHTTPRequestDecompressor,
+# HTTPDecoder) and inside prose about a protocol ("unauthenticated HTTP endpoint").
+_URL_IN_TEXT = re.compile(r"\b(?:https?|ftp|git)://|\bwww\.\w", re.I)
+
+
 def assert_artefact(rows, label, cnas=None, covered=None):
     """Invariants every published artefact must satisfy, not just backlog.json.
 
@@ -224,6 +231,29 @@ def assert_artefact(rows, label, cnas=None, covered=None):
             problems.append(f"{label}:{cid} names {owner}, outside the covered set")
         if any(k.startswith("product_map") for k in r):
             problems.append(f"{label}:{cid} carries an ungated product-map field")
+
+        # Review item 18. A backstop, not a policy gate, and the distinction
+        # matters under PLAN 8b. Cleaning happens deterministically upstream in
+        # classify.display_description, so this can only fire if that sanitiser
+        # has a bug or a new feed bypasses it. When it does fire the failure is a
+        # disclosure harm (a pointer to vulnerable code on an unpublished CVE),
+        # not an ugly string, so blocking is the correct direction. Contrast the
+        # NOTE: guard this replaced, which blocked on cosmetics and froze a
+        # publication over six harmless rows.
+        # Match a URL SCHEME, not the substring "http". The first version of this
+        # check was `"http" in desc.lower()`, which flagged 16 rows on
+        # NIOHTTPRequestDecompressor, HTTPDecoder and "unauthenticated HTTP
+        # tools/call" against 7 genuine URLs, and blocked the build on all 23. A
+        # blocking guard with a sloppy pattern is the same class-1-on-class-2
+        # mistake as the NOTE: guard, so a guard that CAN stop a publication has to
+        # be precise about what it matches.
+        desc = r.get("description") or ""
+        if _URL_IN_TEXT.search(desc):
+            problems.append(
+                f"{label}:{cid} publishes a URL in its description: {desc[:80]!r}")
+        if re.search(r"\bNOTE\s*:|\bDEBIANBUG", desc, re.I):
+            problems.append(
+                f"{label}:{cid} publishes a tracker annotation: {desc[:80]!r}")
         # Deliberately NOT asserted here: a low-quality description is bad
         # display text, not a false statement about a third party. Refusing to
         # publish over it would fail dark on data that is merely ugly, which is
@@ -323,6 +353,11 @@ def load(snap_root, data_dir):
         # Same shape as days_public, self_disclosed, feed health, the epoch and
         # PAGES-at-import: computed in one stage, read in none.
         "gate": gate,
+        # Review Part 2's nine conditions. Published, not just recorded, because
+        # the panel's ask was that the commitment be "checkable from outside".
+        # Coverage is condition 1 of 9, so `gate` and `launch` answer different
+        # questions and the templates must not present either as the other.
+        "launch": launch_mod.status(summary, gate),
         # Split at the render boundary, not in the templates. Both states used
         # to share one list that the templates sorted on days_to_publish, which
         # is None for a rejection, and Jinja's sort filter calls sorted(), so one

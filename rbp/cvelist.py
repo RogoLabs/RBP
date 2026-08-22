@@ -343,10 +343,79 @@ def refresh_corpus(baseline_path, index_dir, force=False):
 
     print(f"incremental refresh: indexed {have}, latest {baseline_date}, "
           f"{len(wanted)} delta day(s)")
-    corpus, _ = apply_deltas(index_dir, wanted)
+    corpus, applied = apply_deltas(index_dir, wanted)
+
+    # `applied` used to be discarded and corpus_date advanced to baseline_date
+    # unconditionally, so a delta day that yielded zero rows was stepped over
+    # permanently: `wanted` then selected `d >= have` from the new date, `missing`
+    # only covers days absent from the release feed, so `gap` stayed 0 forever and
+    # no health surface went red.
+    #
+    # That matters more than it sounds. The corpus is ground truth for reconcile,
+    # Grader.grade, published_last_12mo and coverage, so a frozen corpus stops
+    # detecting closures entirely: already-published records keep accruing
+    # days_public against named CNAs while the site reports itself healthy.
+    #
+    # Deliberately NOT a hard failure here. The obvious guard, "raise when
+    # `wanted` was non-empty and `applied` is empty", was written first and
+    # false-positived immediately: `_delta_rows` returns [] both when the archive
+    # layout changed AND when a day genuinely carried no records, and this
+    # function cannot tell those apart. Blocking a publication on an ambiguous
+    # plumbing signal is the class-2-as-class-1 mistake in PLAN 8b.
+    #
+    # The real protection is assert_corpus_current, which asks the data whether it
+    # is current rather than asking the fetch loop whether it felt successful. It
+    # cannot be fooled by a layout change, and it fires with an actionable
+    # message. So: warn loudly here, block there.
+    skipped = sorted(set(wanted) - set(applied))
+    if skipped:
+        print(f"  WARNING: {len(skipped)} delta day(s) contributed no records: "
+              f"{skipped[:5]}. If the corpus is stale the freshness canary will "
+              "fail the run; if it passes, those days were genuinely empty.")
     _write_state(index_dir, corpus_date=baseline_date, schema=SCHEMA)
     prod = pd.read_parquet(os.path.join(index_dir, "product_cna.parquet"))
     return corpus, prod
+
+
+# How far behind today's date the newest record in the corpus may be before the
+# corpus is treated as frozen. The CVE List publishes continuously, so a corpus
+# whose newest record is older than this is not a quiet week, it is a stuck
+# pipeline. Three days rather than one, to absorb a weekend plus a slow release.
+MAX_CORPUS_LAG_DAYS = 3
+
+
+def assert_corpus_current(corpus, today=None, max_lag_days=MAX_CORPUS_LAG_DAYS):
+    """The one-line canary that catches the whole frozen-corpus class.
+
+    Every other health surface can read green while the corpus is stale, because
+    they all describe the feeds or the reservation endpoint and none of them
+    describe the corpus. This is the only check that looks at the data itself and
+    asks whether it is current.
+
+    Returns the lag in days. Raises only when the newest record is beyond the
+    tolerance, and says what to do about it.
+    """
+    today = today or dt.date.today().isoformat()
+    if "date_published" not in getattr(corpus, "columns", []):
+        return None
+    dates = corpus["date_published"].dropna()
+    dates = dates[dates.astype(str).str.len() >= 10]
+    if dates.empty:
+        raise SystemExit(
+            "the corpus carries no usable date_published values, so its freshness "
+            "cannot be established. Re-run with --reindex.")
+    newest = max(str(d)[:10] for d in dates)
+    lag = (dt.date.fromisoformat(today) - dt.date.fromisoformat(newest)).days
+    if lag > max_lag_days:
+        raise SystemExit(
+            f"the newest CVE record in the corpus is dated {newest}, {lag} days "
+            f"before {today}. The CVE List publishes continuously, so this is a "
+            "frozen corpus rather than a quiet period. Because the corpus is "
+            "ground truth for closure detection, publishing now would keep "
+            "accruing days_public against named CNAs for records that have "
+            "already published. Re-run with --reindex.")
+    print(f"corpus freshness: newest record {newest}, {lag}d behind {today}")
+    return lag
 
 
 def _days_between(start, end):

@@ -116,8 +116,14 @@ jobs:
           path: |
             data/index
             data/.api_cache.json
-          key: corpus-index-v2-${{ github.run_id }}
-          restore-keys: corpus-index-v2-
+          # Keyed on the parser, not just a version string typed by hand. A
+          # restored index has to be one the CURRENT rbp/cvelist.py could have
+          # written: the open `corpus-index-v2-` prefix restored the same index
+          # after any code change, so a parser fix could not take effect until
+          # someone remembered to bump v2 by hand, and a frozen index would be
+          # restored on every subsequent run.
+          key: corpus-index-${{ hashFiles('rbp/cvelist.py') }}-${{ github.run_id }}
+          restore-keys: corpus-index-${{ hashFiles('rbp/cvelist.py') }}-
 
       - name: Install dependencies
         run: pip install -r requirements.txt

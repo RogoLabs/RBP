@@ -331,7 +331,7 @@ def test_feed_health_counts_feeds_not_sub_fetches(monkeypatch):
     feeds.record_feed("osv:npm", feeds.OK, "2321 ids")
     feeds.record_feed("osv:Hex", feeds.FAILED, "connection reset")
     feeds.record_feed("debian", feeds.OK, "17058 ids")
-    failures, attempts = feeds.health_summary()
+    failures, truncated, attempts = feeds.health_summary()
     assert attempts == 2, "osv and debian are two feeds, not four fetches"
     assert failures == ["osv:Hex: connection reset"]
 
@@ -342,7 +342,7 @@ def test_truncation_is_neither_success_nor_failure(monkeypatch):
     from rbp import feeds
     monkeypatch.setattr(feeds, "FEED_HEALTH", {})
     feeds.record_feed("ubuntu", feeds.TRUNCATED, "hit the 200-page cap")
-    failures, attempts = feeds.health_summary()
+    failures, truncated, attempts = feeds.health_summary()
     assert failures == [], "truncation is not a failure"
     detail = feeds.health_detail()
     assert detail["ubuntu"]["status"] == feeds.TRUNCATED
@@ -376,4 +376,4 @@ def test_no_failures_reports_clean(monkeypatch):
     from rbp import feeds
     monkeypatch.setattr(feeds, "FEED_HEALTH", {})
     feeds.record_feed("debian", True, "ok")
-    assert feeds.health_summary() == ([], 1)
+    assert feeds.health_summary() == ([], [], 1)
