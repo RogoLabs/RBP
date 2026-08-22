@@ -1301,6 +1301,48 @@
    "tier": "block",
    "k": 3,
    "on": "2026-08-22"
+  },
+  "CVE-2026-61723": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61722": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61721": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61720": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61714": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55869": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55868": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
   }
  },
  "graded": [
