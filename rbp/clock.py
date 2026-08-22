@@ -355,12 +355,19 @@ class ResolutionLedger:
         an embargo the id IS the sensitive fact, which is the whole reason the row
         leaves rather than merely losing its owner.
         """
-        drop = {c for c in (suppressed or ()) if c in self.state["open"]}
+        # MEMBERSHIP ONLY, never iteration. `suppressed` is usually a
+        # suppress.Suppressions, whose committed half holds keyed hashes rather
+        # than CVE IDs precisely so it CANNOT be enumerated. Iterating it raised
+        # `TypeError: 'Suppressions' object is not iterable` in production while
+        # the test passed, because the test handed in a plain set. Test with the
+        # type the caller actually passes.
+        sup = suppressed if suppressed is not None else ()
+        drop = {cid for cid in list(self.state["open"]) if cid in sup}
         for cid in drop:
             del self.state["open"][cid]
         for r in rows:
             cid = r["cve_id"]
-            if cid in (suppressed or ()) or r.get("suppressed"):
+            if cid in sup or r.get("suppressed"):
                 continue
             if cid not in self.state["open"]:
                 self.state["open"][cid] = {

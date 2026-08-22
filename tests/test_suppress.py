@@ -667,15 +667,55 @@ def test_a_missing_handoff_file_does_not_break_staging(tmp_path):
                   str(tmp_path / "data"))
 
 
-def test_the_resolution_ledger_drops_and_refuses_suppressed_rows():
-    """ResolutionLedger.track both stops new entries and removes existing ones."""
+@pytest.mark.parametrize("as_real_type", [False, True])
+def test_the_resolution_ledger_drops_and_refuses_suppressed_rows(as_real_type):
+    """ResolutionLedger.track both stops new entries and removes existing ones.
+
+    Parametrised over a plain set AND the real Suppressions object, because the
+    first version of this test used a set and passed while production raised
+    `TypeError: 'Suppressions' object is not iterable`. A test that exercises a
+    convenient stand-in instead of the type the caller actually passes is checking
+    the wrong thing."""
     from rbp import clock
     import tempfile
+    ids = {"CVE-2026-1", "CVE-2026-2"}
+    sup = suppress.Suppressions([], ids, key=KEY) if as_real_type else ids
     with tempfile.TemporaryDirectory() as d:
         led = clock.ResolutionLedger(os.path.join(d, "r.json"))
         led.state["open"]["CVE-2026-1"] = {"first_public": "2026-01-01", "owner": None}
         dropped = led.track([{"cve_id": "CVE-2026-2", "public_date": "2026-02-01"}],
-                            suppressed={"CVE-2026-1", "CVE-2026-2"})
+                            suppressed=sup)
         assert dropped == 1, "an existing entry was not removed"
         assert "CVE-2026-1" not in led.state["open"]
         assert "CVE-2026-2" not in led.state["open"], "a new entry was added anyway"
+
+
+def test_suppressions_refuses_iteration_with_a_reason():
+    """The committed half holds keyed hashes, not CVE IDs, exactly so the list
+    cannot be enumerated by anyone holding the file. That property would be quietly
+    false if this object could be iterated, and a caller iterating it would get
+    only the open-request ids while believing it had them all."""
+    s = suppress.Suppressions([suppress.digest("CVE-2026-1", KEY)],
+                              {"CVE-2026-2"}, key=KEY)
+    with pytest.raises(TypeError) as e:
+        list(s)
+    msg = str(e.value)
+    assert "keyed hashes" in msg
+    assert "membership" in msg, "the error must say what to do instead"
+    # Membership still works in both halves.
+    assert "CVE-2026-1" in s and "CVE-2026-2" in s
+
+
+def test_no_caller_iterates_the_suppression_set():
+    """Grep-style. The production failure was one `for c in suppressed` in a
+    module that had no reason to enumerate."""
+    import pathlib
+    import re
+    for f in (pathlib.Path(__file__).parent.parent / "rbp").glob("*.py"):
+        if f.name == "suppress.py":
+            continue
+        body = re.sub(r"#.*", "", f.read_text())
+        body = re.sub(r'""".*?"""', "", body, flags=re.S)
+        for bad in ("for c in suppressed", "for cid in suppressed",
+                    "set(suppressed)", "list(suppressed)", "sorted(suppressed)"):
+            assert bad not in body, f"{f.name} iterates the suppression set: {bad}"

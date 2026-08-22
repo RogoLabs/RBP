@@ -291,6 +291,25 @@ class Suppressions:
     def __len__(self):
         return len(self.committed) + len(self.auto)
 
+    def __iter__(self):
+        """Deliberately unsupported, with a reason.
+
+        The committed half holds keyed hashes rather than CVE IDs, exactly so the
+        list cannot be enumerated by anyone holding the file. That property would
+        be quietly false if this object could be iterated, and a caller iterating
+        it would silently get only the ids from open requests while believing it
+        had them all.
+
+        Raised with an explanation because the default message
+        ("'Suppressions' object is not iterable") took a production failure to
+        diagnose. Use `in` to test membership, or `.auto` for the open-request ids.
+        """
+        raise TypeError(
+            "Suppressions cannot be iterated: the committed entries are keyed "
+            "hashes, not CVE IDs, so enumerating them is impossible by design. "
+            "Test membership with `cve_id in suppressions`, or use `.auto` for the "
+            "ids from open withhold requests.")
+
     @property
     def report(self):
         """What goes in summary.json.
