@@ -138,14 +138,59 @@ def from_advisories(repo="RogoLabs/RBP", token_env="RBP_ADVISORY_TOKEN"):
     return ids, None
 
 
+# Warn this many days before the advisory token expires.
+#
+# The failure this exists to prevent: a fine-grained PAT expires, the advisory
+# read starts failing, the run is marked degraded, and the degraded banner says
+# reports are not being honoured. That is already far better than silence, but it
+# is still an outage of the correction channel discovered after it began. GitHub
+# returns the expiry date on every authenticated response, so the run can say
+# "this stops working in nine days" while it still works.
+EXPIRY_WARN_DAYS = 14
+
+
+def token_expiry_days(token_env="RBP_ADVISORY_TOKEN", today=None):
+    """Days until the advisory token expires, or None if unknown.
+
+    Fine-grained PATs return `github-authentication-token-expiration` on every
+    authenticated response. Classic tokens with no expiry omit it, in which case
+    there is nothing to warn about and None is the honest answer.
+    """
+    token = (os.environ.get(token_env) or "").strip()
+    if not token:
+        return None
+    env = dict(os.environ, GH_TOKEN=token)
+    try:
+        p = subprocess.run(["gh", "api", "-i", "/rate_limit"],
+                           capture_output=True, text=True, timeout=30,
+                           env=env, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    if p.returncode != 0:
+        return None
+    m = re.search(r"^github-authentication-token-expiration:\s*(\S+)",
+                  p.stdout or "", re.I | re.M)
+    if not m:
+        return None
+    import datetime as _dt
+    try:
+        exp = _dt.date.fromisoformat(m.group(1)[:10])
+    except ValueError:
+        return None
+    ref = _dt.date.fromisoformat(today) if today else _dt.date.today()
+    return (exp - ref).days
+
+
 class Suppressions:
     """The effective suppression set for one run, plus what to publish about it."""
 
-    def __init__(self, committed, auto_ids, error=None, key=None, capped=0):
+    def __init__(self, committed, auto_ids, error=None, key=None, capped=0,
+                 expires_in=None):
         self.committed = set(committed or ())
         self.auto = set(auto_ids or ())
         self.error = error
         self.capped = capped
+        self.expires_in = expires_in
         self._key = key
 
     def __contains__(self, cve_id):
@@ -172,6 +217,12 @@ class Suppressions:
             "capped": self.capped,
             "degraded": bool(self.error),
             "detail": self.error,
+            # Days until the token that reads reports expires, when knowable.
+            # Published so an impending outage of the correction channel is
+            # visible before it happens rather than after.
+            "token_expires_in_days": self.expires_in,
+            "token_expiring": (self.expires_in is not None
+                               and self.expires_in <= EXPIRY_WARN_DAYS),
         }
 
 
@@ -200,7 +251,13 @@ def load(list_path=DEFAULT_LIST, repo="RogoLabs/RBP", allow_remote=True):
                   f"reviewed entry in {list_path}.")
         else:
             auto = found
-    s = Suppressions(committed, auto, error=err, key=key, capped=capped)
+    expires_in = None if err else token_expiry_days()
+    if expires_in is not None and expires_in <= EXPIRY_WARN_DAYS:
+        print(f"  WARNING: the advisory token expires in {expires_in} day(s). "
+              "When it does, embargo reports stop being honoured automatically. "
+              "Rotate it before then.")
+    s = Suppressions(committed, auto, error=err, key=key, capped=capped,
+                     expires_in=expires_in)
     if err:
         print(f"  DEGRADED: suppression fast path unavailable ({err}). "
               "Reports filed through private advisories are NOT being honoured "

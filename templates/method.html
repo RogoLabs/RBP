@@ -356,6 +356,16 @@
       need a reviewed entry; the ceiling exists so a single report cannot empty the site.
       {% endif %}
     </p>
+    {% if sup.get('token_expiring') %}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>The credential that reads reports expires in
+        {{ sup.token_expires_in_days }} day(s).</strong> When it does, reports filed
+        through the private route stop being honoured automatically. Said here while
+        it still works, rather than after it stops.
+      </p>
+    </div>
+    {% endif %}
     {% if sup.get('degraded') %}
     <div class="caveat warn">
       <p class="mb-0">

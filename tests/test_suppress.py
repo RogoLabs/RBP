@@ -169,9 +169,16 @@ def test_the_published_report_carries_counts_and_never_ids(tmp_path, monkeypatch
     p = tmp_path / "s.txt"
     p.write_text(suppress.digest("CVE-2026-2222", KEY) + "\n")
     rep = suppress.load(str(p)).report
-    assert rep == {"committed": 1, "from_reports": 1, "capped": 0,
-                   "degraded": False, "detail": None}
+    assert rep["committed"] == 1
+    assert rep["from_reports"] == 1
+    assert rep["capped"] == 0
+    assert rep["degraded"] is False and rep["detail"] is None
+    # The property that actually matters, asserted over the whole serialised
+    # payload rather than a field list, so a NEW key cannot smuggle an id in.
     assert "CVE" not in json.dumps(rep).upper()
+    assert not any(isinstance(v, (list, set, tuple)) for v in rep.values()), (
+        "the published report must be scalars only; a collection is how a set of "
+        "ids gets published by accident")
 
 
 # --------------------------------------------------------------------------
@@ -414,3 +421,62 @@ def test_a_suppressed_id_appears_in_no_file_report_writes(tmp_path):
     # And the row that was NOT suppressed is still published, or the test would
     # pass trivially on an empty snapshot.
     assert any("CVE-2026-4243" in (sdir / n).read_text() for n in written)
+
+
+# --------------------------------------------------------------------------
+# token expiry, warned before it breaks
+# --------------------------------------------------------------------------
+
+def test_token_expiry_is_read_from_the_response_header(monkeypatch):
+    """GitHub returns the expiry on every authenticated response, so an impending
+    outage of the correction channel can be reported while the channel still
+    works, rather than discovered once reports stop being honoured."""
+    class P:
+        returncode = 0
+        stdout = ("HTTP/2.0 200 OK\r\n"
+                  "github-authentication-token-expiration: 2026-09-01 12:00:00 UTC\r\n"
+                  "\r\n{}")
+        stderr = ""
+    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
+    monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
+    assert suppress.token_expiry_days(today="2026-08-22") == 10
+
+
+def test_a_token_with_no_expiry_reports_none_rather_than_guessing(monkeypatch):
+    """Classic tokens without an expiry omit the header. None is the honest
+    answer; a fabricated far-future date would be worse than silence."""
+    class P:
+        returncode, stdout, stderr = 0, "HTTP/2.0 200 OK\r\n\r\n{}", ""
+    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
+    monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
+    assert suppress.token_expiry_days(today="2026-08-22") is None
+
+
+def test_a_soon_to_expire_token_is_flagged_in_the_published_report(tmp_path, monkeypatch):
+    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
+    monkeypatch.setattr(suppress, "from_advisories", lambda **kw: (set(), None))
+    monkeypatch.setattr(suppress, "token_expiry_days", lambda **kw: 9)
+    rep = suppress.load(str(tmp_path / "none.txt")).report
+    assert rep["token_expires_in_days"] == 9
+    assert rep["token_expiring"] is True
+
+
+def test_a_healthy_token_is_not_flagged(tmp_path, monkeypatch):
+    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
+    monkeypatch.setattr(suppress, "from_advisories", lambda **kw: (set(), None))
+    monkeypatch.setattr(suppress, "token_expiry_days", lambda **kw: 200)
+    rep = suppress.load(str(tmp_path / "none.txt")).report
+    assert rep["token_expiring"] is False
+
+
+def test_expiry_is_not_checked_when_the_read_already_failed(tmp_path, monkeypatch):
+    """No point asking a broken token when it expires; the degraded signal already
+    covers it, and a second failing call is just noise in the log."""
+    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
+    monkeypatch.setattr(suppress, "from_advisories", lambda **kw: (set(), "401"))
+    called = []
+    monkeypatch.setattr(suppress, "token_expiry_days",
+                        lambda **kw: called.append(1) or 5)
+    rep = suppress.load(str(tmp_path / "none.txt")).report
+    assert not called
+    assert rep["token_expires_in_days"] is None
