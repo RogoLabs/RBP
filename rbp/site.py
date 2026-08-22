@@ -126,6 +126,33 @@ def _read_strict(path):
         raise SystemExit(f"cannot read {path}: {e}") from e
 
 
+# The legacy placeholder. `owner` is now a CNA short name or None (schema v1), but
+# snapshots written before that carry the string "unattributed" in the same field,
+# and CI restores prior snapshots from the data branch for the week-over-week diff.
+#
+# Coerced on read rather than tolerated in the invariant. _assert_consistent
+# deliberately no longer special-cases the string, so without this a stale snapshot
+# reads as a row naming a CNA called "unattributed" that is absent from cnas.json,
+# which is exactly what it said when this change first built. Version skew on a
+# published artefact is an operational fact, not a bug to crash on; publishing the
+# placeholder as though it were a CNA name is the bug.
+_LEGACY_OWNER = "unattributed"
+
+
+def _normalise_legacy(rows):
+    """Bring a snapshot written under an older schema up to the current contract."""
+    n = 0
+    for r in rows:
+        if isinstance(r, dict) and r.get("owner") == _LEGACY_OWNER:
+            r["owner"] = None
+            r.setdefault("owner_nameable", False)
+            n += 1
+    if n:
+        print(f"  note: coerced {n} legacy {_LEGACY_OWNER!r} owner value(s) to null "
+              "(snapshot predates schema v1)")
+    return rows
+
+
 def _gate_status(summary):
     """Is the launch gate cleared, on the effective coverage figure?
 
@@ -171,7 +198,10 @@ def _assert_consistent(rows, summary, cnas):
             f"summary.json reports total={total}. The published population must "
             "be computed once. Refusing to publish contradictory numbers.")
     known = {c["cna"] for c in cnas}
-    named = [r for r in rows if r.get("owner") and r["owner"] != "unattributed"]
+    # No placeholder special-case. `owner` is a CNA short name or None, so this is
+    # a plain truthiness test; the previous version only passed because it knew
+    # about a magic string that the published field dictionary denied existed.
+    named = [r for r in rows if r.get("owner")]
     orphans = sorted({r["owner"] for r in named} - known)
     if orphans:
         raise SystemExit(
@@ -280,7 +310,7 @@ def load(snap_root, data_dir):
         raise SystemExit(f"no snapshots in {snap_root}; run the pipeline first")
     latest, prev = snaps[-1], (snaps[-2] if len(snaps) > 1 else None)
 
-    rows = _read_strict(os.path.join(latest, "backlog.json"))
+    rows = _normalise_legacy(_read_strict(os.path.join(latest, "backlog.json")))
     summary = _read_strict(os.path.join(latest, "summary.json"))
     cnas = _read_strict(os.path.join(latest, "cnas.json"))
     _assert_consistent(rows, summary, cnas)
@@ -367,6 +397,10 @@ def load(snap_root, data_dir):
         # Coverage is condition 1 of 9, so `gate` and `launch` answer different
         # questions and the templates must not present either as the other.
         "launch": launch_mod.status(summary, gate),
+        # The published contract, rendered on /data rather than described there.
+        "schema_version": _schema.SCHEMA_VERSION,
+        "columns": _schema.COLUMNS,
+        "fields": _schema.FIELDS,
         # Split at the render boundary, not in the templates. Both states used
         # to share one list that the templates sorted on days_to_publish, which
         # is None for a rejection, and Jinja's sort filter calls sorted(), so one
@@ -555,13 +589,12 @@ def _env():
 # was in no template and no CSV, so a consumer could not reconstruct it at all.
 # `indep_sources` ships too: 314 of 553 rows showed feed_count >= 2 with
 # indep_sources == 1, all of them GHSA plus its own OSV mirror.
-CSV_COLS = ["cve_id", "state", "days_public", "past_expectation",
-            "rule", "rule_strength", "rule_certainty", "rule_basis",
-            "owner", "owner_tier", "owner_method", "owner_nameable",
-            "owner_contested", "veto_evaluated", "single_origin",
-            "self_disclosed", "package", "vendor", "public_date",
-            "feed_count", "indep_sources", "sources", "clock_known",
-            "advisory_url", "description"]
+# The published column contract lives in rbp/schema.py, once. This was a 25-field
+# list here and a 26-field list in a different order in report.build, under a
+# comment claiming the two CSVs were identical.
+from . import schema as _schema
+
+CSV_COLS = _schema.COLUMNS
 
 
 def _write_data(out, ctx):
@@ -572,10 +605,34 @@ def _write_data(out, ctx):
     d = os.path.join(out, "data")
     os.makedirs(d, exist_ok=True)
 
-    json.dump(ctx["rows"], open(os.path.join(d, "rbp.json"), "w"), indent=1)
+    # Wrapped, not bare. `rbp.json` was json.dump(rows): an array with no schema
+    # version, no generation time, no epoch, no buffer, no coverage and no floor
+    # flag, so every caveat that makes the count safe to use lived in HTML a tool
+    # has no reason to fetch.
+    env = _schema.envelope(ctx["rows"], ctx["summary"], launched=launched,
+                           snapshot_date=ctx["snapshot_date"])
+    json.dump(env, open(os.path.join(d, "rbp.json"), "w"), indent=1)
     json.dump(ctx["summary"], open(os.path.join(d, "summary.json"), "w"), indent=1)
     json.dump(ctx["cnas"], open(os.path.join(d, "cnas.json"), "w"), indent=1)
     json.dump(ctx["grader"], open(os.path.join(d, "precision.json"), "w"), indent=1)
+
+    # The closure record. resolved.json and held_back.json were computed, rendered
+    # and then withheld from consumers entirely: neither reached the data branch or
+    # site/data. The resolved rows are the only public evidence the pipeline closes,
+    # and the held-back count is the filter that removes the oldest and strongest
+    # rows, so withholding both left a consumer unable to check either.
+    json.dump(_schema.envelope(ctx["resolutions_published"], ctx["summary"],
+                               launched=launched, snapshot_date=ctx["snapshot_date"],
+                               kind="resolved"),
+              open(os.path.join(d, "resolved.json"), "w"), indent=1)
+
+    # A CSV sidecar, so the column contract is machine-readable beside the file
+    # rather than only prose on /data.
+    json.dump({"schema_version": _schema.SCHEMA_VERSION,
+               "columns": _schema.COLUMNS,
+               "fields": {k: {"type": t, "absent": a, "meaning": m}
+                          for k, (t, a, m) in _schema.FIELDS.items()}},
+              open(os.path.join(d, "rbp.csv.meta.json"), "w"), indent=1)
 
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=CSV_COLS, extrasaction="ignore")

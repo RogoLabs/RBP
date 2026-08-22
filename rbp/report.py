@@ -315,17 +315,24 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
             # derived `rule` from it could publish self_disclosed true beside
             # rule 4.5.1.6 on the same row.
             return _publishable(r, owner_nameable=True)
-        return _publishable(r, owner="unattributed", owner_tier="abstain",
+        # owner is a CNA short name or None. NEVER a placeholder string.
+        #
+        # "unattributed" was the largest value in this column by a factor of three,
+        # cnas.json had no such entry, and site._assert_consistent only passed
+        # because it special-cased the string. /data documented the opposite
+        # ("absent wherever the gate did not pass"), so a consumer coding to the
+        # documentation treated every abstention as a named CNA. The word is display
+        # text and now lives only in templates.
+        return _publishable(r, owner=None, owner_tier="abstain",
                             owner_nameable=False)
 
     # Kept deliberately identical in spirit to site.CSV_COLS: two published CSVs
     # of the same rows with different column sets is a trap for a consumer.
-    cols = ["cve_id", "state", "vendor", "package", "ecosystem", "owner", "owner_nameable",
-            "owner_tier", "owner_method", "owner_contested", "self_disclosed",
-            "rule", "rule_strength", "rule_certainty", "rule_basis",
-            "days_public", "hours_public", "past_expectation", "public_date",
-            "feed_count", "indep_sources", "sources", "clock_known",
-            "advisory_url", "refs", "description"]
+    # ONE contract, defined in rbp/schema.py. This was a local 26-field list in a
+    # different order from site.CSV_COLS' 25, under a comment asserting the two CSVs
+    # were kept identical.
+    from . import schema
+    cols = schema.COLUMNS
     reportable.sort(key=lambda r: -r["days_public"])
     # backlog.csv = shareable, buffered, OWNER-GATED. Full inferred set kept in _full.json.
     with open(os.path.join(sdir, "backlog.csv"), "w", newline="") as f:
@@ -378,7 +385,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
         # preview before any row naming it circulates. This file publishes the
         # shape of what is withheld, never who.
         held.append(_publishable(
-            r, owner="unattributed", owner_tier="abstain", owner_nameable=False,
+            r, owner=None, owner_tier="abstain", owner_nameable=False,
             owner_method="withheld-not-reported", self_disclosed=False,
             counted=False, held_back_reason=reason))
     # The same invariants the site applies, applied where the file is written.

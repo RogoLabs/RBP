@@ -123,7 +123,11 @@ def test_report_writes_a_snapshot_the_site_can_read(backlog, corpus, tmp_path):
 
     assert named["owner"] == "acme" and named["owner_nameable"] == "True"
     # The abstained row still ships, it just carries no name.
-    assert abstained["owner"] == "unattributed" and abstained["owner_nameable"] == "False"
+    # CSV absence is an empty cell, JSON absence is null. Never a placeholder:
+    # "unattributed" was the largest value in this column by a factor of three,
+    # cnas.json had no such entry, and /data documented the opposite, so a
+    # consumer coding to the documentation treated every abstention as named.
+    assert abstained["owner"] == "" and abstained["owner_nameable"] == "False"
     assert "RESERVED" in md and "DNE" not in md
 
 
@@ -137,7 +141,8 @@ def test_csv_never_names_a_cna_the_report_withholds(backlog, corpus, tmp_path):
     shared = json.load(open(pathlib.Path(sdir) / "backlog.json"))
     for row in shared:
         if not row["owner_nameable"]:
-            assert row["owner"] == "unattributed"
+            assert row["owner"] is None, (
+                "JSON absence must be null, not a placeholder string")
 
 
 def test_run_coverage_is_reported_separately_from_validation_coverage(backlog, corpus, tmp_path):
@@ -233,7 +238,7 @@ def test_held_back_rows_are_gated_like_every_other_artefact(backlog, corpus, tmp
         # Never named, whether or not the inference succeeded. These rows failed
         # an earlier test than the naming gate: whether the site will report them
         # at all. Naming a CNA on a within-buffer row contradicts the buffer.
-        assert row["owner"] == "unattributed", row["cve_id"]
+        assert row["owner"] is None, row["cve_id"]
         assert row["owner_nameable"] is False
         assert row["counted"] is False
         assert row["held_back_reason"] in ("pre-epoch", "within-buffer", "undated")
@@ -266,7 +271,9 @@ def test_no_snapshot_artefact_leaks_an_ungated_owner(backlog, corpus, tmp_path):
         for row in json.load(open(f)):
             assert not [k for k in row if k.startswith("product_map")], f.name
             if row.get("owner_nameable") is False:
-                assert row["owner"] == "unattributed", f"{f.name}:{row['cve_id']}"
+                assert row["owner"] is None, (
+                    f"{f.name}:{row['cve_id']} JSON absence must be null, not a "
+                    "placeholder string")
 
 
 def test_report_build_applies_no_filter_when_given_rows():

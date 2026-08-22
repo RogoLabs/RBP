@@ -50,6 +50,58 @@
 </div>
 
 <div class="card">
+  <div class="card-header">
+    <h2 class="card-title">The contract</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      <strong>Schema version {{ schema_version }}.</strong> Both JSON files are wrapped in
+      an envelope carrying the version, the generation time, the buffer, the epoch, the
+      coverage figures and the caveats, so a tool holding the rows also holds the
+      qualifiers. Before this they were bare arrays and every caveat lived only in this
+      HTML, which a tool has no reason to fetch. The version is bumped on any key rename,
+      removal, or change of meaning; new fields do not bump it, so pinning a major version
+      keeps working.
+    </p>
+    <p>
+      <strong>Absence has one spelling per field</strong>, listed below. Three conventions
+      used to be in use and none was documented: empty string, null, and the placeholder
+      <span class="mono">"unattributed"</span> sitting in the field that otherwise holds
+      CNA short names. That value was the largest in the column by a factor of three,
+      <span class="mono">cnas.json</span> had no such entry, and this page documented the
+      opposite, so anyone coding to the documentation treated every abstention as a named
+      CNA. <strong>{{ '`owner`' }} is now a CNA short name or <span class="mono">null</span>,
+      never a placeholder</strong>, and
+      <span class="mono">owner_nameable</span> is the field to branch on.
+    </p>
+    <div class="tablewrap">
+      <table class="rbp" style="min-width:0">
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>When absent</th><th>Meaning</th></tr>
+        </thead>
+        <tbody>
+          {% for name in columns %}
+          {% set f = fields.get(name) %}
+          <tr>
+            <td class="mono small">{{ name }}</td>
+            <td class="small">{{ f[0] if f else '' }}</td>
+            <td class="mono small">{{ f[1] if f else '' }}</td>
+            <td class="small">{{ f[2] if f else '' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="small text-muted mb-0">
+      The CSV carries these columns in this order, and the order is part of the contract:
+      a consumer indexing by position breaks silently on a reorder.
+      <a href="data/rbp.csv.meta.json">rbp.csv.meta.json</a> is the same list,
+      machine-readable, beside the file.
+    </p>
+  </div>
+</div>
+
+<div class="card">
   <div class="card-header"><h2 class="card-title">Licence</h2></div>
   <div class="card-body">
     <p class="mb-0">
