@@ -158,6 +158,18 @@ def _assert_consistent(rows, summary, cnas):
         raise SystemExit(
             f"rows name CNAs absent from cnas.json: {orphans}. Every owner link "
             "would 404. Refusing to publish.")
+    # No published artefact may name a CNA outside the covered set for the run
+    # that named it. Before this, coverage.top_missed said "we do not read this
+    # CNA" while a row said "this CNA owns this vulnerability".
+    covered = set((summary.get("coverage") or {}).get("covered") or [])
+    if covered:
+        outside = sorted({r["owner"] for r in named if r["owner"] not in covered})
+        if outside:
+            raise SystemExit(
+                f"rows name CNAs outside the covered set: {outside}. The site "
+                "would simultaneously claim not to read these CNAs and to know "
+                "what they own. Refusing to publish.")
+
     counted = sum(c.get("outstanding", 0) for c in cnas)
     if counted != len(named):
         raise SystemExit(
@@ -435,7 +447,8 @@ def _env():
 # indep_sources == 1, all of them GHSA plus its own OSV mirror.
 CSV_COLS = ["cve_id", "state", "days_public", "past_expectation",
             "rule", "rule_strength", "rule_certainty", "rule_basis",
-            "owner", "owner_tier", "owner_nameable", "owner_contested",
+            "owner", "owner_tier", "owner_method", "owner_nameable",
+            "owner_contested", "veto_evaluated", "single_origin",
             "self_disclosed", "package", "vendor", "public_date",
             "feed_count", "indep_sources", "sources", "clock_known",
             "advisory_url", "description"]

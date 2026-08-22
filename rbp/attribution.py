@@ -26,11 +26,26 @@ from collections import Counter, defaultdict
 
 # CNAs that frequently report/reserve CVEs for third-party products but are rarely
 # the canonical owner of a distro-shipped OSS component. Compared case-insensitively.
-BULK_REPORTERS = {s.lower() for s in {
+# One definition, imported by both the product map and block inference. It used
+# to be private to this module, so the product map excluded these CNAs on the
+# grounds that they are rarely the canonical owner of a distro-shipped component
+# while block inference named them freely on the same rows.
+#
+# The WordPress-ecosystem CNAs are listed explicitly. Two of the worst rows this
+# project produced named one of them on a Linux distribution vulnerability, and
+# their scope is a plugin ecosystem that distro feeds never carry.
+BULK_REPORTER_NAMES = {
     "mitre", "VulDB", "ZDI", "VulnCheck", "Fluid Attacks", "DIVD", "securin", "SSD",
-    "cisa", "Patchstack", "Wordfence", "@huntrdev", "huntr", "Zero Day Initiative",
-    "Fortinet", "CERT-PL", "cert@ncsc.nl", "Wordfence",
-}}
+    "cisa", "Patchstack", "Wordfence", "WPScan", "@huntrdev", "huntr",
+    "Zero Day Initiative", "Fortinet", "CERT-PL", "cert@ncsc.nl",
+}
+BULK_REPORTERS = {s.lower() for s in BULK_REPORTER_NAMES}
+
+
+def is_bulk_reporter(name):
+    """Case and punctuation insensitive, because CNA short names vary by source."""
+    return (name or "").strip().lower().replace("_", "").replace("-", "") in {
+        b.replace("_", "").replace("-", "") for b in BULK_REPORTERS}
 
 # Hand-verified project keyword -> owning CNA short name. Matched on product tokens.
 CURATED = {

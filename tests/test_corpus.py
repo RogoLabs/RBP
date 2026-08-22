@@ -292,7 +292,13 @@ def test_live_delta_is_cumulative_from_midnight():
         today = today or day
         if day == today:
             sizes.append(a["size"])
-    assert len(sizes) >= 3, "not enough same-day releases to judge"
+    if len(sizes) < 3:
+        # Shortly after UTC midnight there is only one same-day release, so the
+        # cumulative property has nothing to be evaluated against. Skipping is
+        # correct: asserting here made the suite fail as a function of the time
+        # of day, which trains people to ignore red builds.
+        pytest.skip(f"only {len(sizes)} same-day release(s) so far; "
+                    "cumulativeness is not observable yet")
     # Newest first, so sizes must be non-increasing as we walk back through the day.
     assert sizes == sorted(sizes, reverse=True), (
         f"delta sizes {sizes} are not monotonic within the day; it may no longer "

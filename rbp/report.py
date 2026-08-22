@@ -202,6 +202,17 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
         pm = r.get("product_map_owner")
         out["owner_contested"] = bool(
             pm and r.get("owner") and not clock._same_name(pm, r["owner"]))
+        # Silence from the product map is not agreement. owner_contested shipped
+        # false on every row as though it had been measured; this says whether it
+        # was evaluated at all.
+        out["veto_evaluated"] = bool(pm)
+        # The aggregate headline requires two independent origins. A named-CNA
+        # claim required only that inference succeeded, so the more consequential
+        # claim was held to the weaker standard. Published per row rather than
+        # withheld, because requiring two origins to name would drop naming from
+        # 276 rows to 74, and the asymmetry stated is better than the coverage
+        # lost silently.
+        out["single_origin"] = (r.get("indep_sources") or 0) < 2
         out.update(over)
         return out
 

@@ -67,9 +67,19 @@
     never how overdue it is.
   </p>
   <p class="mb-0">
-    <strong>Owner is inferred and gated.</strong> A CNA is named only where the three
-    published CVE IDs either side of the reserved one all share one assigner. Rows below
-    that gate say <em>unattributed</em> rather than guessing.
+    <strong>Owner is inferred and gated four ways.</strong> A CNA is named only where the
+    three published CVE IDs either side of the reserved one all share one assigner, AND
+    this site actually reads that CNA's advisories, AND no independent product signal
+    contradicts it, AND the CNA is not a bulk reporter that rarely owns a
+    distro-shipped component. Rows failing any of those say <em>unattributed</em> rather
+    than guessing.
+  </p>
+  <p class="mb-0">
+    <strong>Most named rows rest on a single source.</strong> The headline core requires
+    two independent origins, but naming a CNA required only that inference succeeded, so
+    the more consequential claim was held to the weaker standard. Rather than withhold
+    those names, every row carries <span class="mono">single_origin</span> in the exported
+    data so you can apply the stricter standard yourself.
     {% if summary.undated_excluded %}
     A further {{ summary.undated_excluded | commafy }} reserved IDs are excluded entirely
     because their feeds publish no date, so they cannot be aged at any threshold.

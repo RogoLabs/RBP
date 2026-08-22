@@ -150,6 +150,27 @@ def check(state_dir):
                     f"{os.path.basename(f)}: {r.get('cve_id')} names a CNA on an "
                     "uncounted row")
 
+    # No staged row may name a CNA outside the covered set recorded alongside it.
+    for snap in sorted(glob.glob(os.path.join(state_dir, "snapshots", "*"))):
+        bl, sm = os.path.join(snap, "backlog.json"), os.path.join(snap, "summary.json")
+        if not (os.path.exists(bl) and os.path.exists(sm)):
+            continue
+        try:
+            rows = json.load(open(bl))
+            covered = set((json.load(open(sm)).get("coverage") or {}).get("covered") or [])
+        except Exception:  # noqa: BLE001
+            continue
+        if not covered:
+            continue
+        outside = sorted({r.get("owner") for r in rows
+                          if isinstance(r, dict)
+                          and r.get("owner") not in (None, "", "unattributed")
+                          and r.get("owner") not in covered})
+        if outside:
+            problems.append(
+                f"{os.path.basename(snap)}: names CNAs outside its own covered "
+                f"set: {outside[:5]}")
+
     # And the ledger may not carry a prediction for a row that is not published.
     led_path = os.path.join(state_dir, "precision.json")
     snaps = sorted(d for d in glob.glob(os.path.join(state_dir, "snapshots", "*"))

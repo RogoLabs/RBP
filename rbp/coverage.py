@@ -44,7 +44,15 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     assigner = dict(zip(corpus_df["cve_id"], corpus_df["assigner"]))
     pub_ids = set(pub["cve_id"])
     surfaced_ids = {c for c in refs if c in pub_ids}          # published CVEs we actually saw
-    covered = {assigner[c] for c in surfaced_ids if assigner.get(c)}
+    # Sightings per CNA, not a boolean. A single incidental reference used to
+    # credit a CNA as covered, so one stray row could re-admit a CNA and any
+    # gate built on this would silently reopen with no code change.
+    sightings = {}
+    for c in surfaced_ids:
+        a = assigner.get(c)
+        if a:
+            sightings[a] = sightings.get(a, 0) + 1
+    covered = {a for a in sightings if a}
     covered.discard("")
 
     # "attributable volume" = full output of any touched CNA, an UPPER BOUND (one
@@ -68,6 +76,12 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
         # denominator that moved. The window is derived from the run date, so
         # both sides of the ratio shift overnight on 1 January.
         "cnas_sighted": len(covered),
+        # Returned rather than discarded. inference refuses to name a CNA whose
+        # advisories this site does not read, which is one sentence that survives
+        # a hostile reading. Before this, one published artefact said "we do not
+        # read this CNA" while another said "this CNA owns this row".
+        "covered": sorted(covered),
+        "sightings": sightings,
         "cnas_own_channel": len(own_ingested),
         "own_channel_cnas": own_ingested,
         "window": list(recent_years),

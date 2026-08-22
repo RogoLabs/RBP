@@ -73,6 +73,11 @@ TIER_NONE = "abstain"                      # not named
 # strong-majority signal rather than a weak corpus plurality.
 VETO_CONFIDENCE = 0.85
 
+# A CNA must be sighted at least this many times before this site will name it.
+# One incidental reference is not evidence that we read that CNA's output, and a
+# gate keyed on a single sighting reopens on any stray row with no code change.
+MIN_SIGHTINGS = 3
+
 
 class BlockInferencer:
     """Infer the assigner of an ID from its published neighbours in ID space."""
@@ -119,36 +124,69 @@ class BlockInferencer:
         candidates = set(left) | set(right)
         return candidates.pop() if len(candidates) == 1 else None
 
-    def attribute(self, cve_id, product_map_owner=None, product_map_confidence=0.0):
+    def attribute(self, cve_id, product_map_owner=None, product_map_confidence=0.0,
+                  covered=None, sightings=None, bulk_reporters=frozenset()):
         """Full attribution for one RBP row.
 
         Returns (owner, tier, method). `owner` is None when the gate does not
         pass, the site renders those rows with an empty owner column and links
         to the method page, rather than guessing.
 
-        Three outcomes, not two. The product map can now also VETO a name, which
-        is the fix for the two worst rows the review panel found in the deployed
-        build: CVE-2026-16566 named WPScan on an Ansible flaw, CVE-2026-9238
-        named Wordfence on a QEMU flaw. Both are WordPress-ecosystem CNAs on
-        Linux distribution rows, both had a product map verdict of `redhat` at
-        0.85 and 0.9 confidence sitting right there, and both carried three
-        independent sources so a corroboration threshold would not have caught
-        them.
+        Four outcomes, not two. The product map can VETO a name, and the covered
+        set can withhold one.
+
+        The veto exists because of the two worst rows this project produced. Both
+        named a WordPress-ecosystem CNA on a Linux distribution vulnerability,
+        both had a high-confidence contradicting product map verdict already
+        computed and ignored, and both carried three independent sources, so a
+        corroboration threshold would not have caught either. Their identifiers
+        are deliberately not written here: this function's job is to stop those
+        attributions being published, and repeating a withdrawn attribution in
+        tracked code republishes it into git history and code search, where no
+        later correction reaches it.
 
         Agreement promotes to corroborated. Confident disagreement withholds the
-        name entirely. Silence leaves the block inference standing. Measured on
-        the live snapshot the veto fires on 11 of 282 named rows and costs 3.9%
-        of naming coverage, which is a cheap price for not defaming a third
-        party.
+        name. Silence leaves the block inference standing, but is recorded as
+        silence rather than as agreement. Measured on the live snapshot the veto
+        fires on 11 of 287 named rows, which is a cheap price for not misnaming a
+        third party.
+
+        The covered-set gate is the stronger guarantee, because it needs no
+        product string at all: it refuses to name a CNA whose advisories this
+        site does not read. That matters most for the CSAF population, which is
+        every ICS and enterprise vendor row and where the product field is empty,
+        so the product map has no opinion to contribute either way.
         """
         owner = self.infer(cve_id)
         if owner is None:
             return None, TIER_NONE, f"block-k{self.k}-abstain"
-        if product_map_owner and _same(product_map_owner, owner):
-            return owner, TIER_CORROBORATED, f"block-k{self.k}+product-map"
+
+        corroborated = bool(product_map_owner and _same(product_map_owner, owner))
+
+        # Confident disagreement withholds the name.
         if (product_map_owner and product_map_confidence >= VETO_CONFIDENCE
-                and not _same(product_map_owner, owner)):
+                and not corroborated):
             return None, TIER_NONE, f"block-k{self.k}-vetoed-by-product-map"
+
+        # The covered-set gate: never name a CNA whose advisories this site does
+        # not actually read. This holds with no product string, no description
+        # matching and no hard-coded exclusion list, and it is the gate that also
+        # covers the entire CSAF population where the product field is empty.
+        if covered is not None:
+            seen = (sightings or {}).get(owner, 0)
+            if owner not in covered:
+                return None, TIER_NONE, "uncorroborated-cna-not-reached"
+            if seen < MIN_SIGHTINGS:
+                return None, TIER_NONE, f"uncorroborated-cna-sighted-{seen}x"
+
+        # A bulk reporter is by definition rarely the canonical owner of a
+        # distro-shipped component, which is why the product map excludes them.
+        # Block inference was naming them anyway, so they need a second signal.
+        if owner in bulk_reporters and not corroborated:
+            return None, TIER_NONE, "bulk-reporter-needs-second-signal"
+
+        if corroborated:
+            return owner, TIER_CORROBORATED, f"block-k{self.k}+product-map"
         return owner, TIER_BLOCK, f"block-k{self.k}"
 
     # -- self-validation ---------------------------------------------------
@@ -329,7 +367,8 @@ class Grader:
 # --------------------------------------------------------------------------
 
 def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K,
-                     record_for=None):
+                     record_for=None, covered=None, sightings=None,
+                     bulk_reporters=frozenset()):
     """Name what can be named, grade what can be graded, and report both.
 
     Mutates each backlog row in place with `owner` / `owner_tier` /
@@ -353,7 +392,11 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
         owner, tier, method = inferencer.attribute(
             row["cve_id"],
             product_map_owner=row.get("product_map_owner"),
-            product_map_confidence=row.get("product_map_confidence") or 0.0)
+            product_map_confidence=row.get("product_map_confidence") or 0.0,
+            covered=covered, sightings=sightings, bulk_reporters=bulk_reporters)
+        # Silence from the product map must be distinguishable from agreement.
+        # owner_contested shipped false on every row as though it were measured.
+        row["veto_evaluated"] = bool(row.get("product_map_owner"))
         row["owner"], row["owner_tier"], row["owner_method"] = owner, tier, method
         named[tier] += 1
         if "vetoed" in method:

@@ -87,6 +87,18 @@ def cmd_run(args):
                                        today=today, ttl=args.cache_ttl_days)
     print(f"  RBP backlog: {len(backlog)}  (published-since-baseline: {fresh})")
 
+    # The covered set has to exist before inference, because inference refuses
+    # to name a CNA outside it. It needs only the corpus and the refs, both of
+    # which are already in hand.
+    cyr = int(today[:4])
+    cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr),
+                           sources=sources, own_channels=clock.OWNER_FEEDS)
+    cov["profile"] = args.profile if not args.sources else "custom"
+    _covered = set(cov.get("covered") or [])
+    _sightings = cov.get("sightings") or {}
+    print(f"  covered set: {len(_covered)} CNAs sighted, naming gated on it "
+          f"(min {inference.MIN_SIGHTINGS} sightings)")
+
     # Name what the gate allows, and grade what earlier runs predicted.
     # Which rows will actually be published, decided BEFORE inference so the
     # grader ledger can be scoped to them. days_public depends only on the
@@ -100,6 +112,8 @@ def cmd_run(args):
     }
     validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
                                             record_for=_published_ids,
+                                            covered=_covered, sightings=_sightings,
+                                            bulk_reporters=attribution.BULK_REPORTER_NAMES,
                                             today=today, k=args.k)
 
     # The 72-hour clock, and the MUST/SHOULD split that must ride on every row.
@@ -121,13 +135,6 @@ def cmd_run(args):
               f"({len(ledger.state['open'])} tracked, "
               f"{len(ledger.state['resolved'])} resolved all-time)")
 
-    cyr = int(today[:4])
-    cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr),
-                           sources=sources, own_channels=clock.OWNER_FEEDS)
-    # The profile is part of the measurement: `weekly` and `deep` produce
-    # materially different coverage from the same code, and a figure without it
-    # cannot be compared to another figure.
-    cov["profile"] = args.profile if not args.sources else "custom"
     print(f"  CNA coverage: {cov['covered_cnas']}/{cov['total_cnas']} CNAs "
           f"({cov['pct_cnas']}%); observed {cov['observed_pct']}% of CVEs")
     # One population, computed once, then passed to every writer. Buffer, then

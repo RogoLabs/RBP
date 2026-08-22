@@ -164,3 +164,26 @@ def test_cli_check_exits_nonzero_on_a_leak(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     publish.main(["stage"])
     assert publish.main(["check"]) == 1
+
+
+def test_check_refuses_a_row_naming_a_cna_outside_its_covered_set(tmp_path):
+    """coverage.top_missed said "we do not read this CNA" while a row said "this
+    CNA owns this vulnerability". Both shipped in the same snapshot."""
+    st = tmp_path / ".state"
+    (st / "snapshots" / "2026-08-20").mkdir(parents=True)
+    (st / "snapshots" / "2026-08-20" / "backlog.json").write_text(json.dumps(
+        [{"cve_id": "CVE-2026-1", "owner": "siemens", "counted": True}]))
+    (st / "snapshots" / "2026-08-20" / "summary.json").write_text(json.dumps(
+        {"coverage": {"covered": ["redhat", "debian"]}}))
+    problems = publish.check(str(st))
+    assert any("outside its own covered set" in p for p in problems)
+
+
+def test_check_allows_a_row_inside_the_covered_set(tmp_path):
+    st = tmp_path / ".state"
+    (st / "snapshots" / "2026-08-20").mkdir(parents=True)
+    (st / "snapshots" / "2026-08-20" / "backlog.json").write_text(json.dumps(
+        [{"cve_id": "CVE-2026-1", "owner": "redhat", "counted": True}]))
+    (st / "snapshots" / "2026-08-20" / "summary.json").write_text(json.dumps(
+        {"coverage": {"covered": ["redhat", "debian"]}}))
+    assert publish.check(str(st)) == []

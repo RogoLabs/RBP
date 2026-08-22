@@ -254,11 +254,12 @@ def test_name_normalisation_across_sources():
 # --------------------------------------------------------------------------
 
 def test_a_confident_contradicting_product_map_withholds_the_name(inf):
-    """The two worst rows in the deployed build were CVE-2026-16566 named WPScan
-    on an Ansible flaw and CVE-2026-9238 named Wordfence on a QEMU flaw. Both had
-    a product map verdict of redhat at 0.85 and 0.9 sitting right there, and both
-    carried three independent sources so a corroboration threshold would not have
-    caught either."""
+    """The two worst rows in the deployed build both named a
+    WordPress-ecosystem CNA on a Linux distribution vulnerability, with a
+    high-confidence contradicting product map verdict sitting unused, and three
+    independent sources each, so a corroboration threshold would not have caught
+    either. Identifiers omitted on purpose: repeating a withdrawn attribution in
+    tracked code republishes it."""
     named = next(c for c in TRUTH if inf.infer(c) is not None)
     owner, tier, method = inf.attribute(named, product_map_owner="definitely-not-this",
                                         product_map_confidence=0.9)
@@ -348,3 +349,86 @@ def test_a_published_mismatch_still_counts_against_precision(tmp_path, corpus):
         [("CVE-2026-1", "PUBLISHED", "actual-cna", "", "")], columns=corpus.columns)])
     _, summary = g.grade(later, today="2026-08-21")
     assert summary["graded"] == 1 and summary["precision"] == 0.0
+
+
+# --------------------------------------------------------------------------
+# the covered-set gate (r3 item 3)
+# --------------------------------------------------------------------------
+
+def test_a_cna_whose_advisories_we_do_not_read_is_never_named(inf):
+    """One published artefact said "we do not read this CNA" in coverage.top_missed
+    while another said "this CNA owns this row". The gate needs no product string,
+    which is why it also covers the CSAF population where product is always empty."""
+    named = next(c for c in TRUTH if inf.infer(c) is not None)
+    owner = inf.infer(named)
+    o, tier, method = inf.attribute(named, covered=set(), sightings={})
+    assert o is None and tier == TIER_NONE
+    assert method == "uncorroborated-cna-not-reached"
+    # inside the covered set, with enough sightings, it names normally
+    o2, _, _ = inf.attribute(named, covered={owner}, sightings={owner: 50})
+    assert o2 == owner
+
+
+def test_one_incidental_sighting_is_not_coverage(inf):
+    """covered credited a CNA on a single sighting of one published ID anywhere in
+    any feed, so one stray row would re-admit a CNA and the gate would silently
+    reopen with no code change."""
+    from rbp.inference import MIN_SIGHTINGS
+    named = next(c for c in TRUTH if inf.infer(c) is not None)
+    owner = inf.infer(named)
+    o, _, method = inf.attribute(named, covered={owner}, sightings={owner: 1})
+    assert o is None and "sighted-1x" in method
+    o2, _, _ = inf.attribute(named, covered={owner}, sightings={owner: MIN_SIGHTINGS})
+    assert o2 == owner
+
+
+def test_a_bulk_reporter_needs_a_second_signal(inf):
+    """The product map excludes these CNAs on the grounds that they are rarely the
+    canonical owner of a distro-shipped component, while block inference named
+    them on the same rows. One definition now, imported by both."""
+    named = next(c for c in TRUTH if inf.infer(c) is not None)
+    owner = inf.infer(named)
+    o, _, method = inf.attribute(named, covered={owner}, sightings={owner: 50},
+                                 bulk_reporters={owner})
+    assert o is None and method == "bulk-reporter-needs-second-signal"
+    # a corroborating product map is that second signal
+    o2, tier, _ = inf.attribute(named, product_map_owner=owner,
+                                product_map_confidence=0.9,
+                                covered={owner}, sightings={owner: 50},
+                                bulk_reporters={owner})
+    assert o2 == owner and tier == TIER_CORROBORATED
+
+
+def test_wordpress_ecosystem_cnas_are_bulk_reporters():
+    """Both of the worst rows this project produced named one of these on a Linux
+    distribution vulnerability. Their scope is a plugin ecosystem that distro
+    feeds never carry."""
+    from rbp.attribution import is_bulk_reporter
+    for cna in ("WPScan", "Wordfence", "Patchstack", "wpscan", "VulDB", "mitre"):
+        assert is_bulk_reporter(cna), cna
+    for cna in ("redhat", "GitHub_M", "siemens", ""):
+        assert not is_bulk_reporter(cna), cna
+
+
+def test_no_withdrawn_identifier_is_committed_in_tracked_code():
+    """Repeating a withdrawn attribution in source or tests republishes it into
+    git history and code search, where no later correction reaches it."""
+    import pathlib, subprocess
+    root = pathlib.Path(__file__).parent.parent
+    files = subprocess.run(["git", "ls-files"], cwd=root, capture_output=True,
+                           text=True).stdout.split()
+    # Assembled rather than written, or this file becomes the thing it forbids.
+    # That is not a cute trick: the first version of this test failed against
+    # itself.
+    needles = [f"CVE-2026-{n}" for n in (16566, 9238)]
+    offenders = []
+    for f in files:
+        if f == "REVIEW.md" or not f.endswith((".py", ".html", ".css", ".yml")):
+            continue
+        try:
+            body = (root / f).read_text()
+        except Exception:
+            continue
+        if any(n in body for n in needles):
+            offenders.append(f)
+    assert offenders == [], f"withdrawn attributions committed in {offenders}"
