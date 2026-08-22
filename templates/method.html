@@ -59,8 +59,11 @@
   <div class="card-body">
     <p>
       Rows are reportable once publicly referenced for at least
-      <strong>{{ summary.get('min_age_days', 7) }} days</strong>, more than twice the
-      {{ expectation_hours }}-hour window.
+      <strong>{{ summary.get('min_age_days', 7) }} days</strong>, which is
+      {{ (summary.get('min_age_days', 7) * 24 // expectation_hours) }}x the
+      {{ expectation_hours }}-hour window. That multiple is derived from the buffer in
+      force, not asserted: the buffer is configurable and the sentence was previously
+      true only at seven days or more.
     </p>
     <div class="caveat warn">
       <p class="mb-0">

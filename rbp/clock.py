@@ -154,9 +154,10 @@ OWNER_FEEDS = {
     # ~195 were `ghsa` plus its own OSV mirror, so a single unauthenticated feed
     # with an 83-day rolling window was carrying the strongest claim on the site.
     #
-    # To restore it, feed_ghsa must retain `source_code_location` and emit
-    # `ghsa:<org>`, and self_disclosed must additionally require the owner's own
-    # feed to hold the EARLIEST date rather than merely be present.
+    # Restoring it needs BOTH of: feed_ghsa retaining `source_code_location` so
+    # a GHSA can be attributed to an org rather than to GitHub-the-database, and
+    # a measurable disclosure ordering for the row. The second condition now
+    # exists (see disclosure_order), the first does not, so this stays unmet.
 }
 
 
@@ -167,32 +168,56 @@ def _same_name(a, b):
     return norm(a) == norm(b)
 
 
-def self_disclosed(row):
-    """Did the owning CNA's own feed carry this advisory FIRST?
+def disclosure_order(row):
+    """Who published first, as three states rather than a boolean.
 
-    Presence alone is not enough. 4.5.1.4 turns on the CNA having disclosed, so
-    if a distro advisory predates the CNA's own, the CNA is reacting to a third
-    party and 4.5.1.6 is the right rule. Measured on the live snapshot, presence
-    without ordering scored 18 of 210 MUST rows against a third party's advisory
-    date, using per-source dates the pipeline already fetched and discarded.
+    Returns "own-first", "third-party-first" or "unmeasurable".
 
-    Falls back to presence only when per-source dates are unavailable, and never
-    escalates a row whose owner is unknown.
+    The previous version defaulted to MUST on every ambiguous shape, verified by
+    execution on all four: own feed undated against a dated third party, own feed
+    dated against undated co-sources, a same-day tie, and no dates at all. All
+    four claimed the CNA disclosed first.
+
+    That mattered because three feeds in the scheduled weekly profile (debian,
+    alpine, arch) emit no date at all, so they can never populate the
+    third-party side, and the CNA most likely to be tested is the one whose own
+    dates are least reliable. The effect was systematic, not marginal: absence of
+    evidence was being read as evidence, always in the direction of the stronger
+    accusation.
+
+    One rule now. MUST requires either the owner's own feed to be the only
+    source, or at least one dated own-feed entry AND at least one dated
+    third-party entry with the owner's strictly earlier. A same-day tie does not
+    establish who was first, so it abstains. Absence of a date is never evidence
+    in either direction.
     """
     own = OWNER_FEEDS.get(row.get("owner"))
     if not own:
-        return False
+        return "unmeasurable"
     sources = {s for s in (row.get("sources") or "").split(",") if s}
     if not (own & sources):
-        return False
+        return "third-party-first"
+    others = sources - own
+    if not others:
+        # The CNA's own channel is the only place this appeared. Nobody else
+        # disclosed it, so the CNA did.
+        return "own-first"
+
     dates = row.get("dates") or {}
-    if not dates:
-        return True
-    mine = [d for s, d in dates.items() if s in own and d]
-    theirs = [d for s, d in dates.items() if s not in own and d]
-    if not mine:
-        return True
-    return not theirs or min(mine) <= min(theirs)
+    mine = sorted(d for s, d in dates.items() if s in own and d)
+    theirs = sorted(d for s, d in dates.items() if s in others and d)
+    if not mine or not theirs:
+        return "unmeasurable"
+    if mine[0] < theirs[0]:
+        return "own-first"
+    if mine[0] > theirs[0]:
+        return "third-party-first"
+    return "unmeasurable"        # same-day tie establishes nothing
+
+
+def self_disclosed(row):
+    """True only where the ordering is measured AND the owner was first."""
+    return disclosure_order(row) == "own-first"
 
 
 def annotate(rows, today=None):
@@ -224,7 +249,12 @@ def annotate(rows, today=None):
         # than read off the row: it used to be set inside report._gated(), which
         # runs later in the pipeline AND returns copies, so annotate never saw
         # it and every row in production came out as a SHOULD.
-        must = self_disclosed(r)
+        # Computed ONCE, here. report._gated used to recompute self_disclosed
+        # while only annotate derived `rule` from it, so a divergence could
+        # publish a row reading self_disclosed true beside rule 4.5.1.6.
+        order = disclosure_order(r)
+        must = order == "own-first"
+        r["disclosure_order"] = order
         r["self_disclosed"] = must
         r["rule"] = RULE_MUST if must else RULE_SHOULD
         r["rule_strength"] = "MUST" if must else "SHOULD"
@@ -234,7 +264,10 @@ def annotate(rows, today=None):
         # candidate, never as an established breach. The site is required to
         # carry this qualifier wherever it shows rule_strength.
         r["rule_basis"] = "inferred-owner" if r.get("owner") else "unattributed"
-        r["rule_certainty"] = "candidate"
+        # An unmeasurable ordering is not a candidate MUST downgraded to a
+        # SHOULD; it is a row where the site cannot tell which rule applies, and
+        # saying so is the honest reading.
+        r["rule_certainty"] = "candidate" if order != "unmeasurable" else "unmeasurable"
     return rows
 
 

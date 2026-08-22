@@ -343,9 +343,22 @@ def test_summary_carries_the_undated_rows_it_could_not_age():
 # self-disclosure: what turns a SHOULD into a MUST
 # --------------------------------------------------------------------------
 
-def _r(owner, sources):
+def _r(owner, sources, dates=None):
+    """A row for the disclosure-ordering tests.
+
+    `dates` defaults to the owner's feed dated earliest, because the ordering
+    rule now REQUIRES a measured ordering: the presence of the owner's feed is
+    no longer sufficient on its own. Tests that want an ambiguous shape pass
+    dates explicitly.
+    """
+    if dates is None:
+        own = clock.OWNER_FEEDS.get(owner) or set()
+        srcs = [s for s in sources.split(",") if s]
+        dates = {}
+        for s in srcs:
+            dates[s] = "2026-01-01" if s in own else "2026-02-01"
     return {"cve_id": "CVE-2026-1", "owner": owner, "sources": sources,
-            "public_date": "2026-01-01", "days_public": 30}
+            "dates": dates, "public_date": "2026-01-01", "days_public": 30}
 
 
 def test_owners_own_feed_makes_it_a_must():
@@ -405,7 +418,8 @@ def test_annotate_computes_self_disclosure_itself():
     """Regression: self_disclosed was set inside report._gated(), which runs
     later in the pipeline AND returns copies, so annotate never saw it and every
     row in production came out as a SHOULD. 712 rows, 0 MUST."""
-    rows = [_r("redhat", "redhat,debian"), _r("redhat", "debian")]
+    rows = [_r("redhat", "redhat,debian"),
+            _r("redhat", "debian", dates={"debian": "2026-01-01"})]
     clock.annotate(rows, TODAY)
     assert [r["rule_strength"] for r in rows] == ["MUST", "SHOULD"]
     assert [r["self_disclosed"] for r in rows] == [True, False]
@@ -439,9 +453,15 @@ def test_unattributed_rows_say_so_in_the_basis():
 
 
 def test_no_row_ever_claims_an_established_breach():
-    rows = [_r("redhat", "redhat"), _r("microsoft", "msrc"), _r(None, "debian")]
+    """The intent is that nothing is ever asserted as established. Both
+    "candidate" and "unmeasurable" satisfy that; "unmeasurable" is the weaker
+    claim of the two, so allowing it is not a loosening."""
+    rows = [_r("redhat", "redhat"), _r("microsoft", "msrc"), _r(None, "debian"),
+            _r("redhat", "redhat,debian", dates={})]
     clock.annotate(rows, TODAY)
-    assert {r["rule_certainty"] for r in rows} == {"candidate"}
+    assert {r["rule_certainty"] for r in rows} <= {"candidate", "unmeasurable"}
+    for r in rows:
+        assert r["rule_certainty"] not in ("established", "confirmed", "proven")
 
 
 def test_median_of_whole_days_stays_whole():
@@ -556,3 +576,73 @@ def test_a_transfer_is_recorded_not_collapsed():
         assert closed["transferred"] is True
         # charged to the tracked owner, not to whoever cleaned it up
         assert led.by_owner() == {"original": [10]}
+
+
+# --------------------------------------------------------------------------
+# disclosure ordering: absence of a date is not evidence (r3 item 13)
+# --------------------------------------------------------------------------
+
+def _order_row(dates, sources="redhat,debian", owner="redhat"):
+    return {"cve_id": "CVE-2026-1", "owner": owner, "sources": sources,
+            "dates": dates, "public_date": "2026-01-01"}
+
+
+def test_every_ambiguous_ordering_abstains():
+    """All four of these returned MUST, verified by execution. Three feeds in the
+    scheduled weekly profile (debian, alpine, arch) emit no date at all, so they
+    can never populate the third-party side, and the CNA most likely to be tested
+    is the one whose own dates are least reliable. Absence of evidence was being
+    read as evidence, always toward the stronger accusation."""
+    ambiguous = [
+        {"debian": "2026-01-01"},                              # own undated
+        {"redhat": "2026-02-01"},                              # co-source undated
+        {"redhat": "2026-01-01", "debian": "2026-01-01"},       # same-day tie
+        {},                                                    # no dates at all
+    ]
+    for dates in ambiguous:
+        assert clock.disclosure_order(_order_row(dates)) == "unmeasurable", dates
+        assert clock.self_disclosed(_order_row(dates)) is False
+
+
+def test_a_measured_ordering_is_respected_both_ways():
+    assert clock.disclosure_order(
+        _order_row({"redhat": "2026-01-01", "debian": "2026-02-01"})) == "own-first"
+    assert clock.disclosure_order(
+        _order_row({"redhat": "2026-02-01", "debian": "2026-01-01"})) == "third-party-first"
+
+
+def test_the_owners_own_feed_alone_is_a_legitimate_must():
+    """Nobody else disclosed it, so the CNA did. This needs no dates."""
+    assert clock.disclosure_order(_order_row({}, sources="redhat")) == "own-first"
+    assert clock.self_disclosed(_order_row({}, sources="redhat")) is True
+
+
+def test_an_unmeasurable_ordering_is_labelled_unmeasurable_not_candidate():
+    """A row where the site cannot tell which rule applies is not a candidate MUST
+    downgraded to a SHOULD."""
+    rows = [_order_row({}), _order_row({"redhat": "2026-01-01", "debian": "2026-02-01"})]
+    clock.annotate(rows, TODAY)
+    assert rows[0]["rule_certainty"] == "unmeasurable"
+    assert rows[0]["rule_strength"] == "SHOULD"
+    assert rows[1]["rule_certainty"] == "candidate"
+    assert rows[1]["rule_strength"] == "MUST"
+
+
+def test_self_disclosed_is_computed_in_exactly_one_place():
+    """annotate and report._gated both computed it while only annotate derived
+    `rule` from it, so a divergence could publish self_disclosed true beside rule
+    4.5.1.6 on the same row."""
+    import pathlib
+    report_src = (pathlib.Path(__file__).parent.parent / "rbp" / "report.py").read_text()
+    assert "clock.self_disclosed(" not in report_src, (
+        "report.py recomputes self_disclosed; it must read what annotate set")
+
+
+def test_restoring_ghsa_is_documented_as_still_unmet():
+    """The old comment made restoring ghsa conditional on an ordering test that
+    did not exist. It exists now, so the comment has to say which condition is
+    still outstanding rather than reading as satisfied."""
+    import pathlib
+    src = (pathlib.Path(__file__).parent.parent / "rbp" / "clock.py").read_text()
+    assert "source_code_location" in src
+    assert "stays unmet" in src

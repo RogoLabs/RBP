@@ -89,6 +89,41 @@ def _derive_meta(row):
 # the remaining rows rather than weakening the project.
 DEFAULT_MIN_AGE_DAYS = 7
 
+# Absolute floor on the reportable buffer, in days.
+#
+# The project's entire warrant for naming a reserving CNA is the 24-hour
+# permission in CNA Rule 4.5.1.7, quoted on the holding page and on /policy and
+# named as the R5 mitigation in PLAN.md. Nothing bound the buffer to it:
+# --min-age-days took any int, and the workflow passed a repository variable
+# through unvalidated, so setting it to 0 would publish inferred CNA names on IDs
+# public for under 24 hours, inside the window the Program's own rule tells its
+# own Secretariat not to name in, with no error and no visible change.
+#
+# 4 days rather than 1: the 24-hour horizon is the absolute floor below which the
+# site has no warrant at all, and the 72-hour publication expectation is the
+# operating one, so the first defensible buffer sits just past both.
+MIN_AGE_FLOOR_DAYS = 4
+
+
+def validate_min_age(days):
+    """Refuse a buffer that would name a CNA inside the 4.5.1.7 horizon.
+
+    The epoch got a validator that raises because a silent config error would be
+    catastrophic. This variable is more consequential and had none.
+    """
+    try:
+        days = int(days)
+    except (TypeError, ValueError) as e:
+        raise SystemExit(f"--min-age-days must be an integer, got {days!r}") from e
+    if days < MIN_AGE_FLOOR_DAYS:
+        raise SystemExit(
+            f"--min-age-days={days} is below the floor of {MIN_AGE_FLOOR_DAYS} days. "
+            "CNA Rule 4.5.1.7 permits naming a reserving CNA only 24 hours after "
+            "public disclosure, and that permission is this site's entire warrant "
+            "for naming anyone. The 72-hour publication expectation is the "
+            "operating horizon. Refusing to publish names inside either window.")
+    return days
+
 # Feeds that trace to a common origin: collapsed when counting *independent*
 # corroboration (OSV re-publishes GHSA; ALAS is a RHEL rebuild).
 _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redhat",
@@ -218,10 +253,12 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
 
     def _gated(r):
         if nameable(r):
-            return _publishable(r, owner_nameable=True,
-                                self_disclosed=clock.self_disclosed(r))
+            # Read, never recomputed. Recomputing here while only clock.annotate
+            # derived `rule` from it could publish self_disclosed true beside
+            # rule 4.5.1.6 on the same row.
+            return _publishable(r, owner_nameable=True)
         return _publishable(r, owner="unattributed", owner_tier="abstain",
-                            owner_nameable=False, self_disclosed=False)
+                            owner_nameable=False)
 
     # Kept deliberately identical in spirit to site.CSV_COLS: two published CSVs
     # of the same rows with different column sets is a trap for a consumer.

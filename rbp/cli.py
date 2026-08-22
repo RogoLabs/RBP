@@ -62,6 +62,7 @@ def cmd_run(args):
         print(f"  WARNING: ignoring unknown sources {dropped}; valid: {sorted(feeds.ADAPTERS)}")
     if not sources:
         raise SystemExit(f"no valid sources in {requested!r}; valid: {sorted(feeds.ADAPTERS)}")
+    args.min_age_days = report.validate_min_age(args.min_age_days)
     print(f"RBP run | today={today} | years={sorted(years)} | profile={args.profile if not args.sources else 'custom'} | sources={sources}")
 
     corpus, prod_cna = ensure_corpus(force=args.reindex)

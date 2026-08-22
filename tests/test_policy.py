@@ -172,3 +172,41 @@ def test_live_rbp_policy_is_still_v2_and_still_thresholdless():
     assert not re.search(r"\b\d{1,3}\s?%", text), (
         "a numeric threshold reappeared in the RBP policy, the site's framing "
         "needs revisiting before the next deploy")
+
+
+# --------------------------------------------------------------------------
+# the code constraint is held together with the quoted rule (r3 item 8)
+# --------------------------------------------------------------------------
+
+def test_the_buffer_floor_is_bound_to_the_naming_warrant():
+    """The whole warrant for naming a reserving CNA is the 24-hour permission in
+    4.5.1.7, quoted on the holding page and on /policy. Nothing bound the buffer
+    to it: --min-age-days took any int and the workflow passed a repository
+    variable through unvalidated, so 0 would have published inferred CNA names on
+    IDs public for under 24 hours, inside the window the Program's own rule tells
+    its own Secretariat not to name in.
+
+    Pinned here rather than only in test_report, so the constraint and the rule it
+    derives from move together."""
+    from rbp.report import MIN_AGE_FLOOR_DAYS, validate_min_age
+
+    warrant = RULES["rules"]["4.5.1.7"]
+    assert "24 hours after a CVE ID has been Publicly Disclosed" in warrant
+
+    # The floor must clear both the 24-hour naming horizon and the 72-hour
+    # publication expectation.
+    assert MIN_AGE_FLOOR_DAYS * 24 > 24
+    assert MIN_AGE_FLOOR_DAYS * 24 > 72
+
+    for bad in (0, 1, 3, -5):
+        with pytest.raises(SystemExit, match="4.5.1.7|below the floor"):
+            validate_min_age(bad)
+    assert validate_min_age(MIN_AGE_FLOOR_DAYS) == MIN_AGE_FLOOR_DAYS
+    assert validate_min_age(7) == 7
+
+
+def test_a_non_integer_buffer_is_refused():
+    from rbp.report import validate_min_age
+    for bad in ("seven", None, "", "3.5"):
+        with pytest.raises(SystemExit):
+            validate_min_age(bad)
