@@ -12,18 +12,6 @@
   "median_days_to_publish": 50
  },
  {
-  "cna": "mitre",
-  "outstanding": 35,
-  "oldest_days": 502,
-  "median_days_public": 9,
-  "past_expectation": 35,
-  "must_rows": 0,
-  "should_rows": 35,
-  "published_12mo": 4440,
-  "resolved_n": 0,
-  "median_days_to_publish": null
- },
- {
   "cna": "apple",
   "outstanding": 4,
   "oldest_days": 71,
