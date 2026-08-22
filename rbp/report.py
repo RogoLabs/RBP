@@ -235,8 +235,27 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # them on both branches and publish only a boolean.
     _INTERNAL = ("product_map_owner", "product_map_confidence", "product_map_method")
 
+    def _clean_description(text, package):
+        """Make the description fit to display, or drop it.
+
+        The field is the first 180 characters of whatever the feed supplied, so
+        some rows arrive as bare vulnerability-tracker bookkeeping ("NOTE: this
+        is fixed in ...") which tells a reader nothing and reads like leaked
+        internal text. Six such rows were in the live snapshot. Cleaning beats
+        asserting: a useless description is bad display text, not a false
+        statement about anyone, so it must not be able to stop a publication.
+        """
+        t = (text or "").strip()
+        low = t.lower()
+        if not t or low.startswith(("note:", "[unknown", "unknown")) or low in (
+                "security update", "security fix"):
+            return package or ""
+        return t
+
     def _publishable(r, **over):
         out = {k: v for k, v in r.items() if k not in _INTERNAL}
+        out["description"] = _clean_description(r.get("description"),
+                                                r.get("package") or r.get("vendor"))
         pm = r.get("product_map_owner")
         out["owner_contested"] = bool(
             pm and r.get("owner") and not clock._same_name(pm, r["owner"]))

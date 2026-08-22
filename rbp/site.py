@@ -206,9 +206,11 @@ def assert_artefact(rows, label, cnas=None, covered=None):
             problems.append(f"{label}:{cid} names {owner}, outside the covered set")
         if any(k.startswith("product_map") for k in r):
             problems.append(f"{label}:{cid} carries an ungated product-map field")
-        desc = r.get("description") or ""
-        if desc.startswith("NOTE:"):
-            problems.append(f"{label}:{cid} description is a bare tracker NOTE")
+        # Deliberately NOT asserted here: a low-quality description is bad
+        # display text, not a false statement about a third party. Refusing to
+        # publish over it would fail dark on data that is merely ugly, which is
+        # the opposite of the rule these invariants exist to serve. It is cleaned
+        # at the publishable boundary in report._publishable instead.
     if problems:
         raise SystemExit("refusing to publish:\n  " + "\n  ".join(problems[:25]))
     return len(rows)
