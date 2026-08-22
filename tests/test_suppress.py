@@ -35,7 +35,7 @@ KEY = "test-key-not-the-real-one"
 @pytest.fixture(autouse=True)
 def _key(monkeypatch):
     monkeypatch.setenv("RBP_SUPPRESS_KEY", KEY)
-    monkeypatch.delenv("RBP_ADVISORY_TOKEN", raising=False)
+    monkeypatch.setenv("GITHUB_TOKEN", "t")
 
 
 # --------------------------------------------------------------------------
@@ -97,65 +97,52 @@ def test_an_empty_list_with_no_key_is_fine(tmp_path, monkeypatch):
 # reading private advisories
 # --------------------------------------------------------------------------
 
-def test_a_missing_token_is_degraded_not_empty(tmp_path):
-    """An unreadable endpoint is indistinguishable from "no reports", so a token
-    that quietly expires would switch the fast path off forever with nothing
-    saying so. That is the failure shape this project keeps hitting."""
-    s = suppress.load(str(tmp_path / "none.txt"))
-    assert s.report["degraded"] is True
-    assert "RBP_ADVISORY_TOKEN" in s.report["detail"]
-
-
-def test_advisory_read_failure_does_not_stop_the_build(tmp_path, monkeypatch):
+def test_a_read_failure_does_not_stop_the_build(tmp_path, monkeypatch):
     """The opposite direction from the missing key. Refusing to publish four times
     a day over a credential would freeze the site; the degraded banner is already
     on every page."""
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress, "from_advisories",
+    monkeypatch.setattr(suppress, "from_issues",
                         lambda **kw: (set(), "gh api failed: 401"))
     s = suppress.load(str(tmp_path / "none.txt"))   # must not raise
     assert s.report["degraded"] is True
 
 
-def test_cve_ids_are_extracted_from_advisory_text(monkeypatch):
+def test_cve_ids_are_extracted_from_issue_text(monkeypatch):
     payload = json.dumps([
-        {"summary": "embargo CVE-2026-1111", "description": ""},
-        {"summary": "wrong owner", "description": "see cve-2026-2222 please"},
-        {"summary": "no id here", "description": ""},
+        {"title": "Withhold CVE-2026-1111", "body": ""},
+        {"title": "wrong owner", "body": "see cve-2026-2222 please"},
+        {"title": "no id here", "body": ""},
     ])
 
     class P:
         returncode, stdout, stderr = 0, payload, ""
     monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    ids, err = suppress.from_advisories()
+    ids, err = suppress.from_issues()
     assert err is None
     assert ids == {"CVE-2026-1111", "CVE-2026-2222"}
 
 
-def test_a_withdrawn_advisory_stops_suppressing(monkeypatch):
-    """A retracted report must not keep a row withheld forever by accident."""
+def test_a_pull_request_is_not_read_as_a_withhold_request(monkeypatch):
+    """The issues endpoint returns pull requests too, so a PR mentioning a CVE ID
+    in its title would otherwise withhold that row."""
     payload = json.dumps([
-        {"summary": "CVE-2026-1111", "description": "", "withdrawn_at": "2026-08-01"},
-        {"summary": "CVE-2026-2222", "description": "", "withdrawn_at": None},
+        {"title": "CVE-2026-1111", "body": "", "pull_request": {"url": "x"}},
+        {"title": "CVE-2026-2222", "body": ""},
     ])
 
     class P:
         returncode, stdout, stderr = 0, payload, ""
     monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    ids, _ = suppress.from_advisories()
+    ids, _ = suppress.from_issues()
     assert ids == {"CVE-2026-2222"}
 
 
 def test_the_auto_path_is_capped(tmp_path, monkeypatch):
-    """No verification of who may report is the right call for a genuine embargo,
-    and it means anyone with a GitHub account can remove a row. One advisory
-    naming 500 ids would empty the site, which is a denial of service against the
-    project's whole purpose."""
+    """No verification of who may ask is the right call, and it means anyone with a
+    GitHub account can remove a row. One issue naming 500 ids would empty the site,
+    which is a denial of service against the project's whole purpose."""
     many = {f"CVE-2026-{3000 + i}" for i in range(suppress.MAX_AUTO + 12)}
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress, "from_advisories", lambda **kw: (many, None))
+    monkeypatch.setattr(suppress, "from_issues", lambda **kw: (many, None))
     s = suppress.load(str(tmp_path / "none.txt"))
     assert len(s.auto) == suppress.MAX_AUTO
     assert s.report["capped"] == 12
@@ -163,8 +150,7 @@ def test_the_auto_path_is_capped(tmp_path, monkeypatch):
 
 
 def test_the_published_report_carries_counts_and_never_ids(tmp_path, monkeypatch):
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress, "from_advisories",
+    monkeypatch.setattr(suppress, "from_issues",
                         lambda **kw: ({"CVE-2026-1111"}, None))
     p = tmp_path / "s.txt"
     p.write_text(suppress.digest("CVE-2026-2222", KEY) + "\n")
@@ -299,6 +285,7 @@ import pathlib   # noqa: E402
 import re        # noqa: E402
 
 ROOT = pathlib.Path(__file__).parent.parent
+ISSUE_ROUTE = "issues/new?labels=withhold"
 PRIVATE_ROUTE = "github.com/RogoLabs/RBP/security/advisories/new"
 MAIL_ROUTE = "mailto:rbp@rogolabs.net"
 
@@ -336,13 +323,28 @@ def test_the_footer_carries_the_route_on_every_dashboard_page(built):
         assert MAIL_ROUTE in body, page
 
 
-def test_every_route_tells_the_reporter_to_send_no_detail(built):
-    """The single most important sentence in the whole channel. A CNA must not
-    have to describe a vulnerability to ask that it not be listed."""
+def test_every_route_tells_the_reporter_to_give_the_id_and_nothing_else(built):
+    """The single most important instruction in the whole channel. Nobody should
+    have to describe a vulnerability, or even say why, to ask that a row about them
+    not be listed. Asserted as a property rather than a phrase, because the exact
+    wording has already changed once."""
     for page in ("method.html", "data.html", "index.html"):
-        text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", (built / page).read_text()))
-        assert "the word embargo" in text, page
-        assert "nothing else" in text.lower(), page
+        text = re.sub(r"\s+", " ",
+                      re.sub(r"<[^>]+>", " ", (built / page).read_text())).lower()
+        assert "nothing else" in text, page
+        assert "no reason" in text or "no reason needed" in text, page
+        # And it must not ask the reporter to state a reason.
+        for bad in ("explain why", "state the reason", "describe the vulnerability"):
+            assert bad not in text, (page, bad)
+
+
+def test_the_reason_is_not_required_anywhere(built):
+    """The mitigation that makes a PUBLIC request acceptable: a request carrying no
+    reason does not distinguish an embargo from a wrong owner from a CNA that would
+    rather not be listed, so it leaks nothing beyond the identifier."""
+    text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ",
+                                     (built / "method.html").read_text()))
+    assert "does not" in text and "distinguish" in text
 
 
 def test_security_txt_exists_and_is_well_formed(built):
@@ -364,13 +366,18 @@ def test_ownership_disputes_are_routed_to_the_authoritative_holder(built):
         assert "cveform.mitre.org" in (built / page).read_text(), page
 
 
-def test_the_response_window_is_stated_and_separated_from_the_withhold(built):
-    """Two different promises. The withhold is automatic and fast; the human reply
-    is neither, and conflating them would over-promise the slow half."""
+def test_the_two_paths_have_separately_stated_latencies(built):
+    """Two different promises. The public request is automatic and lands on the next
+    build; the private routes reach a person. Conflating them would over-promise the
+    slow half, and promising "next build" for a route the pipeline cannot read would
+    be a false statement about the mechanism."""
     text = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ",
                                      (built / "method.html").read_text()))
-    assert "five business days" in text
-    assert "does not wait" in text
+    assert "next build" in text, "the automatic path's latency is unstated"
+    assert "five business days" in text, "the human path's latency is unstated"
+    # The private routes must be described as reaching a person, not the pipeline,
+    # because without a credential the pipeline genuinely cannot read them.
+    assert "reach a person" in text or "reaches a person" in text
 
 
 def test_the_committed_list_in_the_repo_holds_no_cve_id():
@@ -421,62 +428,3 @@ def test_a_suppressed_id_appears_in_no_file_report_writes(tmp_path):
     # And the row that was NOT suppressed is still published, or the test would
     # pass trivially on an empty snapshot.
     assert any("CVE-2026-4243" in (sdir / n).read_text() for n in written)
-
-
-# --------------------------------------------------------------------------
-# token expiry, warned before it breaks
-# --------------------------------------------------------------------------
-
-def test_token_expiry_is_read_from_the_response_header(monkeypatch):
-    """GitHub returns the expiry on every authenticated response, so an impending
-    outage of the correction channel can be reported while the channel still
-    works, rather than discovered once reports stop being honoured."""
-    class P:
-        returncode = 0
-        stdout = ("HTTP/2.0 200 OK\r\n"
-                  "github-authentication-token-expiration: 2026-09-01 12:00:00 UTC\r\n"
-                  "\r\n{}")
-        stderr = ""
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
-    assert suppress.token_expiry_days(today="2026-08-22") == 10
-
-
-def test_a_token_with_no_expiry_reports_none_rather_than_guessing(monkeypatch):
-    """Classic tokens without an expiry omit the header. None is the honest
-    answer; a fabricated far-future date would be worse than silence."""
-    class P:
-        returncode, stdout, stderr = 0, "HTTP/2.0 200 OK\r\n\r\n{}", ""
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
-    assert suppress.token_expiry_days(today="2026-08-22") is None
-
-
-def test_a_soon_to_expire_token_is_flagged_in_the_published_report(tmp_path, monkeypatch):
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress, "from_advisories", lambda **kw: (set(), None))
-    monkeypatch.setattr(suppress, "token_expiry_days", lambda **kw: 9)
-    rep = suppress.load(str(tmp_path / "none.txt")).report
-    assert rep["token_expires_in_days"] == 9
-    assert rep["token_expiring"] is True
-
-
-def test_a_healthy_token_is_not_flagged(tmp_path, monkeypatch):
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress, "from_advisories", lambda **kw: (set(), None))
-    monkeypatch.setattr(suppress, "token_expiry_days", lambda **kw: 200)
-    rep = suppress.load(str(tmp_path / "none.txt")).report
-    assert rep["token_expiring"] is False
-
-
-def test_expiry_is_not_checked_when_the_read_already_failed(tmp_path, monkeypatch):
-    """No point asking a broken token when it expires; the degraded signal already
-    covers it, and a second failing call is just noise in the log."""
-    monkeypatch.setenv("RBP_ADVISORY_TOKEN", "x")
-    monkeypatch.setattr(suppress, "from_advisories", lambda **kw: (set(), "401"))
-    called = []
-    monkeypatch.setattr(suppress, "token_expiry_days",
-                        lambda **kw: called.append(1) or 5)
-    rep = suppress.load(str(tmp_path / "none.txt")).report
-    assert not called
-    assert rep["token_expires_in_days"] is None

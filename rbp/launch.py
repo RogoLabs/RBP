@@ -110,16 +110,19 @@ _DECLARED = [
     {
         "n": 4,
         "title": "A monitored correction channel, with a suppression lever behind it",
-        "detail": ("A non-public route for a CNA to contest a row, a lever that "
-                   "withholds it while contested, and a published aggregate count "
-                   "of what is withheld so the lever cannot be used silently."),
+        "detail": ("A route for a CNA to contest a row, a lever that withholds it, "
+                   "and a published aggregate count so the lever cannot be used "
+                   "silently. The fast path is a public withhold request carrying "
+                   "no reason, which is auditable from outside; two private routes "
+                   "reach a person for anyone who prefers them."),
         "status": UNMET,
-        "blocks": ("built and published, but not yet proven. The private route, the "
-                   "email route, the suppression lever and the aggregate count all "
-                   "exist; what is missing is RBP_ADVISORY_TOKEN in repository "
-                   "secrets, without which the automatic withhold cannot read a "
-                   "report and every run is marked degraded. Flip this to met only "
-                   "after a real run reads the endpoint cleanly."),
+        "blocks": ("built and published, but never exercised. The public request "
+                   "route, the two private routes, the suppression lever and the "
+                   "aggregate count all exist and need no credential. What is "
+                   "missing is a single end-to-end rehearsal: file a withhold "
+                   "request naming a real row and confirm it leaves every artefact. "
+                   "Until that has happened once, this is a mechanism that has only "
+                   "ever been tested against fixtures."),
         "item": "4",
     },
     {

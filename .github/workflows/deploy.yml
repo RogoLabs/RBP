@@ -85,6 +85,7 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: write     # the persist step pushes to the data branch
+      issues: read        # the suppression lever reads `withhold`-labelled issues
       pages: write
       id-token: write
     steps:
@@ -152,19 +153,19 @@ jobs:
         env:
           # The suppression lever (review item 4).
           #
-          # RBP_ADVISORY_TOKEN reads this repo's PRIVATE security advisories, which
-          # is how an embargo report filed at 09:00 is honoured by the 12:00 build
-          # with nobody in the loop. GITHUB_TOKEN cannot do it: repository security
-          # advisories need a token with `repo` scope, so this is a separate
-          # fine-grained PAT with read access to Repository security advisories.
+          # The fast path reads OPEN ISSUES carrying the `withhold` label, which
+          # GITHUB_TOKEN can do with `issues: read`. An earlier version read
+          # private security advisories, which needed a fine-grained PAT with
+          # `repo` scope, because there is no permissions key for repository
+          # advisories. Dropping that removed a credential entirely: nothing to
+          # create, nothing to rotate, nothing to expire, and the whole
+          # silent-credential-failure class stopped existing rather than being
+          # mitigated with an expiry warning.
           #
-          # If it is absent or expired the run does NOT fail. It is reported as a
-          # degraded run, which puts a banner on every page saying reports are not
-          # being honoured. A correction channel that has quietly stopped working
-          # is worse than one that never existed, so the failure is visible rather
-          # than silent, and a credential does not get to freeze a publication
-          # that happens four times a day.
-          RBP_ADVISORY_TOKEN: ${{ secrets.RBP_ADVISORY_TOKEN }}
+          # A failed read does NOT fail the run. "Cannot read" and "nothing to
+          # read" are the same value, so a read that starts failing would switch
+          # the fast path off silently. Reported as a degraded run instead, which
+          # puts a banner on every page saying requests are not being honoured.
           # Keys the committed suppression list. That file holds HMAC digests
           # rather than CVE IDs, because a plaintext list in a public repository
           # would be a permanent, git-archived statement that a specific reserved

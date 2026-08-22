@@ -11,10 +11,45 @@ Two inputs, one set.
 
     the committed list      snapshot-independent, durable, reviewed. Entries are
                             added by a human and survive every run.
-    private advisories      GitHub private vulnerability reporting on this repo,
-                            read each run. This is the fast path: a report filed
-                            at 09:00 is honoured by the 12:00 build with nobody
-                            in the loop.
+    labelled issues         public issues on this repo carrying the `withhold`
+                            label, read each run. This is the fast path: a request
+                            filed at 09:00 is honoured by the 12:00 build with
+                            nobody in the loop.
+
+WHY A PUBLIC ISSUE AND NOT A PRIVATE ADVISORY
+
+The first version of this read GitHub private vulnerability reporting, on the
+reasoning that an embargo report must not be public. Three things were wrong with
+that, and the first is the one that matters.
+
+The advisory form does not fit the task. It asks for affected versions, severity,
+CWE and ecosystem, because it is built for reporting a vulnerability in THIS
+repository's own code. Someone who wants to say "do not list CVE-2026-1234" lands
+on a form that does not describe what they are doing, and the likely outcome is
+that they give up. Friction in this channel is a far more probable failure than
+disclosure, and a worse one, because the entire point is that reporting must be
+trivially easy.
+
+An issue is readable with the workflow's own GITHUB_TOKEN (`issues: read`), so
+there is no personal access token: nothing to create, nothing to rotate, nothing
+to expire, and the whole silent-credential-failure class disappears rather than
+being mitigated.
+
+And a public request makes the lever AUDITABLE from outside. Anyone can check that
+the published suppressed count matches the visible requests, which is stronger
+accountability than a private channel plus a number this project publishes about
+itself. The requirement was that the mechanism "cannot be used to quietly hide the
+problem"; a public request serves that better than a private one.
+
+WHAT IS GIVEN UP, AND HOW IT IS MITIGATED
+
+The row is already listed, so the CVE ID is already public here. What a public
+request adds is a signal about WHICH row someone cares about. So no reason is
+asked for and the template tells reporters not to give one: "please withhold
+CVE-2026-1234" does not distinguish an embargo from a wrong owner from a CNA that
+would simply rather not be listed. A private route and email remain available for
+anyone who wants them, described accurately as human-reviewed rather than
+automatic, because without a PAT they cannot be read by the pipeline.
 
 WHY THE COMMITTED LIST HOLDS HASHES AND NOT CVE IDS
 
@@ -36,14 +71,14 @@ refuse to publish. This is one of the few places in this codebase where a
 configuration error should stop a publication, and the reason is that the
 alternative is publishing the thing the lever exists to withhold.
 
-WHY THE ADVISORY READ FAILING DOES *NOT* FAIL THE BUILD
+WHY THE ISSUE READ FAILING DOES *NOT* FAIL THE BUILD
 
 The opposite direction. An unreadable endpoint is indistinguishable from "no
-reports", and a token that quietly expires would silently switch the fast path off
-forever. That is the failure shape this project has hit repeatedly, so it is
-reported as a DEGRADED run instead: the banner is already on every page, and a
-degraded run says its counts are not comparable. Loud, and it does not freeze a
-publication four times a day over a credential.
+requests", so a read that starts failing would silently switch the fast path off.
+That is the failure shape this project has hit repeatedly, so it is reported as a
+DEGRADED run instead: the banner is already on every page, and a degraded run says
+its counts are not comparable. Loud, and it does not freeze a publication four
+times a day over a transient API error.
 """
 from __future__ import annotations
 
@@ -97,22 +132,33 @@ def read_list(path=DEFAULT_LIST):
     return out
 
 
-def from_advisories(repo="RogoLabs/RBP", token_env="RBP_ADVISORY_TOKEN"):
-    """CVE IDs named in this repo's private security advisories.
+WITHHOLD_LABEL = "withhold"
+
+
+def from_issues(repo="RogoLabs/RBP", label=WITHHOLD_LABEL, token_env="GITHUB_TOKEN"):
+    """CVE IDs named in open issues carrying the withhold label.
 
     Returns `(ids, error)`. `error` is None on success and a short string when the
     endpoint could not be read, which the caller must surface as a degraded run
-    rather than treat as an empty result.
+    rather than treat as an empty result: "cannot read" and "nothing to read" are
+    the same value and must not be the same outcome.
 
-    Uses the `gh` CLI so the token never passes through a URL or a shell argument.
+    CLOSED issues are ignored. Closing a withhold request is how it is revoked, so
+    a row does not stay withheld forever because nobody remembered to reopen the
+    question. That makes closing a request a consequential act, which is the right
+    place for the judgement to live.
+
+    Reads with the workflow's own GITHUB_TOKEN (`issues: read`), or with whatever
+    `gh` is already authenticated as locally. No personal access token.
     """
     token = (os.environ.get(token_env) or "").strip()
-    if not token:
-        return set(), f"{token_env} is not set; the fast path is off"
-    env = dict(os.environ, GH_TOKEN=token)
+    env = dict(os.environ)
+    if token:
+        env["GH_TOKEN"] = token
     try:
         p = subprocess.run(
-            ["gh", "api", "--paginate", f"repos/{repo}/security-advisories"],
+            ["gh", "api", "--paginate",
+             f"repos/{repo}/issues?state=open&labels={label}&per_page=100"],
             capture_output=True, text=True, timeout=60, env=env, check=False)
     except (OSError, subprocess.SubprocessError) as e:
         return set(), f"could not run gh: {e}"
@@ -121,76 +167,27 @@ def from_advisories(repo="RogoLabs/RBP", token_env="RBP_ADVISORY_TOKEN"):
     try:
         items = json.loads(p.stdout or "[]")
     except ValueError as e:
-        return set(), f"unparseable advisory response: {e}"
+        return set(), f"unparseable issue response: {e}"
     if not isinstance(items, list):
-        return set(), "advisory response was not a list"
+        return set(), "issue response was not a list"
 
     ids = set()
-    for a in items:
-        if not isinstance(a, dict):
+    for it in items:
+        if not isinstance(it, dict) or it.get("pull_request"):
             continue
-        # Withdrawn advisories are retracted reports and must not keep a row
-        # suppressed, or a withdrawn claim becomes permanent by accident.
-        if a.get("withdrawn_at"):
-            continue
-        blob = " ".join(str(a.get(f) or "") for f in ("summary", "description"))
+        blob = " ".join(str(it.get(f) or "") for f in ("title", "body"))
         ids |= {m.group(0).upper() for m in CVE_RE.finditer(blob)}
     return ids, None
-
-
-# Warn this many days before the advisory token expires.
-#
-# The failure this exists to prevent: a fine-grained PAT expires, the advisory
-# read starts failing, the run is marked degraded, and the degraded banner says
-# reports are not being honoured. That is already far better than silence, but it
-# is still an outage of the correction channel discovered after it began. GitHub
-# returns the expiry date on every authenticated response, so the run can say
-# "this stops working in nine days" while it still works.
-EXPIRY_WARN_DAYS = 14
-
-
-def token_expiry_days(token_env="RBP_ADVISORY_TOKEN", today=None):
-    """Days until the advisory token expires, or None if unknown.
-
-    Fine-grained PATs return `github-authentication-token-expiration` on every
-    authenticated response. Classic tokens with no expiry omit it, in which case
-    there is nothing to warn about and None is the honest answer.
-    """
-    token = (os.environ.get(token_env) or "").strip()
-    if not token:
-        return None
-    env = dict(os.environ, GH_TOKEN=token)
-    try:
-        p = subprocess.run(["gh", "api", "-i", "/rate_limit"],
-                           capture_output=True, text=True, timeout=30,
-                           env=env, check=False)
-    except (OSError, subprocess.SubprocessError):
-        return None
-    if p.returncode != 0:
-        return None
-    m = re.search(r"^github-authentication-token-expiration:\s*(\S+)",
-                  p.stdout or "", re.I | re.M)
-    if not m:
-        return None
-    import datetime as _dt
-    try:
-        exp = _dt.date.fromisoformat(m.group(1)[:10])
-    except ValueError:
-        return None
-    ref = _dt.date.fromisoformat(today) if today else _dt.date.today()
-    return (exp - ref).days
 
 
 class Suppressions:
     """The effective suppression set for one run, plus what to publish about it."""
 
-    def __init__(self, committed, auto_ids, error=None, key=None, capped=0,
-                 expires_in=None):
+    def __init__(self, committed, auto_ids, error=None, key=None, capped=0):
         self.committed = set(committed or ())
         self.auto = set(auto_ids or ())
         self.error = error
         self.capped = capped
-        self.expires_in = expires_in
         self._key = key
 
     def __contains__(self, cve_id):
@@ -217,12 +214,6 @@ class Suppressions:
             "capped": self.capped,
             "degraded": bool(self.error),
             "detail": self.error,
-            # Days until the token that reads reports expires, when knowable.
-            # Published so an impending outage of the correction channel is
-            # visible before it happens rather than after.
-            "token_expires_in_days": self.expires_in,
-            "token_expiring": (self.expires_in is not None
-                               and self.expires_in <= EXPIRY_WARN_DAYS),
         }
 
 
@@ -241,29 +232,22 @@ def load(list_path=DEFAULT_LIST, repo="RogoLabs/RBP", allow_remote=True):
 
     auto, err, capped = set(), None, 0
     if allow_remote:
-        found, err = from_advisories(repo=repo)
+        found, err = from_issues(repo=repo)
         if len(found) > MAX_AUTO:
             capped = len(found) - MAX_AUTO
             auto = set(sorted(found)[:MAX_AUTO])
-            print(f"  SUPPRESSION CAP HIT: private advisories named "
+            print(f"  SUPPRESSION CAP HIT: withhold requests named "
                   f"{len(found)} CVE IDs, above the {MAX_AUTO} per-run ceiling. "
                   f"Withholding {MAX_AUTO}; {capped} not withheld and needing a "
                   f"reviewed entry in {list_path}.")
         else:
             auto = found
-    expires_in = None if err else token_expiry_days()
-    if expires_in is not None and expires_in <= EXPIRY_WARN_DAYS:
-        print(f"  WARNING: the advisory token expires in {expires_in} day(s). "
-              "When it does, embargo reports stop being honoured automatically. "
-              "Rotate it before then.")
-    s = Suppressions(committed, auto, error=err, key=key, capped=capped,
-                     expires_in=expires_in)
+    s = Suppressions(committed, auto, error=err, key=key, capped=capped)
     if err:
         print(f"  DEGRADED: suppression fast path unavailable ({err}). "
-              "Reports filed through private advisories are NOT being honoured "
-              "this run.")
+              "Withhold requests filed as issues are NOT being honoured this run.")
     elif auto:
-        print(f"  suppressing {len(auto)} row(s) from private advisory reports")
+        print(f"  suppressing {len(auto)} row(s) from withhold requests")
     if committed:
         print(f"  {len(committed)} committed suppression entry(ies) in force")
     return s
