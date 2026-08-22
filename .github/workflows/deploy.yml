@@ -24,6 +24,10 @@ on:
         description: 'Run the pipeline and build the site, publish nothing. Rehearse an epoch, a gate flip or a buffer change against real data.'
         type: boolean
         default: false
+      fire_drill:
+        description: 'Deliberately fail the build to exercise the failure notification. Publishes nothing. Safe: a failed build skips deploy, so the site keeps serving the previous good artefact.'
+        type: boolean
+        default: false
 
 env:
   # Precedence: dispatch input, then repository variable RBP_MIN_AGE_DAYS, then
@@ -90,6 +94,22 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+
+      # The fire drill. Condition 8 requires the notification to have been
+      # EXERCISED, not merely written, and a notification nobody has ever seen fire
+      # is a notification nobody knows is broken. An on-demand switch beats
+      # committing a deliberate bug: it is repeatable, it leaves no bad commit in
+      # history, and it fails at the top of the job so nothing downstream runs.
+      #
+      # Safe by construction. `deploy` is `needs: build` with no `if:`, so a failed
+      # build skips the deploy and Pages keeps serving the previous good artefact.
+      # Nothing publishes and no state advances.
+      - name: Fire drill
+        if: ${{ inputs.fire_drill == true }}
+        run: |
+          echo "FIRE DRILL: failing deliberately to exercise the failure notification."
+          echo "Nothing publishes. The site keeps serving the previous good build."
+          exit 1
 
       - uses: actions/setup-python@v5
         with:
@@ -247,6 +267,89 @@ jobs:
           git add -A
           git diff --staged --quiet || git commit -q -m "state: run $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -q origin HEAD:data
+
+  # THE FAILURE NOTIFICATION (review Part 2, condition 8).
+  #
+  # The pipeline publishes four times a day unattended. Before this, a silent stop
+  # looked exactly like a quiet week: the site kept serving the previous artefact
+  # with a freshness claim attached, and nothing anywhere said the run had died.
+  # GitHub's default behaviour emails the commit author, which does not fire usefully
+  # for a cron and is trivially filtered.
+  #
+  # DEDUPLICATED, because volume is how a notification stops being one. A pipeline
+  # broken for two days would otherwise file eight issues, and eight issues from a
+  # bot is indistinguishable from noise. One issue per failure EPISODE: opened on the
+  # first failure, commented on each subsequent one so the duration is visible, and
+  # closed automatically on the next success so the issue list reflects the current
+  # state rather than a history of every wobble.
+  notify:
+    needs: [test, build]
+    if: always() && (needs.test.result == 'failure' || needs.build.result == 'failure')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or update the failure issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          TEST_RESULT: ${{ needs.test.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          EVENT: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          BODY="The scheduled pipeline failed.
+
+          - test: \`$TEST_RESULT\`
+          - build: \`$BUILD_RESULT\`
+          - trigger: \`$EVENT\`
+          - run: $RUN_URL
+
+          The site is still serving the previous good build: nothing publishes and no
+          state advances when \`build\` fails, which is deliberate. What is lost is
+          freshness, so the count on the site is now older than it claims to be until
+          this is fixed.
+
+          This issue closes itself on the next successful run."
+          EXISTING=$(gh issue list --repo "$REPO" --state open                        --label pipeline-failure --limit 1 --json number                        --jq '.[0].number // empty')
+          if [ -n "$EXISTING" ]; then
+            echo "commenting on existing failure issue #$EXISTING"
+            gh issue comment "$EXISTING" --repo "$REPO" --body "$BODY"
+          else
+            echo "opening a new failure issue"
+            gh issue create --repo "$REPO" --label pipeline-failure \
+              --title "Pipeline failing: scheduled run did not publish" \
+              --body "$BODY"
+          fi
+
+  # Closes the failure issue once a run succeeds, so the issue list is current state
+  # rather than a log of every wobble. Runs on success only, and does nothing when
+  # there is no open failure issue.
+  recover:
+    needs: [test, build]
+    if: needs.test.result == 'success' && needs.build.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Close the failure issue if one is open
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          EXISTING=$(gh issue list --repo "$REPO" --state open                        --label pipeline-failure --limit 1 --json number                        --jq '.[0].number // empty')
+          if [ -z "$EXISTING" ]; then
+            echo "no open failure issue; nothing to close"
+            exit 0
+          fi
+          gh issue comment "$EXISTING" --repo "$REPO" \
+            --body "Recovered: $RUN_URL published successfully. Closing."
+          gh issue close "$EXISTING" --repo "$REPO"
 
   deploy:
     needs: build
