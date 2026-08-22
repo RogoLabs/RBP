@@ -123,7 +123,7 @@
   <div class="card-body">
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th>CVE ID</th><th class="num">Days public</th><th>Owner</th><th>Advisory title</th></tr></thead>
+        <thead><tr><th>CVE ID</th><th class="num">Days public</th><th>Owner</th><th>Advisory summary</th></tr></thead>
         <tbody>
           {% for r in changes.new | sortnum('days_public') %}
           <tr>

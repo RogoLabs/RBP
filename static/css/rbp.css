@@ -190,6 +190,18 @@ pre.api {
   font-size: 0.9rem;
 }
 
+/* Quoted policy text. Marked with a rule rather than italics: these are the
+   passages that cut AGAINST the site, so they have to read as the source's own
+   words and not as this site's aside. */
+blockquote {
+  margin: 0 0 var(--spacing-md) 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-left: 3px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 0.94rem;
+}
+blockquote p:last-child { margin-bottom: 0; }
+
 /* Degradation banner. Distinct from the staleness banner because the two say
    different things: stale means "this is old", degraded means "this is
    incomplete", and a run can be fresh and incomplete at the same time, which is

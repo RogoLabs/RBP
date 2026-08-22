@@ -41,6 +41,11 @@
   <a class="chart-export-btn" href="data/rbp.json" download>JSON</a>
 </div>
 
+  <p class="small text-muted mb-1">
+    <strong>Advisory summary</strong> is the upstream advisory’s own text, cut at
+    the first sentence, with URLs and tracker annotations removed. Not a title, and
+    not analysis by this site. <a href="data.html">Details</a>.
+  </p>
 <div class="tablewrap">
   <table class="rbp" id="tbl">
     <thead>
@@ -52,7 +57,7 @@
         <th data-sort="package">Package</th>
         <th class="num" data-sort="indep_sources">Independent sources</th>
         <th data-sort="sources">Sources</th>
-        <th>Advisory title</th>
+        <th>Advisory summary</th>
       </tr>
     </thead>
     <tbody id="body"></tbody>

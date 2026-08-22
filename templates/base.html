@@ -4,7 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>{% block title %}RBP Tracker{% endblock %}</title>
-<meta name="description" content="{% block description %}Every CVE ID that is reserved, publicly referenced, and still unpublished.{% endblock %}">
+{# The one string search engines and link previews quote verbatim, so it is the
+   most-read sentence on the site and has to survive a hostile headline attached
+   to it. It used to begin "Every CVE ID that is reserved..." on a run at 27.9%
+   effective CNA coverage: "every" is the absolute the holding page was corrected
+   to remove, and the site's own copy contradicts it five times over. It now
+   states the legitimacy claim (RBP is the Program's own defined state) before the
+   count, which is the order review item 11 asks for on every front door. #}
+<meta name="description" content="{% block description %}Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This is a count of that state, not a count of violations.{% endblock %}">
 {% if launched %}
 <meta name="robots" content="index, follow">
 {% else %}
@@ -16,7 +23,7 @@
 <link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/style.css?v={{ asset_v['style.css'] }}">
 <link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/rbp.css?v={{ asset_v['rbp.css'] }}">
 <meta property="og:title" content="{% block og_title %}RBP Tracker{% endblock %}">
-<meta property="og:description" content="{{ summary.total }} CVE IDs are reserved, publicly referenced, and unpublished.">
+<meta property="og:description" content="{{ summary.total }} CVE IDs are in the state the CVE Program calls Reserved but Public: reserved, referenced publicly, and still unpublished. A count of a state, not of violations.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rbptracker.org">
 </head>
@@ -43,6 +50,10 @@
         <li><a href="{{ p }}method.html">Method</a></li>
         <li><a href="{{ p }}policy.html">Policy</a></li>
         <li><a href="{{ p }}data.html">Data</a></li>
+        {# Linked only once launched. Pre-launch this page IS the front door, and
+           linking the holding page from the dashboard would put a dashboard link
+           on it in the one posture where nothing may link into the dashboard. #}
+        {% if launched %}<li><a href="{{ p }}about-this-count.html">About</a></li>{% endif %}
       </ul>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
         <span id="themeIcon">&#9790;</span>

@@ -624,14 +624,27 @@ def build(out, snap_root, data_dir):
             "# Pre-launch. The count is built on partial CNA coverage and is not\n"
             "# ready to be indexed or cited. See PLAN.md launch gate.\n"
             "User-agent: *\nDisallow: /\n")
-        # The holding page becomes the front door. Kept as a standalone file
-        # rather than a template: it shares nothing with the dashboard by
-        # design, and it must not link into it before launch.
-        landing = os.path.join(ROOT, "placeholder.html")
-        if os.path.exists(landing):
-            shutil.copyfile(landing, os.path.join(out, "index.html"))
-        else:
-            raise SystemExit("placeholder.html missing; cannot build pre-launch front door")
+    # The holding page, always written, at a permanent route.
+    #
+    # It used to be copied over index.html only in the `not launched` branch, so
+    # flipping RBP_LAUNCHED would have DELETED it, and with it the three paragraphs
+    # that do the site's framing work: the glossary provenance ("That is not our
+    # term. It is the CVE Program's own"), the full 4.5.1.7 quotation, and the
+    # narrow ask with its own safety reasoning. A grep of the built dashboard
+    # returned zero occurrences of "unblind" and zero of "glossary"; the only
+    # surviving ask was one line of footer small print. Launch day would have
+    # quietly destroyed the most careful copy on the site.
+    #
+    # So it lives at /about-this-count.html in both postures, and pre-launch it is
+    # ALSO the front door.
+    landing = os.path.join(ROOT, "placeholder.html")
+    if not os.path.exists(landing):
+        raise SystemExit("placeholder.html missing; cannot build the front door")
+    shutil.copyfile(landing, os.path.join(out, "about-this-count.html"))
+    if not launched:
+        # Kept as a standalone file rather than a template: it shares nothing
+        # with the dashboard by design, and it must not link into it before launch.
+        shutil.copyfile(landing, os.path.join(out, "index.html"))
 
     # Per-CNA detail. This is the page a CNA lands on when someone sends them
     # the link, so it carries the full row list and the method caveats rather

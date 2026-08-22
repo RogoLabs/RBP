@@ -56,13 +56,22 @@
       MIT, same as the <a href="https://github.com/RogoLabs/RBP">source</a>.
     </p>
     <p class="mb-0">
-      <strong>On the description column.</strong> An earlier version of this page called
-      these &ldquo;advisory titles, reproduced verbatim&rdquo; and claimed no vulnerability
-      detail beyond a title appears here. Neither was accurate. The field is the first 180
-      characters of whatever text the feed supplied, which is often a body rather than a
-      title, some entries are cut mid-word, and for some rows that text describes a
-      mechanism. Every character of it was already published by the feed it came from, and
-      nothing here is original analysis, but it is a truncated summary and not a title.
+      <strong>On the description column.</strong> It is an <em>advisory summary</em>, not a
+      title. Two earlier versions of this page were wrong about it in opposite directions:
+      the first called these &ldquo;advisory titles, reproduced verbatim&rdquo;, and the
+      correction then described a raw 180-character slice that cut mid-word. Neither
+      describes the field now.
+    </p>
+    <p class="mb-0">
+      What it is today: the advisory's own summary text, cut at the first sentence
+      boundary, with all URLs and all vulnerability-tracker annotations
+      (<span class="mono">NOTE:</span>, <span class="mono">Introduced with:</span>,
+      <span class="mono">Fixed by:</span>) removed before publication. Those annotations
+      carried commit links, and a pointer to the code that introduced a flaw is not a
+      description of it. Where nothing usable survives, the package name is shown instead.
+      Every remaining character was already published by the feed it came from, and
+      nothing here is original analysis. For some rows the summary does describe a
+      mechanism, because the upstream advisory did.
     </p>
   </div>
 </div>

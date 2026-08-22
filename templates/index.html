@@ -9,13 +9,28 @@
     published record in the CVE List.
   </p>
   <div class="lead-sub">
+    {# Legitimacy before accusation. The site's strongest sentence was the second
+       paragraph of /method, four items along the nav, while the lead screen's
+       first substantive claim was that the Program withholds a field. Read with a
+       hostile headline attached, that order makes the site the accuser and the
+       redaction the story. This order makes the Program's own definition the
+       story, which is both more defensible and more damaging. #}
     <p>
-      The CVE Program can tell you an ID is reserved. Ask its API and it returns the
-      state, then withholds the CNA that reserved it:
-      <span class="mono">"owning_cna":</span> <span class="redacted">[REDACTED]</span>.
-      So the owner on this site is reconstructed from public data, and
+      <strong>Reserved but Public is not our term.</strong> It is the CVE Program's
+      own: a CVE ID in the Reserved state that is referenced publicly but whose record
+      has not been published. RBP is a <em>state</em>, not a verdict, and the count above
+      is that state. Which makes it the Program's own metric, measured from outside.
+    </p>
+    <p class="mb-0">
+      The Program will confirm the state and withhold the owner. Ask its API and it
+      returns <span class="mono">"owning_cna":</span>
+      <span class="redacted">[REDACTED]</span> for exactly this population, so the owner
+      here is reconstructed from public data and
       <a href="method.html">graded in public</a> every time one of these records finally
-      publishes.
+      publishes. On this run
+      <strong>{{ ((1 - summary.inference.run_coverage) * 100) | round | int }}% of these
+      rows carry no owner at all</strong>, because the reconstruction abstained rather
+      than guess. Rendered from the run, not written down, so it cannot go stale.
     </p>
   </div>
 </div>
@@ -136,6 +151,73 @@
 </div>
 
 <div class="card">
+  <div class="card-header">
+    <h2 class="card-title">What the policy says in the CNAs' favour</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      This site quotes the policy's hardest line at the top of this page. The same
+      document carries four passages that cut the other way, and
+      <a href="policy.html">this project's own standard</a> is that quoting only the
+      parts that suit us would be selective. They are reproduced verbatim below, under
+      the section headings they actually occupy, because two of them are not in
+      <em>Timely Publication</em> and filing them there would misdescribe the policy.
+    </p>
+
+    <p class="small text-muted mb-1"><strong>Timely Publication</strong></p>
+    <blockquote>
+      <p>
+        CNAs should ensure timely publication of CVE Records, &ldquo;recognizing that such
+        publication may, at times, coincide with ongoing vulnerability or
+        <strong>incident response</strong> activities.&rdquo;
+      </p>
+      <p class="mb-0">
+        &ldquo;The CVE Program recognizes that internal processes may necessitate
+        <strong>short delays</strong>; however, time flexibility allowed by the CNA
+        Operational Rules should not be used to intentionally delay publication once an
+        advisory or Fix has been made public.&rdquo;
+      </p>
+    </blockquote>
+
+    <p class="small text-muted mb-1"><strong>Notification and Remediation</strong></p>
+    <blockquote class="mb-2">
+      <p class="mb-0">
+        The CNA is expected to publish RBPs as soon as possible and &ldquo;no later than
+        the deadline stated by their TL-Root or Root (which may account for factors such
+        as <strong>volume, complexity, and resource constraints</strong>).&rdquo;
+      </p>
+    </blockquote>
+
+    <p class="small text-muted mb-1"><strong>Enforcement</strong></p>
+    <blockquote class="mb-2">
+      <p class="mb-0">
+        &ldquo;The CVE Program may take further action depending on the CNA's
+        <strong>volume, history</strong>, and severity of RBPs.&rdquo;
+      </p>
+    </blockquote>
+
+    <p>
+      <strong>Taking those seriously changes what this site can claim, and it already
+      has.</strong> Nothing is listed until it has been public for
+      {{ summary.get('min_age_days', 7) }} days, which is
+      {{ (summary.get('min_age_days', 7) * 24 // expectation_hours) }}x the
+      {{ expectation_hours }}-hour window and well past any short delay or live incident
+      response. The median row here has been public
+      <strong>{{ summary.median_days }} days</strong>, and
+      {{ summary.age_buckets.get('180d+', 0) }} have been public more than 180 days. A
+      short delay is not what this list is measuring.
+    </p>
+    <p class="mb-0">
+      And the last two passages license the sentence this whole site is built around:
+      <strong>the only deadline that binds a specific row is one a Root set privately.</strong>
+      It accounts for volume and resource constraints, it is not published, and no
+      outside observer can see it. That is precisely why this site measures
+      <em>days public</em> and never calls a single row overdue.
+    </p>
+  </div>
+</div>
+
+<div class="card">
   <div class="card-header"><h2 class="card-title">The Program used to publish this</h2></div>
   <div class="card-body">
     <p>
@@ -143,16 +225,34 @@
       <a href="https://www.cve.org/About/Metrics">CVE Metrics page</a> in February 2021.
       It was
       <a href="https://github.com/CVEProject/cve-website/blob/main/src/views/About/Metrics.vue">commented
-      out of the page</a> on 7 February 2022, after about a year public. The markup is
-      still in the site source, frozen, its last column Q3&nbsp;2021.
+      out of the page</a> on 7 February 2022. The markup is still in the site source,
+      frozen, its last column Q3&nbsp;2021. Its public life was closer to
+      <strong>four months than a year</strong>: the markup was added in February 2021, but
+      the cve.org site itself did not reach
+      <a href="https://github.com/CVEProject/cve-website/releases/tag/v1.0.0">v1.0.0</a>
+      until September 2021, so most of that year the table existed in source rather than
+      in public.
+    </p>
+    <p>
+      The record shows routine maintenance rather than concealment, and all three
+      exculpatory facts belong here rather than one click away. The table was commented
+      out as <em>item 2 of a three-item</em> release, so it was not singled out:
+      <a href="https://github.com/CVEProject/cve-website/issues/842">issue&nbsp;#842</a>
+      lists item 1 as updating the Published Records and Reserved IDs tables with
+      Q4&nbsp;2021 stats and item 3 as converting the CNA-versus-CNA-LR table from
+      quarterly to annual totals. The v1.0 policy PDF had been withdrawn thirteen days
+      earlier pending a replacement. And the final column already read
+      <span class="mono">N/A</span>, so the series had stopped being populated before
+      anyone commented it out.
     </p>
     <p class="mb-0">
-      The record shows routine maintenance rather than concealment: the v1.0 policy PDF
-      was withdrawn thirteen days earlier pending a replacement, and the table was
-      commented out as item 2 of a three-item table restructuring. The replacement has now
-      arrived as v2.0.0. The series has not. The Metrics page today reports published
-      records and reserved IDs and nothing on the overlap between them, which is the gap
-      this site fills until the Program's own series returns.
+      The replacement has now arrived as v2.0.0. The series has not.
+      <strong>This site does not replace that series and is not comparable to it:</strong>
+      the archived table was a quarterly <em>flow</em> of newly identified RBPs measured
+      with authoritative internal access, and the count above is a live <em>stock</em>
+      discovered from feeds that reach a minority of CNAs, with roughly half the owners
+      inferred. RBP Policy v2.0.0 names "Program metrics and audits" as one of its own
+      identification channels; our ask is for the public face of that channel.
       <a href="policy.html">The full sequence, with the issue numbers</a>.
     </p>
   </div>
