@@ -281,6 +281,8 @@ is the CNA complying with the rules; the site reports it as the opposite.
 ### 6. Design launch day before setting `RBP_EPOCH`
 **BLOCKER. Raised by: Design, CNA, Actions, MITRE, CISA, Marketing, Python.**
 
+> **CLOSED 2026-08-22.** Startup epoch validator with the arithmetic in the message, the comparability guard keyed on presence (the same truthiness hole a third time), gone computed against epoch-eligible rows only, an explicit epoch_started case, the ID dump capped at 50, the zero state moved outside the total guard, and a permanent /backlog-at-launch.html archive published whether or not an epoch is set. Rehearsed against the real snapshot: 167 held-back rows render.
+
 Measured: the newest `public_date` in the reportable set is exactly `min_age_days` before
 the snapshot date, so a launch-day epoch excludes 100% of reportable rows for the whole
 buffer window, and `rbp/cli.py:127-131` raises `SystemExit` on exactly that condition.
@@ -670,6 +672,8 @@ the `clock.py:157-159` comment so it reads as an unmet condition.
 
 ### 14. Give consumers an envelope, a versioned schema and a citable target
 **HIGH, launch blocker. Raised by: Consumer (r2, r3), CISA (r2), Design, Marketing, CNA,
+
+> **CLOSED 2026-08-22.** Both JSON artefacts wrapped with schema_version, counts, coverage and caveats; one 31-column contract in rbp/schema.py replacing two disagreeing lists; owner is a CNA name or null rather than the magic string "unattributed"; a field dictionary on /data plus a CSV sidecar; resolved.json and held-back.json now reach consumers.
 MITRE.**
 
 `data/rbp.json` is `json.dump(ctx["rows"], ...)`: a bare array with no `schema_version`,
@@ -853,6 +857,8 @@ pipeline cannot produce.
 
 ### 17. Accessibility and the primary data surface
 **HIGH, launch blocker for the stated audience. Raised by: Design (r2, r3), endorsed by
+
+> **CLOSED 2026-08-22.** Project-owned contrast tokens measured against all three backgrounds in both themes (the abstention marker was 1.75:1 on most rows, now 5.44); the sticky header actually sticks, verified in a browser at 3,000px of scroll; sorting is keyboard-reachable; aria-live, captions, scope, focus treatment, a mobile card layout, a print block that preserves the certainty vocabulary, an h1 on the front page, and empty states. One bug only the browser caught: the bulk scope edit mangled 14 thead tags.
 CISA on Section 508 grounds, and by Marketing on positioning grounds.**
 
 Two reviewers independently measured these and one called them disqualifying for a
@@ -953,6 +959,8 @@ describes what the code does.
 
 ### 19. Decide the MITRE framing before a journalist decides it
 **BLOCKER (a decision, not a code change). Raised by: Marketing (r2, r3), MITRE (r2),
+
+> **CLOSED 2026-08-22.** The one-CNA share tile is gone from the lead screen (a leaderboard with one entrant) and moved to /method as an instrument reading; a distribution over named CNAs replaces it; the delegation limit is quoted on /method and every /cna page; the answer to "so is the largest holder the worst offender?" is on the site; and the delegation sentence is pinned in tests/test_policy.py.
 CNA (r2), CISA (r3), Design.**
 
 Three facts that are individually documented above and only become a problem together.
@@ -989,6 +997,8 @@ in, is not supported by the data, and would make the ask unwinnable.
 
 ### 20. Bound the lead screen, and lead with the defensible number
 **HIGH, launch blocker. Raised by: Design (x3), CISA, Consumer, Marketing (x2), CNA.**
+
+> **CLOSED 2026-08-22.** Leads with the corroborated figure (172, not 506); a bound strip generated from summary; every tile states its base; per-page og:url and canonical; og:description carries no count pre-launch; the pct filter is one decimal.
 
 The count is the whole product and it carries none of its qualifiers. `grep -rn coverage
 templates/` finds `summary.coverage` only at `method.html:249-257`; the built front page

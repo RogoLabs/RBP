@@ -508,6 +508,26 @@ leaderboard is the evidence; the redaction is the story.
   85 rows come from undated feeds and can never be reportable at any buffer, which is its
   own honest limitation to state on `/method`.
 
+## 8aa. Review Part 1: complete (2026-08-22)
+
+All twenty Part 1 items are closed, with per-item notes in REVIEW.md. Item 15 carries
+three named remainders rather than being marked done: `feed_csaf` calls `record_feed` on
+no path at all, so "Huawei yields 0" and "Huawei was never reached" are
+indistinguishable and CSAF is the only route to every ICS and enterprise vendor; `_get`
+still launders a 404 into an empty page for adapters other than ubuntu; and the
+comparability guard compares status names rather than window edges, so a moved page
+boundary still renders as "No longer listed".
+
+**What actually found the defects.** Five of this session's bugs were found by running
+the thing rather than by the suite, and every one lived at a seam between stages: a guard
+that blocked correct data, a launch gate with an unreachable ceiling, 521 rows published
+under a headline of 522, a withheld row surviving in the accuracy ledger, and iterating
+an object that cannot be enumerated by design. A sixth, fourteen mangled `<thead>` tags,
+was found only by querying the parsed DOM; every string-level test passed.
+
+The suite is thorough about what the data IS and thin about the seams between stages and
+about what the data is SAID to mean. That is the gap to aim the next review at.
+
 ## 8b. Guard taxonomy (review r3 item 10)
 
 Every guard in this codebase answers one question: **what does it cost to be wrong in
