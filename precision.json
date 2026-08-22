@@ -1343,6 +1343,30 @@
    "tier": "block",
    "k": 3,
    "on": "2026-08-22"
+  },
+  "CVE-2026-62321": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-62320": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-62319": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-62318": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
   }
  },
  "graded": [
