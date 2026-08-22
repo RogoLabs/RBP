@@ -25,6 +25,8 @@ the day `RBP_LAUNCHED` is flipped, then the rest by consequence over effort.
 
 ### 1. Stop the next scheduled run before touching anything else
 **BLOCKER. Effort: ten minutes. Raised by: GitHub Actions (r2, r3), Python (r2), all five
+
+> **CLOSED 2026-08-22.** RBP_PAUSE, dry_run and per-job timeouts exist; the suite gates the deploy.
 `held_back` findings.**
 
 `origin/data`'s tip is `9d0433d "state: run 2026-08-20T22:43Z"`; every remediation commit
@@ -51,6 +53,8 @@ Do now, in one commit:
 
 ### 2. Retract the CNA names already on the public data branch
 **BLOCKER. Raised independently by: Python (r2), CNA (r2), Consumer (r2), CISA (r2),
+
+> **CLOSED 2026-08-22.** History rewritten on the data branch; publish.check refuses by allowlist and by content. Remaining exposure (old blobs by SHA) recorded in docs/github-support-request.md, and the ticket was decided against.
 Marketing (r2), MITRE.**
 
 This is the only ungated-name exposure that has already shipped, and it is roughly ten
@@ -183,6 +187,8 @@ Implement the covered-set gate, which the panel converged on as the best availab
 
 ### 4. Build a correction channel before any name is public
 **BLOCKER. Cheapest item on the list. Raised by: Design, CNA (r3), CISA (r3), Marketing
+
+> **CLOSED 2026-08-22.** Rehearsed both ways against a live row 2026-08-22. Launch condition 4 met. One recorded deviation: the automatic route is a public request carrying no reason.
 (r3), MITRE, Consumer.**
 
 `templates/cna.html:27-33` promises that a wrong row, or one "under coordinated
@@ -220,6 +226,8 @@ only way to report it makes the site more dangerous while looking more careful.
 
 ### 5. Rejected and transferred closures: one crash, three false statements
 **BLOCKER. Reproduced by execution by three reviewers. Raised by: CNA, CISA, MITRE,
+
+> **CLOSED 2026-08-22.** Closures split by state; the null-sort crash and the three false statements are fixed and pinned.
 Consumer, Python.**
 
 `clock.reconcile` is terminal on `PUBLISHED` and `REJECTED` (clock.py:329) and sets
@@ -326,6 +334,8 @@ catches the harmless direction (unsetting the epoch) and misses the one that wil
 
 ### 7. Make the launch gate mean something, and enforce it at the transition
 **BLOCKER, and the gate definition itself should change. Raised by: Python, Actions,
+
+> **CLOSED 2026-08-22.** Gate enforced at the transition and reported on /method. The gate figure was ALSO found to be unreachable (own-channel had a 0.7% ceiling against a 50% threshold) and moved to cnas_effective.
 MITRE, CISA, Marketing, Consumer.**
 
 Three separate defects, and the panel's original fix for the first would have caused a
@@ -393,6 +403,8 @@ times a day while continuing to serve a count and a six-hour cadence claim.
 ### 8. Bind the 24-hour naming warrant in code
 **BLOCKER, launch gate candidate. Raised by: MITRE (r3). Not caught in rounds 1 or 2.**
 
+> **CLOSED 2026-08-22.** MIN_AGE_FLOOR_DAYS refuses a buffer inside the 4.5.1.7 window.
+
 The project's entire warrant for naming a reserving CNA is the 24-hour permission in CNA
 Rule 4.5.1.7, quoted on `placeholder.html`, on `/policy` and named as the R5 mitigation in
 PLAN.md. Nothing binds the buffer to it. `--min-age-days` is
@@ -415,6 +427,8 @@ constraint and the quoted rule are held together.
 
 ### 9. Move the artefact invariants onto the publishing path
 **BLOCKER. Raised by: Actions (r2), Python, Consumer, CNA, CISA, Marketing, MITRE.**
+
+> **CLOSED 2026-08-22.** build now needs test, and assert_artefact covers every artefact rather than a one-element tuple.
 
 The remediation plan above rests on assertions that currently have nowhere to run.
 `deploy.yml`'s build job has nine steps and none is pytest; `pip install -r
@@ -456,6 +470,8 @@ call sites in the suite take the `rows is None` branch that production never use
 
 ### 10. Decide the guard taxonomy once, before six guards are written in the same shape
 **BLOCKER (design decision, blocks items 6, 7, 15). Raised by: Actions (r3), with
+
+> **CLOSED 2026-08-22.** Written into PLAN.md 8b, with two of this session's own defects as the worked example in each direction.
 amendments from Consumer, CISA and Marketing on five separate findings.**
 
 At least six proposed guards land in the pipeline or build step, both of which precede
@@ -489,6 +505,8 @@ Split them:
 
 ### 11. The copy and citation pass
 **BLOCKER, and the cheapest work on this list: roughly two hours, all templates. Raised
+
+> **CLOSED 2026-08-22.** Copy and citation pass done; tests/test_copy.py pins the historical claims, which were the unpinned ones.
 by: CNA, MITRE (x4), CISA, Marketing (x3), Design.**
 
 Every item here is a place where the site's public surfaces contradict each other or omit
@@ -568,6 +586,8 @@ what cuts against them, on a project whose entire authority rests on quoting acc
 
 ### 12. Stop rendering unmeasurable as measured
 **BLOCKER. `must_rows` raised independently six times; the false-by-construction field
+
+> **CLOSED 2026-08-22.** Three columns with the unmeasurable bucket separated; 521 of 522 rows were being rendered as a measured third-party disclosure.
 audit raised by Consumer (r2); the rule default by CNA (r2).**
 
 The panel's characteristic finding, in five places at once.
@@ -621,6 +641,8 @@ detector on this list.
 
 ### 13. `self_disclosed` defaults to MUST on every ambiguous shape
 **BLOCKER. Reproduced by execution by five reviewers. Raised by: Python, Consumer, CNA,
+
+> **CLOSED 2026-08-22.** disclosure_order added; every ambiguous shape now reads unmeasurable rather than MUST.
 CISA, MITRE, Marketing.**
 
 `clock.py:192-195` is `mine = [...]; theirs = [...]; if not mine: return True` then
@@ -714,6 +736,10 @@ breaks silently.
 
 ### 15. Stop publishing degraded runs as clean ones
 **HIGH, launch blocker. Raised by: Python (x3), CNA, MITRE, Actions, CISA, Consumer,
+
+> **MOSTLY CLOSED 2026-08-22.** Carry-forward, three-state feed health, the degraded banner on every page, the published oracle tally, 429 handling with jitter, the frozen-corpus canary, and a per-feed magnitude guard that catches a silent shrink regardless of cause. That last one was deferred once and then fired for real: ubuntu went 3,995 -> 1,079 ids with its status improving from `truncated` to `ok`, and the headline fell 558 -> 458 with nothing marked degraded.
+>
+> **Still open:** feed_csaf calls record_feed on no path at all, so "Huawei yields 0" and "Huawei was never reached" remain indistinguishable; `_get` still launders a 404 for adapters other than ubuntu; and the comparability guard still compares status names rather than window edges, so a moved page boundary still renders as "No longer listed".
 Marketing.**
 
 The one direction of error this project cannot afford is a silent shrink, because a
@@ -790,6 +816,8 @@ shrinking count reads as the Program improving. Four mechanisms produce one toda
 
 ### 16. Make the freshness claim falsifiable, and notice when the pipeline stops
 **HIGH, launch blocker. Raised by: Python, Actions, MITRE, Design, Consumer, CISA,
+
+> **CLOSED 2026-08-22.** age_hours computed and rendered, with a staleness banner on every page.
 Marketing.**
 
 `stats["generated_at"]` is written at `cli.py:170` and `age_hours` is computed in
@@ -901,6 +929,8 @@ of the fixes are small.
 
 ### 18. Strip introducing and fixing commits out of published descriptions
 **BLOCKER, cheap. Raised by: Marketing (r3), with CISA (r2) amending its own detail-boundary
+
+> **CLOSED 2026-08-22.** classify.display_description strips annotations and URLs before the length cut; asserted at publish time.
 finding to the same conclusion.**
 
 Measured over the 150 published rows: 13 descriptions contain a URL and 11 carry Debian
