@@ -1,10 +1,82 @@
-# GitHub Support request: purge unreferenced blobs on RogoLabs/RBP
+# GitHub Support request: NOT SENT, and why
 
-**Status: drafted, not sent.** Sending this is Jerry's call, since it is
-correspondence in his name to a third party. Everything it asks for has already
-been verified as necessary (see the verification section).
+**Status: decided against, 2026-08-22.** Jerry's call. The drafted letter is kept
+below in case the position changes, but the decision is not to open a ticket.
 
-## Why this is needed
+## The decision
+
+GitHub's documented policy for removing data after a history rewrite says:
+
+> GitHub Support won't remove non-sensitive data, and will only assist in the
+> removal of sensitive data in cases where we determine that the risk can't be
+> mitigated by rotating affected credentials.
+
+The retracted content is not credentials. There is nothing to rotate, and nothing
+that maps onto the criterion Support applies. Chasing a ticket that the published
+policy says would be declined is not worth the effort, and the content is
+interesting rather than genuinely sensitive.
+
+Two facts checked while deciding, both of which narrow the exposure:
+
+- **Zero pull requests have ever existed on `RogoLabs/RBP`.** The rewrite was
+  against a directly-pushed branch, so there are no cached PR views or diff
+  fragments holding the content. PR dereferencing is the largest part of what
+  Support does in these cases and none of it applies.
+- The three blobs were confirmed still fetchable by SHA on 2026-08-22, and are
+  expected to stay that way until GitHub runs garbage collection on its own
+  schedule.
+
+## What this means, stated plainly
+
+Anyone who already knows one of the three SHAs can still retrieve that content.
+Nobody can discover the SHAs from the repository itself: the rewritten `data`
+branch does not reference them, a fresh clone does not carry them, and they appear
+in no tag, branch or PR. They are unreferenced objects reachable only by exact
+hash.
+
+So the retraction is complete against discovery and incomplete against replay.
+That is the accepted position, not an oversight.
+
+**The mitigations that actually matter were code, and they have shipped:**
+
+- The pipeline no longer produces `backlog_full.json` or `report.md` as published
+  artefacts, and no longer writes CNA names into the `precision.json` predictions
+  map for withheld rows.
+- `rbp.publish.check` refuses to publish any file off an explicit allowlist, any
+  row naming a CNA on an uncounted row, any name outside the run's covered set,
+  and any ledger prediction for an unpublished row. Verified against both real
+  leaks.
+- `inference.attribute` now vetoes a name on a confident contradiction, which is
+  what the two verified misattributions below would hit today.
+
+## The local archive
+
+A full pre-rewrite mirror was moved out of `/tmp` on 2026-08-22 to:
+
+    ~/.rbp-retraction/rbp-data-branch-prerewrite-2026-08-21.tar.gz
+
+Directory `700`, file `600`, not inside any git repository and not cloud-synced.
+It was in `/tmp` at mode `644`, where macOS would eventually purge it.
+
+**It contains exactly the retracted content and must not be published anywhere.**
+Verified 2026-08-22: all three blobs are present in it, in two copies (a bare
+mirror and a working snapshot).
+
+Deliberately **moved rather than deleted.** The original note said to delete it
+once a Support request was confirmed complete; no request is being made, so that
+condition can never be met, and the archive is the only remaining record of what
+was actually published. If a third party ever cites a withdrawn attribution, this
+is the only way to establish what the site did and did not say. Deleting it would
+remove the ability to answer that.
+
+---
+
+## Appendix: the drafted letter, unsent
+
+Kept verbatim for the record. Every factual claim in it was verified on
+2026-08-22 before the decision not to send.
+
+### Why this was thought necessary
 
 On 2026-08-21 the `data` branch of the public repository `RogoLabs/RBP` had its
 history rewritten with `git filter-repo` to remove three classes of content that
@@ -12,48 +84,53 @@ should never have been published:
 
 - `snapshots/*/backlog_full.json`, the ungated backlog, carrying inferred CVE
   Numbering Authority attributions on rows the site deliberately withholds.
+  Verified: 712 rows, 366 of them carrying an owner name.
 - `snapshots/*/report.md`, whose first line reads "Internal / pre-preview. Do not
   forward."
-- `snapshots/*/held_back.json`, which carried inferred CNA names on rows as young
-  as one day, i.e. exactly the rows a coordination buffer exists to withhold.
 - The `predictions` map inside `precision.json`, which named a CNA for 366
   reserved CVE IDs.
 
-The rewrite succeeded and a fresh clone shows no trace. **The old blobs remain
-fetchable by SHA through the API**, which we verified directly:
+Blob identities confirmed 2026-08-22:
 
 ```
-GET /repos/RogoLabs/RBP/git/blobs/344587d5d8dab6bdfaf6d9e6a8f043ffd0184345 -> 200
-GET /repos/RogoLabs/RBP/git/blobs/0157cefd3803d3a08d7af0949a1b7b0727e6c5cf -> 200
-GET /repos/RogoLabs/RBP/git/blobs/3ddd92e79cd955b35d2fc77289105062023dc752 -> 200
+344587d5d8dab6bdfaf6d9e6a8f043ffd0184345  627394 B  backlog_full.json
+0157cefd3803d3a08d7af0949a1b7b0727e6c5cf   12888 B  report.md
+3ddd92e79cd955b35d2fc77289105062023dc752   30407 B  precision.json predictions
 ```
 
-Unreferenced objects stay reachable on a public repository until GitHub runs
-garbage collection, so the rewrite alone does not complete the retraction.
+All three returned HTTP 200 by SHA on 2026-08-22.
 
-## What matters about this content
+### What mattered about this content
 
 These are attributions of responsibility to named organisations, generated by
-statistical inference, on vulnerability records that are not yet public in the
-CVE List. Some of those attributions are known to be wrong: an internal review
-identified specific rows where a WordPress-ecosystem CNA had been named on a
-Linux distribution vulnerability. The project has since added a gate that
-withholds a name whenever an independent signal contradicts it.
+statistical inference, on vulnerability records that are not yet public in the CVE
+List. Some of those attributions are wrong. The two verified cases, read directly
+out of the retracted blob:
 
-The risk is not to us. It is that a third party could cite a withdrawn
+| named CNA | package | vendor |
+|---|---|---|
+| Wordfence | qemu | Amazon Linux |
+| WPScan | ansible | Red Hat |
+
+Both are WordPress-ecosystem CNAs named on Linux distribution vulnerabilities.
+
+The risk was never to us. It is that a third party could cite a withdrawn
 attribution against an organisation that never had a way to see or correct it.
 
-## The request
+### What would have been asked
 
-Please run garbage collection on `RogoLabs/RBP` so that unreferenced objects on
-the rewritten `data` branch are no longer retrievable by SHA. We are not asking
-for anything to be deleted from the current history: the `data` branch tip and
-its full commit series are intended to stay public.
+Garbage collection on `RogoLabs/RBP` so unreferenced objects on the rewritten
+`data` branch stop being retrievable by SHA. Not deletion from current history:
+the `data` branch tip and its commit series are intended to stay public. `main`
+was deliberately **not** rewritten (43 commits, original dates intact) and its
+objects should be left alone.
 
-Note that the `main` branch was deliberately **not** rewritten, so its object
-history should be left alone.
+GitHub also requires the `NOTE: First Changed Commit(s)` line from the
+`git-filter-repo` output. That output was not captured, and the rewrite ran in a
+temporary clone that no longer exists. It would have had to be reconstructed by
+diffing the archived pre-rewrite mirror against the current branch.
 
-## Verification to run afterwards
+### Verification that would have been run afterwards
 
 ```bash
 for sha in 344587d5d8dab6bdfaf6d9e6a8f043ffd0184345 \
@@ -65,14 +142,4 @@ for sha in 344587d5d8dab6bdfaf6d9e6a8f043ffd0184345 \
 done
 ```
 
-All three should return 404.
-
-## Local backup
-
-A full pre-rewrite mirror plus a working clone were archived to
-`/tmp/rbp-data-branch-prerewrite-2026-08-21.tar.gz` before the rewrite.
-
-**That archive contains exactly the content being retracted, so it must not be
-published anywhere.** It is deliberately not a GitHub Release asset. Move it
-somewhere private and durable, or delete it once the Support request is
-confirmed complete.
+All three would need to return 404.
