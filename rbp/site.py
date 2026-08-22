@@ -79,6 +79,14 @@ def _validated_launched(raw):
 
 LAUNCHED = _validated_launched(os.environ.get("RBP_LAUNCHED"))
 
+# Build the LAUNCHED posture even below the coverage gate, for rehearsal only.
+#
+# Deliberately a second variable rather than a mode of RBP_LAUNCHED: bypassing the
+# gate should take two explicit levers, so no single setting can both request a
+# launch and waive the check on it. The workflow sets this only on a dry run, where
+# the deploy job is skipped and the artefact is discarded.
+REHEARSE = (os.environ.get("RBP_REHEARSE") or "").strip() in ("1", "true", "yes")
+
 # The precision floor now lives in inference.MIN_GRADED, because whoever computes
 # the number has to be the one that floors it. Split across two modules, the raw
 # value reached summary.json while the floored one reached precision.json, and both
@@ -361,9 +369,28 @@ def load(snap_root, data_dir):
     launched = LAUNCHED
     gate = _gate_status(summary)
     if launched and not gate["cleared"]:
-        print(f"REFUSING TO LAUNCH: {gate['reason']}. "
-              "Serving the pre-launch page instead.")
-        launched = False
+        # REHEARSAL ESCAPE, and only that.
+        #
+        # The demotion is correct for a real run: a launch below coverage must serve
+        # the pre-launch page rather than the dashboard. But it also made the launch
+        # rehearsal impossible, which the first rehearsal proved by building the
+        # holding page while every other lever said LAUNCHED. So the one thing
+        # condition 9 exists to prevent, launch day being the first execution of the
+        # launched code path, survived a green rehearsal.
+        #
+        # RBP_REHEARSE=1 skips the demotion. The workflow sets it only on a dry run,
+        # where `deploy` is skipped, so the artefact is built and discarded. It is a
+        # separate variable from RBP_LAUNCHED on purpose: someone who sets
+        # RBP_LAUNCHED alone still gets the demotion, and bypassing the gate takes
+        # two deliberate levers rather than one.
+        if REHEARSE:
+            print(f"REHEARSAL: {gate['reason']}, but RBP_REHEARSE=1, so the "
+                  "LAUNCHED posture is being built anyway. This artefact must not "
+                  "be published; the workflow only sets this on a dry run.")
+        else:
+            print(f"REFUSING TO LAUNCH: {gate['reason']}. "
+                  "Serving the pre-launch page instead.")
+            launched = False
     grader = _read(os.path.join(data_dir, "precision.json"),
                    {"graded": [], "predictions": {}, "history": []})
     resolutions = _read(os.path.join(data_dir, "resolutions.json"),

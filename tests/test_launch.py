@@ -148,3 +148,58 @@ def test_declared_statuses_match_what_is_actually_built(n, expect_met):
     assert (c["status"] == launch.MET) is expect_met, (
         f"condition {n} changed status; update this test in the same commit that "
         "changed it, and say so in the message")
+
+
+# --------------------------------------------------------------------------
+# the rehearsal escape (Part 2 condition 9)
+# --------------------------------------------------------------------------
+
+def test_launched_alone_is_still_demoted_below_the_gate(tmp_path, monkeypatch):
+    """The demotion is correct for a real run and must not weaken. Bypassing the
+    coverage gate takes TWO deliberate levers, so no single setting can both request
+    a launch and waive the check on it."""
+    import importlib
+    from rbp import site as site_mod
+    monkeypatch.setenv("RBP_LAUNCHED", "1")
+    monkeypatch.delenv("RBP_REHEARSE", raising=False)
+    importlib.reload(site_mod)
+    assert site_mod.REHEARSE is False
+    monkeypatch.delenv("RBP_LAUNCHED", raising=False)
+    importlib.reload(site_mod)
+
+
+def test_the_rehearsal_flag_is_a_separate_lever(monkeypatch):
+    """Not a mode of RBP_LAUNCHED. A single variable that both requests a launch and
+    waives the gate is one typo away from launching below coverage."""
+    import importlib
+    from rbp import site as site_mod
+    for val, expect in (("1", True), ("true", True), ("yes", True),
+                        ("", False), ("0", False)):
+        monkeypatch.setenv("RBP_REHEARSE", val)
+        importlib.reload(site_mod)
+        assert site_mod.REHEARSE is expect, val
+    monkeypatch.delenv("RBP_REHEARSE", raising=False)
+    importlib.reload(site_mod)
+
+
+def test_the_workflow_only_sets_the_rehearsal_flag_on_a_dry_run():
+    """The escape is safe because deploy is skipped on a dry run, so the artefact is
+    built and discarded. If the flag could be set on a real run it would be a gate
+    bypass rather than a rehearsal."""
+    import pathlib
+    wf = (pathlib.Path(__file__).parent.parent / ".github" / "workflows"
+          / "deploy.yml").read_text()
+    line = next(l for l in wf.splitlines() if l.strip().startswith("RBP_REHEARSE:"))
+    assert "inputs.dry_run == true" in line, (
+        "RBP_REHEARSE is not gated on dry_run, so it is a gate bypass")
+    assert "rehearse_launch == true" in line
+
+
+def test_the_rehearsal_escape_announces_itself_loudly():
+    """A build that silently ignores the gate is indistinguishable from a gate that
+    stopped working."""
+    import inspect
+    from rbp import site as site_mod
+    src = inspect.getsource(site_mod.load)
+    i = src.index("REHEARSE")
+    assert "must not" in src[i:i + 900], "the rehearsal message does not warn"
