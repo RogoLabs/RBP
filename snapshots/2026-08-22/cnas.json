@@ -1,12 +1,12 @@
 [
  {
   "cna": "GitHub_M",
-  "outstanding": 215,
+  "outstanding": 204,
   "oldest_days": 128,
   "median_days_public": 44,
-  "past_expectation": 215,
+  "past_expectation": 204,
   "must_rows": 0,
-  "should_rows": 215,
+  "should_rows": 204,
   "published_12mo": 10391,
   "resolved_n": 39,
   "median_days_to_publish": 50
