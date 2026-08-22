@@ -1,0 +1,2163 @@
+{
+ "source": "https://raw.githubusercontent.com/CVEProject/cve-website/dev/src/assets/data/CNAsList.json",
+ "fetched": "2026-08-22",
+ "count": 539,
+ "cnas": [
+  {
+   "short_name": "2N",
+   "organization": "2N Telekomunikace a.s."
+  },
+  {
+   "short_name": "42Gears",
+   "organization": "42Gears Mobility Systems Pvt Ltd"
+  },
+  {
+   "short_name": "9front",
+   "organization": "9front Systems"
+  },
+  {
+   "short_name": "@huntr_ai",
+   "organization": "Protect AI (formerly huntr.dev)"
+  },
+  {
+   "short_name": "ABB",
+   "organization": "Asea Brown Boveri Ltd. (ABB)"
+  },
+  {
+   "short_name": "Absolute",
+   "organization": "Absolute Software"
+  },
+  {
+   "short_name": "Acer",
+   "organization": "Acer Inc."
+  },
+  {
+   "short_name": "Acronis",
+   "organization": "Acronis International GmbH"
+  },
+  {
+   "short_name": "ADI",
+   "organization": "Analog Devices, Inc."
+  },
+  {
+   "short_name": "adobe",
+   "organization": "Adobe Systems Incorporated"
+  },
+  {
+   "short_name": "AHA",
+   "organization": "Austin Hackers Anonymous"
+  },
+  {
+   "short_name": "airbus",
+   "organization": "Airbus"
+  },
+  {
+   "short_name": "Airlock",
+   "organization": "Airlock by Ergon"
+  },
+  {
+   "short_name": "AISLE",
+   "organization": "AISLE Incorporated"
+  },
+  {
+   "short_name": "AlgoSec",
+   "organization": "AlgoSec"
+  },
+  {
+   "short_name": "Alias",
+   "organization": "Alias Robotics S.L."
+  },
+  {
+   "short_name": "alibaba",
+   "organization": "Alibaba, Inc."
+  },
+  {
+   "short_name": "Almaviva",
+   "organization": "Almaviva S.p.A."
+  },
+  {
+   "short_name": "Altera",
+   "organization": "Altera"
+  },
+  {
+   "short_name": "Altium",
+   "organization": "Altium"
+  },
+  {
+   "short_name": "AMD",
+   "organization": "Advanced Micro Devices Inc."
+  },
+  {
+   "short_name": "AMI",
+   "organization": "AMI"
+  },
+  {
+   "short_name": "Ampere",
+   "organization": "Ampere Computing"
+  },
+  {
+   "short_name": "AMZN",
+   "organization": "Amazon"
+  },
+  {
+   "short_name": "Anolis",
+   "organization": "OpenAnolis"
+  },
+  {
+   "short_name": "Antenna",
+   "organization": "Antenna"
+  },
+  {
+   "short_name": "Anthropic",
+   "organization": "Anthropic, PBC"
+  },
+  {
+   "short_name": "apache",
+   "organization": "Apache Software Foundation"
+  },
+  {
+   "short_name": "AppCheck",
+   "organization": "AppCheck Ltd."
+  },
+  {
+   "short_name": "apple",
+   "organization": "Apple Inc."
+  },
+  {
+   "short_name": "arcinfo",
+   "organization": "ARC Informatique"
+  },
+  {
+   "short_name": "ARCON",
+   "organization": "ARCON Techsolutions Private Limited"
+  },
+  {
+   "short_name": "Arista",
+   "organization": "Arista Networks, Inc."
+  },
+  {
+   "short_name": "Arm",
+   "organization": "Arm Limited"
+  },
+  {
+   "short_name": "Armis",
+   "organization": "Armis, Inc."
+  },
+  {
+   "short_name": "Arteche",
+   "organization": "Arteche"
+  },
+  {
+   "short_name": "Arxscan",
+   "organization": "Arxscan, Inc."
+  },
+  {
+   "short_name": "ASR",
+   "organization": "ASR Microelectronics Co., Ltd."
+  },
+  {
+   "short_name": "ASRG",
+   "organization": "Automotive Security Research Group (ASRG)"
+  },
+  {
+   "short_name": "ASUS",
+   "organization": "ASUSTeK Computer Incorporation"
+  },
+  {
+   "short_name": "ASUSTOR",
+   "organization": "ASUSTOR, Inc."
+  },
+  {
+   "short_name": "ATIS",
+   "organization": "ATISoluciones Dise\u00f1o de Sistemas Electr\u00f3nicos, S.L."
+  },
+  {
+   "short_name": "atlassian",
+   "organization": "Atlassian"
+  },
+  {
+   "short_name": "autodesk",
+   "organization": "Autodesk"
+  },
+  {
+   "short_name": "Automox",
+   "organization": "Automox Inc."
+  },
+  {
+   "short_name": "avaya",
+   "organization": "Avaya, Inc."
+  },
+  {
+   "short_name": "Axis",
+   "organization": "Axis Communications AB"
+  },
+  {
+   "short_name": "AxxonSoft",
+   "organization": "AxxonSoft Limited"
+  },
+  {
+   "short_name": "azure-access",
+   "organization": "Azure Access Technology"
+  },
+  {
+   "short_name": "B.Braun",
+   "organization": "B. Braun SE"
+  },
+  {
+   "short_name": "BAE",
+   "organization": "BAE Systems, Inc."
+  },
+  {
+   "short_name": "Baidu",
+   "organization": "Baidu, Inc."
+  },
+  {
+   "short_name": "Baxter",
+   "organization": "Baxter Healthcare"
+  },
+  {
+   "short_name": "BCNY",
+   "organization": "The Browser Company of New York"
+  },
+  {
+   "short_name": "bcorg",
+   "organization": "Legion of the Bouncy Castle Inc."
+  },
+  {
+   "short_name": "BD",
+   "organization": "Becton, Dickinson and Company (BD)"
+  },
+  {
+   "short_name": "BECDX",
+   "organization": "Beckman Coulter Diagnostics"
+  },
+  {
+   "short_name": "BECLS",
+   "organization": "Beckman Coulter Life Sciences"
+  },
+  {
+   "short_name": "BHV",
+   "organization": "Biohacking Village"
+  },
+  {
+   "short_name": "Bitdefender",
+   "organization": "Bitdefender"
+  },
+  {
+   "short_name": "bizerba",
+   "organization": "Bizerba SE & Co. KG"
+  },
+  {
+   "short_name": "blackberry",
+   "organization": "BlackBerry"
+  },
+  {
+   "short_name": "BlackDuck",
+   "organization": "Black Duck Software, Inc."
+  },
+  {
+   "short_name": "BLSOPS",
+   "organization": "Black Lantern Security"
+  },
+  {
+   "short_name": "BombadilSystems",
+   "organization": "Bombadil Systems LLC"
+  },
+  {
+   "short_name": "bosch",
+   "organization": "Robert Bosch GmbH"
+  },
+  {
+   "short_name": "brocade",
+   "organization": "Brocade Communications Systems LLC, a Broadcom Company"
+  },
+  {
+   "short_name": "BT",
+   "organization": "BeyondTrust Inc."
+  },
+  {
+   "short_name": "Bugcrowd",
+   "organization": "Bugcrowd Inc."
+  },
+  {
+   "short_name": "Bull",
+   "organization": "Bull SAS"
+  },
+  {
+   "short_name": "ByteDance",
+   "organization": "ByteDance, Ltd."
+  },
+  {
+   "short_name": "ca",
+   "organization": "CA Technologies - A Broadcom Company"
+  },
+  {
+   "short_name": "Caliptra",
+   "organization": "Caliptra Project"
+  },
+  {
+   "short_name": "Canon",
+   "organization": "Canon Inc."
+  },
+  {
+   "short_name": "Canon_EMEA",
+   "organization": "Canon EMEA"
+  },
+  {
+   "short_name": "canonical",
+   "organization": "Canonical Ltd."
+  },
+  {
+   "short_name": "Canva",
+   "organization": "Canva"
+  },
+  {
+   "short_name": "Carrier",
+   "organization": "Carrier Global Corporation"
+  },
+  {
+   "short_name": "Cato",
+   "organization": "Cato Networks"
+  },
+  {
+   "short_name": "Censys",
+   "organization": "Censys"
+  },
+  {
+   "short_name": "Centreon",
+   "organization": "Centreon"
+  },
+  {
+   "short_name": "CEP",
+   "organization": "Cepheid"
+  },
+  {
+   "short_name": "CERT-In",
+   "organization": "Indian Computer Emergency Response Team (CERT-In)"
+  },
+  {
+   "short_name": "CERT-PL",
+   "organization": "CERT.PL"
+  },
+  {
+   "short_name": "certcc",
+   "organization": "CERT/CC"
+  },
+  {
+   "short_name": "CERTVDE",
+   "organization": "CERT@VDE"
+  },
+  {
+   "short_name": "Checkmarx",
+   "organization": "Checkmarx"
+  },
+  {
+   "short_name": "Checkmk",
+   "organization": "Checkmk GmbH"
+  },
+  {
+   "short_name": "checkpoint",
+   "organization": "Check Point Software Ltd."
+  },
+  {
+   "short_name": "Chrome",
+   "organization": "Chrome"
+  },
+  {
+   "short_name": "ChromeOS",
+   "organization": "ChromeOS Project"
+  },
+  {
+   "short_name": "Ciena",
+   "organization": "Ciena Corporation"
+  },
+  {
+   "short_name": "CIRCL",
+   "organization": "Computer Incident Response Center Luxembourg (CIRCL)"
+  },
+  {
+   "short_name": "cirosec",
+   "organization": "cirosec GmbH"
+  },
+  {
+   "short_name": "CISA",
+   "organization": "Cybersecurity and Infrastructure Security Agency (CISA)"
+  },
+  {
+   "short_name": "cisa-cg",
+   "organization": "Cybersecurity and Infrastructure Security Agency (CISA) U.S. Civilian Government"
+  },
+  {
+   "short_name": "cisco",
+   "organization": "Cisco Systems, Inc."
+  },
+  {
+   "short_name": "Citrix",
+   "organization": "Citrix Systems, Inc."
+  },
+  {
+   "short_name": "ClickHouse",
+   "organization": "ClickHouse, Inc."
+  },
+  {
+   "short_name": "cloudflare",
+   "organization": "Cloudflare, Inc."
+  },
+  {
+   "short_name": "CODRA",
+   "organization": "CODRA"
+  },
+  {
+   "short_name": "Commvault",
+   "organization": "Commvault Systems Inc."
+  },
+  {
+   "short_name": "ConcreteCMS",
+   "organization": "Concrete CMS"
+  },
+  {
+   "short_name": "ConnectWise",
+   "organization": "ConnectWise LLC"
+  },
+  {
+   "short_name": "CoolKit",
+   "organization": "SHENZHEN CoolKit Technology CO., LTD."
+  },
+  {
+   "short_name": "CPANSec",
+   "organization": "CPAN Security Group"
+  },
+  {
+   "short_name": "Crafter_CMS",
+   "organization": "Crafter CMS"
+  },
+  {
+   "short_name": "Crestron",
+   "organization": "Crestron Electronics, Inc."
+  },
+  {
+   "short_name": "Cribl",
+   "organization": "Cribl, Inc."
+  },
+  {
+   "short_name": "CrowdStrike",
+   "organization": "CrowdStrike Holdings, Inc."
+  },
+  {
+   "short_name": "CSA",
+   "organization": "Cyber Security Agency of Singapore"
+  },
+  {
+   "short_name": "CSAI",
+   "organization": "Cloud Security Alliance"
+  },
+  {
+   "short_name": "CSW",
+   "organization": "Cyber Security Works Pvt. Ltd."
+  },
+  {
+   "short_name": "CTOne",
+   "organization": "CTOne Inc."
+  },
+  {
+   "short_name": "curl",
+   "organization": "curl"
+  },
+  {
+   "short_name": "CyberArk",
+   "organization": "CyberArk Labs"
+  },
+  {
+   "short_name": "CyberDanube",
+   "organization": "CyberDanube"
+  },
+  {
+   "short_name": "cygence",
+   "organization": "Cygence Pty Ltd"
+  },
+  {
+   "short_name": "Cynet",
+   "organization": "Cynet Security Inc."
+  },
+  {
+   "short_name": "Cytiva",
+   "organization": "Cytiva"
+  },
+  {
+   "short_name": "dahua",
+   "organization": "Dahua Technologies"
+  },
+  {
+   "short_name": "Danfoss",
+   "organization": "Danfoss"
+  },
+  {
+   "short_name": "Dassault_Systemes",
+   "organization": "Dassault Syst\u00e8mes"
+  },
+  {
+   "short_name": "debian",
+   "organization": "Debian GNU/Linux"
+  },
+  {
+   "short_name": "Delinea",
+   "organization": "Delinea, Inc."
+  },
+  {
+   "short_name": "dell",
+   "organization": "Dell"
+  },
+  {
+   "short_name": "Deltaww",
+   "organization": "Delta Electronics, Inc."
+  },
+  {
+   "short_name": "DevCycle",
+   "organization": "DevCycle"
+  },
+  {
+   "short_name": "DEVOLUTIONS",
+   "organization": "Devolutions Inc."
+  },
+  {
+   "short_name": "Dfinity",
+   "organization": "DFINITY Foundation"
+  },
+  {
+   "short_name": "DHIS2",
+   "organization": "The HISP Centre at the University of Oslo"
+  },
+  {
+   "short_name": "Digi",
+   "organization": "Digi International Inc."
+  },
+  {
+   "short_name": "directcyber",
+   "organization": "DirectCyber"
+  },
+  {
+   "short_name": "DIVD",
+   "organization": "Dutch Institute for Vulnerability Disclosure (DIVD)"
+  },
+  {
+   "short_name": "Docker",
+   "organization": "Docker Inc."
+  },
+  {
+   "short_name": "Document_Fdn.",
+   "organization": "Document Foundation, The"
+  },
+  {
+   "short_name": "dotCMS",
+   "organization": "dotCMS LLC"
+  },
+  {
+   "short_name": "Dragos",
+   "organization": "Dragos, Inc."
+  },
+  {
+   "short_name": "Dremio",
+   "organization": "Dremio Corporation"
+  },
+  {
+   "short_name": "drupal",
+   "organization": "Drupal.org"
+  },
+  {
+   "short_name": "DSF",
+   "organization": "Django Software Foundation"
+  },
+  {
+   "short_name": "DTEX",
+   "organization": "DTEX Systems, Inc."
+  },
+  {
+   "short_name": "DualVS",
+   "organization": "Dual Vipers LLC"
+  },
+  {
+   "short_name": "EA",
+   "organization": "Electronic Arts, Inc."
+  },
+  {
+   "short_name": "Eaton",
+   "organization": "Eaton"
+  },
+  {
+   "short_name": "Echo",
+   "organization": "Echo Software Ltd."
+  },
+  {
+   "short_name": "eclipse",
+   "organization": "Eclipse Foundation"
+  },
+  {
+   "short_name": "eclypsium",
+   "organization": "Eclypsium, Inc."
+  },
+  {
+   "short_name": "EDB",
+   "organization": "EnterpriseDB Corporation"
+  },
+  {
+   "short_name": "Edgewatch",
+   "organization": "Edgewatch Security Intelligence"
+  },
+  {
+   "short_name": "EEF",
+   "organization": "Erlang Ecosystem Foundation"
+  },
+  {
+   "short_name": "ELAN",
+   "organization": "ELAN Microelectronics Corp."
+  },
+  {
+   "short_name": "elastic",
+   "organization": "Elastic"
+  },
+  {
+   "short_name": "ENISA",
+   "organization": "EU Agency for Cybersecurity (ENISA)"
+  },
+  {
+   "short_name": "Entrust",
+   "organization": "Entrust Corporation"
+  },
+  {
+   "short_name": "ERIC",
+   "organization": "Ericsson"
+  },
+  {
+   "short_name": "ESET",
+   "organization": "ESET, spol. s r.o."
+  },
+  {
+   "short_name": "Esri",
+   "organization": "Environmental Systems Research Institute, Inc."
+  },
+  {
+   "short_name": "Everpure",
+   "organization": "Everpure, Inc."
+  },
+  {
+   "short_name": "ExtremeNetworks",
+   "organization": "Extreme Networks, Inc."
+  },
+  {
+   "short_name": "F5",
+   "organization": "F5, Inc."
+  },
+  {
+   "short_name": "FB",
+   "organization": "Fujifilm Business Innovation Corp."
+  },
+  {
+   "short_name": "fedora",
+   "organization": "Fedora Project"
+  },
+  {
+   "short_name": "FERMAX",
+   "organization": "Fermax Technologies SLU"
+  },
+  {
+   "short_name": "Fidelis",
+   "organization": "Fidelis Security, LLC"
+  },
+  {
+   "short_name": "flexera",
+   "organization": "Flexera Software LLC"
+  },
+  {
+   "short_name": "floragunn",
+   "organization": "floragunn GmbH"
+  },
+  {
+   "short_name": "Fluid_Attacks",
+   "organization": "Fluid Attacks"
+  },
+  {
+   "short_name": "forcepoint",
+   "organization": "Forcepoint"
+  },
+  {
+   "short_name": "Forescout",
+   "organization": "Forescout Technologies"
+  },
+  {
+   "short_name": "fortinet",
+   "organization": "Fortinet, Inc."
+  },
+  {
+   "short_name": "Fortra",
+   "organization": "Fortra, LLC"
+  },
+  {
+   "short_name": "Foxit",
+   "organization": "Foxit Software Incorporated"
+  },
+  {
+   "short_name": "freebsd",
+   "organization": "FreeBSD"
+  },
+  {
+   "short_name": "FSI",
+   "organization": "Financial Security Institute (FSI)"
+  },
+  {
+   "short_name": "FSOFT",
+   "organization": "FPT Software Co., Ltd."
+  },
+  {
+   "short_name": "FTI",
+   "organization": "Fsas Technologies"
+  },
+  {
+   "short_name": "FULL",
+   "organization": "FULL INTERNET"
+  },
+  {
+   "short_name": "Gallagher",
+   "organization": "Gallagher Group Ltd."
+  },
+  {
+   "short_name": "GandC",
+   "organization": "Glyph & Cog, LLC"
+  },
+  {
+   "short_name": "GE_Healthcare",
+   "organization": "GE Healthcare"
+  },
+  {
+   "short_name": "GE_Vernova",
+   "organization": "GE Vernova"
+  },
+  {
+   "short_name": "GEN",
+   "organization": "Gen Digital Inc."
+  },
+  {
+   "short_name": "Genetec",
+   "organization": "Genetec Inc."
+  },
+  {
+   "short_name": "Gitea",
+   "organization": "Gitea Limited"
+  },
+  {
+   "short_name": "GitHub_M",
+   "organization": "GitHub, Inc."
+  },
+  {
+   "short_name": "GitHub_P",
+   "organization": "GitHub, Inc. (Products Only)"
+  },
+  {
+   "short_name": "GitLab",
+   "organization": "GitLab Inc."
+  },
+  {
+   "short_name": "glibc",
+   "organization": "GNU C Library"
+  },
+  {
+   "short_name": "Go",
+   "organization": "Go Project"
+  },
+  {
+   "short_name": "Google",
+   "organization": "Google LLC"
+  },
+  {
+   "short_name": "google_android",
+   "organization": "Android (associated with Google Inc. or Open Handset Alliance)"
+  },
+  {
+   "short_name": "Google_Devices",
+   "organization": "Google Devices"
+  },
+  {
+   "short_name": "GoogleCloud",
+   "organization": "Google Cloud"
+  },
+  {
+   "short_name": "GRAFANA",
+   "organization": "Grafana Labs"
+  },
+  {
+   "short_name": "graphql-java",
+   "organization": "GraphQL Java"
+  },
+  {
+   "short_name": "GreenRocketSecurity",
+   "organization": "Green Rocket Security Inc."
+  },
+  {
+   "short_name": "Gridware",
+   "organization": "Gridware Cybersecurity"
+  },
+  {
+   "short_name": "GV",
+   "organization": "GeoVision Inc."
+  },
+  {
+   "short_name": "gvision-it",
+   "organization": "GVision Italia S.r.l."
+  },
+  {
+   "short_name": "hackerone",
+   "organization": "HackerOne"
+  },
+  {
+   "short_name": "Hackrate",
+   "organization": "Hackrate Kft."
+  },
+  {
+   "short_name": "HackRTU",
+   "organization": "HackRTU"
+  },
+  {
+   "short_name": "Halborn",
+   "organization": "Halborn"
+  },
+  {
+   "short_name": "Hallo_Welt",
+   "organization": "Hallo Welt! GmbH"
+  },
+  {
+   "short_name": "Hanwha_Vision",
+   "organization": "Hanwha Vision Co., Ltd."
+  },
+  {
+   "short_name": "harborist",
+   "organization": "Harborist"
+  },
+  {
+   "short_name": "HashiCorp",
+   "organization": "HashiCorp Inc."
+  },
+  {
+   "short_name": "HCL",
+   "organization": "HCL Software"
+  },
+  {
+   "short_name": "HDFG",
+   "organization": "The HDF Group"
+  },
+  {
+   "short_name": "HDS",
+   "organization": "HDS a.s."
+  },
+  {
+   "short_name": "HemoCue",
+   "organization": "HemoCue AB"
+  },
+  {
+   "short_name": "HeroDevs",
+   "organization": "HeroDevs"
+  },
+  {
+   "short_name": "HiddenLayer",
+   "organization": "HiddenLayer, Inc."
+  },
+  {
+   "short_name": "hikvision",
+   "organization": "Hangzhou Hikvision Digital Technology Co., Ltd."
+  },
+  {
+   "short_name": "Hillstone",
+   "organization": "Hillstone Networks Inc."
+  },
+  {
+   "short_name": "Hitachi",
+   "organization": "Hitachi, Ltd."
+  },
+  {
+   "short_name": "Hitachi_Energy",
+   "organization": "Hitachi Energy"
+  },
+  {
+   "short_name": "Hitachi_Vantara",
+   "organization": "Hitachi Vantara"
+  },
+  {
+   "short_name": "Hologic",
+   "organization": "Hologic, Inc."
+  },
+  {
+   "short_name": "Honeywell",
+   "organization": "Honeywell International Inc."
+  },
+  {
+   "short_name": "Honor",
+   "organization": "Honor Device Co., Ltd."
+  },
+  {
+   "short_name": "hp",
+   "organization": "HP Inc."
+  },
+  {
+   "short_name": "hpe",
+   "organization": "Hewlett Packard Enterprise (HPE)"
+  },
+  {
+   "short_name": "hsi",
+   "organization": "Haverford Systems, Inc."
+  },
+  {
+   "short_name": "huawei",
+   "organization": "Huawei Technologies"
+  },
+  {
+   "short_name": "Huntress",
+   "organization": "Huntress Labs Inc."
+  },
+  {
+   "short_name": "HYPR",
+   "organization": "HYPR Corp"
+  },
+  {
+   "short_name": "ibm",
+   "organization": "IBM Corporation"
+  },
+  {
+   "short_name": "icscert",
+   "organization": "Cybersecurity and Infrastructure Security Agency (CISA) Industrial Control Systems (ICS)"
+  },
+  {
+   "short_name": "ICT",
+   "organization": "Integrated Control Technology LTD"
+  },
+  {
+   "short_name": "IDBS",
+   "organization": "ID Business Solutions"
+  },
+  {
+   "short_name": "IDEMIA",
+   "organization": "IDEMIA"
+  },
+  {
+   "short_name": "IDT-DNA",
+   "organization": "Integrated DNA Technologies, Inc."
+  },
+  {
+   "short_name": "Illumio",
+   "organization": "Illumio"
+  },
+  {
+   "short_name": "illumos",
+   "organization": "The illumos project"
+  },
+  {
+   "short_name": "imaginationtech",
+   "organization": "Imagination Technologies"
+  },
+  {
+   "short_name": "iManage",
+   "organization": "iManage LLC"
+  },
+  {
+   "short_name": "INCD",
+   "organization": "Israel National Cyber Directorate (INCD)"
+  },
+  {
+   "short_name": "INCIBE",
+   "organization": "Spanish National Cybersecurity Institute, S.A. (INCIBE)"
+  },
+  {
+   "short_name": "Insyde",
+   "organization": "Insyde Software"
+  },
+  {
+   "short_name": "intel",
+   "organization": "Intel Corporation"
+  },
+  {
+   "short_name": "Intigriti",
+   "organization": "Intigriti"
+  },
+  {
+   "short_name": "IoT83",
+   "organization": "IoT83 Ltd"
+  },
+  {
+   "short_name": "IQSIGHT",
+   "organization": "IQSIGHT B.V."
+  },
+  {
+   "short_name": "isc",
+   "organization": "Internet Systems Consortium (ISC)"
+  },
+  {
+   "short_name": "ivanti",
+   "organization": "Ivanti"
+  },
+  {
+   "short_name": "JAMF",
+   "organization": "Jamf"
+  },
+  {
+   "short_name": "Jaspersoft",
+   "organization": "Jaspersoft"
+  },
+  {
+   "short_name": "jci",
+   "organization": "Johnson Controls"
+  },
+  {
+   "short_name": "jenkins",
+   "organization": "Jenkins Project"
+  },
+  {
+   "short_name": "JetBrains",
+   "organization": "JetBrains s.r.o."
+  },
+  {
+   "short_name": "JFrog",
+   "organization": "JFrog"
+  },
+  {
+   "short_name": "Joomla",
+   "organization": "Joomla! Project"
+  },
+  {
+   "short_name": "jpcert",
+   "organization": "JPCERT/CC"
+  },
+  {
+   "short_name": "juniper",
+   "organization": "Juniper Networks, Inc."
+  },
+  {
+   "short_name": "JupiterOne",
+   "organization": "JupiterOne, Inc."
+  },
+  {
+   "short_name": "Kaspersky",
+   "organization": "Kaspersky"
+  },
+  {
+   "short_name": "KCFTech",
+   "organization": "KCF Technologies, Inc."
+  },
+  {
+   "short_name": "KeeperSecurity",
+   "organization": "Keeper Security, Inc."
+  },
+  {
+   "short_name": "KNIME",
+   "organization": "KNIME AG"
+  },
+  {
+   "short_name": "Kong",
+   "organization": "Kong Inc."
+  },
+  {
+   "short_name": "KoreLogic",
+   "organization": "KoreLogic Security"
+  },
+  {
+   "short_name": "KrakenD",
+   "organization": "KrakenD, S.L."
+  },
+  {
+   "short_name": "krcert",
+   "organization": "KrCERT/CC"
+  },
+  {
+   "short_name": "kubernetes",
+   "organization": "Kubernetes"
+  },
+  {
+   "short_name": "larry_cashdollar",
+   "organization": "Larry Cashdollar"
+  },
+  {
+   "short_name": "LeicaBiosystems",
+   "organization": "Leica Biosystems"
+  },
+  {
+   "short_name": "lenovo",
+   "organization": "Lenovo Group Ltd."
+  },
+  {
+   "short_name": "Leonardo",
+   "organization": "Leonardo S.p.A."
+  },
+  {
+   "short_name": "Lexmark",
+   "organization": "Lexmark International Inc."
+  },
+  {
+   "short_name": "LGE",
+   "organization": "LG Electronics"
+  },
+  {
+   "short_name": "libreswan",
+   "organization": "Libreswan Project"
+  },
+  {
+   "short_name": "Liferay",
+   "organization": "Liferay, Inc."
+  },
+  {
+   "short_name": "linqi",
+   "organization": "linqi GmbH"
+  },
+  {
+   "short_name": "Linux",
+   "organization": "kernel.org"
+  },
+  {
+   "short_name": "LMS",
+   "organization": "Leica Microsystems"
+  },
+  {
+   "short_name": "Logitech",
+   "organization": "Logitech"
+  },
+  {
+   "short_name": "LY-Corporation",
+   "organization": "LY Corporation"
+  },
+  {
+   "short_name": "M-Files",
+   "organization": "M-Files Corporation"
+  },
+  {
+   "short_name": "Mandiant",
+   "organization": "Mandiant Inc."
+  },
+  {
+   "short_name": "Mattermost",
+   "organization": "Mattermost, Inc."
+  },
+  {
+   "short_name": "Mautic",
+   "organization": "Mautic"
+  },
+  {
+   "short_name": "MediaTek",
+   "organization": "MediaTek, Inc."
+  },
+  {
+   "short_name": "Medtronic",
+   "organization": "Medtronic"
+  },
+  {
+   "short_name": "Meta",
+   "organization": "Meta Platforms, Inc."
+  },
+  {
+   "short_name": "MHV",
+   "organization": "Maritime Hacking Village"
+  },
+  {
+   "short_name": "Microchip",
+   "organization": "Microchip Technology"
+  },
+  {
+   "short_name": "microsoft",
+   "organization": "Microsoft Corporation"
+  },
+  {
+   "short_name": "milestonesys",
+   "organization": "Milestone Systems A/S"
+  },
+  {
+   "short_name": "MIM",
+   "organization": "MIM Software Inc."
+  },
+  {
+   "short_name": "Mirantis",
+   "organization": "Mirantis"
+  },
+  {
+   "short_name": "mitre",
+   "organization": "MITRE Corporation"
+  },
+  {
+   "short_name": "Mitsubishi",
+   "organization": "Mitsubishi Electric Corporation"
+  },
+  {
+   "short_name": "MolDev",
+   "organization": "Molecular Devices"
+  },
+  {
+   "short_name": "MON-CSIRT",
+   "organization": "Monash University - Cyber Security Incident Response Team"
+  },
+  {
+   "short_name": "mongodb",
+   "organization": "MongoDB, Inc."
+  },
+  {
+   "short_name": "Moxa",
+   "organization": "Moxa Inc."
+  },
+  {
+   "short_name": "mozilla",
+   "organization": "Mozilla Corporation"
+  },
+  {
+   "short_name": "MyMMT",
+   "organization": "Mammotome"
+  },
+  {
+   "short_name": "N-able",
+   "organization": "N-able"
+  },
+  {
+   "short_name": "naver",
+   "organization": "Naver Corporation"
+  },
+  {
+   "short_name": "NCSC",
+   "organization": "NATO Cyber Security Centre"
+  },
+  {
+   "short_name": "NCSC-FI",
+   "organization": "National Cyber Security Centre Finland (NCSC-FI)"
+  },
+  {
+   "short_name": "NCSC-NL",
+   "organization": "National Cyber Security Centre Netherlands (NCSC-NL)"
+  },
+  {
+   "short_name": "NCSC.ch",
+   "organization": "Switzerland National Cyber Security Centre (NCSC)"
+  },
+  {
+   "short_name": "NEC",
+   "organization": "NEC Corporation"
+  },
+  {
+   "short_name": "Neo4j",
+   "organization": "Neo4j"
+  },
+  {
+   "short_name": "netapp",
+   "organization": "NetApp, Inc."
+  },
+  {
+   "short_name": "netflix",
+   "organization": "Netflix, Inc."
+  },
+  {
+   "short_name": "NETGEAR",
+   "organization": "NETGEAR"
+  },
+  {
+   "short_name": "NetRise",
+   "organization": "NetRise"
+  },
+  {
+   "short_name": "NetScaler",
+   "organization": "NetScaler"
+  },
+  {
+   "short_name": "Netskope",
+   "organization": "Netskope"
+  },
+  {
+   "short_name": "NI",
+   "organization": "National Instruments"
+  },
+  {
+   "short_name": "NIBEGroup",
+   "organization": "NIBE Group"
+  },
+  {
+   "short_name": "Nintendo",
+   "organization": "Nintendo Co., Ltd."
+  },
+  {
+   "short_name": "NLnet_Labs",
+   "organization": "NLnet Labs"
+  },
+  {
+   "short_name": "nodejs",
+   "organization": "Node.js"
+  },
+  {
+   "short_name": "Nokia",
+   "organization": "Nokia"
+  },
+  {
+   "short_name": "Nozomi",
+   "organization": "Nozomi Networks Inc."
+  },
+  {
+   "short_name": "Nutanix",
+   "organization": "Nutanix"
+  },
+  {
+   "short_name": "nvidia",
+   "organization": "NVIDIA Corporation"
+  },
+  {
+   "short_name": "NX",
+   "organization": "Network Optix"
+  },
+  {
+   "short_name": "OAI",
+   "organization": "OpenAI"
+  },
+  {
+   "short_name": "OB",
+   "organization": "OceanBase"
+  },
+  {
+   "short_name": "obdev",
+   "organization": "Objective Development Software GmbH"
+  },
+  {
+   "short_name": "OCD",
+   "organization": "Orange Cyberdefense"
+  },
+  {
+   "short_name": "Octopus",
+   "organization": "Octopus Deploy"
+  },
+  {
+   "short_name": "ODA",
+   "organization": "Open Design Alliance"
+  },
+  {
+   "short_name": "odoo",
+   "organization": "Odoo"
+  },
+  {
+   "short_name": "Okta",
+   "organization": "Okta"
+  },
+  {
+   "short_name": "OMICRON",
+   "organization": "OMICRON electronics"
+  },
+  {
+   "short_name": "Omnissa",
+   "organization": "Omnissa, LLC"
+  },
+  {
+   "short_name": "OMRON",
+   "organization": "OMRON Corporation"
+  },
+  {
+   "short_name": "ONEKEY",
+   "organization": "ONEKEY GmbH"
+  },
+  {
+   "short_name": "OnLogic",
+   "organization": "OnLogic"
+  },
+  {
+   "short_name": "openam-jp",
+   "organization": "OpenAM Consortium"
+  },
+  {
+   "short_name": "OpenBMC",
+   "organization": "The OpenBMC Project"
+  },
+  {
+   "short_name": "openEuler",
+   "organization": "openEuler"
+  },
+  {
+   "short_name": "openGauss",
+   "organization": "openGauss Community"
+  },
+  {
+   "short_name": "OpenHarmony",
+   "organization": "OpenHarmony"
+  },
+  {
+   "short_name": "openjs",
+   "organization": "OpenJS Foundation"
+  },
+  {
+   "short_name": "OpenNMS",
+   "organization": "The OpenNMS Group"
+  },
+  {
+   "short_name": "openssl",
+   "organization": "OpenSSL Software Foundation"
+  },
+  {
+   "short_name": "OpenText",
+   "organization": "OpenText (formerly Micro Focus)"
+  },
+  {
+   "short_name": "OpenVPN",
+   "organization": "OpenVPN Inc."
+  },
+  {
+   "short_name": "Opera",
+   "organization": "Opera Norway AS"
+  },
+  {
+   "short_name": "OPPO",
+   "organization": "OPPO Mobile Telecommunication Corp., Ltd."
+  },
+  {
+   "short_name": "oracle",
+   "organization": "Oracle"
+  },
+  {
+   "short_name": "OS-S",
+   "organization": "OpenSource Security GmbH"
+  },
+  {
+   "short_name": "OTRS",
+   "organization": "OTRS AG"
+  },
+  {
+   "short_name": "OX",
+   "organization": "Open-Xchange"
+  },
+  {
+   "short_name": "Palantir",
+   "organization": "Palantir Technologies"
+  },
+  {
+   "short_name": "Pall",
+   "organization": "Pall Corporation"
+  },
+  {
+   "short_name": "palo_alto",
+   "organization": "Palo Alto Networks, Inc."
+  },
+  {
+   "short_name": "Panasonic_Holdings_Corporation",
+   "organization": "Panasonic Holdings Corporation"
+  },
+  {
+   "short_name": "PandoraFMS",
+   "organization": "Pandora FMS"
+  },
+  {
+   "short_name": "PangeaCyber",
+   "organization": "Pangea Cyber Corporation"
+  },
+  {
+   "short_name": "PaperCut",
+   "organization": "PaperCut Software Pty Ltd"
+  },
+  {
+   "short_name": "Patchstack",
+   "organization": "Patchstack"
+  },
+  {
+   "short_name": "Payara",
+   "organization": "Payara"
+  },
+  {
+   "short_name": "Pega",
+   "organization": "Pegasystems Inc."
+  },
+  {
+   "short_name": "Pentraze",
+   "organization": "Pentraze Cybersecurity"
+  },
+  {
+   "short_name": "Perforce",
+   "organization": "Perforce"
+  },
+  {
+   "short_name": "Philips",
+   "organization": "Philips"
+  },
+  {
+   "short_name": "Phoenix",
+   "organization": "Phoenix Technologies, Inc."
+  },
+  {
+   "short_name": "php",
+   "organization": "PHP Group"
+  },
+  {
+   "short_name": "PingCAP",
+   "organization": "PingCAP (US), Inc."
+  },
+  {
+   "short_name": "PingIdentity",
+   "organization": "Ping Identity Corporation"
+  },
+  {
+   "short_name": "PlexTrac",
+   "organization": "PlexTrac, Inc."
+  },
+  {
+   "short_name": "PostgreSQL",
+   "organization": "PostgreSQL"
+  },
+  {
+   "short_name": "postiz",
+   "organization": "Postiz"
+  },
+  {
+   "short_name": "PRJBLK",
+   "organization": "Project Black"
+  },
+  {
+   "short_name": "Profelis",
+   "organization": "Profelis IT Consultancy"
+  },
+  {
+   "short_name": "Profisee",
+   "organization": "Profisee Group, Inc."
+  },
+  {
+   "short_name": "ProgressSoftware",
+   "organization": "Progress Software Corporation"
+  },
+  {
+   "short_name": "Proofpoint",
+   "organization": "Proofpoint Inc."
+  },
+  {
+   "short_name": "Proton",
+   "organization": "Proton AG"
+  },
+  {
+   "short_name": "PSF",
+   "organization": "Python Software Foundation"
+  },
+  {
+   "short_name": "PTC",
+   "organization": "PTC Inc."
+  },
+  {
+   "short_name": "QCI",
+   "organization": "Quanta Computer, Inc."
+  },
+  {
+   "short_name": "qnap",
+   "organization": "QNAP Systems, Inc."
+  },
+  {
+   "short_name": "Qt",
+   "organization": "Qt Group"
+  },
+  {
+   "short_name": "qualcomm",
+   "organization": "Qualcomm, Inc."
+  },
+  {
+   "short_name": "Qualys",
+   "organization": "Qualys, Inc."
+  },
+  {
+   "short_name": "Radiometer",
+   "organization": "Radiometer Medical ApS"
+  },
+  {
+   "short_name": "rami.io",
+   "organization": "rami.io GmbH"
+  },
+  {
+   "short_name": "rapid7",
+   "organization": "Rapid7, Inc."
+  },
+  {
+   "short_name": "RealPage",
+   "organization": "RealPage"
+  },
+  {
+   "short_name": "redhat",
+   "organization": "Red Hat, Inc."
+  },
+  {
+   "short_name": "Replicated",
+   "organization": "Replicated, Inc."
+  },
+  {
+   "short_name": "Ribose",
+   "organization": "Ribose Limited"
+  },
+  {
+   "short_name": "Roche",
+   "organization": "Roche Diagnostics"
+  },
+  {
+   "short_name": "Rockwell",
+   "organization": "Rockwell Automation"
+  },
+  {
+   "short_name": "RTI",
+   "organization": "Real-Time Innovations, Inc."
+  },
+  {
+   "short_name": "runZero",
+   "organization": "runZero, Inc."
+  },
+  {
+   "short_name": "rust",
+   "organization": "The Rust Project"
+  },
+  {
+   "short_name": "S21sec",
+   "organization": "S21sec Cyber Solutions by Thales"
+  },
+  {
+   "short_name": "SailPoint",
+   "organization": "SailPoint Technologies"
+  },
+  {
+   "short_name": "Salesforce",
+   "organization": "Salesforce, Inc."
+  },
+  {
+   "short_name": "samsung.tv_appliance",
+   "organization": "Samsung TV & Appliance"
+  },
+  {
+   "short_name": "Samsung_Mobile",
+   "organization": "Samsung Mobile"
+  },
+  {
+   "short_name": "sap",
+   "organization": "SAP SE"
+  },
+  {
+   "short_name": "Saviynt",
+   "organization": "Saviynt Inc."
+  },
+  {
+   "short_name": "sba-research",
+   "organization": "SBA Research gGmbH"
+  },
+  {
+   "short_name": "Scality",
+   "organization": "Scality SA"
+  },
+  {
+   "short_name": "schneider",
+   "organization": "Schneider Electric"
+  },
+  {
+   "short_name": "SCHUTZWERK",
+   "organization": "SCHUTZWERK GmbH"
+  },
+  {
+   "short_name": "SCIEX",
+   "organization": "SCIEX"
+  },
+  {
+   "short_name": "SDC",
+   "organization": "Sandisk"
+  },
+  {
+   "short_name": "Seagate",
+   "organization": "Seagate Technology"
+  },
+  {
+   "short_name": "seal",
+   "organization": "Seal Security"
+  },
+  {
+   "short_name": "SEC-VLab",
+   "organization": "SEC Consult Vulnerability Lab"
+  },
+  {
+   "short_name": "sec1",
+   "organization": "Sec1"
+  },
+  {
+   "short_name": "Secomea",
+   "organization": "Secomea A/S"
+  },
+  {
+   "short_name": "Secur0",
+   "organization": "Secur0"
+  },
+  {
+   "short_name": "securepoint",
+   "organization": "Securepoint GmbH"
+  },
+  {
+   "short_name": "Securifera",
+   "organization": "Securifera, Inc."
+  },
+  {
+   "short_name": "securin",
+   "organization": "Securin"
+  },
+  {
+   "short_name": "SEL",
+   "organization": "Schweitzer Engineering Laboratories, Inc."
+  },
+  {
+   "short_name": "Semtech",
+   "organization": "Semtech Corporation"
+  },
+  {
+   "short_name": "senhasegura",
+   "organization": "senhasegura"
+  },
+  {
+   "short_name": "ShopBeat",
+   "organization": "Shop Beat Solutions (Pty) LTD"
+  },
+  {
+   "short_name": "SICK_AG",
+   "organization": "SICK AG"
+  },
+  {
+   "short_name": "siemens",
+   "organization": "Siemens"
+  },
+  {
+   "short_name": "Silabs",
+   "organization": "Silicon Labs"
+  },
+  {
+   "short_name": "Silver_Peak",
+   "organization": "Silver Peak Systems, Inc."
+  },
+  {
+   "short_name": "Simplinx",
+   "organization": "Simplinx Ltd."
+  },
+  {
+   "short_name": "sirius",
+   "organization": "Sirius Computer, Inc."
+  },
+  {
+   "short_name": "SK-CERT",
+   "organization": "National Cyber Security Centre SK-CERT"
+  },
+  {
+   "short_name": "SmileDigitalHealth",
+   "organization": "Smile CDR Inc. (doing business as \u201cSmile Digital Health\u201d)"
+  },
+  {
+   "short_name": "SN",
+   "organization": "ServiceNow"
+  },
+  {
+   "short_name": "Snow",
+   "organization": "Snow Software"
+  },
+  {
+   "short_name": "SNOW",
+   "organization": "Snowflake"
+  },
+  {
+   "short_name": "snyk",
+   "organization": "Snyk"
+  },
+  {
+   "short_name": "SOCRadar",
+   "organization": "SOCRadar Cyber Intelligence Inc."
+  },
+  {
+   "short_name": "Softing",
+   "organization": "Softing"
+  },
+  {
+   "short_name": "SoftIron",
+   "organization": "SoftIron"
+  },
+  {
+   "short_name": "SolarWinds",
+   "organization": "SolarWinds"
+  },
+  {
+   "short_name": "Solidigm",
+   "organization": "Solidigm"
+  },
+  {
+   "short_name": "Sonatype",
+   "organization": "Sonatype Inc."
+  },
+  {
+   "short_name": "sonicwall",
+   "organization": "SonicWall, Inc."
+  },
+  {
+   "short_name": "Sophos",
+   "organization": "Sophos Limited"
+  },
+  {
+   "short_name": "spartans-security",
+   "organization": "Spartans Security"
+  },
+  {
+   "short_name": "Spotfire",
+   "organization": "Spotfire"
+  },
+  {
+   "short_name": "SRA",
+   "organization": "Security Risk Advisors (SRA)"
+  },
+  {
+   "short_name": "Stackable",
+   "organization": "Stackable GmbH"
+  },
+  {
+   "short_name": "STAR_Labs",
+   "organization": "STAR Labs SG Pte. Ltd."
+  },
+  {
+   "short_name": "StrongDM",
+   "organization": "StrongDM"
+  },
+  {
+   "short_name": "Stryker",
+   "organization": "Stryker Corporation"
+  },
+  {
+   "short_name": "Supermicro",
+   "organization": "Super Micro Computer, Inc."
+  },
+  {
+   "short_name": "suse",
+   "organization": "SUSE"
+  },
+  {
+   "short_name": "Swift",
+   "organization": "Swift Project"
+  },
+  {
+   "short_name": "symantec",
+   "organization": "Symantec - A Division of Broadcom"
+  },
+  {
+   "short_name": "Synaptics",
+   "organization": "Synaptics, Inc."
+  },
+  {
+   "short_name": "Syncro",
+   "organization": "Syncro Soft SRL"
+  },
+  {
+   "short_name": "synology",
+   "organization": "Synology Inc."
+  },
+  {
+   "short_name": "Synopsys",
+   "organization": "Synopsys, Inc."
+  },
+  {
+   "short_name": "systemd",
+   "organization": "The systemd project"
+  },
+  {
+   "short_name": "Tacit",
+   "organization": "Tacit"
+  },
+  {
+   "short_name": "talos",
+   "organization": "Talos"
+  },
+  {
+   "short_name": "Tanium",
+   "organization": "Tanium Inc."
+  },
+  {
+   "short_name": "TCL_Smart_Terminal",
+   "organization": "TCL Electronics Holdings Limited"
+  },
+  {
+   "short_name": "Tcpdump",
+   "organization": "Tcpdump Group"
+  },
+  {
+   "short_name": "TCS-CERT",
+   "organization": "TCS-CERT (Thales Cyber Solutions Customer\u2019s CERT)"
+  },
+  {
+   "short_name": "TeamViewer",
+   "organization": "TeamViewer Germany GmbH"
+  },
+  {
+   "short_name": "TECNOMobile",
+   "organization": "TECNO Mobile Limited"
+  },
+  {
+   "short_name": "Tego_Cyber",
+   "organization": "Tego Cyber, Inc."
+  },
+  {
+   "short_name": "Temporal",
+   "organization": "Temporal Technologies Inc."
+  },
+  {
+   "short_name": "tenable",
+   "organization": "Tenable Network Security, Inc."
+  },
+  {
+   "short_name": "THA-PSIRT",
+   "organization": "Thales Group"
+  },
+  {
+   "short_name": "The_Missing_Link",
+   "organization": "The Missing Link Australia (TML)"
+  },
+  {
+   "short_name": "ThinkstAppliedResearch",
+   "organization": "Thinkst Applied Research"
+  },
+  {
+   "short_name": "TianoCore",
+   "organization": "TianoCore.org"
+  },
+  {
+   "short_name": "tibco",
+   "organization": "TIBCO Software Inc."
+  },
+  {
+   "short_name": "Tigera",
+   "organization": "Tigera, Inc."
+  },
+  {
+   "short_name": "tlt_net",
+   "organization": "Teltonika Networks"
+  },
+  {
+   "short_name": "TMUS",
+   "organization": "T-Mobile US"
+  },
+  {
+   "short_name": "Toreon",
+   "organization": "Toreon"
+  },
+  {
+   "short_name": "Toshiba",
+   "organization": "Toshiba Corporation"
+  },
+  {
+   "short_name": "TPLink",
+   "organization": "TP-Link Systems Inc."
+  },
+  {
+   "short_name": "TR-CERT",
+   "organization": "TR-CERT (Computer Emergency Response Team of the Republic of T\u00fcrkiye)"
+  },
+  {
+   "short_name": "Trellix",
+   "organization": "Trellix"
+  },
+  {
+   "short_name": "trendmicro",
+   "organization": "Trend Micro, Inc."
+  },
+  {
+   "short_name": "TRO",
+   "organization": "Teradyne Robotics"
+  },
+  {
+   "short_name": "TuranSec",
+   "organization": "Turan Security"
+  },
+  {
+   "short_name": "tuxcare",
+   "organization": "Tuxcare Inc."
+  },
+  {
+   "short_name": "twcert",
+   "organization": "TWCERT/CC"
+  },
+  {
+   "short_name": "TXOne",
+   "organization": "TXOne Networks, Inc."
+  },
+  {
+   "short_name": "TYPO3",
+   "organization": "TYPO3 Association"
+  },
+  {
+   "short_name": "Ubiquiti",
+   "organization": "Ubiquiti, Inc."
+  },
+  {
+   "short_name": "Unisoc",
+   "organization": "Unisoc (Shanghai) Technologies Co., Ltd."
+  },
+  {
+   "short_name": "Uniview",
+   "organization": "Zhejiang Uniview Technologies Co., Ltd."
+  },
+  {
+   "short_name": "upKeeper",
+   "organization": "upKeeper Solutions"
+  },
+  {
+   "short_name": "Vaadin",
+   "organization": "Vaadin Ltd."
+  },
+  {
+   "short_name": "Vantive",
+   "organization": "Vantive"
+  },
+  {
+   "short_name": "Verizon",
+   "organization": "Verizon"
+  },
+  {
+   "short_name": "Vestel",
+   "organization": "Vestel Electronics Industry & Trade Co."
+  },
+  {
+   "short_name": "Vivo",
+   "organization": "Vivo Mobile Communication Co., Ltd."
+  },
+  {
+   "short_name": "vmware",
+   "organization": "VMware by Broadcom"
+  },
+  {
+   "short_name": "VulDB",
+   "organization": "VulDB"
+  },
+  {
+   "short_name": "VulnCheck",
+   "organization": "VulnCheck"
+  },
+  {
+   "short_name": "VulNow",
+   "organization": "VulNow"
+  },
+  {
+   "short_name": "VULSec",
+   "organization": "VULSec Labs"
+  },
+  {
+   "short_name": "vx",
+   "organization": "VotingWorks"
+  },
+  {
+   "short_name": "watchdog",
+   "organization": "WatchDogDevelopment.com, LLC"
+  },
+  {
+   "short_name": "WatchGuard",
+   "organization": "WatchGuard Technologies, Inc."
+  },
+  {
+   "short_name": "WDC_PSIRT",
+   "organization": "Western Digital"
+  },
+  {
+   "short_name": "wikimedia-foundation",
+   "organization": "The Wikimedia Foundation"
+  },
+  {
+   "short_name": "WindRiver",
+   "organization": "Wind River Systems Inc."
+  },
+  {
+   "short_name": "Wiz",
+   "organization": "Wiz, Inc."
+  },
+  {
+   "short_name": "wolfSSL",
+   "organization": "wolfSSL Inc."
+  },
+  {
+   "short_name": "Wordfence",
+   "organization": "Wordfence"
+  },
+  {
+   "short_name": "WPScan",
+   "organization": "WPScan"
+  },
+  {
+   "short_name": "WrenSecurity",
+   "organization": "Wren Security"
+  },
+  {
+   "short_name": "WSO2",
+   "organization": "WSO2 LLC"
+  },
+  {
+   "short_name": "XEN",
+   "organization": "Xen Project"
+  },
+  {
+   "short_name": "Xerox",
+   "organization": "Xerox Corporation"
+  },
+  {
+   "short_name": "XI",
+   "organization": "Exodus Intelligence"
+  },
+  {
+   "short_name": "Xiaomi",
+   "organization": "Xiaomi Technology Co., Ltd."
+  },
+  {
+   "short_name": "XONA",
+   "organization": "Xona Systems"
+  },
+  {
+   "short_name": "Xylem",
+   "organization": "Xylem"
+  },
+  {
+   "short_name": "yandex",
+   "organization": "Yandex N.V."
+  },
+  {
+   "short_name": "YesWeHack",
+   "organization": "YesWeHack"
+  },
+  {
+   "short_name": "Ygreky",
+   "organization": "Ygreky SASU"
+  },
+  {
+   "short_name": "YokogawaGroup",
+   "organization": "Yokogawa Group"
+  },
+  {
+   "short_name": "Yugabyte",
+   "organization": "Yugabyte, Inc."
+  },
+  {
+   "short_name": "Zabbix",
+   "organization": "Zabbix"
+  },
+  {
+   "short_name": "zdi",
+   "organization": "Zero Day Initiative"
+  },
+  {
+   "short_name": "zephyr",
+   "organization": "Zephyr Project"
+  },
+  {
+   "short_name": "ZGR",
+   "organization": "ZGR"
+  },
+  {
+   "short_name": "Zohocorp",
+   "organization": "Zohocorp"
+  },
+  {
+   "short_name": "Zoom",
+   "organization": "Zoom Communications, Inc."
+  },
+  {
+   "short_name": "Zowe",
+   "organization": "Zowe"
+  },
+  {
+   "short_name": "Zscaler",
+   "organization": "Zscaler, Inc."
+  },
+  {
+   "short_name": "ZTE",
+   "organization": "ZTE Corporation"
+  },
+  {
+   "short_name": "ZUSO_ART",
+   "organization": "ZUSO Advanced Research Team (ZUSO ART)"
+  },
+  {
+   "short_name": "Zyxel",
+   "organization": "Zyxel Corporation"
+  }
+ ]
+}

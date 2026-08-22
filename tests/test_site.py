@@ -588,12 +588,15 @@ def test_gate_counts_the_same_floor_inference_names_against(tmp_path):
     from rbp import coverage as cov_mod
     from rbp.inference import MIN_SIGHTINGS
 
-    assigners = ["seen"] * (MIN_SIGHTINGS + 1) + ["rare"] * 2
+    # Real roster short names. The coverage denominator is now the CVE Program's
+    # pinned CNA list, so an invented assigner is correctly counted as off-roster
+    # and never reaches the numerator: the fixture has to use names that exist.
+    assigners = ["redhat"] * (MIN_SIGHTINGS + 1) + ["microsoft"] * 2
     ids = [f"CVE-2025-{i:05d}" for i in range(len(assigners))]
     df = pd.DataFrame({"cve_id": ids, "state": ["PUBLISHED"] * len(ids),
                        "assigner": assigners})
-    # Every `seen` row is surfaced; `rare` is surfaced ONCE, so it is sighted but
-    # below the floor.
+    # Every redhat row is surfaced; microsoft is surfaced ONCE, so it is sighted
+    # but below the floor.
     refs = set(ids[:MIN_SIGHTINGS + 1]) | {ids[MIN_SIGHTINGS + 1]}
     cov = cov_mod.compute(df, refs, recent_years=(2025,))
     assert cov["min_sightings"] == MIN_SIGHTINGS

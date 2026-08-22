@@ -55,10 +55,11 @@ def _coverage_condition(summary, gate):
     if not cov.get("profile"):
         reasons.append("the feed profile is not recorded in summary.coverage")
     if not cov.get("roster_pinned"):
-        # The denominator is recounted from the corpus every run, so the
-        # percentage is trended over a moving base and shifts overnight on
-        # 1 January when the year window rolls.
         reasons.append("the CNA denominator is per-run, not a pinned roster")
+    if cov.get("top_covered") is None or not cov.get("top_n"):
+        # The review asked for top-N-by-volume alongside, because 22% of a roster
+        # says nothing about whether the CNAs that actually publish are reachable.
+        reasons.append("top-N-by-volume coverage is not reported")
     return {
         "n": 1,
         "title": "Coverage on the gate figure, against a pinned roster",
@@ -66,7 +67,11 @@ def _coverage_condition(summary, gate):
                    f"at least {cov.get('min_sightings')} times "
                    f"({cov.get('pct_effective')}%), profile "
                    f"{cov.get('profile') or 'unrecorded'!r}. Top "
-                   f"{cov.get('top_n')} by volume: {cov.get('top_covered')} covered."),
+                   f"{cov.get('top_n')} by volume: {cov.get('top_covered')} covered. "
+                   f"Denominator is the pinned roster of {cov.get('total_cnas')} "
+                   f"certified CNAs, not the "
+                   f"{cov.get('total_assigners_in_window')} assigners seen "
+                   f"publishing in the window."),
         "status": UNMET if reasons else MET,
         "blocks": "; ".join(reasons) or None,
         "item": "7",

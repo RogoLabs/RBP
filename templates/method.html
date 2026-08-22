@@ -256,6 +256,23 @@
       listed together because quoting the largest one alone would overstate what
       the feeds actually reach.
     </p>
+    <p class="small text-muted mb-2">
+      The denominator is the CVE Program's own list of
+      <strong>{{ summary.coverage.total_cnas }} certified CNAs</strong>, pinned in this
+      repository and refreshed deliberately. It used to be the
+      {{ summary.coverage.get('total_assigners_in_window') }} distinct assigners seen
+      publishing in a rolling three-year window, which moves as CNAs publish, shrinks
+      as the window rolls and steps overnight on 1 January: a percentage trended over
+      a base like that is weather, not progress. Measuring against the roster
+      <em>lowers</em> every figure below, because a CNA that has published nothing is
+      still one whose advisories this site cannot read.
+      {% if summary.coverage.get('off_roster_n') %}
+      A further <strong>{{ summary.coverage.off_roster_n }}</strong> assigner name(s)
+      in the corpus match no current roster entry, usually a rename
+      ({{ summary.coverage.off_roster[:3] | join(', ') }}), so coverage is understated
+      by up to that many.
+      {% endif %}
+    </p>
     <table class="table table-sm small">
       <thead>
         <tr><th scope="col">Figure</th><th scope="col" class="num">CNAs</th><th scope="col">What it means</th></tr>
@@ -282,6 +299,15 @@
           <td>Its own advisory feed is ingested. This bounds what can ever be read
             as {{ rule_must }}, and nothing else.</td>
         </tr>
+        {% if summary.coverage.get('top_n') %}
+        <tr>
+          <td>Top {{ summary.coverage.top_n }} by volume</td>
+          <td class="num">{{ summary.coverage.top_covered }} / {{ summary.coverage.top_n }}</td>
+          <td>Of the {{ summary.coverage.top_n }} CNAs publishing the most CVEs, how
+            many these feeds reach. A share of the whole roster says nothing about
+            whether the CNAs that actually publish are reachable; this does.</td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
     {% if gate and gate.pct is not none %}

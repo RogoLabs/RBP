@@ -78,6 +78,24 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     top = list(vol.head(top_n).index)
     top_covered = [c for c in top if c in covered]
 
+    # THE DENOMINATOR IS THE PINNED ROSTER, not this count.
+    #
+    # `total_cnas` above is distinct assigners with a published CVE in the rolling
+    # window. It moves as CNAs publish, shrinks as the window rolls, and steps
+    # overnight on 1 January, so a percentage trended over it is weather rather
+    # than progress, and the launch gate is a threshold on exactly that
+    # percentage.
+    #
+    # The roster is larger (539 certified CNAs against 434 recent assigners), so
+    # measuring honestly LOWERS the coverage figure. The 105 difference is CNAs
+    # that published nothing in the window, and a CNA that published nothing is
+    # still one whose advisories this site cannot read and which may hold reserved
+    # IDs. Excluding them flattered the number.
+    from . import roster as roster_mod
+    ros = roster_mod.load()
+    roster_index = roster_mod.index(ros)
+    roster_total = ros["count"]
+
     # Gate figure: seen often enough that the site would be willing to name it.
     # Deliberately the SAME constant inference uses to decide whether to attach a
     # name, so the gate cannot clear on CNAs the site would refuse to name.
@@ -90,16 +108,51 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     own_ingested = sorted(cna for cna, feeds in own_channels.items()
                           if feeds & requested)
 
+    # Sighted and effective sets mapped onto roster names, so the numerator and the
+    # denominator are drawn from the same list. Matching raw assigner strings
+    # against roster short names without normalising undercounts exactly the CNAs
+    # whose names carry punctuation (GitHub_M vs GitHub-M).
+    def _on_roster(names):
+        return {roster_index[roster_mod.normalise(n)] for n in names
+                if roster_mod.normalise(n) in roster_index}
+
+    sighted_on_roster = _on_roster(covered)
+    effective_on_roster = _on_roster(effective)
+    off_roster = sorted({n for n in covered
+                         if roster_mod.normalise(n) not in roster_index})
+
     return {
-        "total_cnas": total_cnas,
-        "covered_cnas": len(covered),
-        "pct_cnas": round(100 * len(covered) / max(total_cnas, 1), 1),
+        # The gate denominator. `total_assigners_in_window` is kept beside it so
+        # the two are never confused and neither can be quoted as the other.
+        "total_cnas": roster_total,
+        "roster_source": ros.get("source"),
+        "roster_fetched": ros.get("fetched"),
+        "total_assigners_in_window": total_cnas,
+        # Assigner strings in the corpus that match no roster entry, published in
+        # full because the list is short and truncating it would hide the size of
+        # the effect.
+        #
+        # These are real CNAs whose historical assigner name differs from their
+        # current roster short name: `crafter` is `Crafter_CMS`, `facebook` is
+        # `Meta`. Normalisation cannot bridge a rename, and adjudicating renames by
+        # hand would be a map that is silently wrong the first time an org changes
+        # name again. So they are excluded from the numerator, which UNDERSTATES
+        # coverage by up to this many CNAs, and the count is published so the
+        # understatement is visible rather than assumed away. Undercounting makes
+        # the gate harder to clear, which is the safe direction to be wrong in.
+        "off_roster": off_roster,
+        "off_roster_n": len(off_roster),
+        # launch._coverage_condition checks this. The denominator is now a pinned,
+        # version-controlled list rather than a figure recounted from the corpus.
+        "roster_pinned": True,
+        "covered_cnas": len(sighted_on_roster),
+        "pct_cnas": round(100 * len(sighted_on_roster) / max(roster_total, 1), 1),
         # Three separate integers, so a percentage is never trended over a
         # denominator that moved. The window is derived from the run date, so
         # both sides of the ratio shift overnight on 1 January.
-        "cnas_sighted": len(covered),
-        "cnas_effective": len(effective),
-        "pct_effective": round(100 * len(effective) / max(total_cnas, 1), 1),
+        "cnas_sighted": len(sighted_on_roster),
+        "cnas_effective": len(effective_on_roster),
+        "pct_effective": round(100 * len(effective_on_roster) / max(roster_total, 1), 1),
         "min_sightings": MIN_SIGHTINGS,
         # Returned rather than discarded. inference refuses to name a CNA whose
         # advisories this site does not read, which is one sentence that survives
