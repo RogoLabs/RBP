@@ -1,5 +1,1554 @@
 {
- "predictions": {},
+ "predictions": {
+  "CVE-2026-69184": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-69186": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-33630": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54240": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54241": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-36849": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-39043": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-39044": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-73261": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-73260": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-73252": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61552": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61551": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61550": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52079": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52078": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52076": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52075": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52073": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52072": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52071": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52070": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52069": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52068": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52067": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52066": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52065": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52064": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52062": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52061": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52060": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52059": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52058": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52057": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52056": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52055": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52054": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52053": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52052": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52051": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52050": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52048": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52047": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61547": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61723": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61722": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61721": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61720": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61714": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-25832": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55869": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55868": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-62321": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-62320": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-62319": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-62318": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48785": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-11053": {
+   "predicted": "Chrome",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-11099": {
+   "predicted": "Chrome",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49837": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49838": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53660": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53658": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48786": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47132": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45694": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-35445": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-32258": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-32257": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49446": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54632": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-73494": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54246": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55177": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54559": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53496": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54567": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54561": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54546": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54547": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54549": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54503": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54247": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54076": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54077": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54542": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54541": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52832": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52833": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50166": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-58196": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54504": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50285": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50276": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50270": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54495": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54254": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54452": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54450": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52883": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52882": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52881": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52847": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49280": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61549": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61699": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55513": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55512": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54629": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53603": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53604": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54628": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54087": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50158": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50157": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50018": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50013": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45710": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45693": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-44300": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52828": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52827": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52826": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52825": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52824": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52823": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52822": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52821": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52820": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52819": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49992": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47677": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61668": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-61667": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54065": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54064": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49259": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48118": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45579": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54072": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49865": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49836": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53956": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53639": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53638": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53637": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53932": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53602": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53760": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50553": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-50554": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48987": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48737": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49464": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49463": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49456": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49455": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53649": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49833": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49830": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49831": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49832": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-52831": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53600": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53508": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45016": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-34151": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55630": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54724": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54640": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54641": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54637": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55786": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55787": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49292": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54617": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49254": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-49250": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-46487": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-39379": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48717": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47426": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47424": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-41262": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-46623": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-46619": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48722": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-46498": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45794": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45052": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45051": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-48496": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55863": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45049": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45048": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-46495": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-46488": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-44793": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-44778": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-44203": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-44202": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-44179": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-41573": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-57168": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-57442": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55866": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55776": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55775": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55774": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55770": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55692": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55847": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55846": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55837": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55828": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55691": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55690": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55091": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55832": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55414": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55591": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54683": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55093": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54711": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47256": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-57441": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-57209": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-57210": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55617": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55887": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55226": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55225": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-55636": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54697": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54700": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-28975": {
+   "predicted": "apple",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-28980": {
+   "predicted": "apple",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-43671": {
+   "predicted": "apple",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-28970": {
+   "predicted": "apple",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47701": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47253": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47252": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-53954": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47680": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45726": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45723": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45720": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-47215": {
+   "predicted": "GitHub_M",
+   "tier": "block-corroborated",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45730": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45057": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-45056": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-44476": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-32179": {
+   "predicted": "microsoft",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54333": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2026-54334": {
+   "predicted": "GitHub_M",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2025-28269": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2025-65852": {
+   "predicted": "mitre",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  },
+  "CVE-2025-23390": {
+   "predicted": "suse",
+   "tier": "block",
+   "k": 3,
+   "on": "2026-08-22"
+  }
+ },
  "graded": [
   {
    "cve_id": "CVE-2026-50192",

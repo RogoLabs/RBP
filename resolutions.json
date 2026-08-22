@@ -208,10 +208,6 @@
    "first_public": "2026-06-19",
    "owner": "mitre"
   },
-  "CVE-2026-50538": {
-   "first_public": "2026-06-19",
-   "owner": null
-  },
   "CVE-2026-41435": {
    "first_public": "2026-06-01",
    "owner": null
@@ -279,14 +275,6 @@
   "CVE-2026-2574": {
    "first_public": "2026-02-16",
    "owner": null
-  },
-  "CVE-2026-53525": {
-   "first_public": "2026-08-19",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-53524": {
-   "first_public": "2026-08-19",
-   "owner": "GitHub_M"
   },
   "CVE-2026-63347": {
    "first_public": "2026-08-18",
@@ -516,30 +504,6 @@
    "first_public": "2026-08-07",
    "owner": null
   },
-  "CVE-2026-63343": {
-   "first_public": "2026-08-04",
-   "owner": null
-  },
-  "CVE-2026-63125": {
-   "first_public": "2026-08-04",
-   "owner": null
-  },
-  "CVE-2026-62941": {
-   "first_public": "2026-08-04",
-   "owner": null
-  },
-  "CVE-2026-62940": {
-   "first_public": "2026-08-04",
-   "owner": null
-  },
-  "CVE-2026-62867": {
-   "first_public": "2026-08-04",
-   "owner": null
-  },
-  "CVE-2026-62313": {
-   "first_public": "2026-08-04",
-   "owner": "GitHub_M"
-  },
   "CVE-2026-62268": {
    "first_public": "2026-07-31",
    "owner": null
@@ -760,10 +724,6 @@
    "first_public": "2026-07-09",
    "owner": "GitHub_M"
   },
-  "CVE-2026-44517": {
-   "first_public": "2026-06-22",
-   "owner": "GitHub_M"
-  },
   "CVE-2025-55662": {
    "first_public": "",
    "owner": null
@@ -775,54 +735,6 @@
   "CVE-2026-52717": {
    "first_public": "2026-06-12",
    "owner": null
-  },
-  "CVE-2026-47753": {
-   "first_public": "2026-06-10",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48749": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48750": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48751": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48752": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48753": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48754": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48755": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48756": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-48769": {
-   "first_public": "2026-06-26",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-55621": {
-   "first_public": "",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-55622": {
-   "first_public": "",
-   "owner": "GitHub_M"
   },
   "CVE-2026-54548": {
    "first_public": "",
@@ -1216,10 +1128,6 @@
    "first_public": "2026-08-17",
    "owner": null
   },
-  "CVE-2026-45099": {
-   "first_public": "2026-08-17",
-   "owner": "GitHub_M"
-  },
   "CVE-2026-53728": {
    "first_public": "2026-08-17",
    "owner": null
@@ -1480,15 +1388,7 @@
    "first_public": "2026-07-15",
    "owner": "GitHub_M"
   },
-  "CVE-2026-54457": {
-   "first_public": "2026-07-15",
-   "owner": "GitHub_M"
-  },
   "CVE-2026-54452": {
-   "first_public": "2026-07-15",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-53656": {
    "first_public": "2026-07-15",
    "owner": "GitHub_M"
   },
@@ -1708,10 +1608,6 @@
    "first_public": "2026-07-10",
    "owner": null
   },
-  "CVE-2026-54071": {
-   "first_public": "2026-07-10",
-   "owner": "GitHub_M"
-  },
   "CVE-2026-54072": {
    "first_public": "2026-07-10",
    "owner": "GitHub_M"
@@ -1876,10 +1772,6 @@
    "first_public": "2026-07-07",
    "owner": "GitHub_M"
   },
-  "CVE-2026-53572": {
-   "first_public": "2026-07-07",
-   "owner": null
-  },
   "CVE-2026-53553": {
    "first_public": "2026-07-07",
    "owner": null
@@ -1887,22 +1779,6 @@
   "CVE-2026-53552": {
    "first_public": "2026-07-07",
    "owner": null
-  },
-  "CVE-2026-53487": {
-   "first_public": "2026-07-07",
-   "owner": null
-  },
-  "CVE-2026-53531": {
-   "first_public": "2026-07-07",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-53530": {
-   "first_public": "2026-07-07",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-53509": {
-   "first_public": "2026-07-07",
-   "owner": "GitHub_M"
   },
   "CVE-2026-45016": {
    "first_public": "2026-07-07",
@@ -1944,10 +1820,6 @@
    "first_public": "2026-07-06",
    "owner": null
   },
-  "CVE-2026-49360": {
-   "first_public": "2026-07-02",
-   "owner": null
-  },
   "CVE-2026-49292": {
    "first_public": "2026-07-02",
    "owner": "GitHub_M"
@@ -1963,14 +1835,6 @@
   "CVE-2026-49250": {
    "first_public": "2026-07-02",
    "owner": "GitHub_M"
-  },
-  "CVE-2026-50290": {
-   "first_public": "2026-07-02",
-   "owner": null
-  },
-  "CVE-2026-50288": {
-   "first_public": "2026-07-02",
-   "owner": null
   },
   "CVE-2026-46487": {
    "first_public": "2026-07-01",
@@ -2028,10 +1892,6 @@
    "first_public": "2026-06-25",
    "owner": "GitHub_M"
   },
-  "CVE-2026-53541": {
-   "first_public": "2026-06-24",
-   "owner": "GitHub_M"
-  },
   "CVE-2026-45052": {
    "first_public": "2026-06-24",
    "owner": "GitHub_M"
@@ -2048,10 +1908,6 @@
    "first_public": "2026-06-23",
    "owner": "GitHub_M"
   },
-  "CVE-2026-54134": {
-   "first_public": "2026-06-23",
-   "owner": null
-  },
   "CVE-2026-45049": {
    "first_public": "2026-06-23",
    "owner": "GitHub_M"
@@ -2059,10 +1915,6 @@
   "CVE-2026-45048": {
    "first_public": "2026-06-23",
    "owner": "GitHub_M"
-  },
-  "CVE-2026-35163": {
-   "first_public": "2026-06-23",
-   "owner": null
   },
   "CVE-2026-46495": {
    "first_public": "2026-06-22",
@@ -2131,10 +1983,6 @@
   "CVE-2026-55650": {
    "first_public": "2026-06-19",
    "owner": null
-  },
-  "CVE-2026-55185": {
-   "first_public": "2026-06-19",
-   "owner": "GitHub_M"
   },
   "CVE-2026-55847": {
    "first_public": "2026-06-19",
@@ -2464,10 +2312,6 @@
    "first_public": "2026-06-12",
    "owner": "apple"
   },
-  "CVE-2026-48050": {
-   "first_public": "2026-06-11",
-   "owner": "GitHub_M"
-  },
   "CVE-2026-47780": {
    "first_public": "2026-06-11",
    "owner": null
@@ -2478,10 +2322,6 @@
   },
   "CVE-2026-47253": {
    "first_public": "2026-06-10",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-47735": {
-   "first_public": "2026-06-08",
    "owner": "GitHub_M"
   },
   "CVE-2026-47252": {
@@ -2530,10 +2370,6 @@
   },
   "CVE-2026-44476": {
    "first_public": "2026-06-04",
-   "owner": "GitHub_M"
-  },
-  "CVE-2026-43980": {
-   "first_public": "2026-06-03",
    "owner": "GitHub_M"
   },
   "CVE-2026-38739": {
@@ -2853,6 +2689,498 @@
    "published": "2026-08-21",
    "days_to_publish": 10,
    "closed_on": "2026-08-21"
+  },
+  {
+   "cve_id": "CVE-2026-50538",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-19",
+   "published": "2026-08-21",
+   "days_to_publish": 63,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53525",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-19",
+   "published": "2026-08-21",
+   "days_to_publish": 2,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53524",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-19",
+   "published": "2026-08-21",
+   "days_to_publish": 2,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-63343",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-04",
+   "published": "2026-08-21",
+   "days_to_publish": 17,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-63125",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-04",
+   "published": "2026-08-21",
+   "days_to_publish": 17,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-62941",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-04",
+   "published": "2026-08-21",
+   "days_to_publish": 17,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-62940",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-04",
+   "published": "2026-08-21",
+   "days_to_publish": 17,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-62867",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-04",
+   "published": "2026-08-21",
+   "days_to_publish": 17,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-62313",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-04",
+   "published": "2026-08-21",
+   "days_to_publish": 17,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-44517",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-22",
+   "published": "2026-08-21",
+   "days_to_publish": 60,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-47753",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-10",
+   "published": "2026-08-21",
+   "days_to_publish": 72,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48749",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48750",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48751",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48752",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48753",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48754",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48755",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48756",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48769",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-26",
+   "published": "2026-08-21",
+   "days_to_publish": 56,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-55621",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "",
+   "published": "2026-08-21",
+   "days_to_publish": null,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-55622",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "",
+   "published": "2026-08-21",
+   "days_to_publish": null,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-45099",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-08-17",
+   "published": "2026-08-21",
+   "days_to_publish": 4,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-54457",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-15",
+   "published": "2026-08-21",
+   "days_to_publish": 37,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53656",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-15",
+   "published": "2026-08-21",
+   "days_to_publish": 37,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-54071",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-10",
+   "published": "2026-08-21",
+   "days_to_publish": 42,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53572",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-07",
+   "published": "2026-08-21",
+   "days_to_publish": 45,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53487",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-07",
+   "published": "2026-08-21",
+   "days_to_publish": 45,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53531",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-07",
+   "published": "2026-08-21",
+   "days_to_publish": 45,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53530",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-07",
+   "published": "2026-08-21",
+   "days_to_publish": 45,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53509",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-07",
+   "published": "2026-08-21",
+   "days_to_publish": 45,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-49360",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-02",
+   "published": "2026-08-21",
+   "days_to_publish": 50,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-50290",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-02",
+   "published": "2026-08-21",
+   "days_to_publish": 50,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-50288",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-07-02",
+   "published": "2026-08-21",
+   "days_to_publish": 50,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-53541",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-24",
+   "published": "2026-08-21",
+   "days_to_publish": 58,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-54134",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-23",
+   "published": "2026-08-21",
+   "days_to_publish": 59,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-35163",
+   "state": "PUBLISHED",
+   "predicted_owner": null,
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-23",
+   "published": "2026-08-21",
+   "days_to_publish": 59,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-55185",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-19",
+   "published": "2026-08-21",
+   "days_to_publish": 63,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-48050",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-11",
+   "published": "2026-08-21",
+   "days_to_publish": 71,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-47735",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-08",
+   "published": "2026-08-21",
+   "days_to_publish": 74,
+   "closed_on": "2026-08-22"
+  },
+  {
+   "cve_id": "CVE-2026-43980",
+   "state": "PUBLISHED",
+   "predicted_owner": "GitHub_M",
+   "published_assigner": "GitHub_M",
+   "transferred": false,
+   "owner": "GitHub_M",
+   "first_public": "2026-06-03",
+   "published": "2026-08-21",
+   "days_to_publish": 79,
+   "closed_on": "2026-08-22"
   }
  ]
 }

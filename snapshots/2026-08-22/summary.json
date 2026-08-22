@@ -1,0 +1,239 @@
+{
+ "date": "2026-08-22",
+ "expectation_hours": 72,
+ "total": 522,
+ "past_expectation": 522,
+ "clock_unknown": 0,
+ "undated_excluded": 83,
+ "epoch": null,
+ "min_age_days": 7,
+ "epoch_excluded": 0,
+ "oldest_days": 521,
+ "median_days": 44,
+ "named_cnas": 6,
+ "top_owner_share": 0.8333,
+ "must_rows": 0,
+ "should_rows": 522,
+ "age_buckets": {
+  "30-90d": 374,
+  "7-30d": 112,
+  "90-180d": 24,
+  "180d+": 12
+ },
+ "inference": {
+  "k": 3,
+  "run_coverage": 0.4918,
+  "leave_one_out": {
+   "method": "leave-one-out",
+   "k": 3,
+   "decided": 29614,
+   "abstained": 17905,
+   "total": 47519,
+   "correct": 29433,
+   "wrong": 181,
+   "coverage": 0.6232,
+   "precision": 0.9939
+  },
+  "live": {
+   "graded": 1,
+   "correct": 1,
+   "precision": 1.0,
+   "outstanding": 258,
+   "closed_unscored": 0,
+   "by_tier": {
+    "block": {
+     "graded": 1,
+     "correct": 1,
+     "precision": 1.0
+    }
+   }
+  }
+ },
+ "feeds": {
+  "requested": [
+   "alas",
+   "ubuntu",
+   "debian",
+   "ghsa",
+   "redhat",
+   "alpine",
+   "osv",
+   "mozilla",
+   "arch"
+  ],
+  "failures": [],
+  "attempts": 9,
+  "detail": {
+   "alas": {
+    "status": "ok",
+    "detail": "11416 ids",
+    "rows": 11416,
+    "ok": true,
+    "truncated": false
+   },
+   "ubuntu": {
+    "status": "truncated",
+    "detail": "hit the 200-page cap; rows beyond it were not read",
+    "rows": 3995,
+    "ok": false,
+    "truncated": true
+   },
+   "debian": {
+    "status": "ok",
+    "detail": "17145 ids",
+    "rows": 17145,
+    "ok": true,
+    "truncated": false
+   },
+   "ghsa": {
+    "status": "ok",
+    "detail": "3321 ids",
+    "rows": 3321,
+    "ok": true,
+    "truncated": false
+   },
+   "redhat": {
+    "status": "ok",
+    "detail": "16128 ids",
+    "rows": 16128,
+    "ok": true,
+    "truncated": false
+   },
+   "alpine": {
+    "status": "ok",
+    "detail": "2537 ids",
+    "rows": 2537,
+    "ok": true,
+    "truncated": false
+   },
+   "osv": {
+    "parts": {
+     "PyPI": {
+      "status": "ok",
+      "detail": "2346 ids from 34MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "npm": {
+      "status": "ok",
+      "detail": "2904 ids from 220MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Go": {
+      "status": "ok",
+      "detail": "2220 ids from 11MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "crates.io": {
+      "status": "ok",
+      "detail": "358 ids from 3MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "RubyGems": {
+      "status": "ok",
+      "detail": "200 ids from 4MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Maven": {
+      "status": "ok",
+      "detail": "1322 ids from 10MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Packagist": {
+      "status": "ok",
+      "detail": "1777 ids from 10MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "NuGet": {
+      "status": "ok",
+      "detail": "376 ids from 3MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Pub": {
+      "status": "ok",
+      "detail": "1 ids from 0MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     },
+     "Hex": {
+      "status": "ok",
+      "detail": "145 ids from 0MB",
+      "rows": null,
+      "ok": true,
+      "truncated": false
+     }
+    },
+    "status": "ok",
+    "detail": "11649 ids",
+    "rows": 11649,
+    "ok": true,
+    "truncated": false
+   },
+   "mozilla": {
+    "status": "ok",
+    "detail": "607 ids",
+    "rows": 607,
+    "ok": true,
+    "truncated": false
+   },
+   "arch": {
+    "status": "ok",
+    "detail": "62 ids",
+    "rows": 62,
+    "ok": true,
+    "truncated": false
+   }
+  },
+  "truncated": [
+   "ubuntu"
+  ]
+ },
+ "coverage": {
+  "total_cnas": 434,
+  "covered_cnas": 159,
+  "pct_cnas": 36.6,
+  "pct_volume_attributable": 90.0,
+  "observed_pct": 20.87,
+  "observed_ids": 26991,
+  "total_pub": 129352,
+  "top_n": 50,
+  "top_covered": 37,
+  "top_missed": [
+   "dell",
+   "siemens",
+   "SamsungMobile",
+   "qualcomm",
+   "huawei",
+   "twcert",
+   "MediaTek",
+   "fortinet",
+   "HCL",
+   "qnap",
+   "juniper",
+   "Google_Devices",
+   "hpe"
+  ],
+  "recent_years": [
+   2024,
+   2025,
+   2026
+  ]
+ },
+ "generated_at": "2026-08-22T00:31:46+00:00"
+}

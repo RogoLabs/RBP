@@ -1,0 +1,74 @@
+[
+ {
+  "cna": "GitHub_M",
+  "outstanding": 215,
+  "oldest_days": 128,
+  "median_days_public": 44,
+  "past_expectation": 215,
+  "must_rows": 0,
+  "should_rows": 215,
+  "published_12mo": 10391,
+  "resolved_n": 39,
+  "median_days_to_publish": 50
+ },
+ {
+  "cna": "mitre",
+  "outstanding": 35,
+  "oldest_days": 502,
+  "median_days_public": 9,
+  "past_expectation": 35,
+  "must_rows": 0,
+  "should_rows": 35,
+  "published_12mo": 4440,
+  "resolved_n": 0,
+  "median_days_to_publish": null
+ },
+ {
+  "cna": "apple",
+  "outstanding": 4,
+  "oldest_days": 71,
+  "median_days_public": 71,
+  "past_expectation": 4,
+  "must_rows": 0,
+  "should_rows": 4,
+  "published_12mo": 835,
+  "resolved_n": 0,
+  "median_days_to_publish": null
+ },
+ {
+  "cna": "Chrome",
+  "outstanding": 2,
+  "oldest_days": 81,
+  "median_days_public": 81,
+  "past_expectation": 2,
+  "must_rows": 0,
+  "should_rows": 2,
+  "published_12mo": 2239,
+  "resolved_n": 0,
+  "median_days_to_publish": null
+ },
+ {
+  "cna": "microsoft",
+  "outstanding": 1,
+  "oldest_days": 128,
+  "median_days_public": 128,
+  "past_expectation": 1,
+  "must_rows": 0,
+  "should_rows": 1,
+  "published_12mo": 2364,
+  "resolved_n": 0,
+  "median_days_to_publish": null
+ },
+ {
+  "cna": "suse",
+  "outstanding": 1,
+  "oldest_days": 484,
+  "median_days_public": 484,
+  "past_expectation": 1,
+  "must_rows": 0,
+  "should_rows": 1,
+  "published_12mo": 85,
+  "resolved_n": 0,
+  "median_days_to_publish": null
+ }
+]
