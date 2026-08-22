@@ -57,7 +57,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # The suite gates the deploy. It previously ran only in ci.yml, a separate
+  # workflow with no dependency in either direction, so a red ci.yml did not stop
+  # a publish and the four scheduled runs a day never invoked pytest at all. At
+  # least fourteen review findings end in "add a test", and none of those tests
+  # were protecting a scheduled publication.
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      # requirements.txt has no pytest; it lives in requirements-dev.txt, which
+      # the build job never installed.
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest tests/ -q
+
   build:
+    needs: test
     runs-on: ubuntu-latest
     # Measured wall times are 6.9 to 14.9 minutes against a 360-minute default,
     # so a hung fetch would otherwise burn six hours and collide with the next

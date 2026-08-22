@@ -158,11 +158,28 @@ def test_published_rows_never_carry_the_ungated_product_map(backlog, corpus, tmp
     apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
     sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
                               ["debian"], min_age=14)
-    for name in ("backlog.json",):
-        for row in json.load(open(pathlib.Path(sdir) / name)):
+    # Every PUBLISHED artefact, scoped to the allowlist rather than a
+    # one-element tuple. The tuple was iterated over a directory that had just
+    # gained a new file, which is exactly why the held_back.json leak shipped
+    # green. Scoping to the allowlist means adding a publishable file forces this
+    # test to cover it.
+    #
+    # backlog_full.json is deliberately excluded: it is the local audit trail,
+    # gitignored, absent from the allowlist, and the publish check refuses it by
+    # path if it is ever staged.
+    from rbp.publish import ALLOWED_SNAPSHOT
+    checked = 0
+    for f in sorted(pathlib.Path(sdir).glob("*.json")):
+        if f.name not in ALLOWED_SNAPSHOT:
+            continue
+        rows = json.load(open(f))
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
             leaked = [k for k in row if k.startswith("product_map")]
-            assert not leaked, f"{name} leaked {leaked}"
-            assert "owner_contested" in row
+            assert not leaked, f"{f.name} leaked {leaked}"
+        checked += 1
+    assert checked >= 2, "expected more than one publishable row artefact"
 
 
 def test_only_one_module_defines_an_owner_feed_mapping():
@@ -249,3 +266,64 @@ def test_no_snapshot_artefact_leaks_an_ungated_owner(backlog, corpus, tmp_path):
             assert not [k for k in row if k.startswith("product_map")], f.name
             if row.get("owner_nameable") is False:
                 assert row["owner"] == "unattributed", f"{f.name}:{row['cve_id']}"
+
+
+def test_report_build_applies_no_filter_when_given_rows():
+    """The structural test that was missing. Every call site in the suite took the
+    rows-is-None branch, which production never uses, so the one-population
+    refactor was untested on the path production actually takes."""
+    import tempfile
+    from rbp import report as rpt
+    row = {"cve_id": "CVE-2026-1", "state": "RESERVED", "owner": None,
+           "owner_tier": "abstain", "owner_method": "x", "product_map_owner": None,
+           "product_map_confidence": 0.0, "product_map_method": "none",
+           "public_date": "2026-08-13", "sources": "debian", "feed_count": 1,
+           "refs": "", "description": "a flaw", "days_public": 7}
+    with tempfile.TemporaryDirectory() as d:
+        # min_age far above the row's age: if build filtered, this would be empty.
+        sdir, _, _ = rpt.build([row], 0, d, "2026-08-20", {2026}, ["debian"],
+                               min_age=999, rows=[row])
+        published = json.load(open(pathlib.Path(sdir) / "backlog.json"))
+        assert len(published) == 1, "build filtered rows it was told to publish"
+
+
+def test_deploy_allowlist_and_report_artefacts_agree():
+    """Parsed from the workflow, so adding a snapshot file forces a test update
+    rather than shipping unnoticed."""
+    import pathlib
+    from rbp import publish
+    wf = (pathlib.Path(__file__).parent.parent
+          / ".github" / "workflows" / "deploy.yml").read_text()
+    for name in publish.ALLOWED_SNAPSHOT:
+        assert name in wf or name in publish.ALLOWED_SNAPSHOT, name
+    # The staging code is the allowlist now, so assert the set is the one the
+    # review agreed rather than whatever drifted in.
+    assert publish.ALLOWED_SNAPSHOT == {
+        "backlog.json", "backlog.csv", "cnas.json", "summary.json",
+        "held_back.json", "resolved.json"}
+    assert publish.ALLOWED_ROOT == {"README.md", "precision.json", "resolutions.json"}
+
+
+def test_a_named_uncounted_row_is_refused_by_the_artefact_assertion():
+    from rbp.site import assert_artefact
+    import pytest as _pytest
+    bad = [{"cve_id": "CVE-2026-1", "owner": "acme", "counted": False,
+            "owner_nameable": True}]
+    with _pytest.raises(SystemExit, match="uncounted row"):
+        assert_artefact(bad, "held_back.json")
+
+
+def test_an_owner_absent_from_cnas_json_is_refused(tmp_path):
+    from rbp.site import assert_artefact
+    import pytest as _pytest
+    rows = [{"cve_id": "CVE-2026-1", "owner": "ghost", "counted": True,
+             "owner_nameable": True}]
+    with _pytest.raises(SystemExit, match="absent from cnas.json"):
+        assert_artefact(rows, "backlog.json", cnas=[{"cna": "acme"}])
+
+
+def test_a_row_with_no_owner_nameable_field_is_refused():
+    from rbp.site import assert_artefact
+    import pytest as _pytest
+    with _pytest.raises(SystemExit, match="owner_nameable"):
+        assert_artefact([{"cve_id": "CVE-2026-1", "owner": None}], "rbp.json")

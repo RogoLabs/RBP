@@ -189,6 +189,9 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # Younger-than-buffer and undated (age-unknown) entries are held back, not counted
     # against a CNA. That is what lets us say "not front-running; these are overdue."
     if rows is None:
+        # Kept only for tests that predate the one-population refactor. cli.py is
+        # the sole production caller and always passes rows, so this branch must
+        # never decide what production publishes.
         reportable = [r for r in backlog
                       if isinstance(r["days_public"], int) and r["days_public"] >= min_age]
     else:
@@ -301,6 +304,13 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
             r, owner="unattributed", owner_tier="abstain", owner_nameable=False,
             owner_method="withheld-not-reported", self_disclosed=False,
             counted=False, held_back_reason=reason))
+    # The same invariants the site applies, applied where the file is written.
+    # held_back.json is the file that proved a single-artefact assertion is not
+    # an assertion: its named owners included CNAs absent from cnas.json.
+    from . import site as _site
+    gated_rows = [_gated(r) for r in reportable]
+    _site.assert_artefact(gated_rows, "backlog.json")
+    _site.assert_artefact(held, "held_back.json")
     json.dump(held, open(os.path.join(sdir, "held_back.json"), "w"), indent=1)
     json.dump([_gated(r) for r in reportable], open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
 

@@ -177,6 +177,43 @@ def _assert_consistent(rows, summary, cnas):
             "named. The per-CNA cards would contradict their own tables.")
 
 
+def assert_artefact(rows, label, cnas=None, covered=None):
+    """Invariants every published artefact must satisfy, not just backlog.json.
+
+    The one assertion that existed iterated a single-element tuple over a
+    directory that had just gained a new file, which is exactly why the
+    held_back.json leak shipped green. held_back's named owners included CNAs
+    absent from cnas.json, so it published precisely the values the existing
+    assertion refused.
+    """
+    known = {c["cna"] for c in (cnas or [])}
+    problems = []
+    for r in rows:
+        if not isinstance(r, dict):
+            problems.append(f"{label}: non-object row")
+            continue
+        cid = r.get("cve_id", "?")
+        owner = r.get("owner")
+        is_named = owner not in (None, "", "unattributed")
+
+        if "owner_nameable" not in r:
+            problems.append(f"{label}:{cid} has no owner_nameable field")
+        if is_named and r.get("counted") is False:
+            problems.append(f"{label}:{cid} names {owner} on an uncounted row")
+        if is_named and known and owner not in known:
+            problems.append(f"{label}:{cid} names {owner}, absent from cnas.json")
+        if is_named and covered and owner not in covered:
+            problems.append(f"{label}:{cid} names {owner}, outside the covered set")
+        if any(k.startswith("product_map") for k in r):
+            problems.append(f"{label}:{cid} carries an ungated product-map field")
+        desc = r.get("description") or ""
+        if desc.startswith("NOTE:"):
+            problems.append(f"{label}:{cid} description is a bare tracker NOTE")
+    if problems:
+        raise SystemExit("refusing to publish:\n  " + "\n  ".join(problems[:25]))
+    return len(rows)
+
+
 def load(snap_root, data_dir):
     """Assemble the render context from the newest snapshot and the ledgers."""
     snaps = _snapshots(snap_root)
@@ -456,6 +493,9 @@ CSV_COLS = ["cve_id", "state", "days_public", "past_expectation",
 
 def _write_data(out, ctx):
     launched = ctx["launched"]
+    # Every published row set, not only the one the old test looked at.
+    covered = set((ctx["summary"].get("coverage") or {}).get("covered") or [])
+    assert_artefact(ctx["rows"], "rbp.json", ctx["cnas"], covered)
     d = os.path.join(out, "data")
     os.makedirs(d, exist_ok=True)
 
