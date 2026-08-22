@@ -28,7 +28,8 @@
   <p class="lead-unit">
     {% if corrob is not none %}
     CVE IDs are reserved, referenced in <strong>two or more independent</strong> public
-    advisories, and still have no published record in the CVE List.
+    advisories, and still have no published record in the CVE List{% if summary.epoch %},
+    <strong>new since {{ summary.epoch }}</strong>{% endif %}.
     {% if summary.total > corrob %}
     A further <strong>{{ (summary.total - corrob) | commafy }}</strong> are referenced
     in one.
@@ -477,6 +478,41 @@
   </div>
 </div>
 {% else %}
-<div class="caveat warn"><p class="mb-0">No reportable rows in this snapshot.</p></div>
+{% endif %}
+
+{# The zero state, OUTSIDE the summary.total guard.
+   The whole body including every disclosure sat inside {% raw %}{% if summary.total %}{% endraw %},
+   so a zero-row page collapsed to a header, one paragraph and one yellow line. On
+   launch day with an epoch set that is exactly what happens for the whole buffer
+   window, so the empty state IS the launch page. Empty is not a warning, so this is
+   a plain bordered block. #}
+{% if not summary.total %}
+<div class="empty-state">
+  <strong>No reportable rows in this snapshot.</strong><br>
+  {% if summary.epoch %}
+  Counting starts {{ summary.epoch }}, and a row is reportable only once it has been
+  public for {{ summary.get('min_age_days', 7) }} days, so the first rows appear once
+  something disclosed on or after the epoch has aged in. This is the expected state
+  immediately after launch, not a fault.
+  {% if summary.epoch_excluded %}
+  <br><strong>{{ summary.epoch_excluded | commafy }}</strong> reserved IDs were already
+  public before the epoch and are held back, including the oldest.
+  <a href="backlog-at-launch.html">The backlog at launch</a>.
+  {% endif %}
+  {% else %}
+  Either every previously listed record has published, or the feeds returned nothing
+  this run. <a href="method.html">Feed health</a> says which.
+  {% endif %}
+</div>
+{% endif %}
+
+{# Linked from the front page whether or not an epoch is set, so the archive is
+   discoverable before it is needed. #}
+{% if summary.epoch_excluded %}
+<p class="small">
+  <a href="backlog-at-launch.html">The backlog at launch</a>:
+  {{ summary.epoch_excluded | commafy }} reserved IDs public before {{ summary.epoch }},
+  excluded from the count above and not less real.
+</p>
 {% endif %}
 {% endblock %}

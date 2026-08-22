@@ -140,16 +140,37 @@ _LEGACY_OWNER = "unattributed"
 
 
 def _normalise_legacy(rows):
-    """Bring a snapshot written under an older schema up to the current contract."""
-    n = 0
+    """Bring a snapshot written under an older schema up to the current contract.
+
+    Two coercions, both idempotent, so applying them to a current snapshot is a
+    no-op and applying them to an old one makes it readable.
+    """
+    from . import classify
+    owners = descs = 0
     for r in rows:
-        if isinstance(r, dict) and r.get("owner") == _LEGACY_OWNER:
+        if not isinstance(r, dict):
+            continue
+        if r.get("owner") == _LEGACY_OWNER:
             r["owner"] = None
             r.setdefault("owner_nameable", False)
-            n += 1
-    if n:
-        print(f"  note: coerced {n} legacy {_LEGACY_OWNER!r} owner value(s) to null "
-              "(snapshot predates schema v1)")
+            owners += 1
+        # Descriptions written before the sanitiser existed still carry URLs and
+        # tracker annotations, which assert_artefact refuses. Cleaning on read is
+        # correct rather than lenient: the sanitiser is idempotent, so this cannot
+        # weaken a current snapshot, and the alternative is a build that cannot
+        # read its own history.
+        d = r.get("description")
+        if d:
+            cleaned = classify.display_description(d)
+            if cleaned != d:
+                r["description"] = cleaned or (r.get("package") or "")
+                descs += 1
+    if owners:
+        print(f"  note: coerced {owners} legacy {_LEGACY_OWNER!r} owner value(s) to "
+              "null (snapshot predates schema v1)")
+    if descs:
+        print(f"  note: sanitised {descs} legacy description(s) on read "
+              "(snapshot predates the description sanitiser)")
     return rows
 
 
@@ -313,6 +334,9 @@ def load(snap_root, data_dir):
     rows = _normalise_legacy(_read_strict(os.path.join(latest, "backlog.json")))
     summary = _read_strict(os.path.join(latest, "summary.json"))
     cnas = _read_strict(os.path.join(latest, "cnas.json"))
+    # Tolerant: a snapshot written before held_back.json existed is a valid input,
+    # and an absent archive must not stop a publication.
+    held_back = _normalise_legacy(_read(os.path.join(latest, "held_back.json"), []))
     _assert_consistent(rows, summary, cnas)
 
     # The launch gate, enforced here but deliberately NOT by refusing to build.
@@ -398,6 +422,13 @@ def load(snap_root, data_dir):
         # questions and the templates must not present either as the other.
         "launch": launch_mod.status(summary, gate),
         # The published contract, rendered on /data rather than described there.
+        # The rows the epoch removes. Read from the snapshot rather than recomputed,
+        # so the page shows exactly what the pipeline held back. Never carries an
+        # owner: these rows are outside the reportable set, so they are outside the
+        # set this site is willing to attribute.
+        "held_back": held_back,
+        "held_back_oldest": max((r.get("days_public") or 0 for r in held_back),
+                                default=0),
         "schema_version": _schema.SCHEMA_VERSION,
         "columns": _schema.COLUMNS,
         "fields": _schema.FIELDS,
@@ -479,32 +510,71 @@ def _changes(rows, prev_dir, latest_dir):
     """
     empty = {"published": [], "rejected": [], "no_longer_listed": [], "new": [],
              "still_open": 0, "have_previous": False, "comparable": True,
-             "incomparable_reason": None}
+             "incomparable_reason": None, "epoch_started": False,
+             "dropped_by_epoch": 0}
     if not prev_dir:
         return empty
 
-    prev_rows = _read(os.path.join(prev_dir, "backlog.json"), [])
+    # STRICT on the previous backlog when its directory exists. The tolerant read
+    # turned a missing or corrupt previous backlog into an empty set, which makes
+    # every current row "new" and every previous row "no longer listed" while
+    # `comparable` stays True. A diff computed against nothing is the one output
+    # that must never be published as a diff.
+    prev_backlog = os.path.join(prev_dir, "backlog.json")
+    prev_rows = (_normalise_legacy(_read_strict(prev_backlog))
+                 if os.path.exists(prev_backlog) else None)
+    if prev_rows is None:
+        return {**empty, "have_previous": True, "comparable": False,
+                "previous_date": os.path.basename(prev_dir),
+                "incomparable_reason":
+                    "the previous snapshot has no backlog.json, so there is nothing "
+                    "to diff against. Showing no movement rather than reporting "
+                    "every row as new."}
     prev_sum = _read(os.path.join(prev_dir, "summary.json"), {})
     now_sum = _read(os.path.join(latest_dir, "summary.json"), {})
 
     # Refuse to diff snapshots that disagree on how they were produced.
+    #
+    # Keyed on PRESENCE, not truthiness. `epoch` is emitted as `EPOCH or None`, so
+    # the None-to-date transition short-circuited `is not None` and the pair was
+    # declared comparable on exactly the run where it is least comparable: launch
+    # day, when every row moves. Reproduced by execution before this fix:
+    # comparable True, no_longer_listed 150 of 150, which at live scale is ~500 CVE
+    # IDs rendered as a comma-joined mono dump under "No longer listed, cause
+    # unverified" on the first day anyone reads the site.
+    #
+    # The guard caught the harmless direction (unsetting the epoch) and missed the
+    # one that will actually happen. Same hole a third time, after `min_age_days`
+    # and the feed set.
     for key, label in (("min_age_days", "buffer"), ("epoch", "epoch")):
-        if prev_sum.get(key) is not None and prev_sum.get(key) != now_sum.get(key):
+        in_prev, in_now = key in prev_sum, key in now_sum
+        if in_prev and in_now and prev_sum.get(key) != now_sum.get(key):
             return {**empty, "have_previous": True, "comparable": False,
                     "previous_date": os.path.basename(prev_dir),
+                    "epoch_started": (key == "epoch" and not prev_sum.get(key)
+                                      and bool(now_sum.get(key))),
                     "incomparable_reason":
                         f"the {label} changed from {prev_sum.get(key)!r} to "
                         f"{now_sum.get(key)!r} between these snapshots"}
     a = set((prev_sum.get("feeds") or {}).get("requested") or [])
     b = set((now_sum.get("feeds") or {}).get("requested") or [])
-    if a and b and a != b:
+    # Presence again, not truthiness: `if a and b` skipped the check whenever
+    # either side was empty, which is precisely a run where every feed was dropped.
+    if "feeds" in prev_sum and "feeds" in now_sum and a != b:
         return {**empty, "have_previous": True, "comparable": False,
                 "previous_date": os.path.basename(prev_dir),
                 "incomparable_reason":
                     "the feed set changed between these snapshots "
                     f"(added {sorted(b - a)}, dropped {sorted(a - b)})"}
 
-    before = {r["cve_id"] for r in prev_rows}
+    # `gone` is computed against the previous snapshot RESTRICTED to rows that are
+    # still epoch-eligible, so an epoch change moves rows into the archive rather
+    # than through the diff. Better than a comparability flag: the flag tells a
+    # reader the diff is meaningless, this stops the meaningless diff existing.
+    now_epoch = now_sum.get("epoch")
+    before = {r["cve_id"] for r in prev_rows
+              if not (now_epoch and (r.get("public_date") or "") < now_epoch)}
+    dropped_by_epoch = len(prev_rows) - len(before)
     now = {r["cve_id"] for r in rows}
     by_id = {r["cve_id"]: r for r in rows}
     gone = before - now
@@ -523,6 +593,8 @@ def _changes(rows, prev_dir, latest_dir):
         "have_previous": True,
         "comparable": True,
         "incomparable_reason": None,
+        "epoch_started": False,
+        "dropped_by_epoch": dropped_by_epoch,
         "previous_date": os.path.basename(prev_dir),
     }
 
@@ -621,6 +693,14 @@ def _write_data(out, ctx):
     # site/data. The resolved rows are the only public evidence the pipeline closes,
     # and the held-back count is the filter that removes the oldest and strongest
     # rows, so withholding both left a consumer unable to check either.
+    # The archive, published rather than computed and withheld. The oldest row is
+    # this project's single strongest piece of evidence and the epoch would have
+    # deleted it from the site with no home anywhere.
+    assert_artefact(ctx["held_back"], "held-back.json", ctx["cnas"], covered)
+    json.dump(_schema.envelope(ctx["held_back"], ctx["summary"], launched=launched,
+                               snapshot_date=ctx["snapshot_date"], kind="held-back"),
+              open(os.path.join(d, "held-back.json"), "w"), indent=1)
+
     json.dump(_schema.envelope(ctx["resolutions_published"], ctx["summary"],
                                launched=launched, snapshot_date=ctx["snapshot_date"],
                                kind="resolved"),
@@ -663,6 +743,11 @@ _PAGE_TEMPLATES = [
     ("policy.html", "policy.html"),
     ("data.html", "data.html"),
     ("changes.html", "changes.html"),
+    # A permanent home for the rows the epoch removes. Published whether or not an
+    # epoch is set, so the archive exists BEFORE the day it is needed rather than
+    # being designed on launch day, which is the sequencing item 6 insists on:
+    # design the zero state, publish the archive, then set the epoch.
+    ("backlog-at-launch.html", "backlog-at-launch.html"),
 ]
 
 

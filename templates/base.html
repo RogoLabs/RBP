@@ -65,6 +65,7 @@
         {# Linked only once launched. Pre-launch this page IS the front door, and
            linking the holding page from the dashboard would put a dashboard link
            on it in the one posture where nothing may link into the dashboard. #}
+        {% if summary.epoch_excluded %}<li><a href="{{ p }}backlog-at-launch.html">At launch</a></li>{% endif %}
         {% if launched %}<li><a href="{{ p }}about-this-count.html">About</a></li>{% endif %}
       </ul>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">

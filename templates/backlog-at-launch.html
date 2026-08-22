@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}The backlog at launch{% endblock %}
+{% block og_title %}The backlog at launch{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>The backlog at launch</h1>
+  <p class="text-muted">
+    {% if summary.epoch %}
+    Reserved CVE IDs that were already public before this site started counting on
+    <strong>{{ summary.epoch }}</strong>, and are still unpublished. They are excluded from
+    the headline count and they are not less real.
+    {% else %}
+    No launch epoch is set, so nothing is held back and the headline count covers every
+    reportable row. This page exists so that the archive has a permanent home the moment
+    an epoch is set, rather than being designed on the day.
+    {% endif %}
+  </p>
+</div>
+
+{% if summary.epoch and held_back %}
+<div class="metric-grid">
+  <div class="metric-card">
+    <div class="metric-value">{{ held_back | length | commafy }}</div>
+    <div class="metric-label">
+      Held back<br>
+      <span class="metric-base">public before {{ summary.epoch }}</span>
+    </div>
+  </div>
+  <div class="metric-card">
+    <div class="metric-value">{{ held_back_oldest | commafy }}</div>
+    <div class="metric-label">
+      Days public, oldest<br>
+      <span class="metric-base">the single strongest row this project has</span>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="caveat">
+  <p>
+    <strong>The epoch does not make these rows younger, and it does not make them less
+    real.</strong> Age derives from the advisory date, so an ID that went public 519 days
+    ago is 519 days old whether or not this site counts it. The epoch exists so the
+    headline measures what has happened <em>since launch</em> rather than carrying a
+    backlog accumulated while feed coverage was still changing underneath it.
+  </p>
+  <p class="mb-0">
+    A filter that removes the oldest and strongest evidence has to be visible rather than
+    quietly applied, which is what this page is for. Without it the epoch would delete
+    this project's best evidence from the site with no home anywhere.
+    <strong>No CNA is named on these rows</strong>, at any age: they are outside the
+    reportable set, so they are outside the set this site is willing to attribute.
+  </p>
+</div>
+
+{% if summary.epoch and held_back %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">How long these have been public</h2></div>
+  <div class="card-body">
+    <div class="tablewrap">
+      <table class="rbp">
+        <caption>
+          {{ held_back | length | commafy }} reserved CVE IDs public before
+          {{ summary.epoch }} and still unpublished. Owner is never shown on these rows.
+          Days public is a floor, not a measure of lateness.
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">CVE ID</th>
+            <th scope="col" class="num">Days public</th>
+            <th scope="col">First public</th>
+            <th scope="col">Package</th>
+            <th scope="col">Sources</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in held_back | sortnum('days_public') %}
+          <tr>
+            <td class="id" data-label="CVE ID">{{ r.cve_id }}</td>
+            <td class="num" data-label="Days public">{{ r.days_public }}</td>
+            <td class="mono small" data-label="First public">{{ r.public_date }}</td>
+            <td data-label="Package">{{ r.package or r.vendor or '' }}</td>
+            <td class="mono small" data-label="Sources">{{ r.sources }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% elif summary.epoch %}
+<div class="empty-state">
+  <strong>Nothing is held back by this epoch.</strong><br>
+  The epoch is set to {{ summary.epoch }} and no reportable row went public before it.
+</div>
+{% endif %}
+
+<p class="small">
+  Machine-readable: <a href="data/held-back.json">held-back.json</a>
+</p>
+{% endblock %}

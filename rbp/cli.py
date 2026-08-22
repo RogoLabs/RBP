@@ -71,6 +71,42 @@ def _previous_reserved(snap_root, today):
         return set()
 
 
+def _validate_epoch_against_data(today, min_age_days):
+    """Refuse an epoch that the buffer guarantees will exclude everything.
+
+    The newest reportable advisory date is always at least `min_age_days` before
+    today, by construction: that is what the buffer does. So an epoch set to today
+    excludes 100% of reportable rows for the whole buffer window, and the guard
+    that catches it sits AFTER the corpus download, the feed fetch and 674 API
+    lookups. Flipping RBP_LAUNCHED and RBP_EPOCH together therefore produced a red
+    cron four times a day for about a week while Pages kept serving the holding
+    page, with no notification anywhere in the workflow. The observable result of
+    launching was that nothing happened and nobody was told.
+
+    Checked here, before any network work, with the arithmetic in the message so
+    the fix is obvious rather than deducible.
+    """
+    if not clock.EPOCH:
+        return
+    try:
+        epoch = dt.date.fromisoformat(clock.EPOCH)
+        newest_possible = dt.date.fromisoformat(today) - dt.timedelta(days=min_age_days)
+    except ValueError:
+        return                      # clock._validated_epoch already refused this
+    if epoch > newest_possible:
+        raise SystemExit(
+            f"RBP_EPOCH={clock.EPOCH} cannot match any reportable row.\n"
+            f"  today                     {today}\n"
+            f"  buffer                    {min_age_days} days\n"
+            f"  newest reportable date    {newest_possible.isoformat()}\n"
+            f"  epoch                     {clock.EPOCH}\n"
+            "A row is reportable only once it has been public for the whole buffer, "
+            "so nothing public on or after the epoch can be reportable yet. This "
+            f"would publish 0 for {(epoch - newest_possible).days} more day(s). "
+            f"Set the epoch to {newest_possible.isoformat()} or earlier, or unset "
+            "it. Refusing before spending the corpus download and the API lookups.")
+
+
 def cmd_build(args):
     site.build(args.out, SNAPS, DATA)
 
@@ -92,6 +128,7 @@ def cmd_run(args):
     if not sources:
         raise SystemExit(f"no valid sources in {requested!r}; valid: {sorted(feeds.ADAPTERS)}")
     args.min_age_days = report.validate_min_age(args.min_age_days)
+    _validate_epoch_against_data(today, args.min_age_days)
     print(f"RBP run | today={today} | years={sorted(years)} | profile={args.profile if not args.sources else 'custom'} | sources={sources}")
 
     corpus, prod_cna = ensure_corpus(force=args.reindex)

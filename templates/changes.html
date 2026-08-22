@@ -10,7 +10,21 @@
   </p>
 </div>
 
-{% if not changes.comparable and changes.have_previous %}
+{# The epoch case, named rather than left as a generic incomparability.
+   On the first run after an epoch flip every row moves, and the guard used to
+   declare the pair comparable because `epoch` is emitted as `EPOCH or None` and
+   the None-to-date transition short-circuited a truthiness test. Reproduced by
+   execution: comparable True, no_longer_listed 150 of 150. #}
+{% if changes.get('epoch_started') %}
+<div class="empty-state">
+  <strong>Counting restarted on {{ summary.epoch }}.</strong><br>
+  Every row that was public before that date left the count on this run, so a diff
+  against the previous snapshot would show the whole backlog departing and mean
+  nothing. No movement is shown for that reason. Those rows are not gone:
+  <a href="backlog-at-launch.html">the backlog at launch</a> holds them, with their
+  real ages.
+</div>
+{% elif not changes.comparable and changes.have_previous %}
 <div class="caveat warn">
   <p class="mb-0">
     <strong>These two snapshots are not comparable.</strong>
@@ -112,7 +126,19 @@
       rejection found in the CVE List. Most likely a feed or lookup difference rather than
       anything a CNA did.
     </p>
-    <p class="mono small">{{ changes.no_longer_listed | join(', ') }}</p>
+    {# CAPPED. An unbounded comma-joined ID paragraph ran to 7,000 characters at
+       150 rows, and ~500 at live scale, which defeats the caveat directly above it:
+       a reader who has to scroll past a wall of identifiers has stopped reading the
+       sentence that says the cause is unverified. #}
+    <p class="mono small">{{ changes.no_longer_listed[:50] | join(', ') }}</p>
+    {% if changes.no_longer_listed | length > 50 %}
+    <p class="small text-muted mb-0">
+      Showing 50 of <strong>{{ changes.no_longer_listed | length | commafy }}</strong>.
+      The full list is in <a href="data/rbp.json">rbp.json</a> by difference against
+      the previous snapshot; it is deliberately not rendered, because a wall of
+      identifiers reads as a finding and this bucket is explicitly not one.
+    </p>
+    {% endif %}
   </div>
 </div>
 {% endif %}
