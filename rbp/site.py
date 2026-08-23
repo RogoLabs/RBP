@@ -503,6 +503,50 @@ def assert_artefact(rows, label, cnas=None, covered=None):
     return len(rows)
 
 
+def _drop_withheld(rows, withheld, label):
+    """Remove withheld ids from a row set. Idempotent, and loud when it fires."""
+    if not withheld:
+        return rows
+    keep = [r for r in rows
+            if not (isinstance(r, dict)
+                    and (r.get("cve_id") or "").strip().upper() in withheld)]
+    if len(keep) != len(rows):
+        print(f"  note: {label}: withheld {len(rows) - len(keep)} row(s) at the "
+              "site boundary")
+    return keep
+
+
+def withheld_ids(data_dir):
+    """Ids this run withheld, read from the runner-local file. Never published.
+
+    THE SITE READS THIS ITSELF rather than relying on the workflow having
+    scrubbed the tree first, and the distinction is the whole of review item 4.
+
+    `publish.stage` was the only code that scrubbed withheld ids, and it runs
+    AFTER the site is built (deploy.yml: Run pipeline, Build site, upload,
+    then Stage durable state). It scrubs `.state`, which is the data branch. The
+    runner's own `snapshots/` tree, which `site.build` reads, was never touched,
+    so on the run where a withhold first fires the site published the withheld id
+    twice: inside /data/archive/<yesterday>/rbp.json, and as plain text on
+    /changes under "no longer listed". For an embargo the id IS the sensitive
+    fact, so that defeats the lever for a full six-hour cycle.
+
+    Doing it here rather than adding a scrub step ahead of the build is
+    deliberate. A workflow ordering constraint is invisible to anyone reading the
+    Python, holds only in CI, and breaks silently the first time someone
+    reorders a step. This holds in a local build too.
+
+    Empty on any problem, and that is the safe direction: an unreadable file
+    means nothing is withheld from the SITE, while `publish.check` still refuses
+    to stage a suppressed row, so the failure cannot reach the data branch.
+    """
+    try:
+        ids = json.load(open(os.path.join(data_dir, ".suppressed.json")))
+    except Exception:  # noqa: BLE001
+        return set()
+    return {str(i).strip().upper() for i in ids if i}
+
+
 def load(snap_root, data_dir):
     """Assemble the render context from the newest snapshot and the ledgers."""
     snaps = _snapshots(snap_root)
@@ -510,14 +554,32 @@ def load(snap_root, data_dir):
         raise SystemExit(f"no snapshots in {snap_root}; run the pipeline first")
     latest, prev = snaps[-1], (snaps[-2] if len(snaps) > 1 else None)
 
+    withheld = withheld_ids(data_dir)
     rows = _normalise_legacy(_read_strict(os.path.join(latest, "backlog.json")),
                              source=f"{os.path.basename(latest)}/backlog.json")
+    n_before = len(rows)
+    rows = _drop_withheld(rows, withheld, "backlog.json")
+    withheld_here = n_before - len(rows)
     summary = _read_strict(os.path.join(latest, "summary.json"))
+    if withheld_here:
+        # The snapshot's own total was computed before the withhold, so leaving
+        # it alone makes _assert_consistent refuse the build: a withhold would
+        # take the site down rather than remove a row. Adjusted here, and the
+        # count is published rather than absorbed, because "counts, never
+        # identifiers" is the promise and a silently shrinking total is the one
+        # thing a suppression lever must not be.
+        summary = dict(summary)
+        if isinstance(summary.get("total"), int):
+            summary["total"] = max(0, summary["total"] - withheld_here)
+        sup = dict(summary.get("suppression") or {})
+        sup["withheld_at_site"] = withheld_here
+        summary["suppression"] = sup
     cnas = _read_strict(os.path.join(latest, "cnas.json"))
     # Tolerant: a snapshot written before held_back.json existed is a valid input,
     # and an absent archive must not stop a publication.
     held_back = _normalise_legacy(_read(os.path.join(latest, "held_back.json"), []),
                                   source=f"{os.path.basename(latest)}/held_back.json")
+    held_back = _drop_withheld(held_back, withheld, "held_back.json")
     _assert_consistent(rows, summary, cnas)
 
     # The launch gate, enforced here but deliberately NOT by refusing to build.
@@ -561,7 +623,7 @@ def load(snap_root, data_dir):
     resolutions = _read(os.path.join(data_dir, "resolutions.json"),
                         {"resolved": [], "open": {}})
 
-    changes = _changes(rows, prev, latest)
+    changes = _changes(rows, prev, latest, withheld)
     for c in cnas:
         c["slug"] = slug(c["cna"])
 
@@ -607,6 +669,10 @@ def load(snap_root, data_dir):
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "snapshot_date": os.path.basename(latest),
         "snap_root": snap_root,
+        # Carried so _write_data can apply it to the dated archive, which is
+        # rebuilt from prior snapshots on every run and is therefore a writer in
+        # its own right. Runner-local; never rendered, never published.
+        "withheld": sorted(withheld),
         "archive": None,          # filled by _write_data, read by /data
         "rows": rows,
         "summary": summary,
@@ -693,7 +759,7 @@ def load(snap_root, data_dir):
     }
 
 
-def _changes(rows, prev_dir, latest_dir):
+def _changes(rows, prev_dir, latest_dir, withheld=frozenset()):
     """Movement against the previous snapshot, in three buckets that are never
     merged.
 
@@ -779,6 +845,17 @@ def _changes(rows, prev_dir, latest_dir):
     # still epoch-eligible, so an epoch change moves rows into the archive rather
     # than through the diff. Better than a comparability flag: the flag tells a
     # reader the diff is meaningless, this stops the meaningless diff existing.
+    # Withheld ids leave BOTH sides of the diff.
+    #
+    # Dropping them only from `rows` would move each one into `gone`, and `gone`
+    # minus the authoritative closures is `no_longer_listed`, which changes.html
+    # renders as a plain list of CVE IDs. So the lever that exists to remove an
+    # id from the site would have published it, in a list captioned as rows that
+    # stopped being listed. That is worse than not withholding at all: it is a
+    # short, high-signal list of exactly the ids someone asked to have removed.
+    if withheld:
+        prev_rows = [r for r in prev_rows
+                     if (r.get("cve_id") or "").strip().upper() not in withheld]
     now_epoch = now_sum.get("epoch")
     before = {r["cve_id"] for r in prev_rows
               if not (now_epoch and (r.get("public_date") or "") < now_epoch)}
@@ -879,6 +956,7 @@ CSV_COLS = _schema.COLUMNS
 
 def _write_data(out, ctx):
     launched = ctx["launched"]
+    withheld = set(ctx.get("withheld") or ())
     # Every published row set, not only the one the old test looked at.
     covered = set((ctx["summary"].get("coverage") or {}).get("covered") or [])
     assert_artefact(ctx["rows"], "rbp.json", ctx["cnas"], covered)
@@ -953,8 +1031,10 @@ def _write_data(out, ctx):
         if not (os.path.exists(rows_path) and os.path.exists(sum_path)):
             continue
         try:
-            snap_rows = _normalise_legacy(json.load(open(rows_path)),
-                                          source=f"archive/{date}")
+            snap_rows = _drop_withheld(
+                _normalise_legacy(json.load(open(rows_path)),
+                                  source=f"archive/{date}"),
+                withheld, f"archive/{date}")
             snap_sum = json.load(open(sum_path))
         except Exception:  # noqa: BLE001
             continue

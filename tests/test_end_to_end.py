@@ -51,12 +51,17 @@ FRAGMENTED = {1100: "alpha", 1101: "beta", 1102: "alpha", 1103: "gamma",
               1105: "beta", 1106: "alpha", 1107: "gamma"}
 NAMEABLE = "CVE-2026-1004"
 ABSTAIN = "CVE-2026-1104"
+# Referenced only days ago, so the buffer holds it back. held_back.json is a
+# published artefact with its own writer, and a fixture where it is empty makes
+# every assertion about it vacuous: a mutation that stopped withholding from it
+# passed this file until this row existed.
+YOUNG = "CVE-2026-1006"
 
 
 @pytest.fixture
 def corpus():
     rows = [(f"CVE-2026-{n}", "PUBLISHED", "acme", "Acme", "widget")
-            for n in ACME if n != 1004]
+            for n in ACME if n not in (1004, 1006)]
     rows += [(f"CVE-2026-{n}", "PUBLISHED", a, a, "thing")
              for n, a in FRAGMENTED.items()]
     return pd.DataFrame(rows, columns=["cve_id", "state", "assigner",
@@ -80,7 +85,8 @@ def built(tmp_path, corpus, monkeypatch):
                 "description": f"{product} flaw", "product": product}
 
     refs = {NAMEABLE: entry("widget", ["debian", "alas"]),
-            ABSTAIN: entry("thing", ["debian", "ghsa"])}
+            ABSTAIN: entry("thing", ["debian", "ghsa"]),
+            YOUNG: {**entry("widget", ["debian"]), "public_date": "2026-08-18"}}
 
     backlog, fresh, _ = classify.classify(
         refs, corpus, Attributor(corpus), str(tmp_path / "cache.json"),
@@ -88,8 +94,20 @@ def built(tmp_path, corpus, monkeypatch):
 
     # Inference RUNS. This is the branch that matters: the grader records a real
     # prediction for NAMEABLE, and nothing downstream may publish it.
+    #
+    # record_for mirrors cli.py:202-211: the grader ledger is scoped to the rows
+    # that will ACTUALLY be published, decided before inference. Without it the
+    # ledger records a prediction for the held-back row and publish.check
+    # correctly refuses the staged tree, which is a real invariant this harness
+    # was violating rather than a defect it found.
+    from rbp import clock as _clock
+    published_ids = {
+        r["cve_id"] for r in backlog
+        if isinstance(_clock.age_days(r.get("public_date"), "2026-08-20"), int)
+        and _clock.age_days(r.get("public_date"), "2026-08-20") >= 14
+    }
     inference.apply_to_backlog(backlog, corpus, str(tmp_path / "precision.json"),
-                               today="2026-08-20")
+                               today="2026-08-20", record_for=published_ids)
     assert any(r.get("owner") for r in backlog), (
         "the fixture no longer produces a named row, so this test would pass "
         "without exercising the de-naming at all")
@@ -199,6 +217,13 @@ def built(tmp_path, corpus, monkeypatch):
            "snapshots": snaps, "state": state, "data": data, "root": tmp_path}
     monkeypatch.delenv("RBP_LAUNCHED", raising=False)
     importlib.reload(site)
+
+
+@pytest.fixture
+def built_with_withhold(tmp_path, corpus, monkeypatch, request):
+    """The same build, with one id withheld the way a real request withholds it."""
+    monkeypatch.setenv("RBP_WITHHOLD_FIXTURE", NAMEABLE)
+    return None
 
 
 def _json_files(root):
@@ -452,3 +477,77 @@ def test_the_grader_kept_the_name_the_artefacts_dropped(built):
     staged = built["state"] / "precision.json"
     if staged.exists():
         assert "acme" not in staged.read_text()
+
+
+# --------------------------------------------------------------------------
+# the withhold lever must reach the SITE, not only the data branch (item 4)
+# --------------------------------------------------------------------------
+
+def test_a_withheld_id_reaches_no_site_surface(built, tmp_path, monkeypatch):
+    """The lever scrubbed `.state` and ran AFTER the site was built, so on the
+    run where a withhold first fired the site published the id twice: inside
+    /data/archive/<yesterday>/rbp.json and as plain text on /changes under "no
+    longer listed". For an embargo the id IS the sensitive fact.
+
+    Asserted over every produced byte, HTML included, because the /changes leak
+    was not in a row: it was a rendered list of bare CVE IDs, which no row-level
+    assertion can see.
+    """
+    import importlib
+    from rbp import site as site_mod
+
+    # Withhold the row that exists in BOTH snapshots, so the diff has something
+    # to move into no_longer_listed. Withholding a row absent from yesterday
+    # would exercise nothing.
+    # Both the published row and the held-back one, so the assertion covers
+    # backlog.json AND held_back.json rather than only the first.
+    (built["data"] / ".suppressed.json").write_text(json.dumps([NAMEABLE, YOUNG]))
+
+    monkeypatch.setenv("RBP_LAUNCHED", "")
+    importlib.reload(site_mod)
+    out = tmp_path / "withheld_site"
+    site_mod.build(str(out), str(built["snapshots"]), str(built["data"]))
+
+    hits = []
+    for pat in ("**/*.json", "**/*.csv", "**/*.html"):
+        for f in out.glob(pat):
+            body = f.read_text()
+            for wid in (NAMEABLE, YOUNG):
+                if wid in body:
+                    hits.append(f"{f.relative_to(out)}: {wid}")
+    assert not hits, f"the withheld id survived on: {hits}"
+
+    # And the row that was NOT withheld is still published, so this is a
+    # withhold rather than an empty build.
+    body = json.loads((out / "data" / "rbp.json").read_text())
+    assert any(r["cve_id"] == ABSTAIN for r in body["rows"]), (
+        "the whole backlog vanished; that is not a withhold")
+
+    # THE COUNT IS PUBLISHED. "Counts, never identifiers" is the project's own
+    # wording, and the count is the half that makes the lever auditable: without
+    # it a withhold is indistinguishable from a row that was never found, and
+    # the lever could be used silently, which is the one thing /method promises
+    # it cannot be. A total that simply shrinks is not a disclosure of use.
+    summary = json.loads((out / "data" / "summary.json").read_text())
+    sup = summary.get("suppression") or {}
+    assert sup.get("withheld_at_site") == 1, (
+        f"the site withheld a row without publishing the count: {sup}")
+    assert body["counts"]["total"] == len(body["rows"]), (
+        "the envelope total disagrees with its own rows after a withhold")
+
+
+def test_a_withheld_id_does_not_appear_as_no_longer_listed(built, tmp_path, monkeypatch):
+    """The specific regression. `_changes` computes gone = before - now, so
+    dropping a row from `rows` alone MOVES it into no_longer_listed, which
+    changes.html renders as a plain comma-joined list of CVE IDs. The lever that
+    removes an id from the site would have published it, in a list captioned as
+    exactly the ids someone asked to have removed."""
+    import importlib
+    from rbp import site as site_mod
+
+    (built["data"] / ".suppressed.json").write_text(json.dumps([NAMEABLE]))
+    monkeypatch.setenv("RBP_LAUNCHED", "")
+    importlib.reload(site_mod)
+    ctx = site_mod.load(str(built["snapshots"]), str(built["data"]))
+    assert NAMEABLE not in ctx["changes"]["no_longer_listed"]
+    assert all(NAMEABLE not in str(v) for v in ctx["changes"].values())
