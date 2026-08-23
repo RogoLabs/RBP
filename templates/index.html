@@ -28,7 +28,7 @@
   <p class="lead-unit">
     {% if corrob is not none %}
     CVE IDs are reserved, referenced in <strong>two or more independent</strong> public
-    advisories, and still have no published record in the CVE List{% if summary.epoch %},
+    sources, and still have no published record in the CVE List{% if summary.epoch %},
     <strong>new since {{ summary.epoch }}</strong>{% endif %}.
     {% if summary.total > corrob %}
     A further <strong>{{ (summary.total - corrob) | commafy }}</strong> are referenced

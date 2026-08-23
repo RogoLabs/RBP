@@ -127,6 +127,8 @@ COLUMNS = [
     # consumer has one documented field to branch on, and its documented value
     # is False.
     "owner_nameable", "veto_evaluated",
+    # WHICH CLOCK, and how long it has run. See clock._ORIGIN_KIND.
+    "clock_origin", "advisory_date", "advisory_days_public",
     # provenance
     "sources", "feed_count", "indep_sources", "single_origin", "refs",
     "advisory_url",
@@ -183,6 +185,23 @@ FIELDS = {
                        "The one field to branch on. `owner`, `owner_tier`, "
                        "`owner_method` and `owner_contested` were removed in "
                        "schema v2 rather than published as permanent nulls."),
+    "clock_origin": ("string", "never absent",
+                     "'advisory' if any feed that referenced this ID publishes "
+                     "actual advisories, otherwise 'tracker'. The 72-hour "
+                     "expectation runs from Public Disclosure, and a "
+                     "distribution tracker entry is a public source under the "
+                     "RBP definition but is NOT a Public Disclosure under "
+                     "4.5.1.4 or 4.5.1.6. past_expectation is false on every "
+                     "tracker-only row for that reason."),
+    "advisory_date": ("date|null", "null",
+                      "Earliest date from an advisory feed. null on "
+                      "tracker-only rows. This, not public_date, is what may "
+                      "start the 72-hour clock."),
+    "advisory_days_public": ("integer|null", "null",
+                             "Days since advisory_date. null on tracker-only "
+                             "rows, where days_public is still reported: "
+                             "'referenced for N days' is true of a tracker "
+                             "entry, 'N days late' is not."),
     "veto_evaluated": ("boolean", "never absent",
                        "Whether a product-map verdict existed to contest the name "
                        "at all. false means silence, not agreement."),

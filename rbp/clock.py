@@ -220,6 +220,54 @@ def self_disclosed(row):
     return disclosure_order(row) == "own-first"
 
 
+# WHAT EACH FEED IS, and it is not a detail.
+#
+# The RBP definition and the 72-hour rules are answering different questions and
+# this project was conflating them. RBP Policy v2.0.0 defines membership as
+# "referenced in one or more public sources"; a distribution tracker entry is
+# squarely a public source and belongs in the count. The 72-hour trigger in CNA
+# Rules 4.5.1.4 and 4.5.1.6 is "Publicly Disclosing", exemplified as an advisory
+# or a Fix, and a tracker entry is not that: it records that a CVE exists and how
+# a package is affected, and it is created when the tracker ingests the id, not
+# when anybody disclosed anything.
+#
+# The consequence of conflating them was measurable and total: `past_expectation`
+# came out TRUE on 522 of 522 published rows. A claim asserted on every single
+# row does no discriminating work while carrying all of the accusatory weight.
+#
+# debian, ubuntu and alpine ingest tracker JSON wholesale; none of the three
+# reads DSA/DLA, USN or ASA. arch reads AVG, which is the same shape.
+_ORIGIN_KIND = {
+    "debian": "tracker", "ubuntu": "tracker", "alpine": "tracker",
+    "arch": "tracker",
+    # A published advisory with its own identifier and release date.
+    "ghsa": "advisory", "msrc": "advisory", "mozilla": "advisory",
+    "csaf": "advisory", "redhat": "advisory", "alas": "advisory",
+    "osv": "advisory",
+}
+
+
+def origin_kind(source):
+    """'advisory', 'tracker', or 'unknown' for a feed name.
+
+    Unknown counts as a TRACKER for clock purposes. A new adapter must not
+    silently start the 72-hour clock by being absent from a map.
+    """
+    return _ORIGIN_KIND.get(source, "unknown")
+
+
+def advisory_date(row):
+    """Earliest date from a feed that is an actual advisory, or None.
+
+    This, not `public_date`, is what may start a 72-hour clock. `public_date` is
+    the earliest date from ANY ingested source, tracker rows included.
+    """
+    dates = row.get("dates") or {}
+    cands = [d for src, d in dates.items()
+             if d and origin_kind(src) == "advisory"]
+    return min(cands) if cands else None
+
+
 def annotate(rows, today=None):
     """Add clock and rule fields to each backlog row, in place.
 
@@ -244,7 +292,26 @@ def annotate(rows, today=None):
         known = isinstance(days, int)
         r["clock_known"] = known
         r["hours_public"] = days * 24 if known else None
-        r["past_expectation"] = bool(known and days * 24 > EXPECTATION_HOURS)
+
+        # days_public is UNCHANGED on tracker-only rows, deliberately.
+        # "Referenced for N days" is a true statement about a tracker entry and
+        # the floor framing survives it. What does NOT survive is calling that
+        # figure past the 72-hour expectation, because the expectation runs from
+        # Public Disclosure and a tracker entry is not one.
+        adv = advisory_date(r)
+        r["clock_origin"] = "advisory" if adv else "tracker"
+        r["advisory_date"] = adv
+        # days_public is authoritative when the caller supplied it, and annotate
+        # already honours that above. If the advisory IS the earliest source
+        # then the advisory age is days_public, so derive it the same way rather
+        # than recomputing from a date the caller may not have kept in step.
+        if adv and adv == r.get("public_date") and known:
+            adv_days = days
+        else:
+            adv_days = age_days(adv, today) if adv else None
+        r["advisory_days_public"] = adv_days
+        r["past_expectation"] = bool(
+            isinstance(adv_days, int) and adv_days * 24 > EXPECTATION_HOURS)
         # Self-disclosure is what makes 4.5.1.4 apply. Computed here rather
         # than read off the row: it used to be set inside report._gated(), which
         # runs later in the pipeline AND returns copies, so annotate never saw

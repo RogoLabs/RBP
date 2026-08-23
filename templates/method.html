@@ -108,6 +108,25 @@
 <div class="card">
   <div class="card-header"><h2 class="card-title">The clock</h2></div>
   <div class="card-body">
+    <div class="caveat">
+      <p class="mb-0">
+        <strong>A tracker entry is a public source, and is not a Public Disclosure.</strong>
+        RBP Policy v2.0.0 defines membership as an ID "referenced in one or more public
+        sources", and a distribution tracker entry is squarely that, so those rows are
+        counted. But the 72-hour rules in {{ rule_must }} and {{ rule_should }} run from
+        <em>Publicly Disclosing</em>, which the rules exemplify as an advisory or a Fix. A
+        tracker record is created when the tracker ingests the ID, not when anybody
+        disclosed anything.
+        <br><br>
+        So <span class="mono">past_expectation</span> is computed only from
+        <strong>advisory</strong> sources, and every tracker-only row reads false
+        regardless of age. Before this split it was true on <strong>522 of 522</strong>
+        published rows, and a claim asserted on every single row does no discriminating
+        work while carrying all of the accusatory weight.
+        <span class="mono">days_public</span> is unchanged on those rows: "referenced for
+        N days" is true of a tracker entry, and only "N days late" is not.
+      </p>
+    </div>
     <p>
       Rows are reportable once publicly referenced for at least
       <strong>{{ summary.get('min_age_days', 7) }} days</strong>, which is
