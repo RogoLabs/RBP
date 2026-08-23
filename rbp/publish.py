@@ -303,9 +303,17 @@ def gate(site_dir):
     # "own-channel 2/434 = 27.9%", pairing one figure's count with another's
     # percentage. 2/434 is 0.5%. Anyone reading this line to work out why a launch
     # did not happen would have been reading a contradiction.
-    print(f"gate: effective {status.get('effective')}/{status.get('total')} "
+    # Each count paired with ITS OWN percentage. The gate moved to
+    # top-N-by-volume on 2026-08-23 and this line kept printing the roster
+    # `effective` count against the new `pct`, which reproduced the exact defect
+    # the paragraph above describes, one metric change later.
+    print(f"gate: top-{status.get('top_n')} effective "
+          f"{status.get('top_effective')}/{status.get('top_n')} "
           f"= {status.get('pct')}% (need {status['required']}%, "
-          f"seen >= {status.get('min_sightings')} times); "
+          f"seen >= {status.get('min_sightings')} times), "
+          f"margin {status.get('margin')}; "
+          f"roster effective {status.get('effective')}/{status.get('total')} "
+          f"= {status.get('roster_pct_effective')}% (does not gate); "
           f"sighted {status.get('sighted')}, "
           f"own-channel {status.get('own_channel')}; "
           f"profile {cov.get('profile')!r}")

@@ -56,7 +56,33 @@ from . import launch as launch_mod
 #
 # The objection that motivated own-channel still stands and is answered instead
 # by the floor: a single stray sighting no longer credits a CNA as covered.
-GATE_PCT = 50.0
+# THE GATE, re-derived 2026-08-23. Read this before changing the number.
+#
+# The old gate was `cnas_effective` >= 50% of the pinned 539-CNA roster. It was
+# unreachable, and not by a little. Two ceilings, both measured:
+#
+#   28.2%  every CNA the nine feeds sight even once, promoted to the 3-sighting
+#          floor. The ceiling on the CURRENT feed set. Tuning cannot pass 50%.
+#   68.8%  roster CNAs that have published 3 CVEs in the window at all. Only 371
+#          of 539 qualify; 128 published nothing. The ceiling on ANY feed set,
+#          so 100% of the roster is arithmetically impossible and 80% would be
+#          a stricter version of the same mistake.
+#
+# 50.0 was set when the gate figure was `cnas_sighted` over a corpus-derived
+# denominator. The numerator later moved to `cnas_effective` and the denominator
+# to the pinned roster, and nobody re-derived the threshold. It was a leftover
+# from two metric changes that each made it harder to clear.
+#
+# The replacement asks a question that has an answer: of the 50 CNAs that issue
+# the most CVEs, how many can this site actually see, on the same 3-sighting
+# floor `cnas_effective` uses. Measured live at 31 of 50; the CSAF/MSRC
+# promotion and the OSV ecosystem expansion together take it to 40 of 50.
+#
+# Deliberately NOT paired with a roster-share floor. That was offered and
+# declined: the top-50 condition alone is the gate. The cost of that choice is
+# that it clears at exactly 40/50 with no margin, so `_gate_status` reports the
+# margin explicitly rather than letting a bare pass read as a comfortable one.
+GATE_TOP_N_PCT = 80.0
 
 
 def _validated_launched(raw):
@@ -201,24 +227,52 @@ def _gate_status(summary):
     total = cov.get("total_cnas") or 0
     eff = cov.get("cnas_effective")
     sighted = cov.get("cnas_sighted", cov.get("covered_cnas"))
-    if not total or eff is None:
-        return {"cleared": False, "pct": None, "required": GATE_PCT,
-                "reason": "coverage was not measured in this snapshot"}
-    pct = round(100 * eff / total, 1)
+    top_n = cov.get("top_n") or 0
+    top_eff = cov.get("top_covered_effective")
     floor = cov.get("min_sightings")
+
+    # The gate reads top_covered_effective, NOT top_covered. A run produced
+    # before that field existed must fail closed rather than fall back to the
+    # one-sighting figure, which would clear the gate on a weaker measure than
+    # the one it names.
+    if not top_n or top_eff is None:
+        return {"cleared": False, "pct": None, "required": GATE_TOP_N_PCT,
+                "basis": f"top-{top_n or '?'}-by-volume at the {floor or '?'}-sighting floor",
+                "reason": ("this snapshot does not report top-N coverage on the "
+                           "sighting floor, so the gate cannot be evaluated")}
+
+    pct = round(100 * top_eff / top_n, 1)
+    needed = -(-int(GATE_TOP_N_PCT * top_n) // 100)      # ceil, in whole CNAs
+    cleared = pct >= GATE_TOP_N_PCT
+    margin = top_eff - needed
     return {
-        "cleared": pct >= GATE_PCT,
+        "cleared": cleared,
         "pct": pct,
-        "required": GATE_PCT,
+        "required": GATE_TOP_N_PCT,
+        "basis": f"top-{top_n}-by-volume at the {floor or '?'}-sighting floor",
+        "top_n": top_n,
+        "top_effective": top_eff,
+        "needed": needed,
+        # Published because the gate was deliberately left without a second
+        # condition, so it can clear by exactly one CNA. A bare "cleared: true"
+        # would hide that; a margin of 0 says it out loud.
+        "margin": margin,
+        "top_missed": cov.get("top_missed_effective") or [],
+        # Carried so the roster-share figures stay visible and quotable even
+        # though they no longer gate anything. Removing them would make the
+        # weaker number harder to find, not the site more honest.
+        "roster_pct_effective": round(100 * eff / total, 1) if total and eff is not None else None,
         "effective": eff,
-        "min_sightings": floor,
-        "own_channel": cov.get("cnas_own_channel"),
         "sighted": sighted,
         "total": total,
+        "min_sightings": floor,
+        "own_channel": cov.get("cnas_own_channel"),
         "profile": cov.get("profile"),
-        "reason": (f"coverage is {pct}% of {total} CNAs seen at least "
-                   f"{floor if floor is not None else '?'} times, below the "
-                   f"{GATE_PCT}% gate"),
+        "reason": (
+            f"{top_eff} of the top {top_n} CNAs by volume are seen at least "
+            f"{floor if floor is not None else '?'} times ({pct}%), "
+            + (f"clearing the {GATE_TOP_N_PCT}% gate by {margin} CNA(s)" if cleared
+               else f"below the {GATE_TOP_N_PCT}% gate, which needs {needed}")),
     }
 
 

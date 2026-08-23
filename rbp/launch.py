@@ -43,33 +43,41 @@ def _coverage_condition(summary, gate):
 
     The review asked for four things here, and three of them are about being able
     to trust the percentage rather than about its value: the profile the cron
-    actually runs, a pinned denominator, and top-50-by-volume alongside. Only the
-    value is currently true, so the condition is unmet even though the number is
-    the headline everyone watches.
+    actually runs, a pinned denominator, and top-50-by-volume alongside.
+
+    Top-50-by-volume is no longer merely reported alongside: as of 2026-08-23 it
+    IS the gate. The roster share it used to sit beside was unreachable, because
+    only 371 of 539 roster CNAs have published three CVEs in the window, so that
+    figure cannot exceed 68.8% on any feed set. The roster share is still
+    computed, still published, and still checked here for the qualifiers, because
+    a denominator that stops being a threshold does not stop needing to be sound.
     """
     cov = (summary or {}).get("coverage") or {}
     reasons = []
     if not gate.get("cleared"):
-        reasons.append(f"coverage is {gate.get('pct')}% of the required "
-                       f"{gate.get('required')}%")
+        reasons.append(f"the gate figure is {gate.get('pct')}% of the required "
+                       f"{gate.get('required')}% on {gate.get('basis')}")
     if not cov.get("profile"):
         reasons.append("the feed profile is not recorded in summary.coverage")
     if not cov.get("roster_pinned"):
         reasons.append("the CNA denominator is per-run, not a pinned roster")
-    if cov.get("top_covered") is None or not cov.get("top_n"):
-        # The review asked for top-N-by-volume alongside, because 22% of a roster
-        # says nothing about whether the CNAs that actually publish are reachable.
-        reasons.append("top-N-by-volume coverage is not reported")
+    if cov.get("top_covered_effective") is None or not cov.get("top_n"):
+        # This is now the gate numerator, not a qualifier. Absent, the gate
+        # cannot be evaluated at all and the condition must not read as met.
+        reasons.append("top-N-by-volume coverage on the sighting floor is not "
+                       "reported, so the gate figure does not exist this run")
     return {
         "n": 1,
-        "title": "Coverage on the gate figure, against a pinned roster",
-        "detail": (f"{cov.get('cnas_effective')} of {cov.get('total_cnas')} CNAs seen "
-                   f"at least {cov.get('min_sightings')} times "
-                   f"({cov.get('pct_effective')}%), profile "
-                   f"{cov.get('profile') or 'unrecorded'!r}. Top "
-                   f"{cov.get('top_n')} by volume: {cov.get('top_covered')} covered. "
-                   f"Denominator is the pinned roster of {cov.get('total_cnas')} "
-                   f"certified CNAs, not the "
+        "title": "Coverage on the gate figure, top-N by volume, against a pinned roster",
+        "detail": (f"Gate: {cov.get('top_covered_effective')} of the top "
+                   f"{cov.get('top_n')} CNAs by volume seen at least "
+                   f"{cov.get('min_sightings')} times "
+                   f"({cov.get('pct_top_effective')}%), profile "
+                   f"{cov.get('profile') or 'unrecorded'!r}. "
+                   f"Roster share, which no longer gates: "
+                   f"{cov.get('cnas_effective')} of {cov.get('total_cnas')} "
+                   f"({cov.get('pct_effective')}%), against the pinned roster of "
+                   f"certified CNAs rather than the "
                    f"{cov.get('total_assigners_in_window')} assigners seen "
                    f"publishing in the window."),
         "status": UNMET if reasons else MET,

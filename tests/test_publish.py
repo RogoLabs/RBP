@@ -194,12 +194,15 @@ def test_check_allows_a_row_inside_the_covered_set(tmp_path):
 # the gate's own diagnostic output
 # --------------------------------------------------------------------------
 
-def _site_with_coverage(tmp_path, total=434, effective=121, sighted=159, own=2):
+def _site_with_coverage(tmp_path, total=539, effective=117, sighted=152, own=2,
+                        top_n=50, top_eff=40):
     d = tmp_path / "site" / "data"
     d.mkdir(parents=True)
     (d / "summary.json").write_text(json.dumps({"coverage": {
         "total_cnas": total, "cnas_effective": effective, "cnas_sighted": sighted,
-        "cnas_own_channel": own, "min_sightings": 3, "profile": "weekly"}}))
+        "cnas_own_channel": own, "min_sightings": 3, "profile": "weekly",
+        "top_n": top_n, "top_covered_effective": top_eff,
+        "top_covered": top_eff + 6, "top_missed_effective": []}}))
     return str(tmp_path / "site")
 
 
@@ -214,26 +217,38 @@ def test_gate_line_pairs_each_count_with_its_own_percentage(tmp_path, capsys):
     line = [ln for ln in capsys.readouterr().out.splitlines()
             if ln.startswith("gate:")][0]
 
-    # The count and the percentage on the gate figure must agree.
-    m = re.search(r"effective (\d+)/(\d+) = ([\d.]+)%", line)
-    assert m, f"gate line does not state the effective figure: {line!r}"
-    eff, total, pct = int(m.group(1)), int(m.group(2)), float(m.group(3))
-    assert eff == 121 and total == 434
-    assert abs(pct - round(100 * eff / total, 1)) < 0.05, (
-        f"{eff}/{total} is {round(100 * eff / total, 1)}%, not {pct}%: {line!r}")
+    # The GATE figure: its count and its percentage must agree. When the gate
+    # moved to top-N-by-volume this line kept printing the roster count against
+    # the new percentage, reproducing the original defect one metric change later.
+    m = re.search(r"top-(\d+) effective (\d+)/(\d+) = ([\d.]+)%", line)
+    assert m, f"gate line does not state the top-N figure: {line!r}"
+    top_n, eff, denom, pct = (int(m.group(1)), int(m.group(2)),
+                              int(m.group(3)), float(m.group(4)))
+    assert eff == 40 and denom == top_n == 50
+    assert abs(pct - round(100 * eff / denom, 1)) < 0.05, (
+        f"{eff}/{denom} is {round(100 * eff / denom, 1)}%, not {pct}%: {line!r}")
 
-    # The other two figures appear, and are not confusable with the gate figure.
-    assert "sighted 159" in line
+    # The roster share is printed too, with ITS own percentage, and marked as
+    # not gating so the two can never be read as each other.
+    m2 = re.search(r"roster effective (\d+)/(\d+) = ([\d.]+)% \(does not gate\)", line)
+    assert m2, f"gate line does not state the roster share: {line!r}"
+    reff, rtot, rpct = int(m2.group(1)), int(m2.group(2)), float(m2.group(3))
+    assert reff == 117 and rtot == 539
+    assert abs(rpct - round(100 * reff / rtot, 1)) < 0.05, (
+        f"{reff}/{rtot} is {round(100 * reff / rtot, 1)}%, not {rpct}%: {line!r}")
+
+    # The other two figures appear, and are not confusable with either.
+    assert "sighted 152" in line
     assert "own-channel 2" in line
-    assert "own-channel 2/434" not in line, (
-        "own-channel must not be printed as a ratio next to the gate percentage")
+    assert "own-channel 2/539" not in line, (
+        "own-channel must not be printed as a ratio next to a gate percentage")
 
 
 def test_gate_fails_loudly_when_a_launch_is_requested_below_it(tmp_path, capsys, monkeypatch):
     from rbp import site as site_mod
     monkeypatch.setattr(site_mod, "LAUNCHED", True)
-    assert publish.gate(_site_with_coverage(tmp_path, effective=10)) == 1
+    assert publish.gate(_site_with_coverage(tmp_path, top_eff=10)) == 1
     out = capsys.readouterr().out
-    assert "FAIL" in out and "below the 50.0% gate" in out
+    assert "FAIL" in out and "below the 80.0% gate" in out
     # And the reason names the floor, so the log says what to move.
     assert "seen at least 3 times" in out

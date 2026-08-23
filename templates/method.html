@@ -301,20 +301,38 @@
         </tr>
         {% if summary.coverage.get('top_n') %}
         <tr>
-          <td>Top {{ summary.coverage.top_n }} by volume</td>
-          <td class="num">{{ summary.coverage.top_covered }} / {{ summary.coverage.top_n }}</td>
-          <td>Of the {{ summary.coverage.top_n }} CNAs publishing the most CVEs, how
-            many these feeds reach. A share of the whole roster says nothing about
-            whether the CNAs that actually publish are reachable; this does.</td>
+          <td><strong>Top {{ summary.coverage.top_n }} by volume</strong></td>
+          <td class="num"><strong>{{ summary.coverage.top_covered_effective }} / {{ summary.coverage.top_n }}</strong></td>
+          <td>Of the {{ summary.coverage.top_n }} CNAs publishing the most CVEs, how many
+            these feeds see at least {{ summary.coverage.min_sightings }} times.
+            <strong>This is the figure the launch gate uses.</strong> A share of the whole
+            roster says nothing about whether the CNAs that actually publish are
+            reachable; this does. Counted on one sighting instead of
+            {{ summary.coverage.min_sightings }} it would read
+            {{ summary.coverage.top_covered }}, which is why the weaker number is
+            shown here and gates nothing.</td>
         </tr>
         {% endif %}
       </tbody>
     </table>
     {% if gate and gate.pct is not none %}
     <p class="small text-muted">
-      <strong>Launch gate:</strong> {{ gate.pct }}% of {{ gate.required }}% required.
-      {% if gate.cleared %}Cleared.{% else %}Not yet met, so the front page is a
-      holding page and these pages are not indexed.{% endif %}
+      <strong>Launch gate:</strong> {{ gate.pct }}% of {{ gate.required }}% required,
+      measured on {{ gate.basis }}.
+      {% if gate.cleared %}Cleared{% if gate.margin == 0 %} by exactly nothing: the gate
+      needs {{ gate.needed }} and this run has {{ gate.top_effective }}. One CNA dropping
+      below the sighting floor un-clears it{% else %} with {{ gate.margin }} CNA(s) to
+      spare{% endif %}.{% else %}Not yet met, so the front page is a
+      holding page and these pages are not indexed. It needs {{ gate.needed }} of the
+      top {{ gate.top_n }}; this run has {{ gate.top_effective }}.{% endif %}
+    </p>
+    <p class="small text-muted">
+      The gate was a share of the whole {{ summary.coverage.total_cnas }}-CNA roster until
+      2026-08-23, and it was unreachable: only 371 roster CNAs have published three CVEs in
+      the window at all, so that figure cannot exceed 68.8% however many feeds are added,
+      and the threshold had never been re-derived after the metric changed underneath it.
+      The roster share is still measured and still published above
+      ({{ gate.roster_pct_effective }}%). It no longer gates anything.
     </p>
     {% endif %}
     <p class="small text-muted">

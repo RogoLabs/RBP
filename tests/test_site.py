@@ -52,7 +52,12 @@ def built(tmp_path, monkeypatch):
         "coverage": {"total_cnas": 10, "cnas_effective": 6, "cnas_own_channel": 1,
                      "cnas_sighted": 8, "min_sightings": 3, "pct_cnas": 80.0,
                      "pct_effective": 60.0, "observed_pct": 12.5,
-                     "profile": "weekly"},
+                     "profile": "weekly",
+                     # The gate figure. 8 of 10 clears the 80% top-N gate; the
+                     # weaker one-sighting count is carried alongside so the
+                     # template can show that the two differ.
+                     "top_n": 10, "top_covered_effective": 8,
+                     "top_covered": 9, "top_missed_effective": []},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30,
@@ -127,9 +132,14 @@ def test_method_states_all_three_coverage_figures_and_the_gate(built):
     assert "Effective 6 / 10 (60.0%)" in text
     assert "Own channel 1 / 10" in text
     assert "figure the launch gate uses" in text
-    assert "Launch gate: 60.0% of 50.0% required" in text
+    assert "Launch gate: 80.0% of 80.0% required" in text
     # The floor is stated as a number, not described in the abstract.
     assert "Seen at least 3 times" in text
+    # The gate names its own basis, so a reader cannot mistake it for the roster
+    # share printed two rows above.
+    assert "top-10-by-volume at the 3-sighting floor" in text
+    # And the roster share is still shown, explicitly demoted rather than deleted.
+    assert "It no longer gates anything." in text
 
 
 def test_prelaunch_holding_page_does_not_link_into_the_dashboard(built):
@@ -415,7 +425,12 @@ def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
         "coverage": {"total_cnas": 10, "cnas_effective": 6, "cnas_own_channel": 1,
                      "cnas_sighted": 8, "min_sightings": 3, "pct_cnas": 80.0,
                      "pct_effective": 60.0, "observed_pct": 12.5,
-                     "profile": "weekly"},
+                     "profile": "weekly",
+                     # The gate figure. 8 of 10 clears the 80% top-N gate; the
+                     # weaker one-sighting count is carried alongside so the
+                     # template can show that the two differ.
+                     "top_n": 10, "top_covered_effective": 8,
+                     "top_covered": 9, "top_missed_effective": []},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30, "median_days_public": 30,
@@ -531,7 +546,14 @@ def test_no_template_defaults_an_absent_certainty_to_the_stronger_label():
 # the launch gate (r3 item 7)
 # --------------------------------------------------------------------------
 
-def _summary_with_coverage(total, eff, own=0):
+def _summary_with_coverage(total, eff, own=0, top_n=50, top_eff=None):
+    """`top_eff` defaults to the same ratio as eff/total.
+
+    Deliberately not defaulted to a clearing value. Callers that pass a low
+    roster coverage mean "below the gate", and a default that cleared regardless
+    silently inverted two tests that assert the below-gate posture."""
+    if top_eff is None:
+        top_eff = round(top_n * eff / total) if total else 0
     return {"total": 0, "min_age_days": 7, "age_buckets": {},
             "inference": {"k": 3, "run_coverage": 0.0,
                           "leave_one_out": {"precision": 0.99, "coverage": 0.6,
@@ -542,13 +564,38 @@ def _summary_with_coverage(total, eff, own=0):
                       "truncated": [], "detail": {}},
             "coverage": {"total_cnas": total, "cnas_effective": eff,
                          "cnas_own_channel": own, "cnas_sighted": eff,
-                         "min_sightings": 3, "profile": "weekly"}}
+                         "min_sightings": 3, "profile": "weekly",
+                         "top_n": top_n, "top_covered_effective": top_eff,
+                         "top_covered": top_n, "top_missed_effective": []}}
 
 
-def test_gate_status_uses_the_effective_sighting_figure():
-    assert site._gate_status(_summary_with_coverage(100, 60))["cleared"] is True
-    assert site._gate_status(_summary_with_coverage(100, 40))["cleared"] is False
-    assert site._gate_status(_summary_with_coverage(100, 50))["cleared"] is True
+def test_gate_status_uses_top_n_by_volume_on_the_sighting_floor():
+    g = site._gate_status(_summary_with_coverage(539, 117, top_eff=40))
+    assert g["cleared"] is True and g["pct"] == 80.0
+    assert site._gate_status(
+        _summary_with_coverage(539, 117, top_eff=39))["cleared"] is False
+    assert site._gate_status(
+        _summary_with_coverage(539, 400, top_eff=39))["cleared"] is False, (
+        "a large roster share must not clear a gate keyed to the top 50")
+
+
+def test_gate_reports_its_margin_because_it_has_no_second_condition():
+    """The roster-share floor was offered and declined, so the gate can clear by
+    exactly one CNA. A bare cleared:true would hide that."""
+    assert site._gate_status(
+        _summary_with_coverage(539, 117, top_eff=40))["margin"] == 0
+    assert site._gate_status(
+        _summary_with_coverage(539, 117, top_eff=45))["margin"] == 5
+
+
+def test_gate_fails_closed_when_the_run_predates_the_gate_figure():
+    """A snapshot written before top_covered_effective existed must not fall back
+    to top_covered, which counts a single stray sighting and would clear the gate
+    on a weaker measure than the one it names."""
+    s = _summary_with_coverage(539, 117)
+    del s["coverage"]["top_covered_effective"]
+    g = site._gate_status(s)
+    assert g["cleared"] is False and "cannot be evaluated" in g["reason"]
 
 
 def test_gate_threshold_is_reachable():
@@ -557,27 +604,42 @@ def test_gate_threshold_is_reachable():
     ceiling and could never clear. Nothing failed: the site published its
     pre-launch posture forever, which is exactly what it does when the gate is
     merely not yet met, so an unreachable gate was indistinguishable from a
-    distant one. The gate figure must be able to reach its own threshold."""
+    distant one. The gate figure must be able to reach its own threshold.
+
+    The 50%-of-roster gate that replaced own-channel had the same defect, found
+    the same way and later: only 371 of 539 roster CNAs have published 3 CVEs in
+    the window, so `cnas_effective` cannot exceed 68.8% on ANY feed set, and the
+    current feed set caps at 28.2%. That is why the gate is now keyed to the top
+    50 by volume, where the numerator and denominator are both bounded by 50.
+    """
     from rbp import clock, coverage as cov_mod
 
-    # The gate reads cnas_effective, which is bounded only by the CNA count.
-    assert site._gate_status(_summary_with_coverage(434, 434))["cleared"] is True
+    # Bounded by top_n on both sides, so the threshold is reachable by
+    # construction rather than by measurement.
     assert site._gate_status(
-        _summary_with_coverage(434, int(434 * site.GATE_PCT / 100) + 1))["cleared"] is True
+        _summary_with_coverage(539, 117, top_eff=50))["cleared"] is True
 
-    # Whereas own-channel is bounded by len(OWNER_FEEDS), and the assertion that
-    # matters is that the gate is NOT keyed to it: were it, this would be the
-    # ceiling, and it is far below the threshold.
-    ceiling = round(100 * len(clock.OWNER_FEEDS) / 434, 1)
-    assert ceiling < site.GATE_PCT, (
+    # Not keyed to own-channel, which is bounded by len(OWNER_FEEDS).
+    assert site._gate_status(
+        _summary_with_coverage(539, 0, own=len(clock.OWNER_FEEDS),
+                               top_eff=0))["cleared"] is False
+    assert round(100 * len(clock.OWNER_FEEDS) / 50, 1) < site.GATE_TOP_N_PCT, (
         "own-channel can reach the gate now, so this test no longer proves "
         "anything; check what the gate is keyed to")
-    assert site._gate_status(
-        _summary_with_coverage(434, 0, own=len(clock.OWNER_FEEDS)))["cleared"] is False
 
     # And the floor the gate counts against is the one inference names against,
     # so the gate cannot clear on CNAs the site would refuse to name.
     assert cov_mod.compute.__doc__ and "cnas_effective" in cov_mod.compute.__doc__
+
+
+def test_gate_numerator_is_not_the_one_sighting_figure():
+    """top_covered credits a top-50 CNA on one stray reference. Live it reads 37
+    where the gate figure reads 31, so keying the gate to it would clear six CNAs
+    early on a measure the coverage module's own docstring calls weak."""
+    s = _summary_with_coverage(539, 117, top_eff=31)
+    s["coverage"]["top_covered"] = 37
+    assert site._gate_status(s)["cleared"] is False
+    assert site._gate_status(s)["top_effective"] == 31
 
 
 def test_gate_counts_the_same_floor_inference_names_against(tmp_path):
@@ -608,7 +670,7 @@ def test_gate_counts_the_same_floor_inference_names_against(tmp_path):
 def test_gate_is_not_cleared_when_coverage_was_not_measured():
     st = site._gate_status({"total": 0})
     assert st["cleared"] is False
-    assert "not measured" in st["reason"]
+    assert "cannot be evaluated" in st["reason"]
 
 
 def test_launching_below_gate_fails_closed_and_still_publishes(tmp_path, monkeypatch):
