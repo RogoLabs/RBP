@@ -218,10 +218,51 @@ def test_there_is_a_mobile_breakpoint_at_all():
     could never reflow, so 86% of every row was off screen and Inferred owner was
     never visible on a phone."""
     css = CSS.read_text()
-    assert "@media (max-width: 767px)" in css
-    mob = css[css.index("@media (max-width: 767px)"):]
+    # 768, not 767. style.css opens its own mobile block at max-width: 768px with
+    # `table { min-width: 600px }` and `th, td { white-space: nowrap }`, so a card
+    # layout starting at 767 left EXACTLY 768px, the iPad portrait width, with the
+    # card layout off and both of those on.
+    assert "@media (max-width: 768px)" in css
+    assert "@media (max-width: 767px)" not in css, (
+        "the card layout reopened one pixel below style.css's mobile block, "
+        "which leaves 768px with nowrap on and no card layout")
+    mob = css[css.index("@media (max-width: 768px)"):]
     assert "min-width: 0" in mob, "the table's min-width is never released"
     assert "data-label" in mob, "no per-cell labels for the card layout"
+    # And the inherited nowrap has to be undone IN THE CARD-LAYOUT RULE, or
+    # stacked block cells still refuse to wrap and push the page sideways.
+    # Scoped to that rule rather than to the whole media block: `white-space:
+    # normal` appears twice, so a bare substring check passed with the one that
+    # matters deleted.
+    # The STANDALONE rule, not the combined `table.rbp, ... , table.rbp td {`
+    # display rule that appears first and only sets display and width.
+    # Comments stripped FIRST. The comment inside this very rule quotes
+    # `th, td { white-space: nowrap }`, braces and all, so an unstripped
+    # `[^}]*` stops inside the comment and reads half a rule. Exactly the bug
+    # rbp/contrast.py had to fix for the same reason.
+    import re as _re
+    m = _re.search(r"(?:^|\n)\s*table\.rbp td \{([^}]*)\}",
+                   contrast.strip_comments(mob))
+    assert m, "no standalone `table.rbp td` rule in the card layout"
+    card_td = m.group(1)
+    assert "white-space: normal" in card_td, (
+        "the card layout never resets style.css's `th, td { white-space: nowrap }`")
+
+
+def test_no_table_keeps_a_min_width_floor_at_narrow_widths():
+    """WCAG 1.4.10. The .rbp tables get the card layout; the OTHER tables, the
+    coverage figures and the launch checklist, are table.table-sm and were
+    inheriting `min-width: 600px` and `nowrap` from style.css with nothing to
+    undo them. /cves had 926px of horizontal page scroll at 375px and /method had
+    1,656px."""
+    css = CSS.read_text()
+    mob = css[css.index("@media (max-width: 768px)"):]
+    assert "table.table-sm" in mob, (
+        "the non-.rbp tables are never released from the 600px floor")
+    block = mob[mob.index("table.table-sm"):]
+    assert "min-width: 0" in block
+    # They stay tabular but scroll inside their own box, so the PAGE does not.
+    assert "overflow-x: auto" in block
 
 
 def test_the_mobile_layout_labels_every_cell():
@@ -268,3 +309,125 @@ def test_the_empty_state_is_not_styled_as_a_warning():
     changes = (TEMPLATES / "changes.html").read_text()
     assert "empty-state" in changes
     assert "caveat warn" not in changes.split("empty-state")[1][:400]
+
+
+# --------------------------------------------------------------------------
+# contrast, COMPUTED (review item 15)
+# --------------------------------------------------------------------------
+#
+# Every test above this line is a re.search over CSS or template text. None of
+# them could see the six real failures the review found, and the reason is
+# structural rather than an oversight: the chips are semi-transparent, so their
+# rendered background does not exist anywhere in the stylesheet. It comes into
+# being only when a colour is composited over whatever the row happens to be,
+# and a regex cannot composite anything.
+#
+# rbp/contrast.py does the compositing. These tests assert the ratios.
+
+import pytest
+
+from rbp import contrast
+
+# The opaque surfaces a chip or a line of prose actually lands on. Taken from
+# the real tokens rather than invented: --color-bg-primary, --color-bg-content
+# and --color-bg-secondary in each theme.
+SURFACES = {
+    "light": ("#f8f9fa", "#ffffff", "#e9ecef"),
+    "dark": ("#0f1117", "#151821"),
+}
+
+# Every chip, plus the prose that explains what the headline number counts.
+# chip-ok is the marker that renders the nine-condition launch checklist and it
+# measured 2.41; chip-none measured 1.75, which is the exact ratio a comment in
+# rbp.css claims to have fixed.
+CONTRAST_SELECTORS = [
+    ".chip-must", ".chip-should", ".chip-ok", ".chip-late",
+    ".chip-corrob", ".chip-block", ".chip-none",
+    ".lead-unit", ".lead-sub", "td.unattributed",
+    "table.rbp td.desc", "table.rbp th", "table.rbp a",
+]
+
+
+@pytest.mark.parametrize("theme", ["light", "dark"])
+@pytest.mark.parametrize("selector", CONTRAST_SELECTORS)
+def test_text_meets_aa_on_every_surface_it_lands_on(selector, theme):
+    """WCAG 2.1 1.4.3 at the normal-text bar of 4.5.
+
+    Chips render at 11.52px/600, which is neither >=18.66px nor >=14px bold, so
+    the large-text exemption of 3.0 does not apply to them.
+    """
+    worst = min(contrast.effective_ratio(selector, bg, theme)
+                for bg in SURFACES[theme])
+    assert worst >= contrast.AA_NORMAL, (
+        f"{selector} renders at {worst} in {theme} theme, below "
+        f"{contrast.AA_NORMAL}")
+
+
+def test_the_harness_reproduces_the_ratios_the_review_measured():
+    """A calibration test, and the reason to trust the numbers above.
+
+    These are the values the adversarial review measured independently, in a
+    browser, against the pre-fix stylesheet. If this module's arithmetic drifts
+    from a browser's, the tests above become confidently wrong in the same way
+    the grep suite was, and nothing would say so.
+    """
+    # chip-none was --color-text-muted (#adb5bd) on --color-bg-secondary.
+    assert contrast.ratio(contrast.parse_hex("#adb5bd"),
+                          contrast.parse_hex("#e9ecef")) == 1.75
+    # chip-ok was #2f9e6b composited over rgba(25,135,84,0.14) on #e9ecef.
+    base = contrast.composite((25, 135, 84), 0.14, contrast.parse_hex("#e9ecef"))
+    assert contrast.ratio(contrast.parse_hex("#2f9e6b"), base) == 2.41
+    # And the sanity anchors: identical colours are 1.0, black on white is 21.
+    assert contrast.ratio((0, 0, 0), (0, 0, 0)) == 1.0
+    assert contrast.ratio((0, 0, 0), (255, 255, 255)) == 21.0
+
+
+def test_the_selector_lookup_ignores_comments_and_honours_the_cascade():
+    """Two harness bugs that made it confidently wrong, both found by using it.
+
+    Comments in rbp.css mention selectors by name, so an unstripped search for
+    `td.unattributed` matched prose and ran on to the next rule's braces,
+    returning a different element's colours. And `table.rbp th` is declared
+    twice, so a first-match read reported the value the browser overrides and a
+    rule that had already been fixed still read as failing.
+    """
+    css = """
+    /* a comment mentioning .fake-sel and its history */
+    .fake-sel { color: #111111; }
+    .fake-sel { color: #222222; }
+    """
+    # The LAST declaration wins, as the browser does it.
+    assert contrast.rule_colors(".fake-sel", css) == ("#222222", None)
+    # And the comment is gone, so its mention of the selector cannot be matched
+    # as though it were a rule.
+    stripped = contrast.strip_comments(css)
+    assert "history" not in stripped and "comment" not in stripped
+    assert ".fake-sel {" in stripped
+
+
+def test_effective_ratio_actually_composites_the_translucent_background():
+    """The step that makes this harness different from a grep, asserted in the
+    path that uses it.
+
+    Skipping the composite call and measuring the text against the bare page
+    background still passed every ratio assertion above, because the corrected
+    colours clear 4.5 either way. So nothing proved the compositing happened,
+    and a harness that silently stopped doing it would go on reporting numbers
+    that look right and are not the ones a reader sees.
+
+    `.chip-must` is `rgba(220, 53, 69, 0.12)`: a red wash that LIGHTENS a white
+    surface slightly and therefore changes the ratio. If the two agree, the
+    background was ignored.
+    """
+    composited = contrast.effective_ratio(".chip-must", "#ffffff", "light")
+    color, _bg = contrast.rule_colors(".chip-must")
+    naive = contrast.ratio(contrast.parse_hex(color),
+                           contrast.parse_hex("#ffffff"))
+    assert composited != naive, (
+        "effective_ratio measured against the bare surface; the translucent "
+        "chip background was not composited, which is the whole point")
+
+    # And the composite itself moves in the right direction and the right amount.
+    assert contrast.composite((255, 255, 255), 0.5, (0, 0, 0)) == (128, 128, 128)
+    assert contrast.composite((10, 20, 30), 1.0, (200, 200, 200)) == (10, 20, 30)
+    assert contrast.composite((10, 20, 30), 0.0, (200, 200, 200)) == (200, 200, 200)

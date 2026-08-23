@@ -16,7 +16,10 @@
 .lead-unit {
   font-size: clamp(1rem, 2.4vw, 1.35rem);
   font-weight: 500;
-  color: var(--color-text-secondary);
+  /* The project's AA-corrected token, not the inherited one. This sentence
+     defines what the lead number counts and it measured 3.95 over the page
+     header, so the most-read sentence on the site was below AA. */
+  color: var(--rbp-text-secondary);
   max-width: 46ch;
   margin: var(--spacing-sm) 0 0;
 }
@@ -24,7 +27,7 @@
   margin-top: var(--spacing-lg);
   padding-top: var(--spacing-md);
   border-top: 1px solid var(--color-border);
-  color: var(--color-text-secondary);
+  color: var(--rbp-text-secondary);
   max-width: 62ch;
 }
 
@@ -53,12 +56,25 @@
   white-space: nowrap;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
-.chip-must    { background: rgba(220, 53, 69, 0.12);  color: var(--color-danger); }
-.chip-should  { background: rgba(108, 117, 125, 0.14); color: var(--color-text-secondary); }
+/* CHIP TEXT COLOURS ARE FIXED TO THE WORST BACKGROUND THEY LAND ON, not to the
+   one in the rule beside them.
+   
+   Every chip on this site failed WCAG AA in light theme, and the reason none of
+   it was caught is that the chips are SEMI-TRANSPARENT: `rgba(220, 53, 69, 0.12)`
+   has no fixed rendered value, only one that exists after compositing over
+   whatever the row happens to be. A regex over CSS cannot composite anything, so
+   the 17-test a11y suite passed while chip-none rendered at 1.75 and chip-ok, the
+   marker for a satisfied launch condition, rendered at 2.41 against a bar of 4.5.
+   
+   The colours below are solved against `--color-bg-secondary` (#e9ecef in light),
+   the darkest surface a chip sits on, so they pass everywhere else too.
+   rbp/contrast.py computes the ratios and tests/test_a11y.py asserts them. */
+.chip-must    { background: rgba(220, 53, 69, 0.12);  color: #b42b39; }
+.chip-should  { background: rgba(108, 117, 125, 0.14); color: #5a6168; }
 /* A launch condition that is satisfied. Green, but muted: this marks a promise
    kept, not a result, and nine of these turning green is the start of a launch
    decision rather than the end of one. */
-.chip-ok { background: rgba(25, 135, 84, 0.14); color: #2f9e6b; }
+.chip-ok { background: rgba(25, 135, 84, 0.14); color: #206b49; }
 
 /* The "we cannot tell" bucket. Deliberately an outline rather than a fill, so it
    does not read as a third category of finding sitting alongside MUST and
@@ -70,11 +86,26 @@
   border: 1px dashed rgba(108, 117, 125, 0.55);
   padding: calc(0.16em - 1px) calc(0.5em - 1px);
 }
-.chip-late    { background: rgba(255, 193, 7, 0.18);  color: #8a6100; }
-.chip-corrob  { background: rgba(25, 135, 84, 0.12);  color: var(--color-success); }
-.chip-block   { background: rgba(13, 110, 253, 0.10); color: var(--color-primary); }
-.chip-none    { background: var(--color-bg-secondary); color: var(--color-text-muted); }
-[data-theme="dark"] .chip-late { color: #f0c25a; }
+.chip-late    { background: rgba(255, 193, 7, 0.18);  color: #875f00; }
+.chip-corrob  { background: rgba(25, 135, 84, 0.12);  color: #146f45; }
+.chip-block   { background: rgba(13, 110, 253, 0.10); color: #0b5bd2; }
+/* chip-none carried --color-text-muted at 1.75, which is the EXACT ratio the
+   comment further down this file claims to have fixed: that fix created a new
+   token and applied it to td.unattributed, and the chip kept the old one. */
+.chip-none    { background: var(--color-bg-secondary); color: #666b70; }
+
+/* DARK THEME. Solved separately against #151821, the card surface, because a
+   colour that passes over #e9ecef is not the same colour that passes over a dark
+   row and three chips failed here too. chip-none needs its BACKGROUND changed as
+   well: no text colour reaches 4.5 over --color-bg-secondary in dark, because
+   that token is #1a1d27 and the chip is the same value as the surface. */
+[data-theme="dark"] .chip-must   { color: #f87171; }
+[data-theme="dark"] .chip-should { color: #9ca3b4; }
+[data-theme="dark"] .chip-ok     { color: #4ade80; }
+[data-theme="dark"] .chip-late   { color: #f0c25a; }
+[data-theme="dark"] .chip-corrob { color: #4ade80; }
+[data-theme="dark"] .chip-block  { color: #6ba5f8; }
+[data-theme="dark"] .chip-none   { background: #262a36; color: #b6bcc7; }
 
 /* ---- tables ------------------------------------------------------------ */
 /* A BOUNDED scrollport, so `position: sticky` on the header actually has
@@ -126,7 +157,10 @@ td.num, th.num {
 }
 td.id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
 td.desc { color: var(--color-text-secondary); min-width: 22rem; }
-td.unattributed { color: var(--color-text-muted); font-style: italic; }
+/* The AA-corrected token. The generic rule kept the inherited one while the
+   table-scoped rule below was fixed, so the same class rendered at two
+   different ratios depending on which table it landed in. */
+td.unattributed { color: var(--rbp-text-muted); font-style: italic; }
 
 /* ---- filter bar -------------------------------------------------------- */
 .filters {
@@ -414,7 +448,14 @@ table.rbp caption {
 
    rbp.css contained ZERO @media rules, so this is the first breakpoint in a layer
    that had none. */
-@media (max-width: 767px) {
+/* 768, NOT 767, and the single pixel was a real failure.
+   
+   style.css opens `@media (max-width: 768px)` with `table { min-width: 600px }`
+   and `th, td { white-space: nowrap }`. This block opened at 767px, so at
+   EXACTLY 768px the card layout was off while nowrap and the 600px floor were
+   on, and roughly three quarters of every row sat off screen. A viewport is not
+   an unusual width to be at: 768 is the iPad portrait width. */
+@media (max-width: 768px) {
   .filters { display: grid; grid-template-columns: 1fr; gap: var(--spacing-xs); }
   .filters label { margin-bottom: -0.25rem; }
   .filters input[type="search"], .filters select { width: 100%; min-width: 0; }
@@ -433,6 +474,11 @@ table.rbp caption {
     border: 0;
     padding: 0.2rem 0;
     text-align: left !important;
+    /* Explicitly undone. style.css sets `th, td { white-space: nowrap }` at this
+       same breakpoint, and the card layout never reset it, so cells that are now
+       stacked blocks still refused to wrap and pushed the page sideways. */
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   /* The label comes from the cell, so a hedge sits next to the claim it
      qualifies rather than in a header row that is no longer on screen. */
@@ -485,4 +531,41 @@ h1.visually-quiet {
   text-transform: uppercase;
   color: var(--rbp-text-muted);
   margin: 0 0 var(--spacing-sm);
+}
+
+
+/* ---- narrow viewports: nothing may scroll the PAGE sideways ------------- */
+/*
+   WCAG 1.4.10 (reflow) is failed by horizontal page scroll at 320 CSS px. This
+   site had 926px of it on /cves and 1,656px on /method at 375px wide.
+   
+   The .rbp tables get the card layout above. These are the OTHER tables, the
+   coverage figures, the feed inventory and the launch checklist, which are
+   `table.table-sm` and were inheriting `min-width: 600px` and `nowrap` from
+   style.css with nothing to undo them. They stay tabular, because a
+   three-column figure table reads worse as stacked cards, and instead scroll
+   inside their own bounded container so the PAGE does not.
+*/
+@media (max-width: 768px) {
+  table.table-sm {
+    min-width: 0;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table.table-sm th,
+  table.table-sm td {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  /* Long unbroken strings are the other source of sideways scroll: CVE IDs,
+     URLs and mono spans in prose. */
+  .mono, code, pre {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  pre.api {
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
 }
