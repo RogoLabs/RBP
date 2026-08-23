@@ -35,7 +35,21 @@ _CHUNK = 1 << 20
 # fewer rows: counts are a floor, and a silent shrink reads as improvement.
 FEED_HEALTH = {}
 
-OK, TRUNCATED, FAILED = "ok", "truncated", "failed"
+# FOUR states, not three. `capped` is the one this file was missing.
+#
+# A configured page cap fires on EVERY run by design: ubuntu's 200-page cap
+# always fires, and ghsa's 40-page cap always fires. Recording those as
+# `truncated` made `degraded` permanently true, so base.html rendered "This run
+# is incomplete ... not comparable to the previous run" on every page of every
+# run, three hundred lines above a card that compares this run to the previous
+# one. A warning that is always on is not a warning; it is furniture, and it
+# trains a reader to ignore the banner that matters.
+#
+#   capped     a known, configured limit was reached. Expected, standing,
+#              disclosed on /method as a permanent caveat. NOT a degraded run.
+#   truncated  the feed stopped for a reason that is not a configured cap.
+#              Unexpected. Degrades the run.
+OK, TRUNCATED, FAILED, CAPPED = "ok", "truncated", "failed", "capped"
 
 
 def reset_health():
@@ -58,7 +72,12 @@ def record_feed(name, status, detail="", rows=None):
     elif status is False:
         status = FAILED
     FEED_HEALTH[name] = {"status": status, "detail": detail, "rows": rows,
-                         "ok": status == OK, "truncated": status == TRUNCATED}
+                         "ok": status == OK,
+                         # Both incomplete-shaped states answer True here, so a
+                         # consumer asking "did this feed read everything" still
+                         # gets the right answer without knowing about caps.
+                         "truncated": status in (TRUNCATED, CAPPED),
+                         "capped": status == CAPPED}
 
 
 def health_summary():
@@ -82,8 +101,10 @@ def health_summary():
                 if v["status"] == FAILED]
     truncated = [f"{k}: {v['detail']}" for k, v in FEED_HEALTH.items()
                  if v["status"] == TRUNCATED]
+    capped = [f"{k}: {v['detail']}" for k, v in FEED_HEALTH.items()
+              if v["status"] == CAPPED]
     top = [k for k in FEED_HEALTH if ":" not in k]
-    return failures, truncated, len(top)
+    return failures, truncated, len(top), capped
 
 
 # A feed returning far fewer ids than last run is the silent-shrink signature,
@@ -97,6 +118,11 @@ def health_summary():
 # while others grow can leave the total looking merely flat.
 MAGNITUDE_DROP = 0.4
 
+# A single sub-fetch (one OSV ecosystem) is noisier than a whole feed, so it is
+# reported only on a clear collapse. Still far below "invisible", which is what
+# skipping parts entirely amounted to.
+PART_DROP = 0.7
+
 
 def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
     """Feeds whose id count fell sharply since the previous run.
@@ -109,17 +135,42 @@ def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
     `record_feed` has carried a `rows` count all along, and it reaches summary.json.
     The work was comparing two numbers.
     """
+    def _cmp(name, was, now, thr):
+        if not isinstance(was, int) or not isinstance(now, int) or was <= 0:
+            return None
+        if now < was * (1 - thr):
+            pct = round(100 * (was - now) / was)
+            return f"{name}: {was:,} -> {now:,} ids ({pct}% fewer)"
+        return None
+
     out = []
     for name, cur in sorted((current or {}).items()):
         if ":" in name:
-            continue                      # sub-fetches roll up to their parent
-        was = ((previous or {}).get(name) or {}).get("rows")
-        now = cur.get("rows")
-        if not isinstance(was, int) or not isinstance(now, int) or was <= 0:
-            continue
-        if now < was * (1 - threshold):
-            pct = round(100 * (was - now) / was)
-            out.append(f"{name}: {was:,} -> {now:,} ids ({pct}% fewer)")
+            continue                      # raw-shape sub-fetch; handled below
+        prev_feed = (previous or {}).get(name) or {}
+        hit = _cmp(name, prev_feed.get("rows"), cur.get("rows"), threshold)
+        if hit:
+            out.append(hit)
+
+        # AND EACH PART, which this deliberately skipped.
+        #
+        # The rationale was that "osv:npm rolls up to osv, comparing both
+        # double-counts one feed and lets a single ecosystem's normal variation
+        # trip the guard". The first half is true and the second is the wrong
+        # trade: osv:npm going 5,000 -> 100 while the osv TOTAL stays flat means
+        # another ecosystem grew enough to mask it, which is precisely the
+        # silent-shrink signature this function exists to catch, arriving in the
+        # one shape it could not see. npm is about 25% of osv's ids.
+        #
+        # Compared at a LOOSER threshold than the parent, because a single
+        # ecosystem genuinely is noisier than a whole feed, so the guard reports
+        # a part only when it has clearly collapsed rather than merely dipped.
+        for child, cv in sorted((cur.get("parts") or {}).items()):
+            pv = ((prev_feed.get("parts") or {}).get(child) or {})
+            hit = _cmp(f"{name}:{child}", pv.get("rows"), cv.get("rows"),
+                       PART_DROP)
+            if hit:
+                out.append(hit)
     return out
 
 
@@ -136,7 +187,12 @@ def health_detail():
     for parent, v in out.items():
         parts = v.get("parts") or {}
         if parts and any(p["status"] != OK for p in parts.values()):
-            worst = FAILED if any(p["status"] == FAILED for p in parts.values()) else TRUNCATED
+            if any(p["status"] == FAILED for p in parts.values()):
+                worst = FAILED
+            elif any(p["status"] == TRUNCATED for p in parts.values()):
+                worst = TRUNCATED
+            else:
+                worst = CAPPED
             # A parent whose sub-fetches degraded is itself degraded, or the
             # top-level number hides the hole.
             if v.get("status") == OK:
@@ -384,7 +440,7 @@ def feed_ubuntu(years, page_cap=200):
         capped = True
     if capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
-        record_feed("ubuntu", TRUNCATED, f"hit the {page_cap}-page cap; rows beyond it were not read")
+        record_feed("ubuntu", CAPPED, f"hit the {page_cap}-page cap; rows beyond it were not read")
     elif ended != "exhausted":
         print(f"  [ubuntu] {ended}", file=sys.stderr)
         record_feed("ubuntu", TRUNCATED, ended)
@@ -415,11 +471,29 @@ def feed_ghsa(years, page_cap=40):
     if token:
         headers["Authorization"] = f"Bearer {token}"
     out, url = [], "https://api.github.com/advisories?per_page=100&sort=published&direction=desc"
+    # Three outcomes, tracked explicitly. This loop reported ONE of them.
+    #
+    # `for _ in range(page_cap)` exhausting is a truncation, twelve lines below
+    # feed_ubuntu which records exactly that, and it recorded nothing. `gather`
+    # then stamped ghsa `ok` with the truncated count, so the live summary read
+    # {status: "ok", detail: "3321 ids"} on a feed that had silently stopped
+    # reading. Worse, a fixed cap returns a roughly CONSTANT count every run, so
+    # compare_magnitudes reads stable truncation as a healthy feed: the one
+    # detector for the failure this project calls intolerable is blind to the
+    # most likely instance of it.
+    #
+    # GHSA sources roughly 300 of 522 rows and the cap bounds that population's
+    # observation window to about 83 days, while distro trackers are observed
+    # over years. That is not merely incomplete, it silently invalidates
+    # cross-CNA comparison, so it has to be visible rather than inferred.
+    ended, pages = "exhausted", 0
     for _ in range(page_cap):
+        pages += 1
         try:
             data, _, hdrs = _get(url, timeout=60, headers=headers)
         except Exception as e:  # noqa: BLE001
             print(f"  [ghsa] stopped: {e}", file=sys.stderr)
+            ended = f"stopped after {pages} page(s): {str(e)[:80]}"
             break
         stop = False
         for a in data or []:
@@ -435,8 +509,16 @@ def feed_ghsa(years, page_cap=40):
                 stop = True
         nxt = [p.split(";")[0].strip("<> ") for p in hdrs.get("Link", "").split(",") if 'rel="next"' in p]
         if stop or not nxt:
+            ended = "reached the requested window"
             break
         url = nxt[0]
+    else:
+        # The loop ran out of iterations rather than out of data, which is
+        # exactly the truncation nothing was reporting.
+        ended = f"hit the {page_cap}-page cap; advisories beyond it were not read"
+    if ended != "reached the requested window":
+        print(f"  [ghsa] {ended}", file=sys.stderr)
+        record_feed("ghsa", CAPPED if "page cap" in ended else TRUNCATED, ended)
     return out
 
 
@@ -557,7 +639,10 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
         except OSError:
             pass
         added = len(out) - n0
-        record_feed(f"osv:{eco}", True, f"{added} ids from {nbytes / 1e6:.0f}MB")
+        # rows= was never passed here, so every OSV part carried rows: null and
+        # compare_magnitudes could not compare it even after it learned to look.
+        record_feed(f"osv:{eco}", True, f"{added} ids from {nbytes / 1e6:.0f}MB",
+                    rows=added)
         print(f"  [osv:{eco}] +{added}", file=sys.stderr)
     return out
 

@@ -551,3 +551,75 @@ def test_a_withheld_id_does_not_appear_as_no_longer_listed(built, tmp_path, monk
     ctx = site_mod.load(str(built["snapshots"]), str(built["data"]))
     assert NAMEABLE not in ctx["changes"]["no_longer_listed"]
     assert all(NAMEABLE not in str(v) for v in ctx["changes"].values())
+
+
+# --------------------------------------------------------------------------
+# feed health: the page and the payload must say the same thing (item 14)
+# --------------------------------------------------------------------------
+
+def test_the_payload_reports_a_degraded_run_as_degraded(built, tmp_path, monkeypatch):
+    """The mutation this exists to catch: hardcoding envelope degraded to False.
+
+    Every fixture in this file produces a CLEAN run, so False == False passed and
+    the assertion below proved nothing about the branch that matters. The served
+    rbp.json said `degraded: false, degraded_reasons: []` while the page rendered
+    "This run is incomplete" on the same build, and no test could see it."""
+    import importlib
+    from rbp import site as site_mod
+
+    latest = sorted(built["snapshots"].iterdir())[-1]
+    summary = json.loads((latest / "summary.json").read_text())
+    summary["degraded"] = True
+    summary["degraded_reasons"] = ["1 feed(s) failed"]
+    (latest / "summary.json").write_text(json.dumps(summary))
+
+    monkeypatch.setenv("RBP_LAUNCHED", "")
+    importlib.reload(site_mod)
+    out = tmp_path / "degraded_site"
+    site_mod.build(str(out), str(built["snapshots"]), str(built["data"]))
+
+    env = json.loads((out / "data" / "rbp.json").read_text())
+    assert env["degraded"] is True, "the payload denies a degradation the run declared"
+    assert env["degraded_reasons"] == ["1 feed(s) failed"]
+    assert "This run is incomplete" in (out / "overview.html").read_text()
+
+
+def test_the_banner_and_the_payload_agree_about_degradation(built):
+    """The served rbp.json said `degraded: false, degraded_reasons: []` while
+    base.html rendered "This run is incomplete" on every page of the same build.
+    A machine-readable copy that contradicts the page is worse than either being
+    wrong alone: a consumer and a reader draw opposite conclusions from one run.
+    """
+    for out in built["sites"]:
+        summary = json.loads((out / "data" / "summary.json").read_text())
+        env = json.loads((out / "data" / "rbp.json").read_text())
+        assert env["degraded"] == bool(summary.get("degraded")), (
+            f"{out.name}: envelope says degraded={env['degraded']}, summary says "
+            f"{summary.get('degraded')}")
+        assert env.get("degraded_reasons") == (summary.get("degraded_reasons") or [])
+
+        rendered = "This run is incomplete" in (out / "overview.html").read_text() \
+            if (out / "overview.html").exists() else \
+            "This run is incomplete" in (out / "index.html").read_text()
+        assert rendered == bool(summary.get("degraded")), (
+            f"{out.name}: the banner and the flag disagree")
+
+
+def test_a_configured_cap_is_a_limitation_and_not_a_degraded_run(built):
+    """ubuntu's 200-page cap and ghsa's 40-page cap fire on every run by design.
+    Recording them as truncation made `degraded` permanently true, so the banner
+    became furniture: it rendered on every page of every run, three hundred lines
+    above a card comparing this run to the previous one."""
+    from rbp import feeds
+    feeds.reset_health()
+    feeds.record_feed("ubuntu", feeds.CAPPED, "hit the 200-page cap", rows=100)
+    feeds.record_feed("debian", feeds.OK, "5000 ids", rows=5000)
+    failures, truncated, attempts, capped = feeds.health_summary()
+    assert failures == [] and truncated == [], (
+        "a configured cap must not read as an unexpected stop")
+    assert len(capped) == 1 and "ubuntu" in capped[0]
+
+    # And an UNEXPECTED stop still degrades the run.
+    feeds.record_feed("redhat", feeds.TRUNCATED, "connection reset after 3 pages")
+    _f, truncated, _a, _c = feeds.health_summary()
+    assert len(truncated) == 1 and "redhat" in truncated[0]

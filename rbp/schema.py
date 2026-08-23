@@ -265,6 +265,12 @@ def envelope(rows, summary, *, launched, snapshot_date, kind="backlog"):
         },
         "degraded": bool(summary.get("degraded")),
         "degraded_reasons": summary.get("degraded_reasons") or [],
+        # Standing limits that fire every run by design, published separately
+        # from `degraded` so a consumer can tell "this run was worse than usual"
+        # from "this feed always stops at a page cap". The page and this payload
+        # disagreed about `degraded` on the same build; tests/test_end_to_end.py
+        # now asserts they cannot.
+        "limitations": summary.get("limitations") or [],
         "columns": COLUMNS,
         "rows": rows,
     }

@@ -54,6 +54,29 @@
   </div>
 </div>
 
+{% if summary.get('limitations') %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Standing limits on what this site reads</h2></div>
+  <div class="card-body">
+    <p>
+      These fire on <strong>every run, by design</strong>. They are not a fault and not a
+      bad day; they are the permanent shape of what the feeds can see, and they are here
+      rather than in a banner because a warning that is always on is not a warning.
+    </p>
+    <ul class="mb-2">
+      {% for lim in summary.limitations %}<li class="mono small">{{ lim }}</li>{% endfor %}
+    </ul>
+    <p class="mb-0">
+      The consequence worth stating plainly: a paginated advisory API read to a fixed cap
+      is observed over a <strong>much shorter window</strong> than a distribution tracker
+      read in full, so counts from the two are not directly comparable, and a CNA whose
+      advisories arrive mainly through a capped feed will be under-represented here
+      relative to one carried by a tracker.
+    </p>
+  </div>
+</div>
+{% endif %}
+
 <div class="card">
   <div class="card-header"><h2 class="card-title">The clock</h2></div>
   <div class="card-body">
