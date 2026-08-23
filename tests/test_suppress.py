@@ -322,8 +322,13 @@ def test_the_private_route_is_published_on_every_surface(built, page):
 
 
 def test_the_footer_carries_the_route_on_every_dashboard_page(built):
-    for page in ("overview.html", "cves.html", "cnas.html", "changes.html",
-                 "policy.html", "data.html", "method.html"):
+    # Globbed, not listed. cnas.html was in this list and no longer exists, and a
+    # hardcoded list is equally wrong in the other direction: a new dashboard page
+    # would ship without the correction route and nothing would say so.
+    pages = sorted(p.name for p in built.glob("*.html")
+                   if p.name not in ("index.html",))
+    assert len(pages) >= 5, f"only found {pages}; the build did not produce a site"
+    for page in pages:
         body = (built / page).read_text()
         assert PRIVATE_ROUTE in body, page
         assert MAIL_ROUTE in body, page
