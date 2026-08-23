@@ -37,7 +37,10 @@ import datetime as dt
 # 1: first versioned artefact. Before this there was no version at all, which is
 #    why the value starts here rather than at 0: a consumer that finds no
 #    schema_version is reading a pre-contract artefact and should refuse it.
-SCHEMA_VERSION = 1
+# v2, 2026-08-23: the owner columns were removed. A consumer pinned to v1 and
+# indexing by position must fail loudly rather than silently read `sources` where
+# it expected `owner`, which is the entire reason this constant exists.
+SCHEMA_VERSION = 2
 
 # The one column contract. Order is part of it: a consumer indexing by position
 # breaks silently on a reorder, so this list is the order and it does not change
@@ -56,9 +59,16 @@ COLUMNS = [
     # the rule call, and its inputs
     "rule", "rule_strength", "rule_certainty", "rule_basis",
     "self_disclosed", "own_feed_date", "earliest_other_date",
-    # attribution, and how much to trust it
-    "owner", "owner_nameable", "owner_tier", "owner_method",
-    "owner_contested", "veto_evaluated",
+    # attribution: ONE field, and it is always False under v1.
+    #
+    # `owner`, `owner_tier`, `owner_method` and `owner_contested` were here.
+    # They are gone rather than emptied, because a column that is present and
+    # always null invites a consumer to build against it and wait for it to
+    # fill, and because an always-empty `owner` column in a published CSV is a
+    # promise the site is not making. `owner_nameable` survives alone so that a
+    # consumer has one documented field to branch on, and its documented value
+    # is False.
+    "owner_nameable", "veto_evaluated",
     # provenance
     "sources", "feed_count", "indep_sources", "single_origin", "refs",
     "advisory_url",
@@ -110,23 +120,11 @@ FIELDS = {
     "earliest_other_date": ("date|null", "null",
                             "Earliest date from any other feed. With own_feed_date, "
                             "these two are the entire input to the rule call."),
-    "owner": ("string|null", "null",
-              "Inferred owning CNA short name, or null where the gate did not "
-              "pass. NEVER a placeholder string. Inferred, not authoritative: the "
-              "reservation endpoint redacts the real value."),
     "owner_nameable": ("boolean", "never absent",
-                       "Whether this site is willing to publish the owner. The "
-                       "marker to branch on, not the emptiness of `owner`."),
-    "owner_tier": ("string", "never absent",
-                   "'block', 'block-corroborated', 'abstain' or 'suppressed'."),
-    "owner_method": ("string", "never absent",
-                     "How the name was reached or why it was withheld. This is the "
-                     "field that distinguishes a plausibility-checked name from an "
-                     "unchecked one."),
-    "owner_contested": ("boolean", "never absent",
-                        "An independent product signal disagreed with the inferred "
-                        "owner. Read with veto_evaluated: false here can mean "
-                        "'agreed' or 'no opinion'."),
+                       "ALWAYS false in v1: this site publishes no attribution. "
+                       "The one field to branch on. `owner`, `owner_tier`, "
+                       "`owner_method` and `owner_contested` were removed in "
+                       "schema v2 rather than published as permanent nulls."),
     "veto_evaluated": ("boolean", "never absent",
                        "Whether a product-map verdict existed to contest the name "
                        "at all. false means silence, not agreement."),

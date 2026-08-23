@@ -163,54 +163,42 @@
     </div>
   </div>
   <div class="metric-card">
-    <div class="metric-value">{{ summary.named_cnas | commafy }}</div>
+    <div class="metric-value">{{ summary.coverage.top_covered_effective if summary.coverage else '?' }}</div>
     <div class="metric-label">
-      CNAs with at least one row named<br>
-      <span class="metric-base">of {{ summary.coverage.total_cnas if summary.coverage else '?' }}
-      CNAs in the Program</span>
+      Of the top {{ summary.coverage.top_n if summary.coverage else '?' }} CNAs by volume,
+      how many this site can see<br>
+      <span class="metric-base">seen at least
+      {{ summary.coverage.min_sightings if summary.coverage else '?' }} times; this is the
+      launch gate figure</span>
     </div>
   </div>
 </div>
 
-{# The distribution, not a single share. Ordered by count, and captioned as an
-   instrument reading rather than a ranking, because it is one. #}
-{% if cnas %}
+{# The per-CNA distribution card lived here. It ranked CNAs by rows named, and
+   v1 names nobody, so there is nothing to rank. Deliberately not replaced with an
+   anonymised version: "one CNA holds 96% of rows" plus a coverage table naming
+   which CNAs are readable is a re-identification exercise, not an anonymisation.
+   The abstention rate below is what the card was really evidence for. #}
 <div class="card">
   <div class="card-header">
-    <h2 class="card-title">Where the named rows sit</h2>
+    <h2 class="card-title">What this site does not tell you</h2>
   </div>
   <div class="card-body">
     <p>
-      <strong>This is a picture of what this site can see, not of who is slowest.</strong>
-      A CNA appears here when its published CVE IDs form blocks wide enough to infer
-      ownership <em>and</em> this site reads its advisories. Concentration in one row of
-      this table is a property of those two things.
+      <strong>This site does not say which CNA reserved any of these IDs.</strong> It can
+      often reconstruct that from the surrounding ID blocks, and it does so internally to
+      measure how well the reconstruction works, but it publishes none of it. The method,
+      its measured error rate, and why the figure is not yet strong enough to publish a
+      name against are all on <a href="method.html">the method page</a>.
     </p>
-    <table class="table table-sm small">
-      <thead>
-        <tr><th scope="col">CNA</th><th scope="col" class="num">Rows named</th>
-            <th scope="col" class="num">Share of the {{ summary.named_cnas }} named CNAs' rows</th></tr>
-      </thead>
-      <tbody>
-        {% set named_total = cnas | sum(attribute='outstanding') %}
-        {% for c in cnas | sortnum('outstanding') %}
-        <tr>
-          <td><a href="cna/{{ c.slug }}.html">{{ c.cna }}</a></td>
-          <td class="num">{{ c.outstanding | commafy }}</td>
-          <td class="num">{{ ((100 * c.outstanding / named_total) | round(1)) if named_total else 0 }}%</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <p class="small text-muted mb-0">
-      Shares are of the <strong>{{ named_total | commafy }} named rows</strong>, not of the
-      {{ summary.total | commafy }} in this snapshot. The other
-      {{ (summary.total - named_total) | commafy }} carry no owner, because the
-      reconstruction abstained.
+    <p class="mb-0">
+      That is a deliberate limit, not a gap waiting to be filled. The argument here is
+      that <span class="mono">owning_cna</span> is populated, served, and masked by
+      choice, and that the Program published an RBP metric until 2022 and stopped. Neither
+      claim needs this site to name anyone.
     </p>
   </div>
 </div>
-{% endif %}
 
 <div class="card">
   <div class="card-header"><h2 class="card-title">How long these have been public</h2></div>

@@ -247,9 +247,16 @@ def test_the_site_quotes_the_delegation_sentence_where_it_matters():
     import pathlib
     tpl = pathlib.Path(__file__).parent.parent / "templates"
     method = (tpl / "method.html").read_text()
-    cna = (tpl / "cna.html").read_text()
     assert "CNA-LR to publish a CVE Record" in method, (
         "/method does not quote the delegation sentence")
-    for page, body in (("method.html", method), ("cna.html", cna)):
-        assert "CNA-LR" in body, page
-        assert "delegat" in body.lower(), page
+
+    # cna.html was the other page this checked, and it was the more important
+    # half: the caveat had to be on the page that names a CNA. v1 names nobody
+    # and that template is gone, so the requirement now reads: any page that
+    # names a CNA must carry the caveat, and there must be no such page.
+    for page in tpl.glob("*.html"):
+        body = page.read_text()
+        if "cna_rows" in body or "r.owner" in body or "c.cna" in body:
+            assert "CNA-LR" in body and "delegat" in body.lower(), (
+                f"{page.name} presents per-CNA attribution without the "
+                "delegation caveat")

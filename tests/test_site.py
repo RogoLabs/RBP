@@ -152,7 +152,7 @@ def test_prelaunch_holding_page_does_not_link_into_the_dashboard(built):
 
 def test_prelaunch_dashboard_pages_are_noindex(built):
     out = built(False)
-    for name in ("overview", "cves", "cnas", "method", "policy", "data", "changes"):
+    for name in ("overview", "cves", "method", "policy", "data", "changes"):
         html = (out / f"{name}.html").read_text()
         assert 'content="noindex, nofollow"' in html, name
 
@@ -174,17 +174,19 @@ def test_holding_page_itself_is_noindex(built):
     assert 'name="robots"' in index and "noindex" in index
 
 
-def test_prelaunch_withholds_the_per_cna_pages(built):
-    """report.py states the project's own rule that a named CNA gets a private
-    preview before any row naming it circulates. A six-hourly public deploy of
-    these pages breaks that rule on every run, and noindex does not help because
-    the page is still fetchable and linkable."""
-    pre = built(False)
-    assert not (pre / "cna").exists() or not list((pre / "cna").glob("*.html"))
-    assert not list((pre / "data" / "cna").glob("*.json"))
-    post = built(True)
-    assert (post / "cna" / "acme.html").exists()
-    assert (post / "data" / "cna" / "acme.json").exists()
+def test_the_per_cna_pages_do_not_exist_in_either_posture(built):
+    """They used to be WITHHELD until launch, on the rule that a named CNA gets a
+    private preview before any row naming it circulates. Under v1 there is no
+    name to preview, so the pages are not written at all.
+
+    Asserted in BOTH postures deliberately. The old test only proved the
+    pre-launch case, so a regression that re-enabled the pages would have been
+    caught only by a launched-posture assertion nobody had written."""
+    for launched in (False, True):
+        out = built(launched)
+        assert not (out / "cna").exists() or not list((out / "cna").glob("*.html")), launched
+        assert not list((out / "data" / "cna").glob("*.json")), launched
+        assert not (out / "cnas.html").exists(), launched
 
 
 def test_launched_front_door_is_the_dashboard(built):
@@ -200,7 +202,9 @@ def test_nav_follows_the_posture(built):
     assert 'href="overview.html">Overview' in (pre / "cves.html").read_text()
     post = built(True)
     assert 'href="index.html">Overview' in (post / "cves.html").read_text()
-    assert 'href="../index.html">Overview' in (post / "cna" / "acme.html").read_text()
+    # The nav must not offer a CNAs tab that resolves to nothing.
+    for out in (pre, post):
+        assert 'cnas.html"' not in (out / "cves.html").read_text()
 
 
 def test_aggregate_data_files_are_served_in_both_postures(built):
@@ -266,28 +270,42 @@ def test_row_count_must_match_the_headline(tmp_path):
         site.load(str(tmp_path / "snapshots"), str(tmp_path))
 
 
-def test_an_owner_with_no_cna_page_raises(tmp_path):
-    """Every owner link must resolve. CNAs dropping out of cnas.json while
-    /cves still linked to them was an observed symptom of the epoch bug."""
+def test_a_name_on_a_snapshot_is_stripped_rather_than_published(tmp_path):
+    """The two tests that used to live here checked RELATIONSHIPS between named
+    rows and per-CNA pages: that every owner resolved to a page, and that the
+    per-CNA totals matched. Under v1 neither subject exists, and a set-membership
+    rule with four ways to be subtly wrong is exactly what let 121 names reach the
+    public data branch. The replacement invariant has one way to be wrong.
+
+    A snapshot on disk may still carry names: prior snapshots restored from the
+    data branch were written before this change. Reading one must strip, not
+    crash, or the build cannot read its own history."""
     snaps = tmp_path / "snapshots" / "2026-08-20"
     snaps.mkdir(parents=True)
     (snaps / "backlog.json").write_text(json.dumps(
-        [{"cve_id": "CVE-2026-1", "owner": "ghost"}]))
+        [{"cve_id": "CVE-2026-1", "owner": "ghost", "owner_tier": "block",
+          "owner_nameable": True, "product_map_owner": "acme"}]))
     (snaps / "summary.json").write_text('{"total": 1}')
     (snaps / "cnas.json").write_text("[]")
-    with pytest.raises(SystemExit, match="absent from cnas.json"):
-        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+    ctx = site.load(str(tmp_path / "snapshots"), str(tmp_path))
+    row = ctx["rows"][0]
+    for field in site.NAME_FIELDS:
+        assert field not in row, field
+    assert row["owner_nameable"] is False
 
 
-def test_per_cna_totals_must_match_the_named_rows(tmp_path):
-    snaps = tmp_path / "snapshots" / "2026-08-20"
-    snaps.mkdir(parents=True)
-    (snaps / "backlog.json").write_text(json.dumps(
-        [{"cve_id": "CVE-2026-1", "owner": "acme"}]))
-    (snaps / "summary.json").write_text('{"total": 1}')
-    (snaps / "cnas.json").write_text(json.dumps([{"cna": "acme", "outstanding": 9}]))
-    with pytest.raises(SystemExit, match="contradict their own tables"):
-        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+def test_assert_artefact_refuses_a_row_that_slipped_past_the_strip(tmp_path):
+    """The strip runs on read. Anything reaching a published artefact with a name
+    means a write path bypassed it, which is how the per-CNA JSON endpoints kept
+    emitting names after every page had stopped."""
+    with pytest.raises(SystemExit, match="name-bearing field"):
+        site.assert_artefact(
+            [{"cve_id": "CVE-2026-1", "owner": "acme", "owner_nameable": False}],
+            "rbp.json")
+    with pytest.raises(SystemExit, match="owner_nameable"):
+        site.assert_artefact(
+            [{"cve_id": "CVE-2026-1", "owner_nameable": True}], "rbp.json")
 
 
 def test_a_corrupt_ledger_raises_but_a_missing_one_does_not(tmp_path):
@@ -322,8 +340,11 @@ def test_rule_strength_never_ships_without_its_certainty(built):
     # Rendered: wherever a template prints the strength it prints the qualifier.
     import pathlib
     tpl_dir = pathlib.Path(__file__).parent.parent / "templates"
-    for name in ("cves.html", "cna.html"):
-        body = (tpl_dir / name).read_text()
+    # cna.html was in this list until v1 stopped publishing attribution and the
+    # template was deleted. Globbed rather than named, so the next template to
+    # appear or disappear does not need this list edited.
+    for tpl in tpl_dir.glob("*.html"):
+        name, body = tpl.name, tpl.read_text()
         if "rule_strength" in body:
             assert "rule_certainty" in body, f"{name} shows strength without certainty"
 
@@ -456,10 +477,12 @@ def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
         site.build(str(out), str(tmp_path / "snapshots"), str(tmp_path))
 
         changes = (out / "changes.html").read_text()
-        cna = (out / "cna" / "acme.html").read_text()
+        # The per-CNA page carried the same sort and the same None hazard, and
+        # was the other half of this assertion until v1 stopped writing it.
+        assert not (out / "cna").exists() or not list((out / "cna").glob("*.html"))
 
         # No bare None in a numeric column.
-        assert ">None<" not in changes and ">None<" not in cna
+        assert ">None<" not in changes
 
         # The rejected block must not claim these rows published. Checking for
         # the substring "published" is wrong: the block legitimately quotes the

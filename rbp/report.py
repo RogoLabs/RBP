@@ -338,7 +338,14 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     with open(os.path.join(sdir, "backlog.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
-        w.writerows(_gated(r) for r in reportable)
+        # De-named like every other artefact. This writer had its own generator
+        # expression rather than sharing the JSON path's row list, so the strip
+        # applied to backlog.json missed it entirely and the CSV kept shipping
+        # owner_nameable=True. Same shape as the per-CNA JSON endpoints: a second
+        # writer for the same rows is where the guard does not reach.
+        from . import site as _site_csv
+        w.writerows(_site_csv._denamed([_gated(r) for r in reportable],
+                                       "backlog.csv"))
     # Suppressed rows are excluded from the ungated audit file too.
     #
     # This file is NOT on publish.ALLOWED_SNAPSHOT, so it never reaches the data
@@ -352,7 +359,9 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # Found by running the real snapshot through this path rather than by a unit
     # test: the unit tests used a two-row fixture and checked backlog.json and
     # held_back.json, so they were blind to the third writer.
-    json.dump([r for r in backlog if not r.get("suppressed")],
+    from . import site as _site_full
+    json.dump(_site_full._denamed([r for r in backlog if not r.get("suppressed")],
+                                  "backlog_full.json"),
               open(os.path.join(sdir, "backlog_full.json"), "w"), indent=1)
     # Excluded rows, with the reason. An epoch that removes the oldest and
     # strongest evidence has to read as deliberate conservatism, not be
@@ -392,11 +401,23 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # held_back.json is the file that proved a single-artefact assertion is not
     # an assertion: its named owners included CNAs absent from cnas.json.
     from . import site as _site
-    gated_rows = [_gated(r) for r in reportable]
+    # De-named HERE, at the write, not only when the site reads back.
+    #
+    # These snapshots are pushed to the `data` branch of a public repo, so they
+    # are a published artefact in their own right and not merely internal state.
+    # Stripping only on read would have left every name sitting on that branch
+    # and in its git history, which is exactly how 121 names reached it while
+    # every rendered page was clean.
+    #
+    # Safe with respect to grading: cli.run calls inference.apply_to_backlog,
+    # which records predictions into the ledger, at line 233, long before this
+    # function is reached at line 287. The grader has already seen the names.
+    gated_rows = _site._denamed([_gated(r) for r in reportable], "backlog.json")
+    held = _site._denamed(held, "held_back.json")
     _site.assert_artefact(gated_rows, "backlog.json")
     _site.assert_artefact(held, "held_back.json")
     json.dump(held, open(os.path.join(sdir, "held_back.json"), "w"), indent=1)
-    json.dump([_gated(r) for r in reportable], open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
+    json.dump(gated_rows, open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
 
     # WoW diff: compare like-for-like (full backlog both sides, not full-vs-reportable)
     prev = _prev_snapshot(snap_root, today)

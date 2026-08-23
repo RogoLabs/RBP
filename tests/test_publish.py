@@ -22,7 +22,9 @@ def _snap(tmp_path, date, files):
     return d
 
 
-ROW_OK = {"cve_id": "CVE-2026-1", "owner": "acme", "counted": True}
+# v1 publishes no attribution, so the CLEAN row is the one with no owner at all.
+# It used to be a NAMED row on a counted CVE, which was clean under the old rule.
+ROW_OK = {"cve_id": "CVE-2026-1", "counted": True, "owner_nameable": False}
 ROW_HELD_NAMED = {"cve_id": "CVE-2026-2", "owner": "acme", "counted": False}
 ROW_HELD_CLEAN = {"cve_id": "CVE-2026-2", "owner": "unattributed", "counted": False}
 
@@ -159,11 +161,30 @@ def test_cli_stage_then_check_exits_zero(tmp_path, capsys, monkeypatch):
     assert publish.main(["check"]) == 0
 
 
-def test_cli_check_exits_nonzero_on_a_leak(tmp_path, monkeypatch):
+def test_stage_de_names_so_a_named_row_cannot_reach_the_branch(tmp_path, monkeypatch):
+    """Staging is now the scrubber, so a named row written by an older pipeline
+    is cleaned on its way into the checkout rather than merely refused."""
     _snap(tmp_path, "2026-08-20", {"held_back.json": [ROW_HELD_NAMED]})
     (tmp_path / "data").mkdir()
     monkeypatch.chdir(tmp_path)
     publish.main(["stage"])
+    staged = json.loads(
+        (tmp_path / ".state" / "snapshots" / "2026-08-20" / "held_back.json").read_text())
+    assert "owner" not in staged[0]
+    assert publish.main(["check"]) == 0
+
+
+def test_cli_check_exits_nonzero_on_a_leak(tmp_path, monkeypatch):
+    """The guard, exercised on a file that did NOT come through stage. That is
+    the real threat model: staging cleans what it copies, and check is the
+    backstop for anything that reaches the checkout another way, which is how
+    the branch acquired workflow files and lost every snapshot in its own
+    history."""
+    st = tmp_path / ".state" / "snapshots" / "2026-08-20"
+    st.mkdir(parents=True)
+    (st / "held_back.json").write_text(json.dumps([ROW_HELD_NAMED]))
+    (tmp_path / "data").mkdir()
+    monkeypatch.chdir(tmp_path)
     assert publish.main(["check"]) == 1
 
 
@@ -180,14 +201,19 @@ def test_check_refuses_a_row_naming_a_cna_outside_its_covered_set(tmp_path):
     assert any("outside its own covered set" in p for p in problems)
 
 
-def test_check_allows_a_row_inside_the_covered_set(tmp_path):
+def test_check_refuses_a_named_row_even_inside_the_covered_set(tmp_path):
+    """This test asserted the opposite until 2026-08-23: a name INSIDE the
+    covered set was allowed. That rule is what let 121 names reach the public
+    branch, because "allowed in the right circumstances" needs the circumstances
+    to be evaluated everywhere, and the ledger arm evaluated them nowhere."""
     st = tmp_path / ".state"
     (st / "snapshots" / "2026-08-20").mkdir(parents=True)
     (st / "snapshots" / "2026-08-20" / "backlog.json").write_text(json.dumps(
         [{"cve_id": "CVE-2026-1", "owner": "redhat", "counted": True}]))
     (st / "snapshots" / "2026-08-20" / "summary.json").write_text(json.dumps(
         {"coverage": {"covered": ["redhat", "debian"]}}))
-    assert publish.check(str(st)) == []
+    problems = publish.check(str(st))
+    assert any("attribution field" in p for p in problems), problems
 
 
 # --------------------------------------------------------------------------

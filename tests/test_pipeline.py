@@ -15,7 +15,7 @@ import pathlib
 import pandas as pd
 import pytest
 
-from rbp import classify, report
+from rbp import classify, report, site
 from rbp.attribution import Attributor
 from rbp.inference import TIER_BLOCK, TIER_CORROBORATED, TIER_NONE, apply_to_backlog
 
@@ -125,13 +125,13 @@ def test_report_writes_a_snapshot_the_site_can_read(backlog, corpus, tmp_path):
     named = next(r for r in rows if r["cve_id"] == RBP_NAMEABLE)
     abstained = next(r for r in rows if r["cve_id"] == RBP_ABSTAIN)
 
-    assert named["owner"] == "acme" and named["owner_nameable"] == "True"
-    # The abstained row still ships, it just carries no name.
-    # CSV absence is an empty cell, JSON absence is null. Never a placeholder:
-    # "unattributed" was the largest value in this column by a factor of three,
-    # cnas.json had no such entry, and /data documented the opposite, so a
-    # consumer coding to the documentation treated every abstention as named.
-    assert abstained["owner"] == "" and abstained["owner_nameable"] == "False"
+    # BOTH rows ship, and neither carries a name. The nameable row is the one
+    # that matters here: inference DID name it (the grader has the prediction),
+    # and the publication boundary dropped the name anyway. That is the whole
+    # de-naming contract in one assertion.
+    assert "owner" not in named and "owner" not in abstained
+    for r in (named, abstained):
+        assert r["owner_nameable"] == "False", r["cve_id"]
     assert "RESERVED" in md and "DNE" not in md
 
 
@@ -143,10 +143,13 @@ def test_csv_never_names_a_cna_the_report_withholds(backlog, corpus, tmp_path):
     sdir, md, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
                                ["debian"], min_age=14)
     shared = json.load(open(pathlib.Path(sdir) / "backlog.json"))
+    assert shared, "fixture produced no rows, so this asserts nothing"
     for row in shared:
-        if not row["owner_nameable"]:
-            assert row["owner"] is None, (
-                "JSON absence must be null, not a placeholder string")
+        # v1 publishes no attribution at all, so the gate is not "absence is
+        # spelled null" but "the field is not there". Stricter than the rule it
+        # replaces: there is no nameable branch left to get wrong.
+        assert row["owner_nameable"] is False
+        assert "owner" not in row, row["cve_id"]
 
 
 def test_run_coverage_is_reported_separately_from_validation_coverage(backlog, corpus, tmp_path):
@@ -242,7 +245,7 @@ def test_held_back_rows_are_gated_like_every_other_artefact(backlog, corpus, tmp
         # Never named, whether or not the inference succeeded. These rows failed
         # an earlier test than the naming gate: whether the site will report them
         # at all. Naming a CNA on a within-buffer row contradicts the buffer.
-        assert row["owner"] is None, row["cve_id"]
+        assert "owner" not in row, row["cve_id"]
         assert row["owner_nameable"] is False
         assert row["counted"] is False
         assert row["held_back_reason"] in ("pre-epoch", "within-buffer", "undated")
@@ -268,16 +271,29 @@ def test_no_snapshot_artefact_leaks_an_ungated_owner(backlog, corpus, tmp_path):
     apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
     sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
                               ["debian"], min_age=14)
-    published = {"backlog.json", "held_back.json"}
+    # EVERY json file in the snapshot, not an allowlist. The allowlist was the
+    # bug in the two previous versions of this test: it named the files known to
+    # leak, so the next writer to be added was exempt by default. backlog_full
+    # and the excluded-rows file are both published to the data branch too.
+    checked = 0
     for f in pathlib.Path(sdir).glob("*.json"):
-        if f.name not in published:
+        try:
+            body = json.load(open(f))
+        except ValueError:
             continue
-        for row in json.load(open(f)):
+        rows = body if isinstance(body, list) else body.get("rows")
+        if not isinstance(rows, list):
+            continue
+        for row in rows:
+            if not isinstance(row, dict):
+                continue
+            checked += 1
             assert not [k for k in row if k.startswith("product_map")], f.name
-            if row.get("owner_nameable") is False:
-                assert row["owner"] is None, (
-                    f"{f.name}:{row['cve_id']} JSON absence must be null, not a "
-                    "placeholder string")
+            for field in site.NAME_FIELDS:
+                assert row.get(field) is None, (
+                    f"{f.name}:{row.get('cve_id')} carries {field}, and v1 "
+                    "publishes no attribution")
+    assert checked, "no rows were inspected, so this test asserts nothing"
 
 
 def test_report_build_applies_no_filter_when_given_rows():
@@ -316,22 +332,26 @@ def test_deploy_allowlist_and_report_artefacts_agree():
     assert publish.ALLOWED_ROOT == {"README.md", "precision.json", "resolutions.json"}
 
 
-def test_a_named_uncounted_row_is_refused_by_the_artefact_assertion():
+def test_any_named_row_is_refused_whatever_its_other_fields_say():
+    """These were two tests, one asserting a name on an UNCOUNTED row was refused
+    and one asserting a name absent from cnas.json was refused. Both encoded the
+    old rule, which permitted a name in the right circumstances and therefore had
+    circumstances to get wrong. v1 refuses the name, full stop, so the two cases
+    collapse into one and the fixtures that used to be the passing case are now
+    also refused."""
     from rbp.site import assert_artefact
     import pytest as _pytest
-    bad = [{"cve_id": "CVE-2026-1", "owner": "acme", "counted": False,
-            "owner_nameable": True}]
-    with _pytest.raises(SystemExit, match="uncounted row"):
-        assert_artefact(bad, "held_back.json")
-
-
-def test_an_owner_absent_from_cnas_json_is_refused(tmp_path):
-    from rbp.site import assert_artefact
-    import pytest as _pytest
-    rows = [{"cve_id": "CVE-2026-1", "owner": "ghost", "counted": True,
-             "owner_nameable": True}]
-    with _pytest.raises(SystemExit, match="absent from cnas.json"):
-        assert_artefact(rows, "backlog.json", cnas=[{"cna": "acme"}])
+    for row in (
+        {"cve_id": "CVE-2026-1", "owner": "acme", "counted": False,
+         "owner_nameable": True},                       # was: uncounted
+        {"cve_id": "CVE-2026-1", "owner": "ghost", "counted": True,
+         "owner_nameable": True},                       # was: absent from cnas
+        {"cve_id": "CVE-2026-1", "owner": "acme", "counted": True,
+         "owner_nameable": True},                       # was: the PASSING case
+    ):
+        with _pytest.raises(SystemExit, match="name-bearing field"):
+            assert_artefact([row], "backlog.json", cnas=[{"cna": "acme"}],
+                            covered={"acme"})
 
 
 def test_a_row_with_no_owner_nameable_field_is_refused():

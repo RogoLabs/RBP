@@ -194,7 +194,10 @@ def test_the_primary_table_has_a_caption_carrying_the_hedge():
     src = (TEMPLATES / "cves.html").read_text()
     assert "<caption>" in src
     cap = src[src.index("<caption>"):src.index("</caption>")]
-    assert "inferred" in cap.lower()
+    # Was "inferred": the hedge used to be that the OWNER was inferred. v1
+    # publishes no owner, so the hedge the caption must carry is the stronger
+    # one, that the site does not attribute these rows at all.
+    assert "does not say which cna" in cap.lower()
     assert "floor" in cap.lower()
 
 
@@ -224,7 +227,7 @@ def test_there_is_a_mobile_breakpoint_at_all():
 def test_the_mobile_layout_labels_every_cell():
     """With thead hidden, a hedge has to sit next to the claim it qualifies."""
     src = (TEMPLATES / "cves.html").read_text()
-    for label in ("CVE ID", "Days public", "Rule", "Inferred owner", "Package",
+    for label in ("CVE ID", "Days public", "Rule", "Package",
                   "Independent sources", "Sources", "Advisory summary"):
         assert f'data-label="{label}"' in src, label
 

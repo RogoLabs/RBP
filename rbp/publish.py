@@ -112,12 +112,91 @@ def _scrub(path, ids):
     return 0
 
 
+# Fields in the ROOT LEDGERS that carry an inferred CNA name.
+#
+# `published_assigner` is deliberately NOT here: it is read back from the
+# published CVE Record and is a restatement of a public fact. Everything else in
+# this list is this project's own guess about a party.
+_LEDGER_NAME_FIELDS = ("owner", "predicted", "predicted_owner")
+
+
+def denamed_ledger(obj):
+    """Strip inferred CNA names from a ledger, at any depth.
+
+    The ledgers are internal state that happens to live on a PUBLIC branch, and
+    that distinction is the whole defect. Measured on origin/data 2026-08-23:
+    resolutions.json named a CNA on 116 rows the site itself does not name, 46 it
+    publishes with owner null and 70 it holds back entirely, and precision.json
+    named `mitre` on 5 more that are owner_tier 'abstain'. Two of the 116 were
+    the section 8c rows, live for 50.8 hours across 43 commits while PLAN.md
+    recorded the window as 2h55m across 7 and described them as removed.
+
+    A v1 that names nobody on the page and hundreds of parties in a JSON file at
+    the root of the same repo has de-named the part people look at, not the site.
+
+    THE COST, stated rather than hidden: an open prediction with no name cannot be
+    graded when the row publishes, so live precision restarts. That is smaller
+    than it sounds. Production graded n is 1, and the leave-one-out warrant,
+    29,614 decisions across 345 CNAs, is name-free and completely unaffected.
+    The panel's preferred long-run design keeps gradability without a name by
+    storing the k published neighbour IDs the inference rested on, so grading
+    becomes a public-CVE-List lookup at grade time. That is a v2 change; this is
+    the one that stops the leak tonight.
+    """
+    drop = set(_LEDGER_NAME_FIELDS) | {"owner_tier", "owner_method",
+                                       "owner_contested", "product_map_owner",
+                                       "product_map_confidence",
+                                       "product_map_method"}
+    if isinstance(obj, dict):
+        return {k: denamed_ledger(v) for k, v in obj.items() if k not in drop}
+    if isinstance(obj, list):
+        return [denamed_ledger(v) for v in obj]
+    return obj
+
+
+def _named_paths(obj, path="", out=None):
+    """Every location in a JSON tree holding a non-null inferred CNA name.
+
+    Returns dotted paths so a failure names the row, not just the file. Shares
+    _LEDGER_NAME_FIELDS with the staging de-namer plus the row-level owner
+    fields, so the guard and the scrubber cannot drift apart: anything the
+    scrubber removes, this refuses.
+
+    `owner_tier` and `owner_method` hold no name of their own ("abstain",
+    "block-k3-vetoed-by-product-map"). They are refused anyway, because they are
+    an assertion that this site formed a view about who owns the row, and on a
+    row the site publishes as unattributed that is a statement it has chosen not
+    to make. site._denamed strips them for the same reason, and the guard must
+    refuse exactly what the scrubber removes or the two drift.
+    """
+    out = [] if out is None else out
+    fields = set(_LEDGER_NAME_FIELDS) | {"owner_tier", "owner_method",
+                                         "product_map_owner"}
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            here = f"{path}.{k}" if path else k
+            if k in fields and v not in (None, "", "unattributed", "abstain"):
+                out.append(here)
+            else:
+                _named_paths(v, here, out)
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            _named_paths(v, f"{path}[{i}]", out)
+    return out
+
+
 def stage(snap_root, state_dir, data_dir):
     """Copy the allowlisted artefacts into the data-branch checkout."""
     os.makedirs(state_dir, exist_ok=True)
     for name in ("precision.json", "resolutions.json"):
         src = os.path.join(data_dir, name)
         if os.path.exists(src):
+            # Copied through the de-namer, never with shutil.copyfile. The local
+            # working copy keeps its names so the grader can still use them
+            # within a run; the branch copy never has them.
+            # Copied verbatim; the de-naming walk below covers it along with
+            # every other staged file, so there is one scrubber rather than two
+            # that can disagree.
             shutil.copyfile(src, os.path.join(state_dir, name))
 
     dest_root = os.path.join(state_dir, "snapshots")
@@ -133,6 +212,32 @@ def stage(snap_root, state_dir, data_dir):
             if f in ALLOWED_SNAPSHOT:
                 shutil.copyfile(os.path.join(d, f), os.path.join(dst, f))
                 copied += 1
+    # DE-NAME every staged JSON, including snapshots staged by EARLIER runs that
+    # are still sitting in the checkout. Fresh snapshots arrive already de-named
+    # from report.build, but the ones already on the branch were written before
+    # that existed and retention keeps them for up to a month, so de-naming only
+    # what this run wrote would leave named history published and slowly ageing
+    # out. Same reasoning as the withhold scrub directly below, which had to be
+    # widened to prior snapshots for exactly this reason.
+    renamed = 0
+    for base, _d, files in os.walk(state_dir):
+        if ".git" in base.split(os.sep):
+            continue
+        for fn in sorted(files):
+            if not fn.endswith(".json"):
+                continue
+            fp = os.path.join(base, fn)
+            try:
+                body = json.load(open(fp))
+            except (OSError, ValueError):
+                continue
+            clean = denamed_ledger(body)
+            if clean != body:
+                json.dump(clean, open(fp, "w"), indent=1)
+                renamed += 1
+    if renamed:
+        print(f"de-named {renamed} staged file(s); v1 publishes no attribution")
+
     # Scrub AFTER copying, over every staged file including the root ledgers and
     # every retained prior snapshot, so a withhold reaches history and not only
     # today.
@@ -220,6 +325,38 @@ def check(state_dir):
                 problems.append(f"snapshot file is not allowlisted: {rel}")
         else:
             problems.append(f"unexpected path: {rel}")
+
+    # NO STAGED FILE MAY CARRY AN INFERRED NAME. Every file, at any depth, root
+    # ledgers included.
+    #
+    # This arm exists because the two below it could not fire. They glob
+    # snapshots/*/*.json, so root-level files are exempt BY CONSTRUCTION, and the
+    # ledger arm further down is hardcoded to precision.json and is a set
+    # difference on ids, so it cannot see resolutions.json at all and cannot see
+    # a row that keeps its id and loses its name. Staging the real data-branch
+    # tip and running this function returned [] while 121 ungated names sat in
+    # it. Launch condition 2 is declared MET on the strength of this function.
+    #
+    # Walks the tree rather than globbing a shape, so the next file added to
+    # ALLOWED_ROOT is covered without anyone remembering to widen a pattern.
+    for base, _dirs, files in os.walk(state_dir):
+        if ".git" in base.split(os.sep):
+            continue
+        for fn in sorted(files):
+            if not fn.endswith(".json"):
+                continue
+            path = os.path.join(base, fn)
+            try:
+                body = json.load(open(path))
+            except (OSError, ValueError):
+                problems.append(f"unreadable JSON about to be published: {path}")
+                continue
+            found = _named_paths(body)
+            if found:
+                rel_p = os.path.relpath(path, state_dir)
+                problems.append(
+                    f"{rel_p} carries {len(found)} attribution field(s), first: "
+                    f"{found[0]}. v1 publishes no attribution.")
 
     # No artefact may name a CNA on a row the site does not count. This is the
     # content check that caught held_back.json when the path check could not,

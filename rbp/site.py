@@ -175,6 +175,72 @@ def _read_strict(path):
 # placeholder as though it were a CNA name is the bug.
 _LEGACY_OWNER = "unattributed"
 
+# v1 PUBLISHES NO NAMES. Read this before flipping it.
+#
+# The site's argument is about a redacted field and a withdrawn Program metric.
+# It is not about which CNA is worst, and it never needed to be: the count, the
+# clock, the sources, the age distribution and the coverage table carry the whole
+# case. Naming was carrying nine of the eighteen launch blockers on its own.
+#
+# What was actually true when this flipped, on 2026-08-23: production graded n
+# was 1; 96.4% of named rows sat on one CNA whose own advisory channel the
+# pipeline does not read; two of the five named CNAs held exactly one inferred,
+# single-origin, unmeasurable-ordering row apiece; and the correction channel a
+# named party would have to use was unreachable by anyone without repository
+# permissions. A published accuracy figure on n=1 is not a measurement.
+#
+# Inference still RUNS. The grader still records and still grades, so a v2
+# naming release starts from real n instead of from one. What changes is only
+# that no name crosses the publication boundary.
+#
+# Flipping this back to True is not sufficient to restore naming. assert_artefact
+# inverts with it, and the conditions in PLAN.md 8d that naming depends on
+# (2, 4, 5) must be genuinely met first, not declared.
+NAMING_ENABLED = False
+
+# Every field that carries or qualifies a name. Stripped as a set, so adding a
+# new owner_* field cannot leak by being forgotten here: schema.COLUMNS is
+# asserted against this list in tests.
+NAME_FIELDS = ("owner", "owner_tier", "owner_method", "owner_contested",
+               "predicted_owner", "product_map_owner", "product_map_confidence",
+               "product_map_method", "owner_is_inferred")
+
+
+def _denamed(rows, source="artefact"):
+    """Strip every name-bearing field from rows about to be published.
+
+    The publication boundary, not the pipeline. Rows arrive here with whatever
+    inference decided; they leave with `owner_nameable` False and no name of any
+    kind. Applied on READ so it covers prior snapshots and the dated archive too,
+    which is where the previous withhold lever leaked: a row scrubbed from the
+    current run was still published verbatim inside /data/archive/<yesterday>.
+
+    Idempotent, so running it over an already-clean snapshot is a no-op.
+
+    NON-MUTATING, deliberately. An in-place version is the obvious implementation
+    and it is wrong here: `reportable`, `backlog` and `held` share row objects, so
+    stripping one artefact on the way out silently stripped the rows that the
+    per-CNA aggregation had not consumed yet. Callers use the return value.
+    """
+    if NAMING_ENABLED:
+        return rows
+    out, stripped = [], 0
+    for r in rows:
+        if not isinstance(r, dict):
+            out.append(r)
+            continue
+        if any(k in r for k in NAME_FIELDS):
+            stripped += 1
+        clean = {k: v for k, v in r.items() if k not in NAME_FIELDS}
+        # Kept, and forced. Consumers branch on this field rather than on the
+        # emptiness of `owner`, and v1's answer to "is this nameable" is no.
+        clean["owner_nameable"] = False
+        out.append(clean)
+    if stripped:
+        print(f"  note: {source}: stripped names from {stripped} row(s); "
+              f"v1 publishes no attribution")
+    return out
+
 
 def _normalise_legacy(rows, source="snapshot"):
     """Bring a snapshot written under an older schema up to the current contract.
@@ -211,7 +277,11 @@ def _normalise_legacy(rows, source="snapshot"):
         # every one of the 170 was in YESTERDAY's snapshot, read for the diff.
         print(f"  note: {source}: sanitised {descs} legacy description(s) on read "
               "(predates the description sanitiser)")
-    return rows
+    # LAST, and unconditionally. Every read path into the site build goes through
+    # here, including prior snapshots and the dated archive, so this is the one
+    # place that can guarantee no name reaches a published artefact regardless of
+    # what the snapshot on disk says.
+    return _denamed(rows, source)
 
 
 def _gate_status(summary):
@@ -291,6 +361,18 @@ def _assert_consistent(rows, summary, cnas):
     # a plain truthiness test; the previous version only passed because it knew
     # about a magic string that the published field dictionary denied existed.
     named = [r for r in rows if r.get("owner")]
+    if not NAMING_ENABLED:
+        # v1 publishes no attribution, so the only invariant left on this axis is
+        # that there is nothing to check. The three arms below all describe
+        # relationships between named rows and per-CNA pages that no longer
+        # exist; keeping them would be keeping three ways to fail an assertion
+        # whose subject was removed.
+        if named:
+            raise SystemExit(
+                f"{len(named)} row(s) still carry an owner after the de-naming "
+                "boundary. _denamed did not run on this path. Refusing to publish.")
+        return
+
     orphans = sorted({r["owner"] for r in named} - known)
     if orphans:
         raise SystemExit(
@@ -329,6 +411,15 @@ def assert_artefact(rows, label, cnas=None, covered=None):
     held_back.json leak shipped green. held_back's named owners included CNAs
     absent from cnas.json, so it published precisely the values the existing
     assertion refused.
+
+    UNDER v1 THIS INVARIANT IS INVERTED, and the inversion is the point. The old
+    rule was "a name must be inside the covered set", which is a set-membership
+    question with four ways to be subtly wrong, and it was: `publish.check`'s
+    ledger arm compared id sets and could not see a name at all, so 121 rows on
+    the public data branch named CNAs the site itself refused to name. The new
+    rule is "no row carries a name", which has one way to be wrong and is
+    checkable by grep. Keeping the old arms as well would be keeping four ways to
+    fail an assertion that is now trivially true.
     """
     known = {c["cna"] for c in (cnas or [])}
     problems = []
@@ -340,16 +431,36 @@ def assert_artefact(rows, label, cnas=None, covered=None):
         owner = r.get("owner")
         is_named = owner not in (None, "", "unattributed")
 
-        if "owner_nameable" not in r:
-            problems.append(f"{label}:{cid} has no owner_nameable field")
-        if is_named and r.get("counted") is False:
-            problems.append(f"{label}:{cid} names {owner} on an uncounted row")
-        if is_named and known and owner not in known:
-            problems.append(f"{label}:{cid} names {owner}, absent from cnas.json")
-        if is_named and covered and owner not in covered:
-            problems.append(f"{label}:{cid} names {owner}, outside the covered set")
-        if any(k.startswith("product_map") for k in r):
-            problems.append(f"{label}:{cid} carries an ungated product-map field")
+        if not NAMING_ENABLED:
+            # ONE arm replaces four. The old rule was "a name must be inside the
+            # covered set", a set-membership question with four ways to be
+            # subtly wrong, and it was wrong: publish.check's ledger arm compared
+            # id sets and could not see a name at all.
+            # On the VALUE, not on the key. `owner: null` carries no name, and
+            # refusing it would fail every legitimately abstaining row while
+            # catching nothing: the harm is a name being published, not a key
+            # being present. _denamed drops the keys entirely, so the strip stays
+            # stricter than the assertion, which is the safe direction.
+            present = sorted(k for k in NAME_FIELDS if r.get(k) is not None)
+            if present:
+                problems.append(
+                    f"{label}:{cid} carries name-bearing field(s) {present} while "
+                    "the site publishes no attribution")
+            if r.get("owner_nameable") is not False:
+                problems.append(
+                    f"{label}:{cid} has owner_nameable={r.get('owner_nameable')!r}; "
+                    "v1 publishes no attribution, so it must be False")
+        else:
+            if "owner_nameable" not in r:
+                problems.append(f"{label}:{cid} has no owner_nameable field")
+            if is_named and r.get("counted") is False:
+                problems.append(f"{label}:{cid} names {owner} on an uncounted row")
+            if is_named and known and owner not in known:
+                problems.append(f"{label}:{cid} names {owner}, absent from cnas.json")
+            if is_named and covered and owner not in covered:
+                problems.append(f"{label}:{cid} names {owner}, outside the covered set")
+            if any(k.startswith("product_map") for k in r):
+                problems.append(f"{label}:{cid} carries an ungated product-map field")
 
         # Review item 4. A suppressed row is withheld because someone reported it
         # as wrong or under embargo, so its presence in ANY published artefact
@@ -888,14 +999,20 @@ def _write_data(out, ctx):
               open(os.path.join(d, "archive.json"), "w"), indent=1)
     _archive_index = archive_index
 
-    # One file per CNA, so anyone can pull just their own rows.
-    per = os.path.join(d, "cna")
-    if launched:
-        os.makedirs(per, exist_ok=True)
-    for c in (ctx["cnas"] if launched else []):
-        mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
-        json.dump({"cna": c["cna"], "summary": c, "rows": mine},
-                  open(os.path.join(per, f"{c['slug']}.json"), "w"), indent=1)
+    # One file per CNA, so anyone can pull just their own rows. NOT WRITTEN under
+    # v1: a file keyed by CNA short name, containing that CNA's rows, is an
+    # attribution whatever the rows inside it say. This writer sat outside
+    # assert_artefact, so the de-naming invariant did not reach it and it kept
+    # emitting named endpoints after every other surface had stopped; the test
+    # that now checks both postures is what caught it.
+    if NAMING_ENABLED:
+        per = os.path.join(d, "cna")
+        if launched:
+            os.makedirs(per, exist_ok=True)
+        for c in (ctx["cnas"] if launched else []):
+            mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
+            json.dump({"cna": c["cna"], "summary": c, "rows": mine},
+                      open(os.path.join(per, f"{c['slug']}.json"), "w"), indent=1)
 
     # Returned so /data can render the citable routes. The pages render AFTER the
     # data files for exactly this reason.
@@ -910,7 +1027,10 @@ def _write_data(out, ctx):
 _PAGE_TEMPLATES = [
     ("index.html", None),
     ("cves.html", "cves.html"),
-    ("cnas.html", "cnas.html"),
+    # cnas.html and cna.html are NOT here. Both pages existed only to attribute
+    # rows to named CNAs, and v1 publishes no attribution. They are not rendered
+    # empty, because an empty per-CNA page is an invitation to fill it before the
+    # conditions naming depends on are met. See NAMING_ENABLED.
     ("method.html", "method.html"),
     ("policy.html", "policy.html"),
     ("data.html", "data.html"),
@@ -1004,35 +1124,40 @@ def build(out, snap_root, data_dir):
         # with the dashboard by design, and it must not link into it before launch.
         shutil.copyfile(landing, os.path.join(out, "index.html"))
 
-    # Per-CNA detail. This is the page a CNA lands on when someone sends them
-    # the link, so it carries the full row list and the method caveats rather
-    # than a summary line.
+    # Per-CNA detail pages are NOT written under v1.
     #
-    # Withheld entirely until launch. report.py states the project's own rule
-    # that a named CNA gets a private preview before any row naming it
-    # circulates, and a six-hourly public deploy of these pages breaks that rule
-    # on every run. The noindex meta tag is not sufficient: the pages are still
-    # fetchable and linkable.
+    # They existed to be the page a CNA lands on when someone sends them the
+    # link, carrying the full row list attributed to that CNA. With no
+    # attribution published there is no such page to write, and writing an empty
+    # one would leave a URL shaped like an accusation waiting for content.
+    #
+    # The previous behaviour, kept here because the reasoning still applies if
+    # NAMING_ENABLED is ever flipped: the pages were withheld until launch,
+    # because report.py states the project's own rule that a named CNA gets a
+    # private preview before any row naming it circulates, and a six-hourly
+    # public deploy breaks that rule on every run. noindex was not sufficient,
+    # since the pages remained fetchable and linkable.
     written_cna = 0
-    cna_dir = os.path.join(out, "cna")
-    if launched:
-        os.makedirs(cna_dir, exist_ok=True)
-    tpl = env.get_template("cna.html")
-    for c in (ctx["cnas"] if launched else []):
-        mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
-        # Keyed on the TRACKED owner. reconcile sets `owner` to the post-transfer
-        # assigner, so keying on it gave a CNA-LR that published someone else's
-        # overdue record under 4.5.1.5 a resolution history it never had, while
-        # clock.by_owner keyed the median tile on the tracked owner. The same
-        # page showed two different parties' data.
-        resolved = [r for r in ctx["resolutions_published"]
-                    if (r.get("predicted_owner") or r.get("owner")) == c["cna"]]
-        # already ordered by _by_days_desc; the template must not re-sort
-        html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine,
-                          cna_resolved=resolved,
-                          page_file=f"cna/{c['slug']}.html")
-        open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
-        written_cna += 1
+    if NAMING_ENABLED:
+        cna_dir = os.path.join(out, "cna")
+        if launched:
+            os.makedirs(cna_dir, exist_ok=True)
+        tpl = env.get_template("cna.html")
+        for c in (ctx["cnas"] if launched else []):
+            mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
+            # Keyed on the TRACKED owner. reconcile sets `owner` to the
+            # post-transfer assigner, so keying on it gave a CNA-LR that
+            # published someone else's overdue record under 4.5.1.5 a resolution
+            # history it never had, while clock.by_owner keyed the median tile on
+            # the tracked owner. The same page showed two different parties' data.
+            resolved = [r for r in ctx["resolutions_published"]
+                        if (r.get("predicted_owner") or r.get("owner")) == c["cna"]]
+            # already ordered by _by_days_desc; the template must not re-sort
+            html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine,
+                              cna_resolved=resolved,
+                              page_file=f"cna/{c['slug']}.html")
+            open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
+            written_cna += 1
 
     posture = "LAUNCHED, / is the dashboard" if launched else \
               "pre-launch, / is the holding page and the dashboard is /overview.html"
@@ -1040,7 +1165,6 @@ def build(out, snap_root, data_dir):
     # count while withholding the pages is the same class of untruth the review
     # found elsewhere on this site.
     print(f"site: {len(pages)} pages + {written_cna} CNA pages -> {out}"
-          + ("" if launched else
-             f" ({len(ctx['cnas'])} CNA pages withheld until launch)"))
+          + ("" if NAMING_ENABLED else " (v1 publishes no attribution)"))
     print(f"      {posture}")
     return ctx

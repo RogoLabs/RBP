@@ -85,7 +85,7 @@
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
         <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days public before publishing</th>
-          <th scope="col">First public</th><th scope="col">Published</th><th scope="col">Assigner</th></tr></thead>
+          <th scope="col">First public</th><th scope="col">Published</th></tr></thead>
         <tbody>
           {% for r in changes.published %}
           <tr>
@@ -93,8 +93,10 @@
             <td class="num">{{ r.days_to_publish if r.days_to_publish is not none else '&mdash;' }}</td>
             <td class="mono small">{{ r.first_public }}</td>
             <td class="mono small">{{ r.published }}</td>
-            <td>{{ r.published_assigner or r.owner }}{% if r.transferred %}
-              <span class="chip chip-none">transferred</span>{% endif %}</td>
+            {# The Assigner column was here. A resolved row saying "X took 30
+               days to publish" is a claim about X, and the fact that X is
+               readable from the published CVE record afterwards does not make
+               the site's assertion of lateness a restatement of it. #}
           </tr>
           {% endfor %}
         </tbody>
@@ -149,14 +151,12 @@
   <div class="card-body">
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days public</th><th scope="col">Owner</th><th scope="col">Advisory summary</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days public</th><th scope="col">Advisory summary</th></tr></thead>
         <tbody>
           {% for r in changes.new | sortnum('days_public') %}
           <tr>
             <td class="id"><a href="{{ r.advisory_url }}">{{ r.cve_id }}</a></td>
             <td class="num">{{ r.days_public }}</td>
-            <td>{% if r.owner and r.owner != 'unattributed' %}{{ r.owner }}
-                {% else %}<span class="text-muted">unattributed</span>{% endif %}</td>
             <td class="desc">{{ r.description }}</td>
           </tr>
           {% endfor %}
@@ -210,13 +210,11 @@
     </p>
     <div class="tablewrap">
       <table class="rbp" style="min-width:0">
-        <thead><tr><th scope="col">CVE ID</th><th scope="col">Owner</th><th scope="col" class="num">Days to publish</th><th scope="col">First public</th><th scope="col">Published</th></tr></thead>
+        <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days to publish</th><th scope="col">First public</th><th scope="col">Published</th></tr></thead>
         <tbody>
           {% for r in resolutions_published %}
           <tr>
             <td class="id">{{ r.cve_id }}</td>
-            <td>{{ r.predicted_owner or r.owner }}{% if r.transferred %}
-              <span class="chip chip-none">published by {{ r.published_assigner }}, transferred</span>{% endif %}</td>
             <td class="num">{{ r.days_to_publish if r.days_to_publish is not none else 'n/a' }}</td>
             <td class="mono small">{{ r.first_public }}</td>
             <td class="mono small">{{ r.published }}</td>

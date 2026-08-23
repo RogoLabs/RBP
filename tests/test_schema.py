@@ -78,7 +78,9 @@ def test_the_sidecar_documents_every_published_column(built):
 def test_the_audit_fields_are_in_the_shareable_contract():
     """The fields missing from the old shareable CSV were exactly the ones that let
     a reader check the rule call instead of taking it on trust."""
-    for field in ("owner_method", "refs", "hours_public", "ecosystem",
+    # owner_method was in this list: it distinguished a plausibility-checked
+    # name from an unchecked one, which only matters when a name is published.
+    for field in ("refs", "hours_public", "ecosystem",
                   "own_feed_date", "earliest_other_date"):
         assert field in schema.COLUMNS, field
 
@@ -142,20 +144,27 @@ def test_no_published_row_carries_the_placeholder(built):
     assert not bad, bad[:5]
 
 
-def test_an_abstained_row_has_owner_null_and_the_marker_false(built):
+def test_every_published_row_is_unnameable_and_carries_no_owner(built):
+    """Was: an ABSTAINED row has owner null and the marker false, which allowed
+    the complementary case, a nameable row with a name. v1 has no such case, so
+    the assertion covers every row rather than a subset."""
     d = json.loads((built / "rbp.json").read_text())
-    abstained = [r for r in d["rows"] if not r.get("owner_nameable")]
-    assert abstained, "no abstained rows in this snapshot; test proves nothing"
-    for r in abstained:
-        assert r["owner"] is None, r["cve_id"]
+    assert d["rows"], "no rows in this snapshot; test proves nothing"
+    for r in d["rows"]:
+        assert r.get("owner_nameable") is False, r["cve_id"]
+        for field in site.NAME_FIELDS:
+            assert field not in r, (r["cve_id"], field)
 
 
-def test_csv_absence_is_an_empty_cell(built):
+def test_the_csv_carries_no_owner_column_at_all(built):
+    """An always-empty owner column would invite a consumer to build against it
+    and wait for it to fill, so the column is gone rather than blank."""
     rows = list(csv.DictReader(open(built / "rbp.csv")))
-    abstained = [r for r in rows if r["owner_nameable"] == "False"]
-    assert abstained
-    for r in abstained:
-        assert r["owner"] == "", r["cve_id"]
+    assert rows
+    for field in site.NAME_FIELDS:
+        assert field not in rows[0], field
+    for r in rows:
+        assert r["owner_nameable"] == "False", r["cve_id"]
 
 
 def test_assert_consistent_no_longer_special_cases_the_placeholder():
@@ -174,9 +183,12 @@ def test_a_legacy_snapshot_is_coerced_rather_than_crashed_on():
     rows = [{"cve_id": "CVE-2026-1", "owner": "unattributed"},
             {"cve_id": "CVE-2026-2", "owner": "acme", "owner_nameable": True}]
     out = site._normalise_legacy(rows)
-    assert out[0]["owner"] is None
+    assert "owner" not in out[0], "v1 strips the field, not just its value"
     assert out[0]["owner_nameable"] is False
-    assert out[1]["owner"] == "acme", "a real name must not be touched"
+    # Was: "a real name must not be touched". Under v1 a real name is exactly
+    # what must be touched, and the legacy coercion now runs ahead of the strip
+    # rather than instead of it.
+    assert "owner" not in out[1], "a real name must be stripped like any other"
 
 
 def test_the_field_dictionary_states_one_absence_spelling_per_field():
@@ -329,5 +341,16 @@ def test_the_archive_is_judged_by_the_rules_that_applied_when_it_was_written(tmp
                    str(tmp_path / "data"))          # must not raise
     dated = (tmp_path / "out" / "data" / "archive" / "2026-08-21" / "rbp.json")
     assert dated.exists()
-    assert "goneaway" in dated.read_text(), (
+    body = dated.read_text()
+    # The ROW survives: failing closed on correct history is still failing, and
+    # that is what this test was written for.
+    assert "CVE-2026-1" in body, (
         "a row that was correct when written was dropped from its own archive")
+    # The NAME does not. Under v1 the archive is de-named on read like every
+    # other artefact, and this is the assertion that matters: the previous
+    # withhold lever scrubbed the current run and left the same row published
+    # verbatim inside /data/archive/<yesterday>, so a withheld id stayed public
+    # for a full cycle. An archive that preserves names it can no longer correct
+    # is the leak, not the feature.
+    assert "goneaway" not in body, (
+        "the dated archive republished a name the current build strips")
