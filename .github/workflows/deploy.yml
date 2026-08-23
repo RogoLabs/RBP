@@ -479,7 +479,14 @@ jobs:
         run: |
           set -euo pipefail
           git init -q ledger && cd ledger
-          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          # The token goes in the REMOTE URL. GH_TOKEN authenticates the `gh`
+          # CLI and does nothing for raw git, so the first real run of this step
+          # died with "could not read Username for https://github.com". It was
+          # continue-on-error, so the deploy still succeeded and the only
+          # evidence was an absent runs.jsonl, which is exactly the silent gap
+          # this ledger exists to close.
+          git remote add origin \
+            "https://x-access-token:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY"
           git -c protocol.version=2 fetch -q --depth=1 origin data || true
           git checkout -q -B data FETCH_HEAD 2>/dev/null || git checkout -q -B data
           python3 - <<'PY' >> runs.jsonl
