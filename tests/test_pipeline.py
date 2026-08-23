@@ -329,7 +329,8 @@ def test_deploy_allowlist_and_report_artefacts_agree():
     assert publish.ALLOWED_SNAPSHOT == {
         "backlog.json", "backlog.csv", "cnas.json", "summary.json",
         "held_back.json", "resolved.json"}
-    assert publish.ALLOWED_ROOT == {"README.md", "precision.json", "resolutions.json"}
+    assert publish.ALLOWED_ROOT == {"README.md", "precision.json",
+                                    "resolutions.json", "runs.jsonl"}
 
 
 def test_any_named_row_is_refused_whatever_its_other_fields_say():

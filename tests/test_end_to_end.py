@@ -623,3 +623,88 @@ def test_a_configured_cap_is_a_limitation_and_not_a_degraded_run(built):
     feeds.record_feed("redhat", feeds.TRUNCATED, "connection reset after 3 pages")
     _f, truncated, _a, _c = feeds.health_summary()
     assert len(truncated) == 1 and "redhat" in truncated[0]
+
+
+# --------------------------------------------------------------------------
+# cadence: the six-hourly claim needs evidence (item 12)
+# --------------------------------------------------------------------------
+
+def test_an_absent_run_ledger_reads_as_unknown_not_as_zero(built):
+    """A fresh repository and a stopped pipeline must not look the same. Zero
+    delivered ticks is a specific, alarming claim and it must not be the default
+    rendering for "no data yet"."""
+    from rbp import site as site_mod
+    assert site_mod.cadence(str(built["data"])) is None
+    page = (built["sites"][0] / "method.html").read_text()
+    assert "Not yet evidenced" in page
+    assert "0 of 28" not in page
+
+
+def test_delivered_ticks_are_counted_from_the_ledger(built, tmp_path):
+    """Counted from the ledger the DEPLOY job appends, so a run that built and
+    failed to deploy is not counted as delivered."""
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    lines = []
+    for i in range(5):
+        at = (now - dt.timedelta(hours=6 * i)).isoformat(timespec="seconds")
+        lines.append(json.dumps({"at": at, "conclusion": "success",
+                                 "run_id": str(i)}))
+    # A failed deploy and a tick outside the window: neither counts.
+    lines.append(json.dumps({"at": (now - dt.timedelta(hours=1)).isoformat(),
+                             "conclusion": "failure", "run_id": "f"}))
+    lines.append(json.dumps({"at": (now - dt.timedelta(days=30)).isoformat(),
+                             "conclusion": "success", "run_id": "old"}))
+    (built["data"] / "runs.jsonl").write_text("\n".join(lines) + "\n")
+
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["delivered"] == 5, c
+    assert c["expected"] == 28
+    assert c["last"].startswith("2026-08-23")
+
+
+def test_a_corrupt_ledger_line_does_not_stop_the_count(built):
+    """The ledger is appended by a shell step on every deploy; a torn write must
+    degrade the figure, not the build."""
+    from rbp import site as site_mod
+    (built["data"] / "runs.jsonl").write_text(
+        '{"at": "2026-08-23T00:00:00+00:00", "conclusion": "success"}\n'
+        'not json at all\n\n')
+    c = site_mod.cadence(str(built["data"]), today="2026-08-23T06:00:00+00:00")
+    assert c["delivered"] == 1
+
+
+def test_staleness_is_recomputed_in_the_browser_not_frozen_at_build(built):
+    """The server-side check could not fire, ever.
+
+    `stale` derives from summary.generated_at, written by the same pipeline
+    invocation minutes before the build, with Run pipeline and Build site
+    adjacent in the workflow, so on success it is always ~0. On FAILURE the job
+    aborts before Build site, so the already-deployed HTML keeps its frozen
+    `stale: false` and asserts freshness for the whole outage. The one condition
+    the banner exists to announce is exactly the one that stops it being
+    recomputed.
+
+    Asserted on the rendered page rather than on the template, because the data
+    attributes have to carry REAL values: an empty data-generated makes the
+    script return early and silently restores the frozen behaviour.
+    """
+    import re
+    page = (built["sites"][0] / "overview.html").read_text()
+
+    m = re.search(r'id="stale-banner"[^>]*data-generated="([^"]*)"', page)
+    assert m, "no stale banner element on the page"
+    assert m.group(1).startswith("20"), (
+        f"data-generated is {m.group(1)!r}; the script returns early on an "
+        "unparseable timestamp, which restores the build-time freeze")
+
+    m2 = re.search(r'data-snapshot="([^"]*)"', page)
+    assert m2 and m2.group(1).startswith("20"), (
+        "snapshot_date is not emitted; it moves at a different rate from "
+        "generated_at and a reader needs both")
+
+    # The script must be able to SHOW the banner. A version that only ever hides
+    # it is the frozen behaviour wearing client-side clothes.
+    assert "el.hidden = false" in page
+    assert "Date.parse" in page and "3600000" in page

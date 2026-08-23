@@ -30,7 +30,12 @@ import sys
 
 # The only files that may exist on the data branch. Anything else is refused,
 # rather than removed by name after the fact.
-ALLOWED_ROOT = {"README.md", "precision.json", "resolutions.json"}
+# runs.jsonl is the delivered-tick ledger, appended by the DEPLOY job. It is the
+# only durable evidence that a scheduled run produced anything: snapshots are
+# per-date and overwritten four times a day, and the failure issue is closed by
+# `recover` on the next success, so before this the data-branch git log was the
+# only record that two ticks on 2026-08-21 delivered nothing.
+ALLOWED_ROOT = {"README.md", "precision.json", "resolutions.json", "runs.jsonl"}
 ALLOWED_SNAPSHOT = {"backlog.json", "backlog.csv", "cnas.json", "summary.json",
                     "held_back.json", "resolved.json"}
 

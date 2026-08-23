@@ -503,6 +503,62 @@ def assert_artefact(rows, label, cnas=None, covered=None):
     return len(rows)
 
 
+def cadence(data_dir, today=None, days=7):
+    """Delivered ticks in the trailing `days`, from the run ledger.
+
+    The site tells readers it updates every six hours. Before the ledger existed
+    there was no evidence for that anywhere, and the claim was false at least
+    twice: the 2026-08-21 06:00Z and 18:00Z scheduled ticks both produced
+    nothing, with zero pushes in the window, so nothing could have been queued or
+    evicted. Nobody could have known.
+
+    Returns None when the ledger is absent, and the template then says the
+    cadence is not yet evidenced rather than printing a confident zero. A fresh
+    repository and a broken pipeline must not look the same.
+    """
+    path = os.path.join(data_dir, "runs.jsonl")
+    if not os.path.exists(path):
+        return None
+    try:
+        now = (dt.datetime.fromisoformat(today) if today
+               else dt.datetime.now(dt.timezone.utc))
+    except ValueError:
+        now = dt.datetime.now(dt.timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=dt.timezone.utc)
+    cutoff = now - dt.timedelta(days=days)
+
+    delivered, last = 0, None
+    try:
+        for line in open(path):
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                rec = json.loads(line)
+            except ValueError:
+                continue
+            try:
+                at = dt.datetime.fromisoformat(rec.get("at", ""))
+            except ValueError:
+                continue
+            if at.tzinfo is None:
+                at = at.replace(tzinfo=dt.timezone.utc)
+            if last is None or at > last:
+                last = at
+            if at >= cutoff and rec.get("conclusion") == "success":
+                delivered += 1
+    except OSError:
+        return None
+
+    # 4 a day is the schedule. Expressed as a fraction of expected rather than a
+    # bare count, because "23" means nothing without "of 28".
+    expected = days * 4
+    return {"days": days, "delivered": delivered, "expected": expected,
+            "pct": round(100 * delivered / expected, 1) if expected else None,
+            "last": last.isoformat(timespec="seconds") if last else None}
+
+
 def _publish_keep():
     """The retention window, read from publish rather than restated.
 
@@ -686,6 +742,9 @@ def load(snap_root, data_dir):
         # Rendered on /data so the retention promise is a number a reader can
         # check against the archive index, not an adjective.
         "keep_snapshots": _publish_keep(),
+        # Evidence for the cadence the site claims. None when the ledger has not
+        # been written yet, which the template distinguishes from zero.
+        "cadence": cadence(data_dir),
         # Carried so _write_data can apply it to the dated archive, which is
         # rebuilt from prior snapshots on every run and is therefore a writer in
         # its own right. Runner-local; never rendered, never published.

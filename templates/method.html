@@ -54,6 +54,34 @@
   </div>
 </div>
 
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Does this site actually run every six hours?</h2></div>
+  <div class="card-body">
+    {% if cadence %}
+    <p>
+      <strong>{{ cadence.delivered }} of {{ cadence.expected }} scheduled runs
+      published in the last {{ cadence.days }} days</strong>
+      ({{ cadence.pct }}%){% if cadence.last %}, most recently
+      <span class="mono">{{ cadence.last }}</span>{% endif %}.
+    </p>
+    <p class="mb-0">
+      Counted from a ledger appended by the step that actually publishes, so a run
+      that built and failed to deploy is not counted as delivered. This exists
+      because the six-hourly claim had no evidence behind it and was false at
+      least twice: two scheduled ticks on 2026-08-21 produced nothing, with no
+      pushes in the window, and nothing on the site could have told you.
+    </p>
+    {% else %}
+    <p class="mb-0">
+      <strong>Not yet evidenced.</strong> The run ledger starts empty and is
+      appended by each successful publish, so this fills in over the first week.
+      It reads as unknown rather than as zero, because a fresh repository and a
+      stopped pipeline must not look the same.
+    </p>
+    {% endif %}
+  </div>
+</div>
+
 {% if summary.get('limitations') %}
 <div class="card">
   <div class="card-header"><h2 class="card-title">Standing limits on what this site reads</h2></div>
