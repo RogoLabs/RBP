@@ -32,8 +32,15 @@ CVEs from. This bound is the panel's, and it is the one that says the plan is ne
 **Ceiling B, any feed set: 68.8%.** Derived below. This is the one that says the plan has
 an end.
 
-The band is therefore **28.2% to 68.8%**, the gate is at 50%, and the whole of this
-document is about crossing 21.8 points of that band.
+The band is therefore **28.2% to 68.8%**.
+
+> **The gate moved on 2026-08-23, after this section was written.** The 50%-of-roster
+> threshold was retired precisely because of the two ceilings above: it was never
+> re-derived when the metric changed underneath it, and it sat 21.8 points above what the
+> current feed set can reach. The gate is now **top-50-CNAs-by-volume at 80%, on the same
+> 3-sighting floor**, with no roster-share floor beside it. Both ceilings still bound the
+> roster share, which is still measured and published; it just no longer gates anything.
+> Sections 4 and 5 are written against the new gate. Section 6 records the re-derivation.
 
 **`cnas_effective` cannot exceed 68.8% of the roster.** The gate figure counts roster
 CNAs for which at least `MIN_SIGHTINGS` (3) of their **published** CVEs were surfaced by
@@ -60,6 +67,8 @@ So the honest formulation of the goal is:
 
 Everything below is measured against **371**, not 539. Current position is **117 of 371
 reachable, 31.5%**, which is the same fact as 21.7% of the roster.
+
+On the gate's own metric the position is **31 of the top 50 by volume, 62%**, needing 40.
 
 **Do not respond to the ceiling by moving the denominator.** Lowering `MIN_SIGHTINGS`
 raises coverage on paper, and it is the same constant inference uses to decide whether it
@@ -287,7 +296,7 @@ in this document, and it is bad news:
 
 | ecosystem | ids in scope | effective CNAs | **new** |
 |---|---:|---:|---:|
-| GIT | 31,366 | 121 | **+18** |
+| ~~GIT~~ | ~~31,366~~ **450** | ~~121~~ **10** | ~~+18~~ **+0** |
 | Android | 622 | 11 | **+7** |
 | Red Hat, SUSE, Rocky, AlmaLinux, Chainguard, Wolfi, openEuler, Mageia, TuxCare, Azure Linux, Bitnami, BellSoft, Maven, NuGet, Packagist, Hex, CRAN, Pub, Hackage, Julia, opam, VSCode, SwiftURL, GitHub Actions, Linux, Root, UVI | 47,000+ | up to 53 each | **0** |
 
@@ -300,12 +309,28 @@ Merge `GIT` and `Android` and the remaining 27 anyway, since the adapter exists 
 marginal cost is bandwidth, but **the 27 go in tagged `corroborating`** until they pass
 the disclosure-lead backtest, and none of them are counted as progress.
 
-**Tier 0 and Tier 1 together were scored as a set, not summed:** 37 new CNAs, one of which
-(`google_android`) both tiers find, so the union is what counts. That is **21.7% to 28.6%
-of roster, 31.5% to 41.5% of reachable.**
+> ### CORRECTION, 2026-08-23. The GIT row above was wrong by its entire value.
+>
+> The 31,366 ids and +18 CNAs came from a full-text regex over the ecosystem's
+> archive. **`feed_osv` returns 450 rows from GIT and +0 new CNAs**, because the
+> adapter reads CVE *aliases* and GIT records carry their CVE references in other
+> fields. The probe and the adapter were measuring different things, and only the
+> adapter's number can be banked.
+>
+> **Tier 1 is +7, not +25.** All of it is Android. GIT is not merged.
+>
+> This is the second estimate in this document to be cancelled by measurement, and
+> the first was cancelled in the opposite direction (the Android bulletin parser
+> was unnecessary because OSV already carried it). Estimates here have now been
+> wrong by their entire value in both directions, which is the case for section 3's
+> harness rather than against it. **Every remaining figure in Tier 2 and Tier 3 is a
+> probe, not an adapter measurement.**
+
+**Tier 0 and Tier 1 together, measured through the adapters:** **+20 CNAs**, taking the
+roster share from 21.7% to about 25.4% and the reachable share from 31.5% to about 37%.
 
 That is the entire cheap half of the plan. Two days of work, no new parsers, and it stops
-**21 points of roster short of the gate**.
+well short of the gate.
 
 ### Tier 2: aggregate feeds that are not OSV
 
@@ -370,7 +395,7 @@ which is the point of the exercise rather than the number.
 | now | 9 | 21.7% **measured** | 31.5% **measured** | |
 | after the admissibility split | 9 | 21.5 to 21.7% **measured** | 31.3 to 31.5% **measured** | 1 to 2 days |
 | Tier 0 | 11 | 24.1% **measured** | 35.0% **measured** | 1 day + 3 prerequisites |
-| Tier 1 | 11 | 28.6% **measured** | 41.5% **measured** | 2 days |
+| Tier 1 | 11 | ~25.4% **measured** | ~37% **measured** | 2 days |
 | Tier 2 | ~25 | ~35 to 42% *estimate* | ~51 to 61% *estimate* | 2 to 3 weeks |
 | Tier 3 to gate | ~90 | **50%** *estimate* | 73% *estimate* | 5 to 7 weeks |
 | Tier 3 to ceiling | ~250 | **68.8%** | 100% | 4 to 6 months |
@@ -381,9 +406,12 @@ honest statement of what is known.
 
 Three things this table is saying that are worth saying in words.
 
-**The cheap work does not reach the gate.** Everything that reuses an existing adapter,
-all of Tier 0 and Tier 1, was measured and lands at **28.6% of roster**. The gate is bought
-with Tier 3, one parser at a time, and there is no shortcut in the data.
+**The cheap work does not reach the gate, and it is now one CNA away on the gate's own
+metric.** Tier 0 and Tier 1 take top-50-by-volume effective coverage from **31/50 to
+39/50, 62% to 78%**, against an 80% gate that needs 40. The roster share reaches about
+25.4%. One more top-50 CNA clears it; the nearest are Samsung Mobile, which publishes its
+own feed and probed 200, then dell, sap, huawei, twcert, juniper, hpe, qnap, HCL, TR-CERT
+and WPScan.
 
 **The last 30 points cost more than the first 30.** Going from 50% to the 68.8% ceiling is
 roughly 160 more CNAs averaging fewer than 20 published CVEs each. Each is a parser with
