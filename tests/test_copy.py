@@ -381,3 +381,67 @@ def test_the_holding_page_unfurls_as_more_than_a_bare_link():
                 'property="og:description"', 'rel="canonical"'):
         assert tag in body, tag
     assert "og:description" in body and "not yet published" in body
+
+
+# --------------------------------------------------------------------------
+# claims the site refutes elsewhere on the site (review item 8)
+# --------------------------------------------------------------------------
+#
+# Five statements the site made about the Program or about itself, each refuted
+# by another page of the same site. All were live, all in the launched nav, and
+# all the sort of thing a reader falsifies by scrolling. Four of the five had
+# already propagated from one original into several files, which is why these
+# are asserted across every template rather than at the place each was found.
+
+import pathlib as _pl
+
+_TPL = _pl.Path(__file__).parent.parent / "templates"
+_RBP = _pl.Path(__file__).parent.parent / "rbp"
+
+
+def _all_templates():
+    return {p.name: p.read_text() for p in _TPL.glob("*.html")}
+
+
+def test_the_site_does_not_call_the_count_the_programs_own_metric():
+    """It is the Program's own DEFINITION, measured from outside. Calling it the
+    Program's own metric was contradicted three hundred lines below on the same
+    rendered page, by "This site does not replace that series and is not
+    comparable to it." The definition claim is both accurate and stronger."""
+    for name, body in _all_templates().items():
+        assert "Program's own metric" not in body, name
+        assert "Program&rsquo;s own metric" not in body, name
+
+
+def test_the_redaction_claim_states_its_true_scope():
+    """"Redacted for exactly this population" was wrong and /policy already said
+    so, labelling itself a precision correction: the redaction covers EVERY
+    reserved ID, tens of thousands a year, of which the RBP set is a subset.
+
+    The true version is a better argument for the ask, because it explains why
+    the Program has not already solved this."""
+    for name, body in _all_templates().items():
+        assert "for exactly this population" not in body, (
+            f"{name} claims the redaction is scoped to RBPs; it covers every "
+            "reserved ID")
+
+
+def test_nothing_calls_rule_4517_this_sites_warrant():
+    """policy.html says in bold that 4.5.1.7 "is not this site's permission to
+    name anyone, and the site does not claim it as one". Three other places
+    called it exactly that. /policy is right, so the others moved."""
+    sources = {**_all_templates(),
+               **{p.name: p.read_text() for p in _RBP.glob("*.py")}}
+    for name, body in sources.items():
+        assert "entire warrant" not in body, (
+            f"{name} calls 4.5.1.7 this site's warrant while /policy denies it")
+
+
+def test_no_page_claims_the_site_names_cnas():
+    """/method opened with "The site names CNAs, so the method has to be
+    auditable". v1 names nobody, so the sentence describing why the method
+    matters described a site that does not exist."""
+    for name, body in _all_templates().items():
+        low = body.lower()
+        assert "the site names cnas" not in low, name
+        assert "this site names cnas" not in low, name

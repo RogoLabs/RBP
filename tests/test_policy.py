@@ -178,20 +178,38 @@ def test_live_rbp_policy_is_still_v2_and_still_thresholdless():
 # the code constraint is held together with the quoted rule (r3 item 8)
 # --------------------------------------------------------------------------
 
-def test_the_buffer_floor_is_bound_to_the_naming_warrant():
-    """The whole warrant for naming a reserving CNA is the 24-hour permission in
-    4.5.1.7, quoted on the holding page and on /policy. Nothing bound the buffer
-    to it: --min-age-days took any int and the workflow passed a repository
-    variable through unvalidated, so 0 would have published inferred CNA names on
-    IDs public for under 24 hours, inside the window the Program's own rule tells
-    its own Secretariat not to name in.
+def test_the_buffer_floor_is_bound_to_the_self_imposed_naming_horizon():
+    """This test was called "bound to the naming WARRANT" and its first line
+    said 4.5.1.7 was "the whole warrant for naming a reserving CNA". That pinned
+    a doctrine the site itself denies: policy.html says in bold that 4.5.1.7 "is
+    a rule about the Secretariat's own conduct. It is not this site's permission
+    to name anyone, and the site does not claim it as one."
 
-    Pinned here rather than only in test_report, so the constraint and the rule it
-    derives from move together."""
+    /policy holds the correct and stronger position, so the code and this test
+    moved to it. What 4.5.1.7 establishes is that the Program already
+    CONTEMPLATES naming a reserving CNA 24 hours after public disclosure; this
+    project takes that as a floor it imposes on itself, not a permission it
+    holds.
+
+    The mechanism was never in doubt and is unchanged: --min-age-days took any
+    int and the workflow passed a repository variable through unvalidated, so 0
+    would have published inferred names on IDs public for under 24 hours.
+
+    Pinned here rather than only in test_report, so the constraint and the rule
+    it derives from move together."""
     from rbp.report import MIN_AGE_FLOOR_DAYS, validate_min_age
 
-    warrant = RULES["rules"]["4.5.1.7"]
-    assert "24 hours after a CVE ID has been Publicly Disclosed" in warrant
+    horizon = RULES["rules"]["4.5.1.7"]
+    assert "24 hours after a CVE ID has been Publicly Disclosed" in horizon
+    # The rule is permissive and about the Secretariat, not about this site.
+    assert "MAY publicly identify" in horizon
+
+    # The site must not describe it as a warrant anywhere in the code that
+    # enforces it, because /policy says the opposite in bold.
+    import pathlib as _p
+    src = (_p.Path(__file__).parent.parent / "rbp" / "report.py").read_text()
+    assert "entire warrant" not in src, (
+        "report.py calls 4.5.1.7 this site's warrant while /policy denies it is one")
 
     # The floor must clear both the 24-hour naming horizon and the 72-hour
     # publication expectation.

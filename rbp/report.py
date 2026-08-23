@@ -100,17 +100,25 @@ DEFAULT_MIN_AGE_DAYS = 7
 
 # Absolute floor on the reportable buffer, in days.
 #
-# The project's entire warrant for naming a reserving CNA is the 24-hour
-# permission in CNA Rule 4.5.1.7, quoted on the holding page and on /policy and
-# named as the R5 mitigation in PLAN.md. Nothing bound the buffer to it:
+# A SELF-IMPOSED FLOOR, not a warrant. The word matters and the site already
+# gets it right elsewhere: policy.html says in bold that Rule 4.5.1.7 "is a rule
+# about the Secretariat's own conduct. It is not this site's permission to name
+# anyone, and the site does not claim it as one." That is the correct and
+# stronger position, and this comment used to contradict it.
+#
+# What 4.5.1.7 establishes is that the Program already CONTEMPLATES naming a
+# reserving CNA once an ID has been public for 24 hours. This project takes that
+# as the floor below which it will not go, which is a choice it makes rather
+# than a permission it holds. Nothing bound the buffer to it:
 # --min-age-days took any int, and the workflow passed a repository variable
 # through unvalidated, so setting it to 0 would publish inferred CNA names on IDs
 # public for under 24 hours, inside the window the Program's own rule tells its
 # own Secretariat not to name in, with no error and no visible change.
 #
-# 4 days rather than 1: the 24-hour horizon is the absolute floor below which the
-# site has no warrant at all, and the 72-hour publication expectation is the
-# operating one, so the first defensible buffer sits just past both.
+# 4 days rather than 1: the 24-hour horizon is the point below which the site
+# would be naming inside a window the Program tells its own Secretariat not to
+# name in, and the 72-hour publication expectation is the operating one, so the
+# first defensible buffer sits just past both.
 MIN_AGE_FLOOR_DAYS = 4
 
 
@@ -128,8 +136,8 @@ def validate_min_age(days):
         raise SystemExit(
             f"--min-age-days={days} is below the floor of {MIN_AGE_FLOOR_DAYS} days. "
             "CNA Rule 4.5.1.7 permits naming a reserving CNA only 24 hours after "
-            "public disclosure, and that permission is this site's entire warrant "
-            "for naming anyone. The 72-hour publication expectation is the "
+            "public disclosure. This site treats that as a self-imposed floor "
+            "rather than as permission. The 72-hour publication expectation is the "
             "operating horizon. Refusing to publish names inside either window.")
     return days
 

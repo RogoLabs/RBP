@@ -196,8 +196,8 @@ _DECLARED = [
         # PARTLY FALSIFIED 2026-08-23. The MECHANISM is real and works:
         # report.validate_min_age refuses to run below the 4-day floor and no
         # configuration defeats it. The DOCTRINE was wrong. report.py:95-97 and
-        # :123 and this condition's old title called Rule 4.5.1.7 "this site's
-        # entire warrant for naming anyone", while policy.html:96-98 says in bold
+        # :123 and this condition's old title described Rule 4.5.1.7 as this site's
+        # sole permission for naming anyone, while policy.html:96-98 says in bold
         # that it "is not this site's permission to name anyone, and the site
         # does not claim it as one". /policy holds the correct and stronger
         # position, so the title changed rather than the code. Moot in v1, which
