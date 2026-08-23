@@ -244,6 +244,10 @@ _ORIGIN_KIND = {
     "ghsa": "advisory", "msrc": "advisory", "mozilla": "advisory",
     "csaf": "advisory", "redhat": "advisory", "alas": "advisory",
     "osv": "advisory",
+    # A Security Maintenance Release is a published advisory with its own
+    # identifier and release date, which is exactly the shape 4.5.1.4 and
+    # 4.5.1.6 mean by Publicly Disclosing.
+    "samsung": "advisory",
 }
 
 

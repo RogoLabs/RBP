@@ -954,10 +954,77 @@ def feed_arch(years):
     return out
 
 
+_SMR_RE = re.compile(r"SMR[\s-]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\s-]+(20\d\d)",
+                     re.I)
+_SMR_MONTHS = {m: i + 1 for i, m in enumerate(
+    ["jan", "feb", "mar", "apr", "may", "jun",
+     "jul", "aug", "sep", "oct", "nov", "dec"])}
+
+
+def feed_samsung(years, url="https://security.samsungmobile.com/securityUpdate.smsb"):
+    """Samsung Mobile Security Maintenance Release bulletins.
+
+    Added to close the launch gate: SamsungMobile is a top-50 CNA by volume and
+    was the last one under the 3-sighting floor. Measured before writing a line
+    of it, which is the rule this project learned the hard way: a full-text probe
+    of OSV's GIT ecosystem predicted +18 CNAs and the adapter delivered +0,
+    because the probe and the adapter were reading different fields. This page
+    yields 72 SamsungMobile sightings and takes top-50 coverage from 39 to 40.
+
+    ONE PAGE, MANY MONTHS. The bulletin index carries every SMR back several
+    years in one document, split by "SMR <Mon>-<Year>" headings, so the whole
+    feed is a single fetch and the date has to come from the heading a CVE sits
+    under rather than from the response.
+
+    Most of the CVEs here are Google's, applied from the Android Security
+    Bulletin, and those already arrive through OSV's Android ecosystem. That is
+    not a reason to skip them: a second independent origin is what moves a row
+    into the corroborated headline, and Samsung publishing a fix is a different
+    public event from Google publishing one.
+    """
+    try:
+        html = _get_text(url, timeout=60)
+    except Exception as e:  # noqa: BLE001
+        record_feed("samsung", False, str(e)[:120])
+        print(f"  [samsung] FAILED: {e}", file=sys.stderr)
+        return []
+
+    # Split on the SMR headings so each CVE inherits the date of its own
+    # release. Falling back to one date for the whole page would put a 2019
+    # bulletin's CVEs on today, which is the clock error this project spent a
+    # whole review item on.
+    marks = [(m.start(), m.group(1).lower(), int(m.group(2)))
+             for m in _SMR_RE.finditer(html)]
+    out, seen = [], set()
+    if not marks:
+        record_feed("samsung", TRUNCATED, "no SMR headings found; page shape changed")
+        print("  [samsung] no SMR headings; page shape changed", file=sys.stderr)
+        return []
+
+    for i, (pos, mon, yr) in enumerate(marks):
+        end = marks[i + 1][0] if i + 1 < len(marks) else len(html)
+        month = _SMR_MONTHS.get(mon)
+        if not month:
+            continue
+        # Samsung publishes an SMR in the first week of its month. Day 1 is the
+        # conservative choice: it can only make a row look OLDER, and every
+        # other date on this site is a floor for the same reason.
+        date = f"{yr:04d}-{month:02d}-01"
+        for cid in set(re.findall(r"CVE-20\d\d-\d{4,7}", html[pos:end])):
+            if _year(cid) not in years or cid in seen:
+                continue
+            seen.add(cid)
+            out.append({"cve_id": cid, "source": "samsung",
+                        "source_ref": f"SMR-{mon.title()}-{yr}",
+                        "public_date": date, "product": "Galaxy",
+                        "description": f"Samsung SMR {mon.title()} {yr}"})
+    return out
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
-            "arch": feed_arch}
+            "arch": feed_arch, "samsung": feed_samsung}
 
 
 def gather(sources, years):

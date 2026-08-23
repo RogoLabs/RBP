@@ -549,3 +549,69 @@ def test_every_osv_part_records_its_row_count(monkeypatch):
         "osv parts carry rows: null, so a collapsed ecosystem is invisible to "
         "compare_magnitudes however carefully it looks")
     assert part["rows"] >= 1
+
+
+def test_samsung_dates_each_cve_from_its_own_release(monkeypatch):
+    """One page carries every SMR back several years, split by "SMR <Mon>-<Year>"
+    headings. Taking one date for the whole document would put a 2019 bulletin's
+    CVEs on today, which is precisely the clock error review item 10 is about:
+    a date that is not the date the thing became public."""
+    html = ('<p>SMR Aug-2026</p> CVE-2026-1111, CVE-2026-2222 '
+            '<p>SMR Jan-2025</p> CVE-2025-3333')
+    monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=60: html)
+    rows = {r["cve_id"]: r for r in feeds.feed_samsung([2025, 2026])}
+    assert rows["CVE-2026-1111"]["public_date"] == "2026-08-01"
+    assert rows["CVE-2026-2222"]["public_date"] == "2026-08-01"
+    assert rows["CVE-2025-3333"]["public_date"] == "2025-01-01"
+    assert rows["CVE-2025-3333"]["source_ref"] == "SMR-Jan-2025"
+
+
+def test_samsung_reports_a_changed_page_shape_rather_than_returning_nothing(monkeypatch):
+    """The silent-shrink signature. A redesign that drops the SMR headings would
+    otherwise return zero rows and be recorded as a healthy feed with nothing to
+    report, which is the one error this project says it cannot tolerate."""
+    monkeypatch.setattr(feeds, "_get_text",
+                        lambda u, timeout=60: "<p>no headings here</p> CVE-2026-1")
+    rows = feeds.feed_samsung([2026])
+    assert rows == []
+    h = feeds.FEED_HEALTH.get("samsung")
+    assert h and h["status"] == feeds.TRUNCATED
+    assert "page shape changed" in h["detail"]
+
+
+def test_samsung_is_an_advisory_origin_not_a_tracker():
+    """An SMR is a published advisory with its own identifier and release date,
+    so it may start the 72-hour clock. A tracker entry may not."""
+    from rbp import clock
+    assert clock.origin_kind("samsung") == "advisory"
+
+
+def test_samsung_corroborates_google_rather_than_mirroring_it():
+    """Most Samsung CVEs are Google's, applied from the Android bulletin, and
+    OSV carries those too. They must count as TWO independent origins: Samsung
+    shipping a fix is a separate public event from Google shipping one, unlike
+    OSV re-publishing GHSA, which is one event twice."""
+    from rbp.report import _indep
+    assert _indep("samsung,osv") == 2
+    assert _indep("osv,ghsa") == 1, "the mirror collapse must still hold"
+
+
+def test_every_adapter_that_the_gate_depends_on_is_in_the_cron_profile():
+    """The gate is measured on the profile the CRON runs, which is condition 1's
+    whole point. csaf and msrc were 'deep' only for weeks, on a monthly cadence
+    that existed in no cron, so siemens read as an uncovered top-50 CNA while
+    already being a configured provider.
+
+    samsung is the CNA that takes top-50 coverage from 39 to 40 and clears the
+    gate, so it being absent from `weekly` would leave the gate uncleared with
+    the code to clear it sitting in the repo unused."""
+    from rbp import cli
+    weekly = set(cli.PROFILES["weekly"].split(","))
+    for src in ("samsung", "csaf", "msrc", "osv", "ghsa"):
+        assert src in weekly, (
+            f"{src} is not in the profile the cron runs, so it contributes "
+            "nothing to the gate the launch decision reads")
+    # And every profile names only real adapters.
+    for name, spec in cli.PROFILES.items():
+        unknown = set(spec.split(",")) - set(feeds.ADAPTERS)
+        assert not unknown, f"profile {name} names non-existent adapters: {unknown}"

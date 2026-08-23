@@ -32,11 +32,12 @@ from . import (cvelist, feeds, classify, report, attribution, coverage, inferenc
 # against a 9-minute warm run and a 15-minute target.
 PROFILES = {
     "weekly": ("alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,"
-               "csaf,msrc"),
+               "csaf,msrc,samsung"),
     # Kept as a distinct name even though it is now identical to weekly, so the
     # workflow's --profile argument and the docs do not have to change, and so a
     # future heavy source has somewhere to go.
-    "deep": "alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,csaf,msrc",
+    "deep": ("alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,"
+             "csaf,msrc,samsung"),
 }
 
 HERE = os.path.dirname(os.path.abspath(__file__))

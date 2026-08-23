@@ -339,7 +339,7 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 | candidate | probe | carries | *estimate* |
 |---|---|---|---|
 | ~~**Android Security Bulletin**~~ | **cancelled, see below** | | **0** |
-| **Samsung Mobile SMR** | `security.samsungmobile.com/securityUpdate.smsb` **200, 117 KB** | Samsung_Mobile | +1 |
+| ~~**Samsung Mobile SMR**~~ | **BUILT 2026-08-23** | SamsungMobile | **+1, measured** |
 | **Patchstack** | `patchstack.com/database/` 200; needs a machine-readable route, not the HTML | Patchstack (14,264 CVEs, the largest missing CNA on the roster) | +1 |
 | **WPScan** | `api/v3` route 404; API is token-gated | WPScan (1,961) | +1, blocked on credentials |
 | **CSAF provider sweep** | probe `.well-known/csaf/` per vendor. Sampled: SonicWall **200**, Palo Alto **404**, Dell **403** | one CNA each, no parser each | +5 to +15 |
@@ -406,8 +406,19 @@ honest statement of what is known.
 
 Three things this table is saying that are worth saying in words.
 
-**The cheap work does not reach the gate, and it is now one CNA away on the gate's own
-metric.** Tier 0 and Tier 1 take top-50-by-volume effective coverage from **31/50 to
+**THE GATE CLEARS.** Samsung Mobile shipped 2026-08-23 and took top-50-by-volume
+effective coverage from 39 to **40 of 50, exactly 80%**. One page, one fetch, 420 rows,
+72 SamsungMobile sightings against a floor of 3.
+
+Measured before a line of the adapter was written, which is now the rule: the OSV `GIT`
+probe predicted +18 CNAs and the adapter delivered +0 because the two were reading
+different fields. This one was checked the same way first and delivered what it promised.
+
+The margin is **zero**, which is the cost of the gate having no second condition. Ten
+top-50 CNAs remain under the floor (WPScan, dell, TR-CERT, sap, huawei, twcert, HCL,
+qnap, juniper, hpe) and any one of them would give headroom.
+
+**The cheap work did not reach the gate on its own, and this was the last step.** Tier 0 and Tier 1 take top-50-by-volume effective coverage from **31/50 to
 39/50, 62% to 78%**, against an 80% gate that needs 40. The roster share reaches about
 25.4%. One more top-50 CNA clears it; the nearest are Samsung Mobile, which publishes its
 own feed and probed 200, then dell, sap, huawei, twcert, juniper, hpe, qnap, HCL, TR-CERT

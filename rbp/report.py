@@ -145,7 +145,12 @@ def validate_min_age(days):
 # corroboration (OSV re-publishes GHSA; ALAS is a RHEL rebuild).
 _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redhat",
            "ubuntu": "ubuntu", "debian": "debian", "alpine": "alpine", "csaf": "csaf",
-           "msrc": "microsoft", "mozilla": "mozilla", "arch": "arch"}
+           "msrc": "microsoft", "mozilla": "mozilla", "arch": "arch",
+           # Samsung is its own origin. Most of its CVEs are Google's, applied
+           # from the Android bulletin, and OSV carries those too, but Samsung
+           # shipping a fix is a separate public event from Google shipping one,
+           # so the two corroborate rather than mirror.
+           "samsung": "samsung"}
 # A CNA may be NAMED as owner only when its own feed corroborates it (or it is the
 # authoritative RESERVED assigner), never on a bare product-map guess.
 # The owner-feed mapping lives in clock.OWNER_FEEDS and nowhere else. A dead
