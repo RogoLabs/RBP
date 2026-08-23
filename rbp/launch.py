@@ -128,8 +128,25 @@ _DECLARED = [
                    "silently. The fast path is a public withhold request carrying "
                    "no reason, which is auditable from outside; two private routes "
                    "reach a person for anyone who prefers them."),
-        "status": MET,
-        "blocks": None,
+        # FALSIFIED 2026-08-23, verified rather than reasoned about. The
+        # automatic route is unreachable by the people it exists for. All six
+        # surfaces link issues/new?labels=withhold; the `labels` query parameter
+        # is applied only for users with triage permission; there is no
+        # .github/ISSUE_TEMPLATE to apply it server-side (`ls -a .github` returns
+        # `workflows` and nothing else); and suppress.from_issues queries
+        # state=open&labels=withhold and reads nothing else. A CNA employee with
+        # an ordinary account files an unlabelled issue that nothing ever reads,
+        # and because the API call itself succeeds, `err` is None and no degraded
+        # banner fires either. The rehearsal that declared this MET was run from
+        # an account with write access, which is the one configuration in which
+        # it cannot reproduce.
+        "status": UNMET,
+        "blocks": ("the automatic route needs an issue label an ordinary account "
+                   "cannot apply, and no issue template supplies it"),
+        # The rehearsal below stands as a record of what WAS verified, and its
+        # last line is why it did not catch this: it checked the data branch
+        # rather than the path a CNA employee would take.
+        #
         # Rehearsed in both directions on 2026-08-22 against CVE-2025-30083, a live
         # row 519 days public. Withheld: absent from backlog.json, backlog.csv,
         # rbp.json, rbp.csv, summary.json, cnas.json, held_back.json,
@@ -152,11 +169,21 @@ _DECLARED = [
     },
     {
         "n": 5,
-        "title": "The 24-hour naming warrant bound in code, with a floor",
+        "title": "A self-imposed naming floor, bound in code",
         "detail": ("CNA Rule 4.5.1.7 lets the Secretariat name a reserving CNA only "
                    "24 hours after public disclosure. report.validate_min_age "
                    "refuses to run below a 4-day floor, so no configuration can "
                    "name a CNA inside the window the Program's own rule protects."),
+        # PARTLY FALSIFIED 2026-08-23. The MECHANISM is real and works:
+        # report.validate_min_age refuses to run below the 4-day floor and no
+        # configuration defeats it. The DOCTRINE was wrong. report.py:95-97 and
+        # :123 and this condition's old title called Rule 4.5.1.7 "this site's
+        # entire warrant for naming anyone", while policy.html:96-98 says in bold
+        # that it "is not this site's permission to name anyone, and the site
+        # does not claim it as one". /policy holds the correct and stronger
+        # position, so the title changed rather than the code. Moot in v1, which
+        # names nobody, and it must not silently become load-bearing again if
+        # NAMING_ENABLED is ever flipped.
         "status": MET, "blocks": None, "item": "8",
     },
     {
@@ -193,8 +220,17 @@ _DECLARED = [
                    "index. Stable rather than immutable: a withhold removes a row "
                    "from the archive too, and /data states that rather than promising "
                    "permanence this project would not honour."),
-        "status": MET,
-        "blocks": None,
+        # FALSIFIED 2026-08-23. `publish stage` runs prune_snapshots(keep=2) on
+        # every six-hourly tick, so the branch holds exactly two dated snapshots
+        # plus one per month, and the site archive is built by iterating that
+        # same tree. A URL cited on Monday stops resolving by Wednesday unless it
+        # happens to be the last snapshot of its month. Verified on origin/data,
+        # which holds 2026-08-22 and 2026-08-23 and nothing else. "Resolvable
+        # after the epoch flip" is a claim about weeks, and retention is set to
+        # about two days.
+        "status": UNMET,
+        "blocks": ("prune_snapshots(keep=2) deletes a dated archive route in "
+                   "about two days; the retention policy contradicts the promise"),
         # /data/archive/<YYYY-MM-DD>/rbp.json per retained snapshot, plus
         # /data/archive.json as the index. Written from that day's snapshot rather
         # than from today's numbers wearing that day's name, and through the same

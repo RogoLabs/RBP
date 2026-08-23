@@ -157,8 +157,15 @@ def test_plan_and_site_publish_the_same_number_of_conditions():
         f"PLAN.md 8d lists {len(set(numbered))} conditions, launch.py has 9")
 
 
-@pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (4, True), (5, True),
-                                          (6, True), (7, True),
+# 4 and 7 moved to UNMET on 2026-08-23, and this is that deliberate update.
+# Both were declared MET and both were falsified by checking rather than by
+# reasoning: condition 4's automatic route needs an issue label an ordinary
+# GitHub account cannot apply, and condition 7's dated archive is deleted in
+# about two days by prune_snapshots(keep=2). Condition 5 stays MET because its
+# mechanism, the 4-day floor, is real; only its stated doctrine was wrong, and
+# the title changed instead.
+@pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (4, False), (5, True),
+                                          (6, True), (7, False),
                                           (8, True), (9, True)])
 def test_declared_statuses_match_what_is_actually_built(n, expect_met):
     """Pins today's honest position so a status cannot drift silently. When one of
