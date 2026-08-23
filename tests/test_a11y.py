@@ -496,3 +496,22 @@ def test_every_scroll_container_is_keyboard_reachable():
                 assert a in attrs, (
                     f"{tpl.name}: a scroll container is missing {a}; it cannot "
                     "be reached or announced without a pointer")
+
+
+def test_the_nav_can_wrap_rather_than_overflowing_the_page():
+    """72 to 79px of horizontal page overflow was measured across 769 to 847px
+    on seven of nine pages, with the theme toggle entirely off screen. The
+    mobile menu collapses at 768px and the full nav does not fit until the high
+    840s, leaving an 80px band where neither layout works. WCAG 1.4.10.
+
+    Asserted on `flex-wrap`, not on a breakpoint number: the exact width at
+    which the nav stops fitting is font-metric dependent, so a number would be
+    correct on the machine it was measured on and wrong on the next one. Wrap is
+    the mechanism and it holds at every width."""
+    css = contrast.strip_comments(CSS.read_text())
+    import re as _re
+    m = _re.search(r"(?:^|\n)\.nav\s*\{([^}]*)\}", css)
+    assert m, "no .nav rule in rbp.css to allow wrapping"
+    assert "flex-wrap: wrap" in m.group(1), (
+        "the nav is a non-wrapping flex row, so it overflows the page rather "
+        "than reflowing when it does not fit")

@@ -620,3 +620,25 @@ h1.visually-quiet {
 [data-theme="dark"] .chart-export-btn:hover {
   color: #0b1220;
 }
+
+
+/* ---- the nav band between the mobile collapse and comfortable ----------- */
+/*
+   Measured at 72 to 79px of horizontal PAGE overflow across 769 to 847px on
+   seven of nine pages, with the theme toggle pushed entirely off screen. The
+   mobile menu collapses at 768px and the full nav does not fit until the high
+   840s, so there is an 80px band where neither layout works.
+   
+   `flex-wrap: wrap` is the mechanism fix and is width-independent: the exact
+   pixel at which the nav stops fitting depends on font metrics, so a breakpoint
+   number alone would be right on the machine it was measured on and wrong on
+   the next one. The wider collapse is belt and braces.
+*/
+.nav { flex-wrap: wrap; }
+.nav-menu { flex-wrap: wrap; }
+
+@media (max-width: 900px) {
+  /* Collapse the menu across the whole band rather than at 768 only. */
+  .nav-menu { gap: var(--spacing-sm); }
+  .nav-menu a { padding-left: 0.4rem; padding-right: 0.4rem; }
+}
