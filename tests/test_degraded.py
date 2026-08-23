@@ -19,6 +19,7 @@ Two mechanisms produced one, and both were invisible from outside:
 from __future__ import annotations
 
 import json
+import os
 
 import pandas as pd
 import pytest
@@ -179,7 +180,7 @@ def test_health_summary_reports_truncation_separately_from_failure():
     feeds.record_feed("ubuntu", feeds.TRUNCATED, "hit the 200-page cap")
     feeds.record_feed("debian", feeds.FAILED, "connection reset")
     feeds.record_feed("alpine", feeds.OK, "40 ids", rows=40)
-    failures, truncated, attempts = feeds.health_summary()
+    failures, truncated, attempts, _capped = feeds.health_summary()
     assert len(failures) == 1 and "debian" in failures[0]
     assert len(truncated) == 1 and "ubuntu" in truncated[0]
     assert attempts == 3
@@ -189,7 +190,7 @@ def test_a_truncated_only_run_is_still_degraded():
     """The live case. Ubuntu truncates every run, so this is the state the site is
     actually in, and `if failures:` reported it as clean."""
     feeds.record_feed("ubuntu", feeds.TRUNCATED, "hit the 200-page cap")
-    failures, truncated, _ = feeds.health_summary()
+    failures, truncated, _, _capped = feeds.health_summary()
     assert failures == []
     assert truncated, "a truncated run must be visible to the caller"
     assert bool(failures or truncated) is True
@@ -197,7 +198,7 @@ def test_a_truncated_only_run_is_still_degraded():
 
 def test_a_fully_clean_run_is_not_degraded():
     feeds.record_feed("alpine", feeds.OK, "40 ids", rows=40)
-    failures, truncated, _ = feeds.health_summary()
+    failures, truncated, _, _capped = feeds.health_summary()
     assert not failures and not truncated
 
 
@@ -350,11 +351,36 @@ def test_a_new_feed_is_not_flagged():
                                     {"a": {"rows": 100}, "b": {"rows": 5}}) == []
 
 
-def test_sub_fetches_are_not_compared_separately():
-    """osv:npm rolls up to osv. Comparing both double-counts one feed and lets a
-    single ecosystem's normal variation trip the guard."""
-    prev = {"osv": {"rows": 11651}, "osv:npm": {"rows": 5000}}
-    cur = {"osv": {"rows": 11600}, "osv:npm": {"rows": 100}}
+def test_a_collapsed_sub_fetch_is_caught_even_when_the_parent_looks_flat():
+    """THIS TEST ASSERTED THE OPPOSITE until 2026-08-23, and pinned the blindness
+    as correct behaviour.
+
+    The old rationale: "osv:npm rolls up to osv. Comparing both double-counts one
+    feed and lets a single ecosystem's normal variation trip the guard." The
+    first half is true. The second is the wrong trade, and the fixture it was
+    written with proves it: npm going 5,000 -> 100 while the osv TOTAL moves
+    11,651 -> 11,600 means another ecosystem grew by ~4,850 and masked the
+    collapse. That is the silent-shrink signature the whole function exists to
+    catch, arriving in the one shape it was told to ignore, on a component
+    contributing about a quarter of osv's ids.
+
+    Compared at PART_DROP rather than MAGNITUDE_DROP, so a single noisy
+    ecosystem has to clearly collapse rather than merely dip.
+    """
+    prev = {"osv": {"rows": 11651, "parts": {"npm": {"rows": 5000}}}}
+    cur = {"osv": {"rows": 11600, "parts": {"npm": {"rows": 100}}}}
+    found = feeds.compare_magnitudes(prev, cur)
+    assert found, "a 98% collapse in one ecosystem went unreported"
+    assert any("osv:npm" in f for f in found), found
+    # The parent is flat and must NOT also be reported, or one failure is two.
+    assert not any(f.startswith("osv:") is False and f.startswith("osv") for f in found)
+
+
+def test_an_ordinary_dip_in_one_sub_fetch_is_not_reported():
+    """The old rationale's real concern, kept: one ecosystem is noisier than a
+    whole feed, so the part threshold is deliberately looser."""
+    prev = {"osv": {"rows": 11651, "parts": {"npm": {"rows": 5000}}}}
+    cur = {"osv": {"rows": 11400, "parts": {"npm": {"rows": 3000}}}}
     assert feeds.compare_magnitudes(prev, cur) == []
 
 
@@ -363,11 +389,41 @@ def test_a_magnitude_drop_marks_the_run_degraded_in_the_cli():
     reads. Every other health signal on this project was computed and then not
     wired to anything at least once."""
     import pathlib
+    from rbp import cli
     src = (pathlib.Path(__file__).parent.parent / "rbp" / "cli.py").read_text()
     assert "compare_magnitudes" in src
-    i = src.index('stats["degraded"] = ')
-    assert "shrunk" in src[i:i + 260], (
-        "a magnitude drop does not reach stats['degraded'], so no banner renders")
+
+    # Behavioural now rather than grep-style. The computation was extracted from
+    # cli.run into degraded_state precisely so this could stop being a substring
+    # search over source, which passes on code that never runs.
+    on, reasons = cli.degraded_state(
+        failures=[], truncated=[], capped=[], dropped=0,
+        reports_unreadable=False, shrunk=["osv: 11,000 -> 400 ids (96% fewer)"])
+    assert on is True and any("fewer ids" in r for r in reasons), (
+        "a magnitude drop does not reach degraded, so no banner renders")
+
+
+def test_a_configured_cap_alone_does_not_degrade_the_run():
+    """The banner was permanent furniture because ubuntu's page cap fires every
+    run and was folded into `degraded`. A warning that is always on is not a
+    warning."""
+    from rbp import cli
+    on, reasons = cli.degraded_state(
+        failures=[], truncated=[], capped=["ubuntu: hit the 200-page cap"],
+        dropped=0, reports_unreadable=False, shrunk=[])
+    assert on is False and reasons == []
+
+
+def test_every_other_signal_still_degrades_the_run():
+    """Excluding caps must not quietly exclude anything else."""
+    from rbp import cli
+    for kw in ({"failures": ["debian: 500"]}, {"truncated": ["ghsa: reset"]},
+               {"dropped": 12}, {"reports_unreadable": True},
+               {"shrunk": ["osv: fewer"]}):
+        args = {"failures": [], "truncated": [], "capped": [], "dropped": 0,
+                "reports_unreadable": False, "shrunk": [], **kw}
+        on, reasons = cli.degraded_state(**args)
+        assert on is True and reasons, kw
 
 
 # --------------------------------------------------------------------------
@@ -416,3 +472,146 @@ def test_a_genuine_end_of_data_is_still_recorded_as_healthy(monkeypatch):
     feeds.feed_ubuntu({2026})
     assert "ubuntu" not in feeds.health_detail(), (
         "a clean exhaustion recorded a health entry it should not have")
+
+
+# --------------------------------------------------------------------------
+# the adapters have to REPORT their own incompleteness (item 14)
+# --------------------------------------------------------------------------
+
+def test_ghsa_records_its_page_cap(monkeypatch):
+    """feed_ghsa exhausted `for _ in range(page_cap)` with no record_feed call,
+    twelve lines below feed_ubuntu which does exactly that. gather then stamped
+    it `ok` with the truncated count, so the live summary read
+    {status: "ok", detail: "3321 ids"} on a feed that had stopped reading.
+
+    Worse than a one-off miss: a fixed cap returns a roughly CONSTANT count every
+    run, so compare_magnitudes reads stable truncation as a healthy feed. GHSA
+    sources roughly 300 of 522 rows."""
+    page = [{"cve_id": "CVE-2026-1", "ghsa_id": "GHSA-x", "published_at":
+             "2026-08-01T00:00:00Z", "summary": "s"}]
+
+    def fake_get(url, timeout=60, headers=None):
+        # Always another page, so the cap is what ends the loop.
+        return page, None, {"Link": '<https://api.github.com/next>; rel="next"'}
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    feeds.feed_ghsa([2026], page_cap=3)
+    h = feeds.FEED_HEALTH.get("ghsa")
+    assert h, "feed_ghsa recorded no health at all after hitting its cap"
+    assert h["status"] == feeds.CAPPED
+    assert "3-page cap" in h["detail"]
+
+
+def test_ghsa_reaching_the_window_is_not_reported_as_incomplete(monkeypatch):
+    """The complement, so the previous test cannot be satisfied by recording a
+    cap unconditionally."""
+    def fake_get(url, timeout=60, headers=None):
+        return ([{"cve_id": "CVE-2026-1", "ghsa_id": "GHSA-x",
+                  "published_at": "2026-08-01T00:00:00Z", "summary": "s"}],
+                None, {})            # no next link: the data ran out
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    feeds.feed_ghsa([2026], page_cap=40)
+    assert "ghsa" not in feeds.FEED_HEALTH, (
+        "a feed that read everything must not report itself incomplete")
+
+
+def test_every_osv_part_records_its_row_count(monkeypatch):
+    """record_feed(f"osv:{eco}", ...) never passed rows=, so every part carried
+    rows: null and compare_magnitudes could not compare it even once it learned
+    to look inside parts. npm alone is about 25% of osv's ids."""
+    import io
+    import zipfile
+
+    def fake_stream(url):
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as z:
+            z.writestr("a.json", json.dumps(
+                {"id": "GHSA-a", "aliases": ["CVE-2026-1"],
+                 "affected": [{"package": {"name": "p", "ecosystem": "npm"}}]}))
+        buf.seek(0)
+        # feed_osv unlinks the temp path in its finally block, so hand it a real
+        # one rather than None.
+        import tempfile
+        fd, path = tempfile.mkstemp(suffix=".zip")
+        os.close(fd)
+        return zipfile.ZipFile(buf), path, 1000
+
+    monkeypatch.setattr(feeds, "_stream_zip", fake_stream)
+    monkeypatch.setattr(feeds, "_url_ok", lambda u: True)
+    feeds.feed_osv([2026], ecosystems=("npm",))
+
+    part = feeds.FEED_HEALTH.get("osv:npm")
+    assert part, "the osv part recorded no health"
+    assert isinstance(part["rows"], int), (
+        "osv parts carry rows: null, so a collapsed ecosystem is invisible to "
+        "compare_magnitudes however carefully it looks")
+    assert part["rows"] >= 1
+
+
+def test_samsung_dates_each_cve_from_its_own_release(monkeypatch):
+    """One page carries every SMR back several years, split by "SMR <Mon>-<Year>"
+    headings. Taking one date for the whole document would put a 2019 bulletin's
+    CVEs on today, which is precisely the clock error review item 10 is about:
+    a date that is not the date the thing became public."""
+    html = ('<p>SMR Aug-2026</p> CVE-2026-1111, CVE-2026-2222 '
+            '<p>SMR Jan-2025</p> CVE-2025-3333')
+    monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=60: html)
+    rows = {r["cve_id"]: r for r in feeds.feed_samsung([2025, 2026])}
+    assert rows["CVE-2026-1111"]["public_date"] == "2026-08-01"
+    assert rows["CVE-2026-2222"]["public_date"] == "2026-08-01"
+    assert rows["CVE-2025-3333"]["public_date"] == "2025-01-01"
+    assert rows["CVE-2025-3333"]["source_ref"] == "SMR-Jan-2025"
+
+
+def test_samsung_reports_a_changed_page_shape_rather_than_returning_nothing(monkeypatch):
+    """The silent-shrink signature. A redesign that drops the SMR headings would
+    otherwise return zero rows and be recorded as a healthy feed with nothing to
+    report, which is the one error this project says it cannot tolerate."""
+    monkeypatch.setattr(feeds, "_get_text",
+                        lambda u, timeout=60: "<p>no headings here</p> CVE-2026-1")
+    rows = feeds.feed_samsung([2026])
+    assert rows == []
+    h = feeds.FEED_HEALTH.get("samsung")
+    assert h and h["status"] == feeds.TRUNCATED
+    assert "page shape changed" in h["detail"]
+
+
+def test_samsung_is_an_advisory_origin_not_a_tracker():
+    """An SMR is a published advisory with its own identifier and release date,
+    so it may start the 72-hour clock. A tracker entry may not."""
+    from rbp import clock
+    assert clock.origin_kind("samsung") == "advisory"
+
+
+def test_samsung_corroborates_google_rather_than_mirroring_it():
+    """Most Samsung CVEs are Google's, applied from the Android bulletin, and
+    OSV carries those too. They must count as TWO independent origins: Samsung
+    shipping a fix is a separate public event from Google shipping one, unlike
+    OSV re-publishing GHSA, which is one event twice."""
+    from rbp.report import _indep
+    assert _indep("samsung,osv") == 2
+    assert _indep("osv,ghsa") == 1, "the mirror collapse must still hold"
+
+
+def test_every_adapter_that_the_gate_depends_on_is_in_the_cron_profile():
+    """The gate is measured on the profile the CRON runs, which is condition 1's
+    whole point. csaf and msrc were 'deep' only for weeks, on a monthly cadence
+    that existed in no cron, so siemens read as an uncovered top-50 CNA while
+    already being a configured provider.
+
+    samsung is the CNA that takes top-50 coverage from 39 to 40 and clears the
+    gate, so it being absent from `weekly` would leave the gate uncleared with
+    the code to clear it sitting in the repo unused."""
+    from rbp import cli
+    weekly = set(cli.PROFILES["weekly"].split(","))
+    for src in ("samsung", "csaf", "msrc", "osv", "ghsa"):
+        assert src in weekly, (
+            f"{src} is not in the profile the cron runs, so it contributes "
+            "nothing to the gate the launch decision reads")
+    # And every profile names only real adapters.
+    for name, spec in cli.PROFILES.items():
+        unknown = set(spec.split(",")) - set(feeds.ADAPTERS)
+        assert not unknown, f"profile {name} names non-existent adapters: {unknown}"

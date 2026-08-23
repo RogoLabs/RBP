@@ -603,16 +603,56 @@ The specifics stay recoverable from the archived mirror described in
 Two rows carried a **WordPress-plugin-ecosystem CNA named on a core Linux platform
 vulnerability**, surfaced only through distro advisory feeds that such a CNA's scope
 never touches. Item 3's covered-set gate and bulk-reporter rule were built to stop
-exactly this. Both rows now read `unattributed` / `abstain` / `owner_nameable: false`,
-and zero WordPress-ecosystem CNAs are named anywhere in production.
+exactly this.
 
-**Decision: do not notify the two CNAs. Jerry, 2026-08-22.**
+> ### CORRECTION, 2026-08-23. The exposure table below was wrong and the decision rests on it.
+>
+> The sentence that used to stand here, *"Both rows now read `unattributed` /
+> `abstain` / `owner_nameable: false`, and zero WordPress-ecosystem CNAs are named
+> anywhere in production"*, was true of the SITE and false of the DATA BRANCH.
+> Measured directly on `origin/data`:
+>
+> ```
+> resolutions.json  open.CVE-2026-9238.owner  = "Wordfence"   (package: qemu)
+> resolutions.json  open.CVE-2026-16566.owner = "WPScan"      (package: ansible)
+> ```
+>
+> | | recorded below | **actually measured** |
+> |---|---|---|
+> | Window the names were public | ~2h55m | **50.8 hours and counting** |
+> | Commits carrying them | 7 | **43** |
+> | Now | "removed from branch history" | **live at the branch tip** |
+>
+> First appearance `cb77d67`, 2026-08-20T22:29:37Z. Still present at `db1e017`,
+> 2026-08-23T01:20:23Z. The names were never on a rendered page, which is the one
+> line of the original table that holds.
+>
+> Cause: `ResolutionLedger.track` writes the owner under `if cid not in open`, so
+> the FIRST name wins permanently. Both rows were recorded on 2026-08-20, the gate
+> that now abstains on them was added afterwards, and nothing ever revisits an
+> existing entry. `publish.check` could not see it: its content rule globs
+> `snapshots/*/*.json`, so root-level files were exempt by construction.
+>
+> **The leak is closed** as of the de-naming commit: staging strips every
+> attribution field from every staged file, and `publish.check` now walks the whole
+> tree. That fixes the future. It does not un-publish 43 commits of git history.
+>
+> **The decision below is therefore reopened, and it is Jerry's to make.** Section
+> 8c set its own trigger: *"If that residual is ever judged to outweigh the above,
+> notifying becomes defensible and this decision should be revisited."* A 50.8-hour
+> live window across 43 public commits is a different fact pattern from a 2h55m one
+> that was described as already removed. Two things follow, neither of them mine to
+> decide: whether to notify Wordfence and WPScan, and whether to re-root the data
+> branch to drop the history. **No history has been rewritten.**
 
-Measured exposure, which is what the decision turns on:
+**Decision as originally recorded: do not notify the two CNAs. Jerry, 2026-08-22.**
+**Status: REOPENED 2026-08-23 on the corrected exposure figures above.**
+
+Exposure as originally recorded, retained so the correction has something to point at:
 
 | | |
 |---|---|
-| Window the names were public | **~2h55m**, across 7 commits |
+| Window the names were public | ~2h55m, across 7 commits |
 | Served by rbptracker.org | **No.** Never a page; the ungated file was git-branch only |
 | Repo reach in that window | 0 stars, 0 forks, repo under 3 hours old |
 | Now | removed from branch history; reachable only by exact blob SHA |
@@ -678,6 +718,62 @@ top-50 reported alongside. Only the profile is currently true. The denominator i
 recounted from the corpus every run, so the percentage is trended over a moving base and
 will shift overnight on 1 January when the year window rolls. A pinned roster is a
 prerequisite for treating any coverage figure as progress rather than as weather.
+
+## 8e. Panel decision: rendering in CI (2026-08-23)
+
+A four-persona panel was asked how CI should cover the half of accessibility that
+genuinely needs layout: horizontal overflow at a given viewport, and the 768px
+breakpoint collision. Recorded here because the decision is not implemented yet
+and should not be lost.
+
+**Decision: a browser on the COMMIT path only. Nothing new on the publish path.**
+
+The panel's own investigation is the reason. A reviewer served the built site and
+measured it, and found that the review's proposed assertion would not have caught
+the review's own defect: at 375px the card layout IS correctly active and the
+document still overflowed 926px, because `style.css` sets `white-space: nowrap`
+at 768px and the card layout never reset it. And at exactly 768px, where the
+collision is worst, `scrollWidth - clientWidth` is **0** and the check passes,
+because `.tablewrap { overflow-x: auto }` absorbs the overflow before the
+document sees it while hiding 74% of every row behind a nested scrollbar.
+
+So `scrollWidth <= clientWidth` is necessary and not sufficient, and the check
+that does catch 768 is a computed-style agreement check: at every width at or
+below the mobile boundary, `thead` being `display: none` must agree with `td` not
+being `nowrap`. Producing that value means running the cascade, specificity
+resolution and media-query evaluation, which is the definition of a browser.
+Option (b), a CSS parser, was rejected on measurement rather than on taste.
+
+**The shape, so it cannot become a false-green or an outage:**
+
+- a new `render` job, `needs: test`, on push and pull_request only, NOT in
+  `deploy.needs`, so there is no skip cascade and the publish path is unchanged
+- `render` added to `notify.needs`, so a failure is reported
+- Playwright pinned in a separate `requirements-browser.txt`, never in
+  `requirements-dev.txt`, so `pytest tests/ -q --ignore=tests/render` stays the
+  offline default at about 11 seconds
+- widths parsed from the `@media` preludes in both stylesheets as {b-1, b, b+1}
+  plus 320/375/1280, never typed
+- the served `?v=` hash asserted against the file on disk, because two reviewers
+  silently measured the wrong document
+- focus rings exercised by real Tab traversal, since `.focus()` does not arm
+  `:focus-visible`
+
+**Given up, explicitly:** per-tick browser coverage. Three experiments agreed
+that after `overflow-wrap: anywhere` and `min-width: 0`, document overflow no
+longer varies with feed data, so a scheduled tick has nothing new to render. If
+that is wrong the failure is silent, and the fix is to move `render` into
+`deploy.needs` with the notify wiring already in place.
+
+**Also given up:** detecting the `render` job being deleted rather than failing.
+Branch protection sees red, not absent. The panel refused the cross-branch hash
+handshake proposed to close that, on the grounds that it puts a new false-green
+surface on the publication path to guard against an edit only the maintainer can
+make.
+
+**Status: NOT IMPLEMENTED.** The contrast half needs no browser and is done and
+covered. The layout half is currently asserted structurally, which is weaker than
+measuring a real viewport and is labelled as such in `tests/test_a11y.py`.
 
 ## 9. Still open
 

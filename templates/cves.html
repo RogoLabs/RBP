@@ -21,13 +21,9 @@
     <option value="{{ rule_must }}">{{ rule_must }} MUST</option>
     <option value="{{ rule_should }}">{{ rule_should }} SHOULD</option>
   </select>
-  <label for="owner">Owner</label>
-  <select id="owner">
-    <option value="">any</option>
-    <option value="__named">named</option>
-    <option value="__unattributed">unattributed</option>
-    {% for c in cnas %}<option value="{{ c.cna }}">{{ c.cna }}</option>{% endfor %}
-  </select>
+  {# The Owner filter and the Inferred owner column were here. v1 publishes no
+     attribution, so there is nothing to filter on and no per-CNA page to link
+     to. See site.NAMING_ENABLED. #}
   <label for="minage">Min days</label>
   <select id="minage">
     <option value="">any</option>
@@ -57,10 +53,10 @@
        caveat block below it. #}
     <caption>
       {{ summary.total | commafy }} reserved CVE IDs referenced publicly for at least
-      {{ summary.get('min_age_days', 7) }} days with no published record. Owner is
-      <strong>inferred</strong>, never authoritative, and is absent on rows where the
-      inference abstained. Days public is a floor on how long an ID has been public,
-      not a measure of lateness.
+      {{ summary.get('min_age_days', 7) }} days with no published record.
+      <strong>This site does not say which CNA reserved any of them.</strong> Days
+      public is a floor on how long an ID has been public, not a measure of
+      lateness.
     </caption>
     <thead>
       <tr>
@@ -71,7 +67,6 @@
         <th scope="col" data-sort="cve_id"><button type="button" class="sortbtn">CVE ID</button></th>
         <th scope="col" class="num" data-sort="days_public" aria-sort="descending"><button type="button" class="sortbtn">Days public</button></th>
         <th scope="col" data-sort="rule"><button type="button" class="sortbtn">Rule</button></th>
-        <th scope="col" data-sort="owner"><button type="button" class="sortbtn">Inferred owner</button></th>
         <th scope="col" data-sort="package"><button type="button" class="sortbtn">Package</button></th>
         <th scope="col" class="num" data-sort="indep_sources"><button type="button" class="sortbtn">Independent sources</button></th>
         <th scope="col" data-sort="sources"><button type="button" class="sortbtn">Sources</button></th>
@@ -90,12 +85,11 @@
     never how overdue it is.
   </p>
   <p class="mb-0">
-    <strong>Owner is inferred and gated four ways.</strong> A CNA is named only where the
-    three published CVE IDs either side of the reserved one all share one assigner, AND
-    this site actually reads that CNA's advisories, AND no independent product signal
-    contradicts it, AND the CNA is not a bulk reporter that rarely owns a
-    distro-shipped component. Rows failing any of those say <em>unattributed</em> rather
-    than guessing.
+    <strong>No row here names a CNA.</strong> The reservation endpoint returns
+    <span class="mono">[REDACTED]</span> for this population, and the reconstruction that
+    could often fill it in is run and measured but not published: its live sample is too
+    small to put a name on a public row. That is a deliberate limit, and
+    <a href="method.html">the method page</a> gives the measurement behind it.
   </p>
   <p class="mb-0">
     <strong>Most named rows rest on a single source.</strong> The headline core requires
@@ -128,7 +122,6 @@
   var els = {
     q: document.getElementById('q'),
     rule: document.getElementById('rule'),
-    owner: document.getElementById('owner'),
     minage: document.getElementById('minage')
   };
   var sortKey = 'days_public', sortDir = -1;
@@ -156,34 +149,14 @@
       (r.rule_basis ? ', ' + esc(r.rule_basis).replace(/-/g, ' ') : '') + '</span>';
   }
 
-  function ownerCell(r) {
-    if (!r.owner || r.owner === 'unattributed') {
-      return '<td class="unattributed" data-label="Inferred owner">unattributed</td>';
-    }
-    var tier = r.owner_tier === 'block-corroborated' ? 'chip-corrob' : 'chip-block';
-    var label = r.owner_tier === 'block-corroborated' ? 'corroborated' : 'block';
-    return '<td data-label="Inferred owner"><a href="cna/' + esc(slug(r.owner)) + '.html">' + esc(r.owner) + '</a> ' +
-      '<span class="chip ' + tier + '">' + label + '</span></td>';
-  }
-
-  function slug(n) {
-    return String(n || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '') || 'unknown';
-  }
-
   function matches(r) {
     var q = els.q.value.trim().toLowerCase();
     if (q) {
-      var hay = [r.cve_id, r.package, r.vendor, r.description, r.owner, r.sources]
+      var hay = [r.cve_id, r.package, r.vendor, r.description, r.sources]
         .join(' ').toLowerCase();
       if (hay.indexOf(q) === -1) return false;
     }
     if (els.rule.value && r.rule !== els.rule.value) return false;
-    var named = r.owner && r.owner !== 'unattributed';
-    if (els.owner.value === '__named' && !named) return false;
-    if (els.owner.value === '__unattributed' && named) return false;
-    if (els.owner.value && els.owner.value.indexOf('__') !== 0 &&
-        r.owner !== els.owner.value) return false;
     if (els.minage.value && !(r.days_public >= +els.minage.value)) return false;
     return true;
   }
@@ -212,7 +185,6 @@
         '<td class="id" data-label="CVE ID"><a href="' + esc(r.advisory_url) + '">' + esc(r.cve_id) + '</a></td>' +
         '<td class="num" data-label="Days public">' + esc(r.days_public) + late + '</td>' +
         '<td data-label="Rule">' + ruleChip(r) + '</td>' +
-        ownerCell(r) +
         '<td data-label="Package">' + esc(r.package || r.vendor || '') + '</td>' +
         // The honest count. feed_count treats GHSA and its own OSV mirror as two.
         '<td class="num" data-label="Independent sources">' + esc(r.indep_sources == null ? r.feed_count : r.indep_sources) +

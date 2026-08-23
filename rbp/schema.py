@@ -30,6 +30,64 @@ templates.
 from __future__ import annotations
 
 import datetime as dt
+import os
+import subprocess
+
+
+# BUILD PROVENANCE. Every artefact says which code produced it.
+#
+# Review item 1, and it is item 1 because nothing else can be verified without
+# it. A fifth of the adversarial review's blocker-grade output was spent on
+# defects that did not exist, filed against a local build produced by an older
+# revision and refuted by four reviewers who fetched origin/data and recomputed.
+# The same thing happened during the de-naming: a test compared a freshly changed
+# column contract against a site/ directory built by earlier code, and the
+# failure looked like a bug in the contract.
+#
+# The failure mode is not "the artefact is wrong". It is "nobody can tell which
+# code the artefact came from", which makes every verdict about the project
+# provisional, including the favourable ones.
+_UNKNOWN_COMMIT = "unknown"
+
+
+def source_commit():
+    """The commit this build came from, or 'unknown'.
+
+    Order matters. GITHUB_SHA is authoritative in Actions and is present even
+    when the checkout is shallow or detached. `git rev-parse` is the local
+    fallback. Neither is allowed to raise: a build must not fail because it
+    cannot describe itself, it must say so.
+    """
+    sha = (os.environ.get("GITHUB_SHA") or "").strip()
+    if sha:
+        return sha[:12]
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"],
+                             capture_output=True, text=True, timeout=10,
+                             cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if out.returncode == 0 and out.stdout.strip():
+            return out.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return _UNKNOWN_COMMIT
+
+
+def source_dirty():
+    """True when the working tree differs from the commit above.
+
+    A dirty build is the one that produced the stale-artefact confusion, so the
+    artefact says so rather than implying the commit describes it fully. Always
+    False under Actions, where the tree is a clean checkout.
+    """
+    if os.environ.get("GITHUB_SHA"):
+        return False
+    try:
+        out = subprocess.run(["git", "status", "--porcelain"],
+                             capture_output=True, text=True, timeout=10,
+                             cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        return out.returncode == 0 and bool(out.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 # Bump on ANY published key rename, removal, or meaning change. Additive fields
 # do not require a bump; a consumer pinning a major version must keep working.
@@ -37,7 +95,10 @@ import datetime as dt
 # 1: first versioned artefact. Before this there was no version at all, which is
 #    why the value starts here rather than at 0: a consumer that finds no
 #    schema_version is reading a pre-contract artefact and should refuse it.
-SCHEMA_VERSION = 1
+# v2, 2026-08-23: the owner columns were removed. A consumer pinned to v1 and
+# indexing by position must fail loudly rather than silently read `sources` where
+# it expected `owner`, which is the entire reason this constant exists.
+SCHEMA_VERSION = 2
 
 # The one column contract. Order is part of it: a consumer indexing by position
 # breaks silently on a reorder, so this list is the order and it does not change
@@ -56,9 +117,18 @@ COLUMNS = [
     # the rule call, and its inputs
     "rule", "rule_strength", "rule_certainty", "rule_basis",
     "self_disclosed", "own_feed_date", "earliest_other_date",
-    # attribution, and how much to trust it
-    "owner", "owner_nameable", "owner_tier", "owner_method",
-    "owner_contested", "veto_evaluated",
+    # attribution: ONE field, and it is always False under v1.
+    #
+    # `owner`, `owner_tier`, `owner_method` and `owner_contested` were here.
+    # They are gone rather than emptied, because a column that is present and
+    # always null invites a consumer to build against it and wait for it to
+    # fill, and because an always-empty `owner` column in a published CSV is a
+    # promise the site is not making. `owner_nameable` survives alone so that a
+    # consumer has one documented field to branch on, and its documented value
+    # is False.
+    "owner_nameable", "veto_evaluated",
+    # WHICH CLOCK, and how long it has run. See clock._ORIGIN_KIND.
+    "clock_origin", "advisory_date", "advisory_days_public",
     # provenance
     "sources", "feed_count", "indep_sources", "single_origin", "refs",
     "advisory_url",
@@ -110,23 +180,28 @@ FIELDS = {
     "earliest_other_date": ("date|null", "null",
                             "Earliest date from any other feed. With own_feed_date, "
                             "these two are the entire input to the rule call."),
-    "owner": ("string|null", "null",
-              "Inferred owning CNA short name, or null where the gate did not "
-              "pass. NEVER a placeholder string. Inferred, not authoritative: the "
-              "reservation endpoint redacts the real value."),
     "owner_nameable": ("boolean", "never absent",
-                       "Whether this site is willing to publish the owner. The "
-                       "marker to branch on, not the emptiness of `owner`."),
-    "owner_tier": ("string", "never absent",
-                   "'block', 'block-corroborated', 'abstain' or 'suppressed'."),
-    "owner_method": ("string", "never absent",
-                     "How the name was reached or why it was withheld. This is the "
-                     "field that distinguishes a plausibility-checked name from an "
-                     "unchecked one."),
-    "owner_contested": ("boolean", "never absent",
-                        "An independent product signal disagreed with the inferred "
-                        "owner. Read with veto_evaluated: false here can mean "
-                        "'agreed' or 'no opinion'."),
+                       "ALWAYS false in v1: this site publishes no attribution. "
+                       "The one field to branch on. `owner`, `owner_tier`, "
+                       "`owner_method` and `owner_contested` were removed in "
+                       "schema v2 rather than published as permanent nulls."),
+    "clock_origin": ("string", "never absent",
+                     "'advisory' if any feed that referenced this ID publishes "
+                     "actual advisories, otherwise 'tracker'. The 72-hour "
+                     "expectation runs from Public Disclosure, and a "
+                     "distribution tracker entry is a public source under the "
+                     "RBP definition but is NOT a Public Disclosure under "
+                     "4.5.1.4 or 4.5.1.6. past_expectation is false on every "
+                     "tracker-only row for that reason."),
+    "advisory_date": ("date|null", "null",
+                      "Earliest date from an advisory feed. null on "
+                      "tracker-only rows. This, not public_date, is what may "
+                      "start the 72-hour clock."),
+    "advisory_days_public": ("integer|null", "null",
+                             "Days since advisory_date. null on tracker-only "
+                             "rows, where days_public is still reported: "
+                             "'referenced for N days' is true of a tracker "
+                             "entry, 'N days late' is not."),
     "veto_evaluated": ("boolean", "never absent",
                        "Whether a product-map verdict existed to contest the name "
                        "at all. false means silence, not agreement."),
@@ -170,6 +245,9 @@ def envelope(rows, summary, *, launched, snapshot_date, kind="backlog"):
     return {
         "schema_version": SCHEMA_VERSION,
         "kind": kind,
+        # Which code produced this file. See source_commit().
+        "source_commit": source_commit(),
+        "source_dirty": source_dirty(),
         "generated_at": summary.get("generated_at")
                         or dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "snapshot_date": snapshot_date,
@@ -206,6 +284,12 @@ def envelope(rows, summary, *, launched, snapshot_date, kind="backlog"):
         },
         "degraded": bool(summary.get("degraded")),
         "degraded_reasons": summary.get("degraded_reasons") or [],
+        # Standing limits that fire every run by design, published separately
+        # from `degraded` so a consumer can tell "this run was worse than usual"
+        # from "this feed always stops at a page cap". The page and this payload
+        # disagreed about `degraded` on the same build; tests/test_end_to_end.py
+        # now asserts they cannot.
+        "limitations": summary.get("limitations") or [],
         "columns": COLUMNS,
         "rows": rows,
     }

@@ -76,12 +76,21 @@ https://rbptracker.org/data/archive.json        <em>the index of what exists</em
         <em>down</em> later. This project will not promise permanence it is unwilling
         to honour at the expense of someone asking to be delisted, and an archive that
         kept rows a CNA had contested would become the reason the withhold did not
-        work. Retention also prunes: the current snapshot, the previous one, and one
-        per month survive.
+        work.
+      </p>
+      <p class="mb-0 mt-2">
+        <strong>Retention is {{ keep_snapshots }} days, then one per month, forever.</strong>
+        A dated URL resolves for {{ keep_snapshots }} days from the day it was written.
+        After that the exact date stops resolving unless it was the last snapshot of
+        its month, which does survive indefinitely.
+        <a href="data/archive.json">The index</a> always lists what exists, so a
+        consumer can check rather than guess. This was two days until 2026-08-23,
+        which was shorter than the time it takes to write anything citing it.
       </p>
     </div>
     {% if archive %}
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Published data files, table 1, scrollable">
       <table class="rbp" style="min-width:0">
         <caption>Snapshots currently resolvable. Rows can decrease on a withhold.</caption>
         <thead>
@@ -131,7 +140,8 @@ https://rbptracker.org/data/archive.json        <em>the index of what exists</em
       never a placeholder</strong>, and
       <span class="mono">owner_nameable</span> is the field to branch on.
     </p>
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Published data files, table 2, scrollable">
       <table class="rbp" style="min-width:0">
         <thead>
           <tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">When absent</th><th scope="col">Meaning</th></tr>
@@ -166,7 +176,7 @@ https://rbptracker.org/data/archive.json        <em>the index of what exists</em
     </p>
     <p class="mb-0">
       <strong>Reporting a row.</strong> To have one withheld,
-      <a href="https://github.com/RogoLabs/RBP/issues/new?labels=withhold&title=Withhold%20CVE-">open a withhold request</a> giving the CVE ID and
+      <a href="https://github.com/RogoLabs/RBP/issues/new?template=withhold.yml">open a withhold request</a> giving the CVE ID and
       nothing else, no reason needed; it is withheld on the next build and leaves every
       file on this page. Prefer not to post publicly?
       <a href="https://github.com/RogoLabs/RBP/security/advisories/new">Report privately</a> or email

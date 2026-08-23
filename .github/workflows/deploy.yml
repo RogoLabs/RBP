@@ -4,7 +4,12 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 */6 * * *'
+    # NOT minute 0. GitHub's scheduler is heavily oversubscribed on the hour and
+    # delivered ticks are chronically late there: 06:47Z and 12:50Z on
+    # 2026-08-22, against a schedule asking for 06:00 and 12:00. Two ticks on
+    # 2026-08-21 produced nothing at all. Minute 17 is unremarkable and much
+    # less contended.
+    - cron: '17 */6 * * *'
   workflow_dispatch:
     inputs:
       profile:
@@ -199,6 +204,16 @@ jobs:
           else
             echo "no grader ledger yet, starting fresh"
           fi
+          # The run ledger, so /method can evidence the cadence it claims rather
+          # than asserting it. Written by the deploy job of PREVIOUS runs, so it
+          # is always one run behind, which is correct: this run has not
+          # delivered yet.
+          if [ -f .state/runs.jsonl ]; then
+            cp .state/runs.jsonl data/runs.jsonl
+            echo "run ledger: $(wc -l < data/runs.jsonl) delivered tick(s) recorded"
+          else
+            echo "no run ledger yet"
+          fi
           if [ -f .state/resolutions.json ]; then
             cp .state/resolutions.json data/resolutions.json
             python -c "import json;d=json.load(open('data/resolutions.json'));print('resolution ledger:',len(d.get('resolved',[])),'resolved,',len(d.get('open',{})),'tracked')"
@@ -334,8 +349,20 @@ jobs:
   # closed automatically on the next success so the issue list reflects the current
   # state rather than a history of every wobble.
   notify:
-    needs: [test, build]
-    if: always() && (needs.test.result == 'failure' || needs.build.result == 'failure')
+    # `deploy` was absent here, so a failed actions/deploy-pages@v4 opened no
+    # issue at all: the publication step could fail and the only alarm the
+    # project has stayed silent. `timed_out` is matched as well as `failure`,
+    # because a deploy that hangs past its 10-minute limit is the same outage.
+    #
+    # Correction from the review's own cross-examination, recorded so nobody
+    # adds it back: matching `cancelled` cannot report a run evicted at queue
+    # time, because this job is INSIDE the cancelled run. Only an external
+    # heartbeat covers that, and that is the dead-man's switch in runs.jsonl.
+    needs: [test, build, deploy]
+    if: >-
+      always() && (needs.test.result == 'failure' || needs.build.result == 'failure'
+      || needs.deploy.result == 'failure' || needs.test.result == 'timed_out'
+      || needs.build.result == 'timed_out' || needs.deploy.result == 'timed_out')
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -379,8 +406,16 @@ jobs:
   # rather than a log of every wobble. Runs on success only, and does nothing when
   # there is no open failure issue.
   recover:
-    needs: [test, build]
-    if: needs.test.result == 'success' && needs.build.result == 'success'
+    # Gated on DEPLOY, not just build. This closed the failure issue
+    # unconditionally on any green test+build, including a dry run, a paused
+    # run, and a run whose deploy had just failed, none of which published
+    # anything. The issue body promises "This issue closes itself on the next
+    # successful run", so it was closing on runs that were not successful in the
+    # only sense a reader cares about.
+    needs: [test, build, deploy]
+    if: >-
+      needs.test.result == 'success' && needs.build.result == 'success'
+      && needs.deploy.result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -412,9 +447,58 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      # For the run ledger below, which appends to the data branch.
+      contents: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      # THE RUN LEDGER. Appended as the last step of DEPLOY, not of build.
+      #
+      # Nothing recorded what was owed. Snapshots are per-date and overwritten
+      # four times a day; the failure issue is the only artefact recording a
+      # failed tick and `recover` closes it on the next success; and the
+      # data-branch git log was the only surviving evidence that two scheduled
+      # ticks on 2026-08-21 produced nothing at all.
+      #
+      # In deploy rather than build because a build that never published is not
+      # a delivered tick, and this file is what /method cites when it claims a
+      # six-hourly cadence. A claim about cadence needs evidence of cadence.
+      #
+      # continue-on-error: a bookkeeping append must never be the reason a
+      # successful publication reports failure.
+      - name: Append to the run ledger
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RBP_CRON: ${{ github.event.schedule }}
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          git init -q ledger && cd ledger
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          git -c protocol.version=2 fetch -q --depth=1 origin data || true
+          git checkout -q -B data FETCH_HEAD 2>/dev/null || git checkout -q -B data
+          python3 - <<'PY' >> runs.jsonl
+          import json, os, datetime
+          print(json.dumps({
+              "at": datetime.datetime.now(datetime.timezone.utc)
+                    .isoformat(timespec="seconds"),
+              "run_id": os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "event": os.environ.get("GITHUB_EVENT_NAME"),
+              "cron": os.environ.get("RBP_CRON") or "",
+              "sha": (os.environ.get("GITHUB_SHA") or "")[:12],
+              "conclusion": "success",
+              "page_url": os.environ.get("PAGE_URL") or "",
+          }))
+          PY
+          git config user.name "rbp-bot"
+          git config user.email "noreply@github.com"
+          git add runs.jsonl
+          git commit -qm "runs: $GITHUB_RUN_ID" || exit 0
+          git push -q origin data
+

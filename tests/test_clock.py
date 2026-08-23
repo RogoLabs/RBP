@@ -24,7 +24,7 @@ COLS = ["cve_id", "state", "assigner", "date_published", "vendor", "product"]
 TODAY = "2026-08-20"
 
 
-def row(cve, days, owner=None, self_disclosed=False, public=None):
+def row(cve, days, owner=None, self_disclosed=False, public=None, source=None):
     """A backlog row.
 
     days=None means an undated feed, so public_date is cleared too: leaving a
@@ -35,11 +35,17 @@ def row(cve, days, owner=None, self_disclosed=False, public=None):
     in `sources`, because annotate derives the flag rather than trusting it. A
     row asserting the flag directly would not exercise the real path.
     """
+    src = source or ("redhat" if self_disclosed else "debian")
+    pub = public if public is not None else ("2026-01-01" if days is not None else "")
     return {"cve_id": cve, "days_public": days,
             "owner": owner or ("redhat" if self_disclosed else None),
-            "sources": "redhat" if self_disclosed else "debian",
-            "public_date": public if public is not None
-            else ("2026-01-01" if days is not None else "")}
+            "sources": src,
+            # Per-source dates, which the advisory clock reads. Without these
+            # every row looks tracker-only and no row can ever be past the
+            # 72-hour expectation, which is a true statement about a tracker
+            # entry and a useless fixture for testing the expectation.
+            "dates": {src: pub} if pub else {},
+            "public_date": pub}
 
 
 def corpus(rows):
@@ -51,11 +57,56 @@ def corpus(rows):
 # --------------------------------------------------------------------------
 
 def test_past_expectation_is_strictly_beyond_72h():
-    rows = [row("CVE-2026-1", 2), row("CVE-2026-2", 3), row("CVE-2026-3", 4)]
+    # `alas` is an ADVISORY feed. On a tracker source none of these rows would be
+    # past the expectation at any age, because a tracker entry is a public source
+    # under the RBP definition and not a Public Disclosure under 4.5.1.4/4.5.1.6.
+    rows = [row("CVE-2026-1", 2, source="alas"), row("CVE-2026-2", 3, source="alas"),
+            row("CVE-2026-3", 4, source="alas")]
     clock.annotate(rows, TODAY)
     assert [r["hours_public"] for r in rows] == [48, 72, 96]
     # 72h exactly is not yet past the expectation.
     assert [r["past_expectation"] for r in rows] == [False, False, True]
+
+
+def test_a_tracker_only_row_is_never_past_the_expectation():
+    """The defect this split exists to fix: past_expectation came out TRUE on
+    522 of 522 published rows, because it ran off public_date, which is the
+    earliest date from ANY source including distribution trackers. A claim
+    asserted on every single row does no discriminating work while carrying all
+    of the accusatory weight.
+
+    days_public is unchanged: "referenced for 50 days" is true of a tracker entry
+    and the floor framing survives it. What does not survive is calling that
+    figure late."""
+    r = row("CVE-2026-1", 50, source="debian")
+    clock.annotate([r], TODAY)
+    assert r["days_public"] == 50, "the age is still reported"
+    assert r["clock_origin"] == "tracker"
+    assert r["past_expectation"] is False
+    assert r["advisory_days_public"] is None
+
+
+def test_an_unknown_feed_does_not_start_the_clock():
+    """A new adapter must not silently begin asserting lateness by being absent
+    from the origin map."""
+    r = row("CVE-2026-1", 50, source="somenewfeed")
+    clock.annotate([r], TODAY)
+    assert clock.origin_kind("somenewfeed") == "unknown"
+    assert r["past_expectation"] is False
+
+
+def test_the_earliest_ADVISORY_date_starts_the_clock_not_the_earliest_date():
+    """A row seen by a tracker weeks before any advisory must be timed from the
+    advisory."""
+    r = row("CVE-2026-1", 50, source="debian")
+    r["dates"] = {"debian": "2026-01-01", "alas": "2026-08-19"}
+    r["sources"] = "debian,alas"
+    clock.annotate([r], TODAY)
+    assert r["days_public"] == 50, "membership still counts from the tracker"
+    assert r["clock_origin"] == "advisory"
+    assert r["advisory_date"] == "2026-08-19"
+    assert r["advisory_days_public"] == 1
+    assert r["past_expectation"] is False, "1 day is inside the 72-hour window"
 
 
 def test_undated_rows_carry_no_clock_but_are_not_dropped():
@@ -276,8 +327,12 @@ def test_time_to_publish_reports_its_own_n(tmp_path):
 # --------------------------------------------------------------------------
 
 def test_summary_counts_and_buckets():
-    rows = [row("CVE-2026-1", 2), row("CVE-2026-2", 10), row("CVE-2026-3", 200),
-            row("CVE-2026-4", None),
+    # ADVISORY sources throughout, except the deliberate tracker row below.
+    # On tracker sources past_expectation is always False and this test would
+    # assert nothing about the 72-hour boundary.
+    rows = [row("CVE-2026-1", 2, source="alas"), row("CVE-2026-2", 10, source="alas"),
+            row("CVE-2026-3", 200, source="alas"),
+            row("CVE-2026-4", None, source="alas"),
             row("CVE-2026-5", 40, owner="redhat", self_disclosed=True)]
     clock.annotate(rows, TODAY)
     s = clock.summary(rows, [{"cna": "acme"}], TODAY)
@@ -307,7 +362,8 @@ def test_annotate_derives_the_age_itself(tmp_path):
     later in the pipeline, so every row came out undated while the report showed
     correct ages. The clock module owns the clock."""
     rows = [{"cve_id": "CVE-2026-1", "public_date": "2026-07-01",
-             "self_disclosed": False}]
+             "self_disclosed": False, "sources": "alas",
+             "dates": {"alas": "2026-07-01"}}]
     clock.annotate(rows, TODAY)
     assert rows[0]["days_public"] == 50
     assert rows[0]["clock_known"] is True

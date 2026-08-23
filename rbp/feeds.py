@@ -35,7 +35,21 @@ _CHUNK = 1 << 20
 # fewer rows: counts are a floor, and a silent shrink reads as improvement.
 FEED_HEALTH = {}
 
-OK, TRUNCATED, FAILED = "ok", "truncated", "failed"
+# FOUR states, not three. `capped` is the one this file was missing.
+#
+# A configured page cap fires on EVERY run by design: ubuntu's 200-page cap
+# always fires, and ghsa's 40-page cap always fires. Recording those as
+# `truncated` made `degraded` permanently true, so base.html rendered "This run
+# is incomplete ... not comparable to the previous run" on every page of every
+# run, three hundred lines above a card that compares this run to the previous
+# one. A warning that is always on is not a warning; it is furniture, and it
+# trains a reader to ignore the banner that matters.
+#
+#   capped     a known, configured limit was reached. Expected, standing,
+#              disclosed on /method as a permanent caveat. NOT a degraded run.
+#   truncated  the feed stopped for a reason that is not a configured cap.
+#              Unexpected. Degrades the run.
+OK, TRUNCATED, FAILED, CAPPED = "ok", "truncated", "failed", "capped"
 
 
 def reset_health():
@@ -58,7 +72,12 @@ def record_feed(name, status, detail="", rows=None):
     elif status is False:
         status = FAILED
     FEED_HEALTH[name] = {"status": status, "detail": detail, "rows": rows,
-                         "ok": status == OK, "truncated": status == TRUNCATED}
+                         "ok": status == OK,
+                         # Both incomplete-shaped states answer True here, so a
+                         # consumer asking "did this feed read everything" still
+                         # gets the right answer without knowing about caps.
+                         "truncated": status in (TRUNCATED, CAPPED),
+                         "capped": status == CAPPED}
 
 
 def health_summary():
@@ -82,8 +101,10 @@ def health_summary():
                 if v["status"] == FAILED]
     truncated = [f"{k}: {v['detail']}" for k, v in FEED_HEALTH.items()
                  if v["status"] == TRUNCATED]
+    capped = [f"{k}: {v['detail']}" for k, v in FEED_HEALTH.items()
+              if v["status"] == CAPPED]
     top = [k for k in FEED_HEALTH if ":" not in k]
-    return failures, truncated, len(top)
+    return failures, truncated, len(top), capped
 
 
 # A feed returning far fewer ids than last run is the silent-shrink signature,
@@ -97,6 +118,11 @@ def health_summary():
 # while others grow can leave the total looking merely flat.
 MAGNITUDE_DROP = 0.4
 
+# A single sub-fetch (one OSV ecosystem) is noisier than a whole feed, so it is
+# reported only on a clear collapse. Still far below "invisible", which is what
+# skipping parts entirely amounted to.
+PART_DROP = 0.7
+
 
 def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
     """Feeds whose id count fell sharply since the previous run.
@@ -109,17 +135,42 @@ def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
     `record_feed` has carried a `rows` count all along, and it reaches summary.json.
     The work was comparing two numbers.
     """
+    def _cmp(name, was, now, thr):
+        if not isinstance(was, int) or not isinstance(now, int) or was <= 0:
+            return None
+        if now < was * (1 - thr):
+            pct = round(100 * (was - now) / was)
+            return f"{name}: {was:,} -> {now:,} ids ({pct}% fewer)"
+        return None
+
     out = []
     for name, cur in sorted((current or {}).items()):
         if ":" in name:
-            continue                      # sub-fetches roll up to their parent
-        was = ((previous or {}).get(name) or {}).get("rows")
-        now = cur.get("rows")
-        if not isinstance(was, int) or not isinstance(now, int) or was <= 0:
-            continue
-        if now < was * (1 - threshold):
-            pct = round(100 * (was - now) / was)
-            out.append(f"{name}: {was:,} -> {now:,} ids ({pct}% fewer)")
+            continue                      # raw-shape sub-fetch; handled below
+        prev_feed = (previous or {}).get(name) or {}
+        hit = _cmp(name, prev_feed.get("rows"), cur.get("rows"), threshold)
+        if hit:
+            out.append(hit)
+
+        # AND EACH PART, which this deliberately skipped.
+        #
+        # The rationale was that "osv:npm rolls up to osv, comparing both
+        # double-counts one feed and lets a single ecosystem's normal variation
+        # trip the guard". The first half is true and the second is the wrong
+        # trade: osv:npm going 5,000 -> 100 while the osv TOTAL stays flat means
+        # another ecosystem grew enough to mask it, which is precisely the
+        # silent-shrink signature this function exists to catch, arriving in the
+        # one shape it could not see. npm is about 25% of osv's ids.
+        #
+        # Compared at a LOOSER threshold than the parent, because a single
+        # ecosystem genuinely is noisier than a whole feed, so the guard reports
+        # a part only when it has clearly collapsed rather than merely dipped.
+        for child, cv in sorted((cur.get("parts") or {}).items()):
+            pv = ((prev_feed.get("parts") or {}).get(child) or {})
+            hit = _cmp(f"{name}:{child}", pv.get("rows"), cv.get("rows"),
+                       PART_DROP)
+            if hit:
+                out.append(hit)
     return out
 
 
@@ -136,7 +187,12 @@ def health_detail():
     for parent, v in out.items():
         parts = v.get("parts") or {}
         if parts and any(p["status"] != OK for p in parts.values()):
-            worst = FAILED if any(p["status"] == FAILED for p in parts.values()) else TRUNCATED
+            if any(p["status"] == FAILED for p in parts.values()):
+                worst = FAILED
+            elif any(p["status"] == TRUNCATED for p in parts.values()):
+                worst = TRUNCATED
+            else:
+                worst = CAPPED
             # A parent whose sub-fetches degraded is itself degraded, or the
             # top-level number hides the hole.
             if v.get("status") == OK:
@@ -384,7 +440,7 @@ def feed_ubuntu(years, page_cap=200):
         capped = True
     if capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
-        record_feed("ubuntu", TRUNCATED, f"hit the {page_cap}-page cap; rows beyond it were not read")
+        record_feed("ubuntu", CAPPED, f"hit the {page_cap}-page cap; rows beyond it were not read")
     elif ended != "exhausted":
         print(f"  [ubuntu] {ended}", file=sys.stderr)
         record_feed("ubuntu", TRUNCATED, ended)
@@ -415,11 +471,29 @@ def feed_ghsa(years, page_cap=40):
     if token:
         headers["Authorization"] = f"Bearer {token}"
     out, url = [], "https://api.github.com/advisories?per_page=100&sort=published&direction=desc"
+    # Three outcomes, tracked explicitly. This loop reported ONE of them.
+    #
+    # `for _ in range(page_cap)` exhausting is a truncation, twelve lines below
+    # feed_ubuntu which records exactly that, and it recorded nothing. `gather`
+    # then stamped ghsa `ok` with the truncated count, so the live summary read
+    # {status: "ok", detail: "3321 ids"} on a feed that had silently stopped
+    # reading. Worse, a fixed cap returns a roughly CONSTANT count every run, so
+    # compare_magnitudes reads stable truncation as a healthy feed: the one
+    # detector for the failure this project calls intolerable is blind to the
+    # most likely instance of it.
+    #
+    # GHSA sources roughly 300 of 522 rows and the cap bounds that population's
+    # observation window to about 83 days, while distro trackers are observed
+    # over years. That is not merely incomplete, it silently invalidates
+    # cross-CNA comparison, so it has to be visible rather than inferred.
+    ended, pages = "exhausted", 0
     for _ in range(page_cap):
+        pages += 1
         try:
             data, _, hdrs = _get(url, timeout=60, headers=headers)
         except Exception as e:  # noqa: BLE001
             print(f"  [ghsa] stopped: {e}", file=sys.stderr)
+            ended = f"stopped after {pages} page(s): {str(e)[:80]}"
             break
         stop = False
         for a in data or []:
@@ -435,8 +509,16 @@ def feed_ghsa(years, page_cap=40):
                 stop = True
         nxt = [p.split(";")[0].strip("<> ") for p in hdrs.get("Link", "").split(",") if 'rel="next"' in p]
         if stop or not nxt:
+            ended = "reached the requested window"
             break
         url = nxt[0]
+    else:
+        # The loop ran out of iterations rather than out of data, which is
+        # exactly the truncation nothing was reporting.
+        ended = f"hit the {page_cap}-page cap; advisories beyond it were not read"
+    if ended != "reached the requested window":
+        print(f"  [ghsa] {ended}", file=sys.stderr)
+        record_feed("ghsa", CAPPED if "page cap" in ended else TRUNCATED, ended)
     return out
 
 
@@ -493,8 +575,26 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
     return out
 
 
+# OSV publishes 46 ecosystems; this reads 11. The other 35 were scored against the
+# corpus on 2026-08-23 and the result is why the list is not longer: every distro
+# ecosystem (Red Hat, SUSE, Rocky, AlmaLinux, Chainguard, Wolfi, openEuler, Mageia,
+# TuxCare, Azure Linux, Bitnami) contributes ZERO new CNAs at the 3-sighting floor,
+# because the distros are exactly what the other nine feeds already read.
+#
+# `Android` is the one that earned its place: +7 CNAs (Arm, Google_Devices,
+# MediaTek, Unisoc, google_android, imaginationtech, qualcomm) for 620 rows in
+# 0.5s. It also made a hand-written Android Security Bulletin scraper unnecessary,
+# which was the top item on the expansion list until this was measured.
+#
+# `GIT` is deliberately ABSENT despite looking like the biggest win available. A
+# full-text regex over its archive finds 31,366 in-scope CVE IDs and suggested
+# +18 CNAs; the ADAPTER returns 450 rows and +0, because it reads CVE aliases and
+# GIT records carry their CVE references elsewhere. The estimate and the adapter
+# were measuring different things. Anything added here needs the adapter's own
+# number, not a probe's.
 def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
-                                "Maven", "Packagist", "NuGet", "Pub", "Hex")):
+                                "Maven", "Packagist", "NuGet", "Pub", "Hex",
+                                "Android")):
     """OSV.dev bulk per-ecosystem dumps: language-ecosystem breadth. Each record's
     CVE aliases are the referenced IDs; package name is the attribution product."""
     out, seen = [], set()
@@ -539,7 +639,10 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
         except OSError:
             pass
         added = len(out) - n0
-        record_feed(f"osv:{eco}", True, f"{added} ids from {nbytes / 1e6:.0f}MB")
+        # rows= was never passed here, so every OSV part carried rows: null and
+        # compare_magnitudes could not compare it even after it learned to look.
+        record_feed(f"osv:{eco}", True, f"{added} ids from {nbytes / 1e6:.0f}MB",
+                    rows=added)
         print(f"  [osv:{eco}] +{added}", file=sys.stderr)
     return out
 
@@ -764,8 +867,16 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             for v in (d or {}).get("vulnerabilities", []):
                 cid = v.get("cve", "")
                 if cid and _year(cid) in years:
+                    # source_ref carries publisher, tracking id AND the advisory
+                    # URL. Without the URL, report._u had no csaf branch to write
+                    # and every CSAF row fell through to
+                    # cve.org/CVERecord?id=<id>, which renders NOTHING for a
+                    # RESERVED ID: the row's only evidence link disproved it.
+                    # The publisher is separated by a tab so a name containing a
+                    # colon ("Foo Inc.: PSIRT") cannot corrupt the split.
                     rows.append({"cve_id": cid, "source": "csaf",
-                                 "source_ref": f"{pub}:{tid}", "public_date": _d(rel),
+                                 "source_ref": f"{pub}\t{tid}\t{href}",
+                                 "public_date": _d(rel),
                                  "product": "", "description": (v.get("title") or doc.get("title") or "")[:400]})
             return rows
 
@@ -843,10 +954,77 @@ def feed_arch(years):
     return out
 
 
+_SMR_RE = re.compile(r"SMR[\s-]+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[\s-]+(20\d\d)",
+                     re.I)
+_SMR_MONTHS = {m: i + 1 for i, m in enumerate(
+    ["jan", "feb", "mar", "apr", "may", "jun",
+     "jul", "aug", "sep", "oct", "nov", "dec"])}
+
+
+def feed_samsung(years, url="https://security.samsungmobile.com/securityUpdate.smsb"):
+    """Samsung Mobile Security Maintenance Release bulletins.
+
+    Added to close the launch gate: SamsungMobile is a top-50 CNA by volume and
+    was the last one under the 3-sighting floor. Measured before writing a line
+    of it, which is the rule this project learned the hard way: a full-text probe
+    of OSV's GIT ecosystem predicted +18 CNAs and the adapter delivered +0,
+    because the probe and the adapter were reading different fields. This page
+    yields 72 SamsungMobile sightings and takes top-50 coverage from 39 to 40.
+
+    ONE PAGE, MANY MONTHS. The bulletin index carries every SMR back several
+    years in one document, split by "SMR <Mon>-<Year>" headings, so the whole
+    feed is a single fetch and the date has to come from the heading a CVE sits
+    under rather than from the response.
+
+    Most of the CVEs here are Google's, applied from the Android Security
+    Bulletin, and those already arrive through OSV's Android ecosystem. That is
+    not a reason to skip them: a second independent origin is what moves a row
+    into the corroborated headline, and Samsung publishing a fix is a different
+    public event from Google publishing one.
+    """
+    try:
+        html = _get_text(url, timeout=60)
+    except Exception as e:  # noqa: BLE001
+        record_feed("samsung", False, str(e)[:120])
+        print(f"  [samsung] FAILED: {e}", file=sys.stderr)
+        return []
+
+    # Split on the SMR headings so each CVE inherits the date of its own
+    # release. Falling back to one date for the whole page would put a 2019
+    # bulletin's CVEs on today, which is the clock error this project spent a
+    # whole review item on.
+    marks = [(m.start(), m.group(1).lower(), int(m.group(2)))
+             for m in _SMR_RE.finditer(html)]
+    out, seen = [], set()
+    if not marks:
+        record_feed("samsung", TRUNCATED, "no SMR headings found; page shape changed")
+        print("  [samsung] no SMR headings; page shape changed", file=sys.stderr)
+        return []
+
+    for i, (pos, mon, yr) in enumerate(marks):
+        end = marks[i + 1][0] if i + 1 < len(marks) else len(html)
+        month = _SMR_MONTHS.get(mon)
+        if not month:
+            continue
+        # Samsung publishes an SMR in the first week of its month. Day 1 is the
+        # conservative choice: it can only make a row look OLDER, and every
+        # other date on this site is a floor for the same reason.
+        date = f"{yr:04d}-{month:02d}-01"
+        for cid in set(re.findall(r"CVE-20\d\d-\d{4,7}", html[pos:end])):
+            if _year(cid) not in years or cid in seen:
+                continue
+            seen.add(cid)
+            out.append({"cve_id": cid, "source": "samsung",
+                        "source_ref": f"SMR-{mon.title()}-{yr}",
+                        "public_date": date, "product": "Galaxy",
+                        "description": f"Samsung SMR {mon.title()} {yr}"})
+    return out
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
-            "arch": feed_arch}
+            "arch": feed_arch, "samsung": feed_samsung}
 
 
 def gather(sources, years):

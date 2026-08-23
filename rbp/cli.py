@@ -17,13 +17,27 @@ import json
 import os
 
 from . import (cvelist, feeds, classify, report, attribution, coverage, inference,
-               clock, site, suppress)
+               clock, site, suppress, schema)
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
 # (CSAF aggregator + Microsoft) move to a deeper monthly cadence.
+# csaf and msrc were "deep" only, on a monthly cadence that existed in no cron.
+# The gate is measured on the profile the cron actually runs, so anything outside
+# `weekly` was outside the measurement: siemens showed as an uncovered top-50 CNA
+# while already being a configured CSAF provider.
+#
+# Measured before promoting, 2026-08-22: msrc 10,516 ids in 5.8s for +1 CNA,
+# csaf 3,401 ids in 135.8s for +12 (ABB, CERTVDE, CyberDanube, PTC, Rockwell,
+# SICK_AG, TPLink, fortinet, jci, palo_alto, schneider, siemens). 142 seconds
+# against a 9-minute warm run and a 15-minute target.
 PROFILES = {
-    "weekly": "alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch",
-    "deep": "alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,csaf,msrc",
+    "weekly": ("alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,"
+               "csaf,msrc,samsung"),
+    # Kept as a distinct name even though it is now identical to weekly, so the
+    # workflow's --profile argument and the docs do not have to change, and so a
+    # future heavy source has somewhere to go.
+    "deep": ("alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,"
+             "csaf,msrc,samsung"),
 }
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -37,6 +51,43 @@ RESOLUTIONS = os.path.join(DATA, "resolutions.json")
 BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 # Runner-local handoff from `run` to `publish stage`. Never published.
 SUPPRESSED_IDS = os.path.join(DATA, ".suppressed.json")
+
+
+def degraded_state(*, failures, truncated, capped, dropped,
+                   reports_unreadable, shrunk):
+    """One flag a consumer can branch on, plus the reasons. `(bool, [str])`.
+
+    EXTRACTED FROM cli.run so it can be tested. It could not be before, and the
+    result was that the single most-rendered piece of state on the site had no
+    test at all.
+
+    `capped` is deliberately NOT a degradation. A configured page cap fires on
+    every run by design: ubuntu's 200-page cap always fires and ghsa's 40-page
+    cap always fires. Folding those in made `degraded` permanently true, so
+    base.html rendered "This run is incomplete ... not comparable to the previous
+    run" on every page of every run, three hundred lines above a card that
+    compares this run to the previous one. A warning that is always on is not a
+    warning, it is furniture, and it teaches a reader to ignore the banner on the
+    day it means something.
+
+    Degraded means THIS RUN IS WORSE THAN USUAL. The standing caps are published
+    separately as `limitations`, because they are real, permanent, and something
+    a reader needs: a capped advisory API is observed over a much shorter window
+    than a tracker read in full, so counts from the two are not comparable.
+    """
+    reasons = (
+        [f"{len(failures)} feed(s) failed" for _ in [0] if failures]
+        + [f"{len(truncated)} feed(s) stopped early, outside their configured limits"
+           for _ in [0] if truncated]
+        + [f"{dropped} id(s) unresolved and not carried forward"
+           for _ in [0] if dropped]
+        # A correction route that has silently stopped working is exactly the
+        # failure shape this project keeps hitting, so it is a visible one.
+        + ["correction reports could not be read this run"
+           for _ in [0] if reports_unreadable]
+        + [f"{len(shrunk)} feed(s) returned far fewer ids than last run"
+           for _ in [0] if shrunk])
+    return bool(reasons), reasons
 
 
 def ensure_corpus(force=False):
@@ -149,7 +200,7 @@ def cmd_run(args):
     # returned only FAILED entries. Every run truncates ubuntu, so the live
     # snapshot published `failures: []` beside `truncated: ["ubuntu"]` on a run
     # with known data loss, and the DEGRADED line never printed once.
-    failures, truncated, attempts = feeds.health_summary()
+    failures, truncated, attempts, capped = feeds.health_summary()
     if failures or truncated:
         what = []
         if failures:
@@ -359,23 +410,20 @@ def cmd_run(args):
     stats["suppression"] = sup.report
     # One flag any consumer can branch on, rather than three they have to combine
     # correctly. True whenever this run's count is a lower floor than usual.
-    stats["degraded"] = bool(failures or truncated or oracle["dropped"]
-                             or sup.report["degraded"] or shrunk)
-    stats["degraded_reasons"] = (
-        [f"{len(failures)} feed(s) failed" for _ in [0] if failures]
-        + [f"{len(truncated)} feed(s) truncated" for _ in [0] if truncated]
-        + [f"{oracle['dropped']} id(s) unresolved and not carried forward"
-           for _ in [0] if oracle["dropped"]]
-        # A correction route that has silently stopped working is exactly the
-        # failure shape this project keeps hitting, so it is a visible one.
-        + ["correction reports could not be read this run"
-           for _ in [0] if sup.report["degraded"]]
-        + [f"{len(shrunk)} feed(s) returned far fewer ids than last run"
-           for _ in [0] if shrunk])
+    stats["degraded"], stats["degraded_reasons"] = degraded_state(
+        failures=failures, truncated=truncated, capped=capped,
+        dropped=oracle["dropped"], reports_unreadable=sup.report["degraded"],
+        shrunk=shrunk)
+    stats["limitations"] = capped
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.
     stats["coverage"] = cov
     stats["generated_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    # Which code produced this run. Read by every envelope and rendered in the
+    # site footer, so a stale artefact identifies itself instead of being
+    # mistaken for a defect in whatever is being compared against it.
+    stats["source_commit"] = schema.source_commit()
+    stats["source_dirty"] = schema.source_dirty()
     stats["min_age_days"] = args.min_age_days
     json.dump(cnas, open(os.path.join(sdir, "cnas.json"), "w"), indent=1)
     json.dump(stats, open(os.path.join(sdir, "summary.json"), "w"), indent=1)

@@ -110,8 +110,14 @@ def test_a_read_failure_does_not_stop_the_build(tmp_path, monkeypatch):
 def test_cve_ids_are_extracted_from_issue_text(monkeypatch):
     payload = json.dumps([
         {"title": "Withhold CVE-2026-1111", "body": ""},
+        # Was expected to yield CVE-2026-2222 from the body. It no longer does,
+        # and that is the fix: an issue that is not a withhold request cannot
+        # withhold a row by mentioning an id in passing.
         {"title": "wrong owner", "body": "see cve-2026-2222 please"},
         {"title": "no id here", "body": ""},
+        # The template route: label applied server-side, id in its own field.
+        {"title": "Withhold CVE-", "labels": [{"name": "withhold"}],
+         "body": "### CVE ID\n\ncve-2026-2222\n"},
     ])
 
     class P:
@@ -128,8 +134,9 @@ def test_a_pull_request_is_not_read_as_a_withhold_request(monkeypatch):
     """The issues endpoint returns pull requests too, so a PR mentioning a CVE ID
     in its title would otherwise withhold that row."""
     payload = json.dumps([
-        {"title": "CVE-2026-1111", "body": "", "pull_request": {"url": "x"}},
-        {"title": "CVE-2026-2222", "body": ""},
+        {"title": "Withhold CVE-2026-1111", "body": "",
+         "pull_request": {"url": "x"}},
+        {"title": "Withhold CVE-2026-2222", "body": ""},
     ])
 
     class P:
@@ -148,9 +155,12 @@ def test_the_auto_path_is_capped(tmp_path, monkeypatch):
              "confirmed": False} for i in range(suppress.MAX_AUTO + 12)]
     monkeypatch.setattr(suppress, "from_issues", lambda **kw: (many, None))
     s = suppress.load(str(tmp_path / "none.txt"))
-    assert len(s.auto) == suppress.MAX_AUTO
-    assert s.report["deferred"] == 12
-    assert s.report["from_reports"] == suppress.MAX_AUTO
+    # The cap no longer decides what is WITHHELD, only what persists without
+    # review. A flood is honoured for one cycle and is visible as anomalous.
+    assert len(s.auto) == suppress.MAX_AUTO + 12
+    assert s.report["needs_review"] == 12
+    assert s.report["persists_next_run"] == suppress.MAX_AUTO
+    assert s.report["anomalous"] is True
 
 
 def test_the_published_report_carries_counts_and_never_ids(tmp_path, monkeypatch):
@@ -163,7 +173,7 @@ def test_the_published_report_carries_counts_and_never_ids(tmp_path, monkeypatch
     rep = suppress.load(str(p)).report
     assert rep["committed"] == 1
     assert rep["from_reports"] == 1
-    assert rep["deferred"] == 0
+    assert rep["needs_review"] == 0
     assert rep["degraded"] is False and rep["detail"] is None
     # The property that actually matters, asserted over the whole serialised
     # payload rather than a field list, so a NEW key cannot smuggle an id in.
@@ -322,8 +332,13 @@ def test_the_private_route_is_published_on_every_surface(built, page):
 
 
 def test_the_footer_carries_the_route_on_every_dashboard_page(built):
-    for page in ("overview.html", "cves.html", "cnas.html", "changes.html",
-                 "policy.html", "data.html", "method.html"):
+    # Globbed, not listed. cnas.html was in this list and no longer exists, and a
+    # hardcoded list is equally wrong in the other direction: a new dashboard page
+    # would ship without the correction route and nothing would say so.
+    pages = sorted(p.name for p in built.glob("*.html")
+                   if p.name not in ("index.html",))
+    assert len(pages) >= 5, f"only found {pages}; the build did not produce a site"
+    for page in pages:
         body = (built / page).read_text()
         assert PRIVATE_ROUTE in body, page
         assert MAIL_ROUTE in body, page
@@ -460,17 +475,29 @@ def test_the_cap_honours_the_oldest_requests_first():
                   created="2026-08-20T00:00:00Z", issue=100 + i)
              for i in range(suppress.MAX_AUTO + 10)]
     ids, rep = suppress.triage([genuine] + flood)
+    # Nothing can be displaced now: every request holds for the cycle. The
+    # ordering still matters because it decides which requests PERSIST without
+    # review, and the genuine one filed nineteen days earlier must be among them.
     assert "CVE-2026-9999" in ids, "the earlier genuine request was displaced"
-    assert rep["deferred_ceiling"] > 0
-    assert len(ids) <= suppress.MAX_AUTO
+    assert rep["needs_review_ceiling"] > 0
+    assert rep["persists_next_run"] <= suppress.MAX_AUTO
+    assert rep["anomalous"] is True, "a flood this size must be visible on the site"
 
 
-def test_one_author_cannot_consume_the_whole_budget():
+def test_one_author_is_honoured_this_cycle_but_not_carried_past_the_cap():
+    """The policy inverted on 2026-08-23. Past the per-author cap a request used
+    to be silently DROPPED: the row kept publishing, nobody was told, and an
+    embargo request could sit unhonoured behind a healthy-looking site.
+
+    Now every request is withheld for the cycle and the cap decides only what
+    carries into the next run without review. The failure mode moved from "an
+    embargoed row stays published" to "a row is briefly missing"."""
     reqs = [_req(f"CVE-2026-{5000 + i}", author="bot", issue=i)
             for i in range(suppress.MAX_PER_AUTHOR + 8)]
     ids, rep = suppress.triage(reqs)
-    assert len(ids) == suppress.MAX_PER_AUTHOR
-    assert rep["deferred_per_author"] == 8
+    assert len(ids) == suppress.MAX_PER_AUTHOR + 8, "every request holds this cycle"
+    assert rep["needs_review_per_author"] == 8
+    assert rep["persists_next_run"] == suppress.MAX_PER_AUTHOR
 
 
 def test_a_flood_from_one_author_cannot_crowd_out_another_author():
@@ -489,7 +516,10 @@ def test_the_ceiling_is_proportional_when_the_backlog_is_small():
     reqs = [_req(f"CVE-2026-{7000 + i}", author=f"a{i}", issue=i) for i in range(30)]
     ids, rep = suppress.triage(reqs, backlog_size=40)
     assert rep["ceiling"] == 2, rep
-    assert len(ids) == 2
+    # Every request holds this cycle; the proportional ceiling now bounds only
+    # what survives into the next run without a human confirming it.
+    assert len(ids) == 30
+    assert rep["persists_next_run"] == 2
 
 
 def test_the_ceiling_never_drops_below_one():
@@ -507,7 +537,7 @@ def test_a_confirmed_request_bypasses_every_limit():
     ids, rep = suppress.triage(reqs, backlog_size=100)
     assert len(ids) == 60
     assert rep["confirmed"] == 60
-    assert rep["deferred_per_author"] == 0 and rep["deferred_ceiling"] == 0
+    assert rep["needs_review_per_author"] == 0 and rep["needs_review_ceiling"] == 0
 
 
 def test_the_triage_report_is_published_so_abuse_is_visible():
@@ -516,9 +546,10 @@ def test_the_triage_report_is_published_so_abuse_is_visible():
     reqs = [_req(f"CVE-2026-{9000 + i}", author="bot", issue=i) for i in range(9)]
     _, rep = suppress.triage(reqs)
     assert rep["requested"] == 9
-    assert rep["honoured"] == suppress.MAX_PER_AUTHOR
+    assert rep["honoured"] == 9, "everything requested is withheld this cycle"
     assert rep["authors"] == 1
-    assert rep["deferred_per_author"] == 9 - suppress.MAX_PER_AUTHOR
+    assert rep["needs_review_per_author"] == 9 - suppress.MAX_PER_AUTHOR
+    assert rep["persists_next_run"] == suppress.MAX_PER_AUTHOR
 
 
 def test_the_published_report_still_carries_no_identifiers(tmp_path, monkeypatch):
@@ -765,3 +796,137 @@ def test_a_withhold_reaches_the_dated_archive(tmp_path):
     body = dated.read_text()
     assert victim not in body, "the archive resurrected a withheld row"
     assert "CVE-2026-9999" in body, "the archive dropped a row it should carry"
+
+
+# --------------------------------------------------------------------------
+# the channel has to be reachable by someone with no repo permissions (item 6)
+# --------------------------------------------------------------------------
+
+def _issue(title="Withhold CVE-2026-1234", body="", labels=(), login="stranger"):
+    return {"title": title, "body": body, "user": {"login": login},
+            "labels": [{"name": n} for n in labels],
+            "number": 1, "created_at": "2026-08-20T00:00:00Z"}
+
+
+def _run_with(monkeypatch, issues):
+    payload = json.dumps(issues)
+
+    class P:
+        returncode, stdout, stderr = 0, payload, ""
+    monkeypatch.setattr(suppress.subprocess, "run", lambda *a, **k: P())
+    return suppress.from_issues()
+
+
+def test_an_unlabelled_request_from_a_stranger_is_read(monkeypatch):
+    """THE defect. Every surface linked issues/new?labels=withhold, and the
+    `labels` query parameter is honoured only for accounts with triage
+    permission. A CNA employee with an ordinary account filed an UNLABELLED
+    issue, the query filtered on the label server-side and never returned it,
+    and because the API call succeeded no degraded banner fired either. The
+    request vanished with no error anywhere, which is the worst possible
+    behaviour for a channel whose purpose is that someone can reach us."""
+    reqs, err = _run_with(monkeypatch, [_issue(labels=())])
+    assert err is None
+    assert {r["cve_id"] for r in reqs} == {"CVE-2026-1234"}
+
+
+def test_the_label_still_works_for_a_template_filed_request(monkeypatch):
+    """The template applies the label server-side, so a request filed through it
+    matches on both. Neither route may be the only one that works."""
+    reqs, _ = _run_with(monkeypatch, [
+        _issue(title="Anything at all", body="### CVE ID\n\nCVE-2026-5555\n",
+               labels=("withhold",))])
+    assert {r["cve_id"] for r in reqs} == {"CVE-2026-5555"}
+
+
+def test_an_ordinary_issue_mentioning_a_cve_withholds_nothing(monkeypatch):
+    """The read is now unfiltered, so the matcher is the ONLY thing standing
+    between a bug report and a silent withhold.
+
+    The id is in the TITLE deliberately. An earlier version of this test put it
+    in the body, where the template-field parser already excluded it, so
+    disabling the matcher entirely still passed."""
+    reqs, _ = _run_with(monkeypatch, [
+        _issue(title="Wrong package shown for CVE-2026-7777",
+               body="The package column says qemu but it is ceph.", labels=())])
+    assert reqs == [], (
+        "an ordinary issue naming a CVE in its title was read as a request to "
+        "withhold that row")
+
+
+def test_the_issue_read_is_not_filtered_on_the_label(monkeypatch):
+    """Asserted on the REQUEST, not the response.
+
+    Every other test here mocks subprocess.run with a fixed payload, so the URL
+    is unobservable and restoring the server-side label filter passes all of
+    them. That filter is the entire defect: it made the channel unreachable for
+    any account without triage permission, which is every account this channel
+    exists for."""
+    seen = {}
+
+    class P:
+        returncode, stdout, stderr = 0, "[]", ""
+
+    def fake_run(cmd, *a, **k):
+        seen["cmd"] = cmd
+        return P()
+    monkeypatch.setattr(suppress.subprocess, "run", fake_run)
+    suppress.from_issues()
+
+    url = next(c for c in seen["cmd"] if "issues?" in c)
+    assert "labels=" not in url, (
+        f"the read filters on the label server-side again: {url}. Only accounts "
+        "with triage permission can apply it, so this hides exactly the "
+        "requests the channel exists to receive.")
+    assert "state=open" in url
+
+
+def test_prose_in_the_body_cannot_withhold_an_unrelated_row(monkeypatch):
+    """`blob = title + body` meant every distinct CVE ID anywhere in the text
+    became a request, so "same root cause as CVE-2025-1111" withheld a row
+    nobody asked about."""
+    reqs, _ = _run_with(monkeypatch, [
+        _issue(title="Withhold CVE-2026-1234",
+               body="Same root cause as CVE-2025-1111, which is fine to keep.")])
+    assert {r["cve_id"] for r in reqs} == {"CVE-2026-1234"}, (
+        "an id mentioned in prose was read as a withhold request")
+
+
+def test_the_issue_template_exists_and_applies_the_label():
+    """The template is what makes the label reachable without permissions. A
+    broken or missing one silently returns the channel to labels-only."""
+    import pathlib
+    tpl = (pathlib.Path(__file__).parent.parent
+           / ".github" / "ISSUE_TEMPLATE" / "withhold.yml")
+    assert tpl.exists(), "no issue template; the label cannot be applied server-side"
+    body = tpl.read_text()
+    assert f'labels: ["{suppress.WITHHOLD_LABEL}"]' in body
+    # The prefilled title must match what from_issues accepts, or a
+    # template-filed request relies on the label alone.
+    assert 'title: "Withhold CVE-' in body
+    assert suppress._TITLE_RE.match("Withhold CVE-2026-1")
+    # And it must warn that the id becomes public, since that is the one thing
+    # a requester with an embargo needs to know before filing.
+    assert "security.txt" in body and "permanent" in body.lower()
+
+
+def test_every_withhold_link_points_at_the_template():
+    """Six surfaces linked ?labels=withhold, which does nothing for the accounts
+    this channel is for. Asserted across all of them, because they drifted apart
+    once already."""
+    import pathlib
+    root = pathlib.Path(__file__).parent.parent
+    files = list((root / "templates").glob("*.html")) + \
+        [root / "placeholder.html", root / "rbp" / "site.py"]
+    seen = 0
+    for f in files:
+        if not f.exists():
+            continue
+        body = f.read_text()
+        if "issues/new" not in body:
+            continue
+        for line in body.splitlines():
+            if "issues/new" in line and "#" not in line.split("issues/new")[0][-4:]:
+                seen += 1
+                assert "template=withhold.yml" in line, f"{f.name}: {line.strip()[:90]}"
+    assert seen >= 4, f"only found {seen} withhold links; the check is not covering them"

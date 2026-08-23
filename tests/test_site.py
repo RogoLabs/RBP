@@ -52,7 +52,12 @@ def built(tmp_path, monkeypatch):
         "coverage": {"total_cnas": 10, "cnas_effective": 6, "cnas_own_channel": 1,
                      "cnas_sighted": 8, "min_sightings": 3, "pct_cnas": 80.0,
                      "pct_effective": 60.0, "observed_pct": 12.5,
-                     "profile": "weekly"},
+                     "profile": "weekly",
+                     # The gate figure. 8 of 10 clears the 80% top-N gate; the
+                     # weaker one-sighting count is carried alongside so the
+                     # template can show that the two differ.
+                     "top_n": 10, "top_covered_effective": 8,
+                     "top_covered": 9, "top_missed_effective": []},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30,
@@ -127,9 +132,14 @@ def test_method_states_all_three_coverage_figures_and_the_gate(built):
     assert "Effective 6 / 10 (60.0%)" in text
     assert "Own channel 1 / 10" in text
     assert "figure the launch gate uses" in text
-    assert "Launch gate: 60.0% of 50.0% required" in text
+    assert "Launch gate: 80.0% of 80.0% required" in text
     # The floor is stated as a number, not described in the abstract.
     assert "Seen at least 3 times" in text
+    # The gate names its own basis, so a reader cannot mistake it for the roster
+    # share printed two rows above.
+    assert "top-10-by-volume at the 3-sighting floor" in text
+    # And the roster share is still shown, explicitly demoted rather than deleted.
+    assert "It no longer gates anything." in text
 
 
 def test_prelaunch_holding_page_does_not_link_into_the_dashboard(built):
@@ -142,7 +152,7 @@ def test_prelaunch_holding_page_does_not_link_into_the_dashboard(built):
 
 def test_prelaunch_dashboard_pages_are_noindex(built):
     out = built(False)
-    for name in ("overview", "cves", "cnas", "method", "policy", "data", "changes"):
+    for name in ("overview", "cves", "method", "policy", "data", "changes"):
         html = (out / f"{name}.html").read_text()
         assert 'content="noindex, nofollow"' in html, name
 
@@ -164,17 +174,19 @@ def test_holding_page_itself_is_noindex(built):
     assert 'name="robots"' in index and "noindex" in index
 
 
-def test_prelaunch_withholds_the_per_cna_pages(built):
-    """report.py states the project's own rule that a named CNA gets a private
-    preview before any row naming it circulates. A six-hourly public deploy of
-    these pages breaks that rule on every run, and noindex does not help because
-    the page is still fetchable and linkable."""
-    pre = built(False)
-    assert not (pre / "cna").exists() or not list((pre / "cna").glob("*.html"))
-    assert not list((pre / "data" / "cna").glob("*.json"))
-    post = built(True)
-    assert (post / "cna" / "acme.html").exists()
-    assert (post / "data" / "cna" / "acme.json").exists()
+def test_the_per_cna_pages_do_not_exist_in_either_posture(built):
+    """They used to be WITHHELD until launch, on the rule that a named CNA gets a
+    private preview before any row naming it circulates. Under v1 there is no
+    name to preview, so the pages are not written at all.
+
+    Asserted in BOTH postures deliberately. The old test only proved the
+    pre-launch case, so a regression that re-enabled the pages would have been
+    caught only by a launched-posture assertion nobody had written."""
+    for launched in (False, True):
+        out = built(launched)
+        assert not (out / "cna").exists() or not list((out / "cna").glob("*.html")), launched
+        assert not list((out / "data" / "cna").glob("*.json")), launched
+        assert not (out / "cnas.html").exists(), launched
 
 
 def test_launched_front_door_is_the_dashboard(built):
@@ -190,7 +202,9 @@ def test_nav_follows_the_posture(built):
     assert 'href="overview.html">Overview' in (pre / "cves.html").read_text()
     post = built(True)
     assert 'href="index.html">Overview' in (post / "cves.html").read_text()
-    assert 'href="../index.html">Overview' in (post / "cna" / "acme.html").read_text()
+    # The nav must not offer a CNAs tab that resolves to nothing.
+    for out in (pre, post):
+        assert 'cnas.html"' not in (out / "cves.html").read_text()
 
 
 def test_aggregate_data_files_are_served_in_both_postures(built):
@@ -256,28 +270,42 @@ def test_row_count_must_match_the_headline(tmp_path):
         site.load(str(tmp_path / "snapshots"), str(tmp_path))
 
 
-def test_an_owner_with_no_cna_page_raises(tmp_path):
-    """Every owner link must resolve. CNAs dropping out of cnas.json while
-    /cves still linked to them was an observed symptom of the epoch bug."""
+def test_a_name_on_a_snapshot_is_stripped_rather_than_published(tmp_path):
+    """The two tests that used to live here checked RELATIONSHIPS between named
+    rows and per-CNA pages: that every owner resolved to a page, and that the
+    per-CNA totals matched. Under v1 neither subject exists, and a set-membership
+    rule with four ways to be subtly wrong is exactly what let 121 names reach the
+    public data branch. The replacement invariant has one way to be wrong.
+
+    A snapshot on disk may still carry names: prior snapshots restored from the
+    data branch were written before this change. Reading one must strip, not
+    crash, or the build cannot read its own history."""
     snaps = tmp_path / "snapshots" / "2026-08-20"
     snaps.mkdir(parents=True)
     (snaps / "backlog.json").write_text(json.dumps(
-        [{"cve_id": "CVE-2026-1", "owner": "ghost"}]))
+        [{"cve_id": "CVE-2026-1", "owner": "ghost", "owner_tier": "block",
+          "owner_nameable": True, "product_map_owner": "acme"}]))
     (snaps / "summary.json").write_text('{"total": 1}')
     (snaps / "cnas.json").write_text("[]")
-    with pytest.raises(SystemExit, match="absent from cnas.json"):
-        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+
+    ctx = site.load(str(tmp_path / "snapshots"), str(tmp_path))
+    row = ctx["rows"][0]
+    for field in site.NAME_FIELDS:
+        assert field not in row, field
+    assert row["owner_nameable"] is False
 
 
-def test_per_cna_totals_must_match_the_named_rows(tmp_path):
-    snaps = tmp_path / "snapshots" / "2026-08-20"
-    snaps.mkdir(parents=True)
-    (snaps / "backlog.json").write_text(json.dumps(
-        [{"cve_id": "CVE-2026-1", "owner": "acme"}]))
-    (snaps / "summary.json").write_text('{"total": 1}')
-    (snaps / "cnas.json").write_text(json.dumps([{"cna": "acme", "outstanding": 9}]))
-    with pytest.raises(SystemExit, match="contradict their own tables"):
-        site.load(str(tmp_path / "snapshots"), str(tmp_path))
+def test_assert_artefact_refuses_a_row_that_slipped_past_the_strip(tmp_path):
+    """The strip runs on read. Anything reaching a published artefact with a name
+    means a write path bypassed it, which is how the per-CNA JSON endpoints kept
+    emitting names after every page had stopped."""
+    with pytest.raises(SystemExit, match="name-bearing field"):
+        site.assert_artefact(
+            [{"cve_id": "CVE-2026-1", "owner": "acme", "owner_nameable": False}],
+            "rbp.json")
+    with pytest.raises(SystemExit, match="owner_nameable"):
+        site.assert_artefact(
+            [{"cve_id": "CVE-2026-1", "owner_nameable": True}], "rbp.json")
 
 
 def test_a_corrupt_ledger_raises_but_a_missing_one_does_not(tmp_path):
@@ -312,8 +340,11 @@ def test_rule_strength_never_ships_without_its_certainty(built):
     # Rendered: wherever a template prints the strength it prints the qualifier.
     import pathlib
     tpl_dir = pathlib.Path(__file__).parent.parent / "templates"
-    for name in ("cves.html", "cna.html"):
-        body = (tpl_dir / name).read_text()
+    # cna.html was in this list until v1 stopped publishing attribution and the
+    # template was deleted. Globbed rather than named, so the next template to
+    # appear or disappear does not need this list edited.
+    for tpl in tpl_dir.glob("*.html"):
+        name, body = tpl.name, tpl.read_text()
         if "rule_strength" in body:
             assert "rule_certainty" in body, f"{name} shows strength without certainty"
 
@@ -415,7 +446,12 @@ def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
         "coverage": {"total_cnas": 10, "cnas_effective": 6, "cnas_own_channel": 1,
                      "cnas_sighted": 8, "min_sightings": 3, "pct_cnas": 80.0,
                      "pct_effective": 60.0, "observed_pct": 12.5,
-                     "profile": "weekly"},
+                     "profile": "weekly",
+                     # The gate figure. 8 of 10 clears the 80% top-N gate; the
+                     # weaker one-sighting count is carried alongside so the
+                     # template can show that the two differ.
+                     "top_n": 10, "top_covered_effective": 8,
+                     "top_covered": 9, "top_missed_effective": []},
     }))
     (snaps / "cnas.json").write_text(json.dumps([{
         "cna": "acme", "outstanding": 1, "oldest_days": 30, "median_days_public": 30,
@@ -441,10 +477,12 @@ def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
         site.build(str(out), str(tmp_path / "snapshots"), str(tmp_path))
 
         changes = (out / "changes.html").read_text()
-        cna = (out / "cna" / "acme.html").read_text()
+        # The per-CNA page carried the same sort and the same None hazard, and
+        # was the other half of this assertion until v1 stopped writing it.
+        assert not (out / "cna").exists() or not list((out / "cna").glob("*.html"))
 
         # No bare None in a numeric column.
-        assert ">None<" not in changes and ">None<" not in cna
+        assert ">None<" not in changes
 
         # The rejected block must not claim these rows published. Checking for
         # the substring "published" is wrong: the block legitimately quotes the
@@ -531,7 +569,14 @@ def test_no_template_defaults_an_absent_certainty_to_the_stronger_label():
 # the launch gate (r3 item 7)
 # --------------------------------------------------------------------------
 
-def _summary_with_coverage(total, eff, own=0):
+def _summary_with_coverage(total, eff, own=0, top_n=50, top_eff=None):
+    """`top_eff` defaults to the same ratio as eff/total.
+
+    Deliberately not defaulted to a clearing value. Callers that pass a low
+    roster coverage mean "below the gate", and a default that cleared regardless
+    silently inverted two tests that assert the below-gate posture."""
+    if top_eff is None:
+        top_eff = round(top_n * eff / total) if total else 0
     return {"total": 0, "min_age_days": 7, "age_buckets": {},
             "inference": {"k": 3, "run_coverage": 0.0,
                           "leave_one_out": {"precision": 0.99, "coverage": 0.6,
@@ -542,13 +587,38 @@ def _summary_with_coverage(total, eff, own=0):
                       "truncated": [], "detail": {}},
             "coverage": {"total_cnas": total, "cnas_effective": eff,
                          "cnas_own_channel": own, "cnas_sighted": eff,
-                         "min_sightings": 3, "profile": "weekly"}}
+                         "min_sightings": 3, "profile": "weekly",
+                         "top_n": top_n, "top_covered_effective": top_eff,
+                         "top_covered": top_n, "top_missed_effective": []}}
 
 
-def test_gate_status_uses_the_effective_sighting_figure():
-    assert site._gate_status(_summary_with_coverage(100, 60))["cleared"] is True
-    assert site._gate_status(_summary_with_coverage(100, 40))["cleared"] is False
-    assert site._gate_status(_summary_with_coverage(100, 50))["cleared"] is True
+def test_gate_status_uses_top_n_by_volume_on_the_sighting_floor():
+    g = site._gate_status(_summary_with_coverage(539, 117, top_eff=40))
+    assert g["cleared"] is True and g["pct"] == 80.0
+    assert site._gate_status(
+        _summary_with_coverage(539, 117, top_eff=39))["cleared"] is False
+    assert site._gate_status(
+        _summary_with_coverage(539, 400, top_eff=39))["cleared"] is False, (
+        "a large roster share must not clear a gate keyed to the top 50")
+
+
+def test_gate_reports_its_margin_because_it_has_no_second_condition():
+    """The roster-share floor was offered and declined, so the gate can clear by
+    exactly one CNA. A bare cleared:true would hide that."""
+    assert site._gate_status(
+        _summary_with_coverage(539, 117, top_eff=40))["margin"] == 0
+    assert site._gate_status(
+        _summary_with_coverage(539, 117, top_eff=45))["margin"] == 5
+
+
+def test_gate_fails_closed_when_the_run_predates_the_gate_figure():
+    """A snapshot written before top_covered_effective existed must not fall back
+    to top_covered, which counts a single stray sighting and would clear the gate
+    on a weaker measure than the one it names."""
+    s = _summary_with_coverage(539, 117)
+    del s["coverage"]["top_covered_effective"]
+    g = site._gate_status(s)
+    assert g["cleared"] is False and "cannot be evaluated" in g["reason"]
 
 
 def test_gate_threshold_is_reachable():
@@ -557,27 +627,42 @@ def test_gate_threshold_is_reachable():
     ceiling and could never clear. Nothing failed: the site published its
     pre-launch posture forever, which is exactly what it does when the gate is
     merely not yet met, so an unreachable gate was indistinguishable from a
-    distant one. The gate figure must be able to reach its own threshold."""
+    distant one. The gate figure must be able to reach its own threshold.
+
+    The 50%-of-roster gate that replaced own-channel had the same defect, found
+    the same way and later: only 371 of 539 roster CNAs have published 3 CVEs in
+    the window, so `cnas_effective` cannot exceed 68.8% on ANY feed set, and the
+    current feed set caps at 28.2%. That is why the gate is now keyed to the top
+    50 by volume, where the numerator and denominator are both bounded by 50.
+    """
     from rbp import clock, coverage as cov_mod
 
-    # The gate reads cnas_effective, which is bounded only by the CNA count.
-    assert site._gate_status(_summary_with_coverage(434, 434))["cleared"] is True
+    # Bounded by top_n on both sides, so the threshold is reachable by
+    # construction rather than by measurement.
     assert site._gate_status(
-        _summary_with_coverage(434, int(434 * site.GATE_PCT / 100) + 1))["cleared"] is True
+        _summary_with_coverage(539, 117, top_eff=50))["cleared"] is True
 
-    # Whereas own-channel is bounded by len(OWNER_FEEDS), and the assertion that
-    # matters is that the gate is NOT keyed to it: were it, this would be the
-    # ceiling, and it is far below the threshold.
-    ceiling = round(100 * len(clock.OWNER_FEEDS) / 434, 1)
-    assert ceiling < site.GATE_PCT, (
+    # Not keyed to own-channel, which is bounded by len(OWNER_FEEDS).
+    assert site._gate_status(
+        _summary_with_coverage(539, 0, own=len(clock.OWNER_FEEDS),
+                               top_eff=0))["cleared"] is False
+    assert round(100 * len(clock.OWNER_FEEDS) / 50, 1) < site.GATE_TOP_N_PCT, (
         "own-channel can reach the gate now, so this test no longer proves "
         "anything; check what the gate is keyed to")
-    assert site._gate_status(
-        _summary_with_coverage(434, 0, own=len(clock.OWNER_FEEDS)))["cleared"] is False
 
     # And the floor the gate counts against is the one inference names against,
     # so the gate cannot clear on CNAs the site would refuse to name.
     assert cov_mod.compute.__doc__ and "cnas_effective" in cov_mod.compute.__doc__
+
+
+def test_gate_numerator_is_not_the_one_sighting_figure():
+    """top_covered credits a top-50 CNA on one stray reference. Live it reads 37
+    where the gate figure reads 31, so keying the gate to it would clear six CNAs
+    early on a measure the coverage module's own docstring calls weak."""
+    s = _summary_with_coverage(539, 117, top_eff=31)
+    s["coverage"]["top_covered"] = 37
+    assert site._gate_status(s)["cleared"] is False
+    assert site._gate_status(s)["top_effective"] == 31
 
 
 def test_gate_counts_the_same_floor_inference_names_against(tmp_path):
@@ -608,7 +693,7 @@ def test_gate_counts_the_same_floor_inference_names_against(tmp_path):
 def test_gate_is_not_cleared_when_coverage_was_not_measured():
     st = site._gate_status({"total": 0})
     assert st["cleared"] is False
-    assert "not measured" in st["reason"]
+    assert "cannot be evaluated" in st["reason"]
 
 
 def test_launching_below_gate_fails_closed_and_still_publishes(tmp_path, monkeypatch):

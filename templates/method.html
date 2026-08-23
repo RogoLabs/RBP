@@ -5,8 +5,10 @@
 <div class="page-header">
   <h1>Method</h1>
   <p class="text-muted">
-    Every number on this site traces to a rule here. The site names CNAs, so the
-    method has to be auditable rather than merely described.
+    Every number on this site traces to a rule here. <strong>This site names no
+    CNA</strong>, and the reconstruction that could is run, measured and withheld;
+    the method is auditable anyway, because a count nobody can check is not
+    evidence of anything.
   </p>
 </div>
 
@@ -26,7 +28,7 @@
       &ldquo;in violation of Program Rules 4.5.1.4 or 4.5.1.6 exceeding the 72
       hours&rdquo;, and assigns that determination to Roots, TL-Roots and the Secretariat.
       The headline count on this site is the state, which makes it the Program's own
-      metric. Violation language is confined to the rule column, always marked candidate,
+      <strong>definition</strong>, measured from outside. Violation language is confined to the rule column, always marked candidate,
       and never aggregated into the headline.
     </p>
     <p>
@@ -55,8 +57,78 @@
 </div>
 
 <div class="card">
+  <div class="card-header"><h2 class="card-title">Does this site actually run every six hours?</h2></div>
+  <div class="card-body">
+    {% if cadence %}
+    <p>
+      <strong>{{ cadence.delivered }} of {{ cadence.expected }} scheduled runs
+      published in the last {{ cadence.days }} days</strong>
+      ({{ cadence.pct }}%){% if cadence.last %}, most recently
+      <span class="mono">{{ cadence.last }}</span>{% endif %}.
+    </p>
+    <p class="mb-0">
+      Counted from a ledger appended by the step that actually publishes, so a run
+      that built and failed to deploy is not counted as delivered. This exists
+      because the six-hourly claim had no evidence behind it and was false at
+      least twice: two scheduled ticks on 2026-08-21 produced nothing, with no
+      pushes in the window, and nothing on the site could have told you.
+    </p>
+    {% else %}
+    <p class="mb-0">
+      <strong>Not yet evidenced.</strong> The run ledger starts empty and is
+      appended by each successful publish, so this fills in over the first week.
+      It reads as unknown rather than as zero, because a fresh repository and a
+      stopped pipeline must not look the same.
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+{% if summary.get('limitations') %}
+<div class="card">
+  <div class="card-header"><h2 class="card-title">Standing limits on what this site reads</h2></div>
+  <div class="card-body">
+    <p>
+      These fire on <strong>every run, by design</strong>. They are not a fault and not a
+      bad day; they are the permanent shape of what the feeds can see, and they are here
+      rather than in a banner because a warning that is always on is not a warning.
+    </p>
+    <ul class="mb-2">
+      {% for lim in summary.limitations %}<li class="mono small">{{ lim }}</li>{% endfor %}
+    </ul>
+    <p class="mb-0">
+      The consequence worth stating plainly: a paginated advisory API read to a fixed cap
+      is observed over a <strong>much shorter window</strong> than a distribution tracker
+      read in full, so counts from the two are not directly comparable, and a CNA whose
+      advisories arrive mainly through a capped feed will be under-represented here
+      relative to one carried by a tracker.
+    </p>
+  </div>
+</div>
+{% endif %}
+
+<div class="card">
   <div class="card-header"><h2 class="card-title">The clock</h2></div>
   <div class="card-body">
+    <div class="caveat">
+      <p class="mb-0">
+        <strong>A tracker entry is a public source, and is not a Public Disclosure.</strong>
+        RBP Policy v2.0.0 defines membership as an ID "referenced in one or more public
+        sources", and a distribution tracker entry is squarely that, so those rows are
+        counted. But the 72-hour rules in {{ rule_must }} and {{ rule_should }} run from
+        <em>Publicly Disclosing</em>, which the rules exemplify as an advisory or a Fix. A
+        tracker record is created when the tracker ingests the ID, not when anybody
+        disclosed anything.
+        <br><br>
+        So <span class="mono">past_expectation</span> is computed only from
+        <strong>advisory</strong> sources, and every tracker-only row reads false
+        regardless of age. Before this split it was true on <strong>522 of 522</strong>
+        published rows, and a claim asserted on every single row does no discriminating
+        work while carrying all of the accusatory weight.
+        <span class="mono">days_public</span> is unchanged on those rows: "referenced for
+        N days" is true of a tracker entry, and only "N days late" is not.
+      </p>
+    </div>
     <p>
       Rows are reportable once publicly referenced for at least
       <strong>{{ summary.get('min_age_days', 7) }} days</strong>, which is
@@ -201,7 +273,8 @@
     {% if grader.misses %}
     <p class="mb-2"><strong>Misses.</strong> Predictions that turned out wrong, shown because
       a precision figure without its errors is marketing.</p>
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Method figures, scrollable">
       <table class="rbp" style="min-width:0">
         <thead><tr><th scope="col">CVE ID</th><th scope="col">Predicted</th><th scope="col">Actual</th><th scope="col">Graded</th></tr></thead>
         <tbody>
@@ -301,20 +374,38 @@
         </tr>
         {% if summary.coverage.get('top_n') %}
         <tr>
-          <td>Top {{ summary.coverage.top_n }} by volume</td>
-          <td class="num">{{ summary.coverage.top_covered }} / {{ summary.coverage.top_n }}</td>
-          <td>Of the {{ summary.coverage.top_n }} CNAs publishing the most CVEs, how
-            many these feeds reach. A share of the whole roster says nothing about
-            whether the CNAs that actually publish are reachable; this does.</td>
+          <td><strong>Top {{ summary.coverage.top_n }} by volume</strong></td>
+          <td class="num"><strong>{{ summary.coverage.top_covered_effective }} / {{ summary.coverage.top_n }}</strong></td>
+          <td>Of the {{ summary.coverage.top_n }} CNAs publishing the most CVEs, how many
+            these feeds see at least {{ summary.coverage.min_sightings }} times.
+            <strong>This is the figure the launch gate uses.</strong> A share of the whole
+            roster says nothing about whether the CNAs that actually publish are
+            reachable; this does. Counted on one sighting instead of
+            {{ summary.coverage.min_sightings }} it would read
+            {{ summary.coverage.top_covered }}, which is why the weaker number is
+            shown here and gates nothing.</td>
         </tr>
         {% endif %}
       </tbody>
     </table>
     {% if gate and gate.pct is not none %}
     <p class="small text-muted">
-      <strong>Launch gate:</strong> {{ gate.pct }}% of {{ gate.required }}% required.
-      {% if gate.cleared %}Cleared.{% else %}Not yet met, so the front page is a
-      holding page and these pages are not indexed.{% endif %}
+      <strong>Launch gate:</strong> {{ gate.pct }}% of {{ gate.required }}% required,
+      measured on {{ gate.basis }}.
+      {% if gate.cleared %}Cleared{% if gate.margin == 0 %} by exactly nothing: the gate
+      needs {{ gate.needed }} and this run has {{ gate.top_effective }}. One CNA dropping
+      below the sighting floor un-clears it{% else %} with {{ gate.margin }} CNA(s) to
+      spare{% endif %}.{% else %}Not yet met, so the front page is a
+      holding page and these pages are not indexed. It needs {{ gate.needed }} of the
+      top {{ gate.top_n }}; this run has {{ gate.top_effective }}.{% endif %}
+    </p>
+    <p class="small text-muted">
+      The gate was a share of the whole {{ summary.coverage.total_cnas }}-CNA roster until
+      2026-08-23, and it was unreachable: only 371 roster CNAs have published three CVEs in
+      the window at all, so that figure cannot exceed 68.8% however many feeds are added,
+      and the threshold had never been re-derived after the metric changed underneath it.
+      The roster share is still measured and still published above
+      ({{ gate.roster_pct_effective }}%). It no longer gates anything.
     </p>
     {% endif %}
     <p class="small text-muted">
@@ -475,7 +566,7 @@
   <div class="card-body">
     <p>
       <strong>To have a row withheld:</strong>
-      <a href="https://github.com/RogoLabs/RBP/issues/new?labels=withhold&title=Withhold%20CVE-">open a withhold request</a>. It is withheld on the
+      <a href="https://github.com/RogoLabs/RBP/issues/new?template=withhold.yml">open a withhold request</a>. It is withheld on the
       next build, which runs every six hours, with no human in the loop.
       <strong>Give the CVE ID and nothing else.</strong> No reason, no detail, and no
       confirmation that a vulnerability exists. A request carrying no reason does not
@@ -522,8 +613,8 @@
     {% if sup.get('requested') %}
     <p class="small text-muted mb-2">
       <strong>{{ sup.requested }} request(s) from {{ sup.authors }} author(s) this
-      run</strong>{% if sup.get('deferred') %},
-      of which <strong>{{ sup.deferred }} deferred</strong> by the anti-abuse limits
+      run</strong>{% if sup.get('needs_review') %},
+      of which <strong>{{ sup.needs_review }} need review</strong> to carry past this run
       below{% endif %}{% if sup.get('confirmed') %},
       {{ sup.confirmed }} reviewed and confirmed{% endif %}.
     </p>

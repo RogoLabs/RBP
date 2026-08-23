@@ -102,6 +102,22 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     from .inference import MIN_SIGHTINGS
     effective = {a for a, n in sightings.items() if a and n >= MIN_SIGHTINGS}
 
+    # THE GATE FIGURE, from 2026-08-23. Top-N-by-volume measured on the SAME
+    # sighting floor as `cnas_effective`, not on a single sighting.
+    #
+    # `top_covered` above credits a top-50 CNA on one stray reference, which is
+    # the weakness this module's own docstring names, so it cannot be what a gate
+    # is built on. Measured the difference on the live run before switching:
+    # 37 of 50 on one sighting, 31 of 50 on three. The gate uses the 31.
+    #
+    # Why the gate moved here at all: the old threshold was a share of the whole
+    # 539-CNA roster, and only 371 roster CNAs have published 3 CVEs in the
+    # window, so no feed set can exceed 68.8% and the 50% figure was never
+    # re-derived when the metric changed underneath it. Top-50-by-volume is
+    # reachable, it moves as feeds are added, and it asks the question that
+    # actually matters: can this site see the CNAs that issue most of the CVEs.
+    top_effective = [c for c in top if c in effective]
+
     # Bounds 4.5.1.4 only: the CNA's own advisory channel was ingested this run.
     own_channels = own_channels or {}
     requested = set(sources or ())
@@ -170,6 +186,11 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
         "total_pub": total_vol,
         "top_n": top_n,
         "top_covered": len(top_covered),
+        # The gate numerator. Kept beside `top_covered` rather than replacing it,
+        # so the strong figure and the weak one are never quoted as each other.
+        "top_covered_effective": len(top_effective),
+        "pct_top_effective": round(100 * len(top_effective) / max(top_n, 1), 1),
+        "top_missed_effective": [c for c in top if c not in effective][:15],
         "top_missed": [c for c in top if c not in covered][:15],
         "recent_years": list(recent_years),
     }

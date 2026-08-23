@@ -22,7 +22,9 @@ def _snap(tmp_path, date, files):
     return d
 
 
-ROW_OK = {"cve_id": "CVE-2026-1", "owner": "acme", "counted": True}
+# v1 publishes no attribution, so the CLEAN row is the one with no owner at all.
+# It used to be a NAMED row on a counted CVE, which was clean under the old rule.
+ROW_OK = {"cve_id": "CVE-2026-1", "counted": True, "owner_nameable": False}
 ROW_HELD_NAMED = {"cve_id": "CVE-2026-2", "owner": "acme", "counted": False}
 ROW_HELD_CLEAN = {"cve_id": "CVE-2026-2", "owner": "unattributed", "counted": False}
 
@@ -159,11 +161,30 @@ def test_cli_stage_then_check_exits_zero(tmp_path, capsys, monkeypatch):
     assert publish.main(["check"]) == 0
 
 
-def test_cli_check_exits_nonzero_on_a_leak(tmp_path, monkeypatch):
+def test_stage_de_names_so_a_named_row_cannot_reach_the_branch(tmp_path, monkeypatch):
+    """Staging is now the scrubber, so a named row written by an older pipeline
+    is cleaned on its way into the checkout rather than merely refused."""
     _snap(tmp_path, "2026-08-20", {"held_back.json": [ROW_HELD_NAMED]})
     (tmp_path / "data").mkdir()
     monkeypatch.chdir(tmp_path)
     publish.main(["stage"])
+    staged = json.loads(
+        (tmp_path / ".state" / "snapshots" / "2026-08-20" / "held_back.json").read_text())
+    assert "owner" not in staged[0]
+    assert publish.main(["check"]) == 0
+
+
+def test_cli_check_exits_nonzero_on_a_leak(tmp_path, monkeypatch):
+    """The guard, exercised on a file that did NOT come through stage. That is
+    the real threat model: staging cleans what it copies, and check is the
+    backstop for anything that reaches the checkout another way, which is how
+    the branch acquired workflow files and lost every snapshot in its own
+    history."""
+    st = tmp_path / ".state" / "snapshots" / "2026-08-20"
+    st.mkdir(parents=True)
+    (st / "held_back.json").write_text(json.dumps([ROW_HELD_NAMED]))
+    (tmp_path / "data").mkdir()
+    monkeypatch.chdir(tmp_path)
     assert publish.main(["check"]) == 1
 
 
@@ -180,26 +201,34 @@ def test_check_refuses_a_row_naming_a_cna_outside_its_covered_set(tmp_path):
     assert any("outside its own covered set" in p for p in problems)
 
 
-def test_check_allows_a_row_inside_the_covered_set(tmp_path):
+def test_check_refuses_a_named_row_even_inside_the_covered_set(tmp_path):
+    """This test asserted the opposite until 2026-08-23: a name INSIDE the
+    covered set was allowed. That rule is what let 121 names reach the public
+    branch, because "allowed in the right circumstances" needs the circumstances
+    to be evaluated everywhere, and the ledger arm evaluated them nowhere."""
     st = tmp_path / ".state"
     (st / "snapshots" / "2026-08-20").mkdir(parents=True)
     (st / "snapshots" / "2026-08-20" / "backlog.json").write_text(json.dumps(
         [{"cve_id": "CVE-2026-1", "owner": "redhat", "counted": True}]))
     (st / "snapshots" / "2026-08-20" / "summary.json").write_text(json.dumps(
         {"coverage": {"covered": ["redhat", "debian"]}}))
-    assert publish.check(str(st)) == []
+    problems = publish.check(str(st))
+    assert any("attribution field" in p for p in problems), problems
 
 
 # --------------------------------------------------------------------------
 # the gate's own diagnostic output
 # --------------------------------------------------------------------------
 
-def _site_with_coverage(tmp_path, total=434, effective=121, sighted=159, own=2):
+def _site_with_coverage(tmp_path, total=539, effective=117, sighted=152, own=2,
+                        top_n=50, top_eff=40):
     d = tmp_path / "site" / "data"
     d.mkdir(parents=True)
     (d / "summary.json").write_text(json.dumps({"coverage": {
         "total_cnas": total, "cnas_effective": effective, "cnas_sighted": sighted,
-        "cnas_own_channel": own, "min_sightings": 3, "profile": "weekly"}}))
+        "cnas_own_channel": own, "min_sightings": 3, "profile": "weekly",
+        "top_n": top_n, "top_covered_effective": top_eff,
+        "top_covered": top_eff + 6, "top_missed_effective": []}}))
     return str(tmp_path / "site")
 
 
@@ -214,26 +243,93 @@ def test_gate_line_pairs_each_count_with_its_own_percentage(tmp_path, capsys):
     line = [ln for ln in capsys.readouterr().out.splitlines()
             if ln.startswith("gate:")][0]
 
-    # The count and the percentage on the gate figure must agree.
-    m = re.search(r"effective (\d+)/(\d+) = ([\d.]+)%", line)
-    assert m, f"gate line does not state the effective figure: {line!r}"
-    eff, total, pct = int(m.group(1)), int(m.group(2)), float(m.group(3))
-    assert eff == 121 and total == 434
-    assert abs(pct - round(100 * eff / total, 1)) < 0.05, (
-        f"{eff}/{total} is {round(100 * eff / total, 1)}%, not {pct}%: {line!r}")
+    # The GATE figure: its count and its percentage must agree. When the gate
+    # moved to top-N-by-volume this line kept printing the roster count against
+    # the new percentage, reproducing the original defect one metric change later.
+    m = re.search(r"top-(\d+) effective (\d+)/(\d+) = ([\d.]+)%", line)
+    assert m, f"gate line does not state the top-N figure: {line!r}"
+    top_n, eff, denom, pct = (int(m.group(1)), int(m.group(2)),
+                              int(m.group(3)), float(m.group(4)))
+    assert eff == 40 and denom == top_n == 50
+    assert abs(pct - round(100 * eff / denom, 1)) < 0.05, (
+        f"{eff}/{denom} is {round(100 * eff / denom, 1)}%, not {pct}%: {line!r}")
 
-    # The other two figures appear, and are not confusable with the gate figure.
-    assert "sighted 159" in line
+    # The roster share is printed too, with ITS own percentage, and marked as
+    # not gating so the two can never be read as each other.
+    m2 = re.search(r"roster effective (\d+)/(\d+) = ([\d.]+)% \(does not gate\)", line)
+    assert m2, f"gate line does not state the roster share: {line!r}"
+    reff, rtot, rpct = int(m2.group(1)), int(m2.group(2)), float(m2.group(3))
+    assert reff == 117 and rtot == 539
+    assert abs(rpct - round(100 * reff / rtot, 1)) < 0.05, (
+        f"{reff}/{rtot} is {round(100 * reff / rtot, 1)}%, not {rpct}%: {line!r}")
+
+    # The other two figures appear, and are not confusable with either.
+    assert "sighted 152" in line
     assert "own-channel 2" in line
-    assert "own-channel 2/434" not in line, (
-        "own-channel must not be printed as a ratio next to the gate percentage")
+    assert "own-channel 2/539" not in line, (
+        "own-channel must not be printed as a ratio next to a gate percentage")
 
 
 def test_gate_fails_loudly_when_a_launch_is_requested_below_it(tmp_path, capsys, monkeypatch):
     from rbp import site as site_mod
     monkeypatch.setattr(site_mod, "LAUNCHED", True)
-    assert publish.gate(_site_with_coverage(tmp_path, effective=10)) == 1
+    assert publish.gate(_site_with_coverage(tmp_path, top_eff=10)) == 1
     out = capsys.readouterr().out
-    assert "FAIL" in out and "below the 50.0% gate" in out
+    assert "FAIL" in out and "below the 80.0% gate" in out
     # And the reason names the floor, so the log says what to move.
     assert "seen at least 3 times" in out
+
+
+# --------------------------------------------------------------------------
+# retention: the archive has to outlive the citation (item 17)
+# --------------------------------------------------------------------------
+
+def _dated(tmp_path, dates):
+    root = tmp_path / ".state" / "snapshots"
+    for d in dates:
+        p = root / d
+        p.mkdir(parents=True)
+        (p / "backlog.json").write_text("[]")
+    return root
+
+
+def test_retention_keeps_a_quarter_of_dailies(tmp_path):
+    """keep=2 meant a URL cited on Monday stopped resolving by Wednesday, while
+    launch condition 7 promised anything cited before launch stays resolvable
+    after it. The live branch held exactly two dates."""
+    import datetime as dt
+    days = [(dt.date(2026, 8, 23) - dt.timedelta(days=i)).isoformat()
+            for i in range(200)]
+    _dated(tmp_path, days)
+    publish.prune_snapshots(str(tmp_path / ".state"))
+    left = sorted(p.name for p in (tmp_path / ".state" / "snapshots").iterdir())
+    # The newest 90 survive as dailies.
+    assert days[0] in left and days[89] in left
+    assert days[90] not in left or days[90][:7] != days[89][:7], (
+        "a snapshot older than the window survived for a reason other than "
+        "being its month's last")
+    assert len(left) >= 90
+
+
+def test_retention_keeps_one_per_month_forever(tmp_path):
+    """A citation older than the daily window still resolves to SOMETHING from
+    that month, rather than 404ing."""
+    dates = ["2025-01-31", "2025-01-15", "2025-02-28", "2025-06-30",
+             "2026-08-22", "2026-08-23"]
+    _dated(tmp_path, dates)
+    publish.prune_snapshots(str(tmp_path / ".state"), keep=2)
+    left = sorted(p.name for p in (tmp_path / ".state" / "snapshots").iterdir())
+    # The LAST snapshot of each month survives; the earlier January one does not.
+    assert "2025-01-31" in left and "2025-01-15" not in left
+    assert "2025-02-28" in left and "2025-06-30" in left
+
+
+def test_the_retention_default_matches_the_documented_constant(tmp_path):
+    """The CLI default and the function default drifted apart once already: the
+    workflow passed --keep and the constant was only advisory."""
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--keep", type=int, default=publish.KEEP_SNAPSHOTS)
+    assert ap.parse_args([]).keep == publish.KEEP_SNAPSHOTS
+    assert publish.KEEP_SNAPSHOTS >= 30, (
+        "retention below a month cannot satisfy the citable-archive promise")

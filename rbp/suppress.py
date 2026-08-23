@@ -138,6 +138,26 @@ WITHHOLD_LABEL = "withhold"
 # the caps exist to bound an anonymous stranger, not to stop a reviewed decision.
 CONFIRMED_LABEL = "confirmed"
 
+# A title a human would type without the template, e.g. "Withhold CVE-2026-1234".
+# The template prefills exactly this, so a request filed through it matches on
+# both the label and the title.
+_TITLE_RE = re.compile(r"^withhold\b", re.I)
+
+# The template renders its answers under a "### CVE ID" heading. Only that
+# section is parsed, so prose elsewhere in the body cannot withhold a row.
+_FIELD_RE = re.compile(r"^###\s*CVE ID\s*$(.*?)(?=^###\s|\Z)",
+                       re.I | re.M | re.S)
+
+
+def _template_field(body):
+    """The CVE ID section of a template-filled issue, or '' if there is none.
+
+    Falling back to the WHOLE body would restore the defect this exists to fix,
+    so absence returns nothing and the title alone carries the request.
+    """
+    m = _FIELD_RE.search(body or "")
+    return m.group(1) if m else ""
+
 
 def from_issues(repo="RogoLabs/RBP", label=WITHHOLD_LABEL, token_env="GITHUB_TOKEN"):
     """Withhold requests from open issues carrying the label.
@@ -164,9 +184,23 @@ def from_issues(repo="RogoLabs/RBP", label=WITHHOLD_LABEL, token_env="GITHUB_TOK
     if token:
         env["GH_TOKEN"] = token
     try:
+        # NOT filtered on the label server-side. That filter is what made this
+        # channel unreachable for the people it exists for.
+        #
+        # Every surface linked issues/new?labels=withhold, and the `labels` query
+        # parameter is honoured only for accounts with TRIAGE permission on the
+        # repository. A CNA employee with an ordinary GitHub account filed an
+        # unlabelled issue, this query never returned it, and because the API
+        # call itself succeeded `err` stayed None so no degraded banner fired
+        # either. The request vanished with no error anywhere.
+        #
+        # There is now an issue template that applies the label server-side, and
+        # this reads ALL open issues and matches on the label OR the title, so a
+        # request filed by hand, from a phone, or against a stale bookmark still
+        # lands. The cost is one extra page of issues per run, which is nothing.
         p = subprocess.run(
             ["gh", "api", "--paginate",
-             f"repos/{repo}/issues?state=open&labels={label}&per_page=100"],
+             f"repos/{repo}/issues?state=open&per_page=100"],
             capture_output=True, text=True, timeout=60, env=env, check=False)
     except (OSError, subprocess.SubprocessError) as e:
         return [], f"could not run gh: {e}"
@@ -187,7 +221,19 @@ def from_issues(repo="RogoLabs/RBP", label=WITHHOLD_LABEL, token_env="GITHUB_TOK
             continue
         labels = {(l or {}).get("name") for l in (it.get("labels") or [])
                   if isinstance(l, dict)}
-        blob = " ".join(str(it.get(f) or "") for f in ("title", "body"))
+        title = str(it.get("title") or "")
+        # An issue counts as a withhold request if it carries the label OR its
+        # title says so. Anything else is an ordinary issue and is ignored.
+        if label not in labels and not _TITLE_RE.match(title.strip()):
+            continue
+
+        # THE TITLE AND THE TEMPLATE FIELD, NEVER THE FREE BODY.
+        #
+        # This used to be `title + body`, and every distinct CVE ID anywhere in
+        # the text became a withhold request. So "same root cause as
+        # CVE-2025-1111" withheld an unrelated row that nobody asked about, and
+        # a reference to prior art quietly removed someone else's row.
+        blob = title + " " + _template_field(str(it.get("body") or ""))
         author = ((it.get("user") or {}).get("login") or "").lower()
         for cid in {m.group(0).upper() for m in CVE_RE.finditer(blob)}:
             out.append({
@@ -212,7 +258,9 @@ def from_issues(repo="RogoLabs/RBP", label=WITHHOLD_LABEL, token_env="GITHUB_TOK
 # defacement, not exploitation, and the damage is proportional to rows removed. So
 # the primary defence is bounding the number, not authenticating the asker.
 
-# Most rows one author may withhold per run.
+# Most rows one author may withhold per run. RETAINED but no longer a gate: see
+# triage() for why the caps stopped deciding whether a row is withheld and
+# started deciding only whether the withhold PERSISTS.
 MAX_PER_AUTHOR = 5
 # Most rows all requests together may withhold per run, absolute...
 MAX_AUTO = 25
@@ -220,22 +268,48 @@ MAX_AUTO = 25
 # backlog is ever small. 25 of 522 is nothing; 25 of 40 would be most of the site.
 MAX_FRACTION = 0.05
 
+# Above this many requests in one run, the run is reported as anomalous. Not a
+# cap: every request is still honoured for the cycle. It exists so a flood is
+# VISIBLE on the site the same run it happens, rather than being discovered when
+# someone notices the count dropped.
+ANOMALY_THRESHOLD = MAX_AUTO
+
 
 def triage(requests, backlog_size=None):
     """Decide which withhold requests to honour this run.
 
     Returns `(honoured_ids, report)`.
 
-    ORDERED OLDEST FIRST, and that is the important line. The first version took
-    `sorted(found)[:MAX_AUTO]`, which sorts by CVE ID string, so an attacker naming
-    low-numbered ids would sort ahead of a genuine request filed days earlier and
-    silently displace it. A cap that can starve the request it exists to protect is
-    worse than no cap: it converts vandalism against the site into denial of the
-    correction channel, which is the more serious of the two. First-come-first-served
-    means a flood filed after a genuine request cannot displace it.
+    THE POLICY INVERTED ON 2026-08-23, and the reasoning is worth keeping.
 
-    Confirmed requests bypass every limit, so a reviewed mass report is not held
-    back by a ceiling designed for strangers.
+    It used to be: honour up to a cap, and silently drop the rest. Past
+    MAX_PER_AUTHOR the request was appended to a deferred list and nothing else
+    happened. The row kept publishing, no reply reached the requester, and the
+    degraded banner had no deferral term, so the site looked healthy while an
+    embargo request sat unhonoured. The failure mode was "an embargoed row stays
+    published", which is the worst outcome this channel exists to prevent.
+
+    It is now: EVERY request is honoured for ONE CYCLE, unconditionally, and it
+    PERSISTS only if a human adds the `confirmed` label. The failure mode becomes
+    "a row is briefly missing", and the abuse case the caps were written for is
+    bounded to a single six-hour cycle rather than prevented outright.
+
+    What this trades away, stated plainly because it is a real cost: anyone with
+    a GitHub account can blank any row for up to one cycle, and a flood can blank
+    many. That is defacement, the count goes DOWN, and it is visible and
+    self-healing. The alternative was publishing something a party asked to have
+    withheld, which is neither.
+
+    The caps still exist and still do work: they decide what carries into the
+    NEXT run without review, which is where an unbounded flood would otherwise
+    become permanent. `confirmed` bypasses everything, so a reviewed mass report
+    is never held back by a ceiling designed for strangers.
+
+    ORDERED OLDEST FIRST. The first version took `sorted(found)[:MAX_AUTO]`,
+    which sorts by CVE ID string, so an attacker naming low-numbered ids sorted
+    ahead of a genuine request filed days earlier and silently displaced it. That
+    matters less now that nothing is displaced, and the ordering is kept because
+    the persistence decision inherits it.
     """
     reqs = sorted(requests or [], key=lambda r: (r.get("created_at") or "",
                                                  r.get("issue") or 0))
@@ -243,21 +317,26 @@ def triage(requests, backlog_size=None):
     if backlog_size:
         ceiling = min(MAX_AUTO, max(1, int(backlog_size * MAX_FRACTION)))
 
-    honoured, per_author = [], {}
-    deferred_author, deferred_ceiling = [], []
+    # Everything requested is withheld this cycle. No exceptions, no ordering
+    # effects, no cap: that is the whole change.
+    honoured = list(reqs)
+
+    # The caps now classify PERSISTENCE only. A request over a cap is still
+    # withheld today; what it does not get is a free ride into tomorrow.
+    persists, over_author, over_ceiling, per_author = [], [], [], {}
     for r in reqs:
         if r.get("confirmed"):
-            honoured.append(r)
+            persists.append(r)
             continue
         a = r.get("author") or "?"
         if per_author.get(a, 0) >= MAX_PER_AUTHOR:
-            deferred_author.append(r)
+            over_author.append(r)
             continue
-        if len([x for x in honoured if not x.get("confirmed")]) >= ceiling:
-            deferred_ceiling.append(r)
+        if len(persists) >= ceiling:
+            over_ceiling.append(r)
             continue
         per_author[a] = per_author.get(a, 0) + 1
-        honoured.append(r)
+        persists.append(r)
 
     ids = {r["cve_id"] for r in honoured}
     report = {
@@ -265,9 +344,16 @@ def triage(requests, backlog_size=None):
         "honoured": len(ids),
         "authors": len({r.get("author") for r in reqs}),
         "confirmed": len([r for r in reqs if r.get("confirmed")]),
-        "deferred_per_author": len({r["cve_id"] for r in deferred_author}),
-        "deferred_ceiling": len({r["cve_id"] for r in deferred_ceiling}),
+        # Withheld today but NOT carried without review. Nothing is silently
+        # dropped any more, so these names changed with the meaning: a row here
+        # is withheld right now and needs the `confirmed` label to stay that way.
+        "needs_review_per_author": len({r["cve_id"] for r in over_author}),
+        "needs_review_ceiling": len({r["cve_id"] for r in over_ceiling}),
+        "persists_next_run": len({r["cve_id"] for r in persists}),
         "ceiling": ceiling,
+        # Visible the same run a flood happens, rather than inferred later from
+        # a count that dropped.
+        "anomalous": len(ids) > ANOMALY_THRESHOLD,
     }
     return ids, report
 
@@ -329,8 +415,15 @@ class Suppressions:
             "requested": t.get("requested", 0),
             "authors": t.get("authors", 0),
             "confirmed": t.get("confirmed", 0),
-            "deferred": (t.get("deferred_per_author", 0)
-                         + t.get("deferred_ceiling", 0)),
+            # Nothing is deferred any more: everything requested is withheld
+            # this cycle. What is published instead is how many of those need a
+            # human `confirmed` label to survive into the next run, which is the
+            # number that actually tells a reader whether the lever is being
+            # used or abused.
+            "needs_review": (t.get("needs_review_per_author", 0)
+                             + t.get("needs_review_ceiling", 0)),
+            "persists_next_run": t.get("persists_next_run", 0),
+            "anomalous": bool(t.get("anomalous")),
             "ceiling": t.get("ceiling"),
             "degraded": bool(self.error),
             "detail": self.error,
@@ -361,14 +454,18 @@ def load(list_path=DEFAULT_LIST, repo="RogoLabs/RBP", allow_remote=True,
                 print(f"  withhold requests: {d['requested']} id(s) from "
                       f"{d['authors']} author(s); honouring {d['honoured']}"
                       + (f", {d['confirmed']} confirmed" if d["confirmed"] else ""))
-            if d["deferred_per_author"]:
-                print(f"  ANTI-ABUSE: {d['deferred_per_author']} request(s) deferred, "
-                      f"one author above the {MAX_PER_AUTHOR}-per-run limit")
-            if d["deferred_ceiling"]:
-                print(f"  ANTI-ABUSE: {d['deferred_ceiling']} request(s) deferred, "
-                      f"above the {d['ceiling']}-per-run ceiling. Oldest requests were "
-                      "honoured first, so nothing already filed was displaced. Add the "
-                      f"'{CONFIRMED_LABEL}' label to exempt a reviewed request.")
+            over_a = d.get("needs_review_per_author", 0)
+            over_c = d.get("needs_review_ceiling", 0)
+            if over_a or over_c:
+                print(f"  REVIEW NEEDED: {over_a + over_c} request(s) are "
+                      "withheld this run but will NOT carry into the next one "
+                      f"without the '{CONFIRMED_LABEL}' label "
+                      f"({over_a} above the {MAX_PER_AUTHOR}-per-author limit, "
+                      f"{over_c} above the {d.get('ceiling')}-per-run ceiling).")
+            if d.get("anomalous"):
+                print(f"  ANOMALY: {d['honoured']} withhold(s) in one run, above "
+                      f"{ANOMALY_THRESHOLD}. Every one is honoured this cycle; "
+                      "check whether this is a flood before confirming any.")
     s = Suppressions(committed, auto, error=err, key=key, triage=triage_report)
     if err:
         print(f"  DEGRADED: suppression fast path unavailable ({err}). "

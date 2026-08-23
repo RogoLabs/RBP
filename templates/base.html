@@ -57,7 +57,6 @@
       <ul class="nav-menu">
         <li><a href="{{ p }}{{ home }}">Overview</a></li>
         <li><a href="{{ p }}cves.html">CVEs</a></li>
-        <li><a href="{{ p }}cnas.html">CNAs</a></li>
         <li><a href="{{ p }}changes.html">Changes</a></li>
         <li><a href="{{ p }}method.html">Method</a></li>
         <li><a href="{{ p }}policy.html">Policy</a></li>
@@ -79,16 +78,57 @@
 </header>
 
 <main id="main" class="container">
-{% if very_stale %}
-<div class="stale-banner">
-  <strong>This data is {{ age_hours }} hours old.</strong> The pipeline normally runs every
-  six hours, so something has stopped. Treat every count below as stale.
+{# STALENESS IS COMPUTED IN THE BROWSER, and it has to be.
+
+   The server-side version could not fire, ever. `stale` is derived from
+   summary.generated_at, written by the same pipeline invocation minutes before
+   the build, with Run pipeline and Build site adjacent in the workflow. On
+   success it is always ~0. On FAILURE the job aborts before Build site, so the
+   already-deployed HTML keeps its frozen `stale: false` and goes on asserting
+   freshness for as long as the outage lasts. The one condition the banner
+   exists to announce is exactly the one that stops it being recomputed.
+
+   Two scheduled ticks have already produced nothing (2026-08-21 06:00Z and
+   18:00Z, both with zero pushes in the window, so nothing was queued or
+   evicted), and no reader could have told.
+
+   The server-rendered text below is the no-JS fallback and is still correct on
+   the pathological case where a build succeeds against an old snapshot. #}
+<div id="stale-banner" class="stale-banner"
+     data-generated="{{ summary.get('generated_at', '') }}"
+     data-snapshot="{{ snapshot_date }}"
+     {% if not stale %}hidden{% endif %}>
+  <span id="stale-text">
+    {%- if very_stale %}
+    <strong>This data is {{ age_hours }} hours old.</strong> The pipeline normally runs
+    every six hours, so something has stopped. Treat every count below as stale.
+    {%- elif stale %}
+    Last updated {{ age_hours }} hours ago, longer than the usual six-hour interval.
+    {%- endif %}
+  </span>
 </div>
-{% elif stale %}
-<div class="stale-banner">
-  Last updated {{ age_hours }} hours ago, longer than the usual six-hour interval.
-</div>
-{% endif %}
+<script>
+(function () {
+  var el = document.getElementById('stale-banner');
+  if (!el) return;
+  var gen = Date.parse(el.getAttribute('data-generated'));
+  if (isNaN(gen)) return;                 // no timestamp: leave the fallback alone
+  var hours = (Date.now() - gen) / 3600000;
+  if (hours < 12) { el.hidden = true; return; }
+  var h = Math.round(hours);
+  var snap = el.getAttribute('data-snapshot') || '';
+  // snapshot_date is emitted alongside because the two move at different rates:
+  // the pipeline can run and still write no newer snapshot.
+  var suffix = snap ? ' The newest snapshot is dated ' + snap + '.' : '';
+  document.getElementById('stale-text').innerHTML = hours >= 24
+    ? '<strong>This data is ' + h + ' hours old.</strong> The pipeline normally runs '
+      + 'every six hours, so something has stopped. Treat every count below as stale.'
+      + suffix
+    : 'Last updated ' + h + ' hours ago, longer than the usual six-hour interval.'
+      + suffix;
+  el.hidden = false;
+})();
+</script>
 {# Degradation belongs beside staleness, on EVERY page, including /cna. PLAN.md
    states the rule ("never publish a degraded run without a banner") and it was
    broken on every single run: ubuntu truncates every time, and the only
@@ -133,7 +173,7 @@
         <p class="mb-1"><strong>Report a row</strong></p>
         <p class="text-muted small mb-0">
           To have a row withheld,
-          <a href="https://github.com/RogoLabs/RBP/issues/new?labels=withhold&title=Withhold%20CVE-">open a withhold request</a>. Give the CVE ID and
+          <a href="https://github.com/RogoLabs/RBP/issues/new?template=withhold.yml">open a withhold request</a>. Give the CVE ID and
           nothing else: no reason, no detail. Withheld on the next build.<br>
           Prefer not to post publicly?
           <a href="https://github.com/RogoLabs/RBP/security/advisories/new">Report privately</a> or email
@@ -149,6 +189,14 @@
         and publish an RBP metric, and this site will point at yours instead.<br>
         Built by <a href="https://rogolabs.net">RogoLabs</a> &middot;
         <a href="https://cve.icu">CVE.ICU</a>
+        {# Build provenance, on every page. A verdict about this site should name
+           the artefact it was measured against, and until this existed nobody
+           could. #}
+        {% if summary.get('source_commit') %}<br>
+        <span class="mono">{{ summary.source_commit }}</span>{% if summary.get('source_dirty') %}
+        <span class="chip chip-none">uncommitted changes</span>{% endif %}
+        &middot; built {{ summary.get('generated_at', '')[:16] | replace('T', ' ') }}Z
+        {% endif %}
       </small>
     </div>
   </div>

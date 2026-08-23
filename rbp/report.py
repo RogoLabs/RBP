@@ -71,6 +71,14 @@ def _derive_meta(row):
             return f"https://github.com/advisories/{gh}" if gh else ""
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
+        if s == "csaf":
+            # The advisory itself. Before this there was no csaf branch, so every
+            # CSAF row took the last-resort cve.org/CVERecord URL, which renders
+            # NOTHING for a RESERVED ID: the site would publish an ICS row whose
+            # only evidence link disproved it. refs carry "csaf:<pub>\t<id>\t<url>".
+            ref = next((r.split(":", 1)[1] for r in refs if r.startswith("csaf:")), "")
+            parts = ref.split("\t")
+            return parts[2] if len(parts) > 2 and parts[2].startswith("http") else ""
         return ""
     url = ""
     for s in ("redhat", "ubuntu", "debian", "alas", "alpine", "msrc", "mozilla", "ghsa", "osv", "csaf"):
@@ -92,17 +100,25 @@ DEFAULT_MIN_AGE_DAYS = 7
 
 # Absolute floor on the reportable buffer, in days.
 #
-# The project's entire warrant for naming a reserving CNA is the 24-hour
-# permission in CNA Rule 4.5.1.7, quoted on the holding page and on /policy and
-# named as the R5 mitigation in PLAN.md. Nothing bound the buffer to it:
+# A SELF-IMPOSED FLOOR, not a warrant. The word matters and the site already
+# gets it right elsewhere: policy.html says in bold that Rule 4.5.1.7 "is a rule
+# about the Secretariat's own conduct. It is not this site's permission to name
+# anyone, and the site does not claim it as one." That is the correct and
+# stronger position, and this comment used to contradict it.
+#
+# What 4.5.1.7 establishes is that the Program already CONTEMPLATES naming a
+# reserving CNA once an ID has been public for 24 hours. This project takes that
+# as the floor below which it will not go, which is a choice it makes rather
+# than a permission it holds. Nothing bound the buffer to it:
 # --min-age-days took any int, and the workflow passed a repository variable
 # through unvalidated, so setting it to 0 would publish inferred CNA names on IDs
 # public for under 24 hours, inside the window the Program's own rule tells its
 # own Secretariat not to name in, with no error and no visible change.
 #
-# 4 days rather than 1: the 24-hour horizon is the absolute floor below which the
-# site has no warrant at all, and the 72-hour publication expectation is the
-# operating one, so the first defensible buffer sits just past both.
+# 4 days rather than 1: the 24-hour horizon is the point below which the site
+# would be naming inside a window the Program tells its own Secretariat not to
+# name in, and the 72-hour publication expectation is the operating one, so the
+# first defensible buffer sits just past both.
 MIN_AGE_FLOOR_DAYS = 4
 
 
@@ -120,8 +136,8 @@ def validate_min_age(days):
         raise SystemExit(
             f"--min-age-days={days} is below the floor of {MIN_AGE_FLOOR_DAYS} days. "
             "CNA Rule 4.5.1.7 permits naming a reserving CNA only 24 hours after "
-            "public disclosure, and that permission is this site's entire warrant "
-            "for naming anyone. The 72-hour publication expectation is the "
+            "public disclosure. This site treats that as a self-imposed floor "
+            "rather than as permission. The 72-hour publication expectation is the "
             "operating horizon. Refusing to publish names inside either window.")
     return days
 
@@ -129,7 +145,12 @@ def validate_min_age(days):
 # corroboration (OSV re-publishes GHSA; ALAS is a RHEL rebuild).
 _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redhat",
            "ubuntu": "ubuntu", "debian": "debian", "alpine": "alpine", "csaf": "csaf",
-           "msrc": "microsoft", "mozilla": "mozilla", "arch": "arch"}
+           "msrc": "microsoft", "mozilla": "mozilla", "arch": "arch",
+           # Samsung is its own origin. Most of its CVEs are Google's, applied
+           # from the Android bulletin, and OSV carries those too, but Samsung
+           # shipping a fix is a separate public event from Google shipping one,
+           # so the two corroborate rather than mirror.
+           "samsung": "samsung"}
 # A CNA may be NAMED as owner only when its own feed corroborates it (or it is the
 # authoritative RESERVED assigner), never on a bare product-map guess.
 # The owner-feed mapping lives in clock.OWNER_FEEDS and nowhere else. A dead
@@ -140,8 +161,25 @@ _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redha
 # pins the exclusion and tests/test_pipeline.py now pins the single definition.
 
 
-def _indep(sources_str):
-    return len({_ORIGIN.get(s, s) for s in sources_str.split(",") if s})
+def _indep(sources_str, refs_str=""):
+    """Count INDEPENDENT origins, expanding csaf to one origin per provider.
+
+    Every CSAF provider used to collapse to the single token "csaf", so Siemens
+    and Schneider independently carrying the same row scored indep_sources 1 and
+    the headline, which counts only rows with two or more, discarded exactly the
+    corroboration CSAF exists to add. The mapping was written when csaf was one
+    hand-configured feed; it is now an aggregator expanding to 17 providers.
+    """
+    origins = {_ORIGIN.get(s, s) for s in sources_str.split(",") if s}
+    if "csaf" in origins:
+        providers = {r.split(":", 1)[1].split("\t")[0]
+                     for r in (refs_str or "").split(";")
+                     if r.startswith("csaf:") and ":" in r}
+        providers = {p for p in providers if p}
+        if providers:
+            origins.discard("csaf")
+            origins |= {f"csaf:{p}" for p in providers}
+    return len(origins)
 
 
 
@@ -253,7 +291,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     undated = [r for r in backlog if not isinstance(r["days_public"], int)]
 
     for r in backlog:
-        r["indep_sources"] = _indep(r["sources"])
+        r["indep_sources"] = _indep(r["sources"], r.get("refs") or "")
     # Every row is RESERVED now, the reservation endpoint confirms the state
     # directly, so there is no inferred `DNE` bucket to separate out.
     hard = [r for r in reportable if r["state"] == "RESERVED"]
@@ -338,7 +376,14 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     with open(os.path.join(sdir, "backlog.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols, extrasaction="ignore")
         w.writeheader()
-        w.writerows(_gated(r) for r in reportable)
+        # De-named like every other artefact. This writer had its own generator
+        # expression rather than sharing the JSON path's row list, so the strip
+        # applied to backlog.json missed it entirely and the CSV kept shipping
+        # owner_nameable=True. Same shape as the per-CNA JSON endpoints: a second
+        # writer for the same rows is where the guard does not reach.
+        from . import site as _site_csv
+        w.writerows(_site_csv._denamed([_gated(r) for r in reportable],
+                                       "backlog.csv"))
     # Suppressed rows are excluded from the ungated audit file too.
     #
     # This file is NOT on publish.ALLOWED_SNAPSHOT, so it never reaches the data
@@ -352,7 +397,9 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # Found by running the real snapshot through this path rather than by a unit
     # test: the unit tests used a two-row fixture and checked backlog.json and
     # held_back.json, so they were blind to the third writer.
-    json.dump([r for r in backlog if not r.get("suppressed")],
+    from . import site as _site_full
+    json.dump(_site_full._denamed([r for r in backlog if not r.get("suppressed")],
+                                  "backlog_full.json"),
               open(os.path.join(sdir, "backlog_full.json"), "w"), indent=1)
     # Excluded rows, with the reason. An epoch that removes the oldest and
     # strongest evidence has to read as deliberate conservatism, not be
@@ -392,11 +439,23 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # held_back.json is the file that proved a single-artefact assertion is not
     # an assertion: its named owners included CNAs absent from cnas.json.
     from . import site as _site
-    gated_rows = [_gated(r) for r in reportable]
+    # De-named HERE, at the write, not only when the site reads back.
+    #
+    # These snapshots are pushed to the `data` branch of a public repo, so they
+    # are a published artefact in their own right and not merely internal state.
+    # Stripping only on read would have left every name sitting on that branch
+    # and in its git history, which is exactly how 121 names reached it while
+    # every rendered page was clean.
+    #
+    # Safe with respect to grading: cli.run calls inference.apply_to_backlog,
+    # which records predictions into the ledger, at line 233, long before this
+    # function is reached at line 287. The grader has already seen the names.
+    gated_rows = _site._denamed([_gated(r) for r in reportable], "backlog.json")
+    held = _site._denamed(held, "held_back.json")
     _site.assert_artefact(gated_rows, "backlog.json")
     _site.assert_artefact(held, "held_back.json")
     json.dump(held, open(os.path.join(sdir, "held_back.json"), "w"), indent=1)
-    json.dump([_gated(r) for r in reportable], open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
+    json.dump(gated_rows, open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
 
     # WoW diff: compare like-for-like (full backlog both sides, not full-vs-reportable)
     prev = _prev_snapshot(snap_root, today)
