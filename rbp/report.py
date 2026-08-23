@@ -71,6 +71,14 @@ def _derive_meta(row):
             return f"https://github.com/advisories/{gh}" if gh else ""
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
+        if s == "csaf":
+            # The advisory itself. Before this there was no csaf branch, so every
+            # CSAF row took the last-resort cve.org/CVERecord URL, which renders
+            # NOTHING for a RESERVED ID: the site would publish an ICS row whose
+            # only evidence link disproved it. refs carry "csaf:<pub>\t<id>\t<url>".
+            ref = next((r.split(":", 1)[1] for r in refs if r.startswith("csaf:")), "")
+            parts = ref.split("\t")
+            return parts[2] if len(parts) > 2 and parts[2].startswith("http") else ""
         return ""
     url = ""
     for s in ("redhat", "ubuntu", "debian", "alas", "alpine", "msrc", "mozilla", "ghsa", "osv", "csaf"):
@@ -140,8 +148,25 @@ _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redha
 # pins the exclusion and tests/test_pipeline.py now pins the single definition.
 
 
-def _indep(sources_str):
-    return len({_ORIGIN.get(s, s) for s in sources_str.split(",") if s})
+def _indep(sources_str, refs_str=""):
+    """Count INDEPENDENT origins, expanding csaf to one origin per provider.
+
+    Every CSAF provider used to collapse to the single token "csaf", so Siemens
+    and Schneider independently carrying the same row scored indep_sources 1 and
+    the headline, which counts only rows with two or more, discarded exactly the
+    corroboration CSAF exists to add. The mapping was written when csaf was one
+    hand-configured feed; it is now an aggregator expanding to 17 providers.
+    """
+    origins = {_ORIGIN.get(s, s) for s in sources_str.split(",") if s}
+    if "csaf" in origins:
+        providers = {r.split(":", 1)[1].split("\t")[0]
+                     for r in (refs_str or "").split(";")
+                     if r.startswith("csaf:") and ":" in r}
+        providers = {p for p in providers if p}
+        if providers:
+            origins.discard("csaf")
+            origins |= {f"csaf:{p}" for p in providers}
+    return len(origins)
 
 
 
@@ -253,7 +278,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     undated = [r for r in backlog if not isinstance(r["days_public"], int)]
 
     for r in backlog:
-        r["indep_sources"] = _indep(r["sources"])
+        r["indep_sources"] = _indep(r["sources"], r.get("refs") or "")
     # Every row is RESERVED now, the reservation endpoint confirms the state
     # directly, so there is no inferred `DNE` bucket to separate out.
     hard = [r for r in reportable if r["state"] == "RESERVED"]

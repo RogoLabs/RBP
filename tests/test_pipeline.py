@@ -359,3 +359,53 @@ def test_a_row_with_no_owner_nameable_field_is_refused():
     import pytest as _pytest
     with _pytest.raises(SystemExit, match="owner_nameable"):
         assert_artefact([{"cve_id": "CVE-2026-1", "owner": None}], "rbp.json")
+
+
+# --------------------------------------------------------------------------
+# CSAF: the two defects that had to land before the profile promotion
+# --------------------------------------------------------------------------
+
+def test_a_csaf_row_links_to_the_advisory_not_to_a_blank_cve_page():
+    """report._u had branches for nine sources and none for csaf, so every CSAF
+    row fell through to cve.org/CVERecord?id=<id>. That page renders NOTHING for a
+    RESERVED ID, which is every row on this site: the evidence link disproved the
+    row it was evidence for. ICS and OT rows are the population this reaches."""
+    from rbp.report import _derive_meta
+    url = "https://cert-portal.siemens.com/productcert/csaf/ssa-123456.json"
+    _pkg, _eco, _vendor, out = _derive_meta({
+        "cve_id": "CVE-2026-1", "sources": "csaf",
+        "refs": f"csaf:Siemens ProductCERT\t SSA-123456\t{url}".replace("\t ", "\t"),
+    })
+    assert out == url, out
+
+    # And a malformed ref must fall back rather than emit a broken link.
+    _p, _e, _v, fallback = _derive_meta({
+        "cve_id": "CVE-2026-1", "sources": "csaf", "refs": "csaf:Siemens"})
+    assert fallback == "https://www.cve.org/CVERecord?id=CVE-2026-1"
+
+
+def test_two_csaf_providers_count_as_two_independent_origins():
+    """Every provider collapsed to the single token "csaf", so Siemens and
+    Schneider independently carrying one row scored indep_sources 1. The headline
+    counts only rows with two or more independent origins, so CSAF corroboration
+    was discarded at exactly the moment it started mattering."""
+    from rbp.report import _indep
+    refs = ("csaf:Siemens ProductCERT\tSSA-1\thttps://a.invalid/1;"
+            "csaf:Schneider Electric\tSEVD-2\thttps://b.invalid/2")
+    assert _indep("csaf", refs) == 2
+
+    # One provider is still one origin.
+    assert _indep("csaf", "csaf:Siemens ProductCERT\tSSA-1\thttps://a.invalid/1") == 1
+
+    # And the pre-existing collapses are untouched: OSV re-publishes GHSA.
+    assert _indep("osv,ghsa") == 1
+    assert _indep("csaf,debian", refs) == 3
+
+
+def test_the_origin_map_covers_every_adapter():
+    """An unmapped source falls through to itself, which silently counts a mirror
+    as an independent origin. The map was written when csaf was one feed."""
+    from rbp import feeds
+    from rbp.report import _ORIGIN
+    missing = sorted(set(feeds.ADAPTERS) - set(_ORIGIN))
+    assert not missing, f"adapters absent from _ORIGIN: {missing}"

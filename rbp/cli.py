@@ -21,8 +21,21 @@ from . import (cvelist, feeds, classify, report, attribution, coverage, inferenc
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
 # (CSAF aggregator + Microsoft) move to a deeper monthly cadence.
+# csaf and msrc were "deep" only, on a monthly cadence that existed in no cron.
+# The gate is measured on the profile the cron actually runs, so anything outside
+# `weekly` was outside the measurement: siemens showed as an uncovered top-50 CNA
+# while already being a configured CSAF provider.
+#
+# Measured before promoting, 2026-08-22: msrc 10,516 ids in 5.8s for +1 CNA,
+# csaf 3,401 ids in 135.8s for +12 (ABB, CERTVDE, CyberDanube, PTC, Rockwell,
+# SICK_AG, TPLink, fortinet, jci, palo_alto, schneider, siemens). 142 seconds
+# against a 9-minute warm run and a 15-minute target.
 PROFILES = {
-    "weekly": "alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch",
+    "weekly": ("alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,"
+               "csaf,msrc"),
+    # Kept as a distinct name even though it is now identical to weekly, so the
+    # workflow's --profile argument and the docs do not have to change, and so a
+    # future heavy source has somewhere to go.
     "deep": "alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,csaf,msrc",
 }
 

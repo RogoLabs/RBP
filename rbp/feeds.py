@@ -493,8 +493,26 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
     return out
 
 
+# OSV publishes 46 ecosystems; this reads 11. The other 35 were scored against the
+# corpus on 2026-08-23 and the result is why the list is not longer: every distro
+# ecosystem (Red Hat, SUSE, Rocky, AlmaLinux, Chainguard, Wolfi, openEuler, Mageia,
+# TuxCare, Azure Linux, Bitnami) contributes ZERO new CNAs at the 3-sighting floor,
+# because the distros are exactly what the other nine feeds already read.
+#
+# `Android` is the one that earned its place: +7 CNAs (Arm, Google_Devices,
+# MediaTek, Unisoc, google_android, imaginationtech, qualcomm) for 620 rows in
+# 0.5s. It also made a hand-written Android Security Bulletin scraper unnecessary,
+# which was the top item on the expansion list until this was measured.
+#
+# `GIT` is deliberately ABSENT despite looking like the biggest win available. A
+# full-text regex over its archive finds 31,366 in-scope CVE IDs and suggested
+# +18 CNAs; the ADAPTER returns 450 rows and +0, because it reads CVE aliases and
+# GIT records carry their CVE references elsewhere. The estimate and the adapter
+# were measuring different things. Anything added here needs the adapter's own
+# number, not a probe's.
 def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
-                                "Maven", "Packagist", "NuGet", "Pub", "Hex")):
+                                "Maven", "Packagist", "NuGet", "Pub", "Hex",
+                                "Android")):
     """OSV.dev bulk per-ecosystem dumps: language-ecosystem breadth. Each record's
     CVE aliases are the referenced IDs; package name is the attribution product."""
     out, seen = [], set()
@@ -764,8 +782,16 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             for v in (d or {}).get("vulnerabilities", []):
                 cid = v.get("cve", "")
                 if cid and _year(cid) in years:
+                    # source_ref carries publisher, tracking id AND the advisory
+                    # URL. Without the URL, report._u had no csaf branch to write
+                    # and every CSAF row fell through to
+                    # cve.org/CVERecord?id=<id>, which renders NOTHING for a
+                    # RESERVED ID: the row's only evidence link disproved it.
+                    # The publisher is separated by a tab so a name containing a
+                    # colon ("Foo Inc.: PSIRT") cannot corrupt the split.
                     rows.append({"cve_id": cid, "source": "csaf",
-                                 "source_ref": f"{pub}:{tid}", "public_date": _d(rel),
+                                 "source_ref": f"{pub}\t{tid}\t{href}",
+                                 "public_date": _d(rel),
                                  "product": "", "description": (v.get("title") or doc.get("title") or "")[:400]})
             return rows
 
