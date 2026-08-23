@@ -232,3 +232,62 @@ def test_the_rehearsal_escape_announces_itself_loudly():
     src = inspect.getsource(site_mod.load)
     i = src.index("REHEARSE")
     assert "must not" in src[i:i + 900], "the rehearsal message does not warn"
+
+
+# --------------------------------------------------------------------------
+# the checklist has to be able to go false (review item 16)
+# --------------------------------------------------------------------------
+
+def test_a_hand_verified_condition_expires():
+    """`_DECLARED` hard-coded six of nine conditions as MET, and four of the six
+    were false on the day someone finally looked. The docstring says the
+    checklist exists so the commitment is "checkable from outside", and a
+    condition that cannot go false is not checkable.
+
+    Deriving what the run can observe is the better fix and is done for
+    conditions 1 to 4. For the rest, "met once in August" must stop reading as
+    "met today"."""
+    fresh = launch.status(_summary(), _gate(), today="2026-08-25")
+    stale = launch.status(_summary(), _gate(), today="2026-12-01")
+    assert stale["unmet"] > fresh["unmet"], (
+        "no condition expired after three months; the checklist is still a claim")
+    for c in stale["conditions"]:
+        if c["n"] in (5, 6, 8, 9):
+            assert c["status"] == launch.UNMET
+            assert "verified" in (c["blocks"] or "")
+
+
+def test_an_undated_declared_condition_cannot_claim_met():
+    """An undated hand-verification is exactly the thing the expiry guards
+    against, so absence must fail closed rather than never expire."""
+    cond = {"n": 99, "title": "x", "detail": "", "status": launch.MET,
+            "blocks": None, "verified_on": None}
+    out = launch._expire(cond, today="2026-08-25")
+    assert out["status"] == launch.UNMET
+    assert "no usable verification date" in out["blocks"]
+
+
+def test_every_declared_condition_carries_a_verification_date():
+    """A new condition added without one would be permanently true, which is the
+    defect this whole section exists to remove."""
+    for c in launch._DECLARED:
+        assert "verified_on" in c, f"condition {c['n']} has no verified_on"
+        if c["status"] == launch.MET:
+            assert c["verified_on"], f"condition {c['n']} claims met with no date"
+
+
+def test_the_correction_channel_condition_follows_the_run():
+    """It rendered MET twenty lines below the banner saying withhold requests
+    could not be read this run, from data the run already computes. The
+    checklist was contradicting the page it is printed on."""
+    degraded = {**_summary(), "suppression": {"degraded": True}}
+    c = next(c for c in launch.checklist(degraded, _gate(), today="2026-08-25")
+             if c["n"] == 4)
+    assert c["status"] == launch.UNMET
+    assert "could not be read" in c["blocks"]
+
+    ok = {**_summary(), "suppression": {"degraded": False}}
+    c2 = next(c for c in launch.checklist(ok, _gate(), today="2026-08-25")
+              if c["n"] == 4)
+    # Still unmet for its own recorded reason, but not for this one.
+    assert "could not be read" not in (c2["blocks"] or "")

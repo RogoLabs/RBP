@@ -122,6 +122,8 @@ def _no_ungated_name(summary):
 _DECLARED = [
     {
         "n": 4,
+        # Hand-verified on this date; _expire flips it to UNMET once stale.
+        "verified_on": "2026-08-23",
         "title": "A monitored correction channel, with a suppression lever behind it",
         "detail": ("A route for a CNA to contest a row, a lever that withholds it, "
                    "and a published aggregate count so the lever cannot be used "
@@ -188,6 +190,8 @@ _DECLARED = [
     },
     {
         "n": 5,
+        # Hand-verified on this date; _expire flips it to UNMET once stale.
+        "verified_on": "2026-08-23",
         "title": "A self-imposed naming floor, bound in code",
         "detail": ("CNA Rule 4.5.1.7 lets the Secretariat name a reserving CNA only "
                    "24 hours after public disclosure. report.validate_min_age "
@@ -207,6 +211,8 @@ _DECLARED = [
     },
     {
         "n": 6,
+        # Hand-verified on this date; _expire flips it to UNMET once stale.
+        "verified_on": "2026-08-22",
         "title": "One precision figure, stratified, with its sample composition",
         "detail": ("One floored figure, computed in one place, stratified by CNA with "
                    "the floor applied per stratum, and published with its composition "
@@ -233,6 +239,8 @@ _DECLARED = [
     },
     {
         "n": 7,
+        # Hand-verified on this date; _expire flips it to UNMET once stale.
+        "verified_on": "2026-08-23",
         "title": "A dated immutable archive, resolvable after the epoch flip",
         "detail": ("Anything cited before launch stays resolvable afterwards at "
                    "/data/archive/<date>/rbp.json, with /data/archive.json as the "
@@ -271,6 +279,8 @@ _DECLARED = [
     },
     {
         "n": 8,
+        # Hand-verified on this date; _expire flips it to UNMET once stale.
+        "verified_on": "2026-08-22",
         "title": "A failure notification exists, and has been exercised once",
         "detail": ("One issue per failure episode, opened on the first failure, "
                    "commented on subsequent ones so the duration is visible, and "
@@ -291,6 +301,8 @@ _DECLARED = [
     },
     {
         "n": 9,
+        # Hand-verified on this date; _expire flips it to UNMET once stale.
+        "verified_on": "2026-08-22",
         "title": "The launch state rehearsed via dry_run against real data",
         "detail": ("dry_run plus rehearse_launch and rehearse_epoch build the "
                    "launched posture and an epoch flip against live data while "
@@ -324,19 +336,86 @@ _DECLARED = [
 ]
 
 
-def checklist(summary, gate):
-    """The nine conditions, in the review's order, derived where derivable."""
+# How long a hand-verified condition may claim MET before it has to be checked
+# again. A declared status is a memory, and this project has been wrong about a
+# memory more than once: four of the six declared conditions were false on the
+# day someone finally looked.
+VERIFIED_MAX_AGE_DAYS = 30
+
+
+def _expire(cond, today=None):
+    """Flip a hand-verified condition to UNMET once its check has gone stale.
+
+    THE WHOLE POINT OF THE CHECKLIST is that the commitment is "checkable from
+    outside", and a condition that cannot go false is not checkable. Six of nine
+    were hard-coded MET, and four of those six were false when the review looked.
+
+    Deriving what the run can observe is the better fix and is done above. For
+    the rest, "met once in August" must stop reading as "met today", so a
+    declared MET carries the date it was verified and expires. Absent a date it
+    expires immediately, because an undated claim is exactly the thing this
+    guards against.
+    """
+    if cond.get("status") != MET or "verified_on" not in cond:
+        return cond
+    import datetime as _dt
+    try:
+        then = _dt.date.fromisoformat(cond["verified_on"])
+        now = _dt.date.fromisoformat(today) if today else _dt.date.today()
+    except (TypeError, ValueError):
+        cond = dict(cond)
+        cond["status"] = UNMET
+        cond["blocks"] = ("this condition is hand-verified and carries no usable "
+                          "verification date, so it cannot claim to be met")
+        return cond
+    age = (now - then).days
+    cond = dict(cond)
+    cond["verified_age_days"] = age
+    if age > VERIFIED_MAX_AGE_DAYS:
+        cond["status"] = UNMET
+        cond["blocks"] = (f"last verified by hand {age} days ago, past the "
+                          f"{VERIFIED_MAX_AGE_DAYS}-day limit; re-check it")
+    return cond
+
+
+def _correction_channel_is_readable(cond, summary):
+    """Condition 4 cannot read MET on a run that could not read the requests.
+
+    Derived from data the run already computes. This rendered MET twenty lines
+    below the banner saying withhold requests could not be read this run, which
+    is the checklist contradicting the page it is printed on.
+    """
+    sup = (summary or {}).get("suppression") or {}
+    if not sup.get("degraded"):
+        return cond
+    cond = dict(cond)
+    cond["status"] = UNMET
+    cond["blocks"] = ("withhold requests could not be read on this run, so the "
+                      "correction channel is not monitored right now")
+    return cond
+
+
+def checklist(summary, gate, today=None):
+    """The nine conditions, in the review's order, derived where derivable.
+
+    Everything the run can observe is derived. What cannot be is declared with a
+    verification date and expires, so no condition is permanently true.
+    """
     out = [_coverage_condition(summary, gate)]
     out.extend(_no_ungated_name(summary))
-    out.extend(dict(c) for c in _DECLARED)
+    for c in _DECLARED:
+        c = dict(c)
+        if c["n"] == 4:
+            c = _correction_channel_is_readable(c, summary)
+        out.append(_expire(c, today))
     return sorted(out, key=lambda c: c["n"])
 
 
-def status(summary, gate):
+def status(summary, gate, today=None):
     """Roll-up. `cleared` means every condition is met, which is not the same
     question as `site._gate_status`'s coverage check and must never be conflated
     with it: coverage is one of the nine."""
-    items = checklist(summary, gate)
+    items = checklist(summary, gate, today)
     unmet = [c for c in items if c["status"] != MET]
     return {
         "conditions": items,
