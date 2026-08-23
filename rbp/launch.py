@@ -219,18 +219,24 @@ _DECLARED = [
                    "/data/archive/<date>/rbp.json, with /data/archive.json as the "
                    "index. Stable rather than immutable: a withhold removes a row "
                    "from the archive too, and /data states that rather than promising "
-                   "permanence this project would not honour."),
-        # FALSIFIED 2026-08-23. `publish stage` runs prune_snapshots(keep=2) on
-        # every six-hourly tick, so the branch holds exactly two dated snapshots
-        # plus one per month, and the site archive is built by iterating that
-        # same tree. A URL cited on Monday stops resolving by Wednesday unless it
-        # happens to be the last snapshot of its month. Verified on origin/data,
-        # which holds 2026-08-22 and 2026-08-23 and nothing else. "Resolvable
-        # after the epoch flip" is a claim about weeks, and retention is set to
-        # about two days.
-        "status": UNMET,
-        "blocks": ("prune_snapshots(keep=2) deletes a dated archive route in "
-                   "about two days; the retention policy contradicts the promise"),
+                   "permanence this project would not honour. Retention is 90 "
+                   "days of dailies, then one snapshot per month indefinitely, "
+                   "and /data states that as a number rather than an adjective."),
+        # Was FALSIFIED on 2026-08-23 and fixed the same day. prune_snapshots ran
+        # with keep=2 on every six-hourly tick, so the branch held exactly two
+        # dated snapshots and a URL cited on Monday stopped resolving by
+        # Wednesday. Verified on origin/data, which held 2026-08-22 and
+        # 2026-08-23 and nothing else.
+        #
+        # MET is claimed on a BOUNDED promise, which is the only kind this can
+        # honestly be. A dated URL resolves for 90 days; after that the exact
+        # date resolves only if it was its month's last. The condition's title
+        # says "immutable" and the archive is not, deliberately, because a
+        # withhold must be able to reach it. What changed is that the window is
+        # now longer than the time it takes to write something citing it, and it
+        # is published rather than implied.
+        "status": MET,
+        "blocks": None,
         # /data/archive/<YYYY-MM-DD>/rbp.json per retained snapshot, plus
         # /data/archive.json as the index. Written from that day's snapshot rather
         # than from today's numbers wearing that day's name, and through the same

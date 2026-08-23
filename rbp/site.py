@@ -503,6 +503,20 @@ def assert_artefact(rows, label, cnas=None, covered=None):
     return len(rows)
 
 
+def _publish_keep():
+    """The retention window, read from publish rather than restated.
+
+    A second copy of this number in a template is how /data came to describe
+    "the current snapshot, the previous one, and one per month" while the
+    constant said something else.
+    """
+    try:
+        from .publish import KEEP_SNAPSHOTS
+        return KEEP_SNAPSHOTS
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def _drop_withheld(rows, withheld, label):
     """Remove withheld ids from a row set. Idempotent, and loud when it fires."""
     if not withheld:
@@ -669,6 +683,9 @@ def load(snap_root, data_dir):
         "generated": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d %H:%M UTC"),
         "snapshot_date": os.path.basename(latest),
         "snap_root": snap_root,
+        # Rendered on /data so the retention promise is a number a reader can
+        # check against the archive index, not an adjective.
+        "keep_snapshots": _publish_keep(),
         # Carried so _write_data can apply it to the dated archive, which is
         # rebuilt from prior snapshots on every run and is therefore a writer in
         # its own right. Runner-local; never rendered, never published.

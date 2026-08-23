@@ -76,8 +76,16 @@ https://rbptracker.org/data/archive.json        <em>the index of what exists</em
         <em>down</em> later. This project will not promise permanence it is unwilling
         to honour at the expense of someone asking to be delisted, and an archive that
         kept rows a CNA had contested would become the reason the withhold did not
-        work. Retention also prunes: the current snapshot, the previous one, and one
-        per month survive.
+        work.
+      </p>
+      <p class="mb-0 mt-2">
+        <strong>Retention is {{ keep_snapshots }} days, then one per month, forever.</strong>
+        A dated URL resolves for {{ keep_snapshots }} days from the day it was written.
+        After that the exact date stops resolving unless it was the last snapshot of
+        its month, which does survive indefinitely.
+        <a href="data/archive.json">The index</a> always lists what exists, so a
+        consumer can check rather than guess. This was two days until 2026-08-23,
+        which was shorter than the time it takes to write anything citing it.
       </p>
     </div>
     {% if archive %}

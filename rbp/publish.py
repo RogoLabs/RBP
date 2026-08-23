@@ -284,12 +284,34 @@ def prune_ledger(state_dir, snap_root):
     return dropped
 
 
-def prune_snapshots(state_dir, keep=2, keep_monthly=True):
-    """Retention: the current snapshot, the previous one, and one per month.
+# How many dated snapshots the data branch retains. One directory per day.
+#
+# WAS 2, and the reason it was 2 no longer applies. The original rationale was
+# that "an unbounded public log of every row ever NAMED, including names later
+# withdrawn, grew four times a day and no correction on the site could reach the
+# history". That is an argument about names, and v1 publishes none: a retained
+# snapshot is now a dated count with no attribution in it.
+#
+# Meanwhile keep=2 quietly contradicted launch condition 7, which promises that
+# "anything cited before launch stays resolvable afterwards". The site archive is
+# built by iterating this same tree, so a URL cited on Monday stopped resolving
+# by Wednesday, and the live branch held exactly two dates.
+#
+# 90 days at 0.88 MB per staged snapshot is about 79 MB, plus roughly 11 MB a
+# year from the monthlies that survive forever. Well inside the 1 GB repo
+# guidance, and it makes a citation good for a quarter, which covers any
+# realistic press or research cycle.
+#
+# Still STABLE rather than immutable: a withhold removes a row from every
+# retained snapshot, so a figure can go down. That is the point of the lever and
+# /data says so rather than promising a permanence this project will not honour.
+KEEP_SNAPSHOTS = 90
 
-    An unbounded public log of every row ever named, including names later
-    withdrawn, grew four times a day and no correction on the site could reach
-    the history.
+
+def prune_snapshots(state_dir, keep=KEEP_SNAPSHOTS, keep_monthly=True):
+    """Retention: the last `keep` dated snapshots, plus one per month forever.
+
+    See KEEP_SNAPSHOTS for why the number changed and what it is trading off.
     """
     root = os.path.join(state_dir, "snapshots")
     snaps = sorted(d for d in glob.glob(os.path.join(root, "*")) if os.path.isdir(d))
@@ -470,7 +492,7 @@ def main(argv=None):
     ap.add_argument("--state", default=".state")
     ap.add_argument("--snapshots", default="snapshots")
     ap.add_argument("--data", default="data")
-    ap.add_argument("--keep", type=int, default=2)
+    ap.add_argument("--keep", type=int, default=KEEP_SNAPSHOTS)
     ap.add_argument("--site", default="site")
     args = ap.parse_args(argv)
 

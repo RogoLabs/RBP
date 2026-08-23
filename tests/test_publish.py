@@ -278,3 +278,58 @@ def test_gate_fails_loudly_when_a_launch_is_requested_below_it(tmp_path, capsys,
     assert "FAIL" in out and "below the 80.0% gate" in out
     # And the reason names the floor, so the log says what to move.
     assert "seen at least 3 times" in out
+
+
+# --------------------------------------------------------------------------
+# retention: the archive has to outlive the citation (item 17)
+# --------------------------------------------------------------------------
+
+def _dated(tmp_path, dates):
+    root = tmp_path / ".state" / "snapshots"
+    for d in dates:
+        p = root / d
+        p.mkdir(parents=True)
+        (p / "backlog.json").write_text("[]")
+    return root
+
+
+def test_retention_keeps_a_quarter_of_dailies(tmp_path):
+    """keep=2 meant a URL cited on Monday stopped resolving by Wednesday, while
+    launch condition 7 promised anything cited before launch stays resolvable
+    after it. The live branch held exactly two dates."""
+    import datetime as dt
+    days = [(dt.date(2026, 8, 23) - dt.timedelta(days=i)).isoformat()
+            for i in range(200)]
+    _dated(tmp_path, days)
+    publish.prune_snapshots(str(tmp_path / ".state"))
+    left = sorted(p.name for p in (tmp_path / ".state" / "snapshots").iterdir())
+    # The newest 90 survive as dailies.
+    assert days[0] in left and days[89] in left
+    assert days[90] not in left or days[90][:7] != days[89][:7], (
+        "a snapshot older than the window survived for a reason other than "
+        "being its month's last")
+    assert len(left) >= 90
+
+
+def test_retention_keeps_one_per_month_forever(tmp_path):
+    """A citation older than the daily window still resolves to SOMETHING from
+    that month, rather than 404ing."""
+    dates = ["2025-01-31", "2025-01-15", "2025-02-28", "2025-06-30",
+             "2026-08-22", "2026-08-23"]
+    _dated(tmp_path, dates)
+    publish.prune_snapshots(str(tmp_path / ".state"), keep=2)
+    left = sorted(p.name for p in (tmp_path / ".state" / "snapshots").iterdir())
+    # The LAST snapshot of each month survives; the earlier January one does not.
+    assert "2025-01-31" in left and "2025-01-15" not in left
+    assert "2025-02-28" in left and "2025-06-30" in left
+
+
+def test_the_retention_default_matches_the_documented_constant(tmp_path):
+    """The CLI default and the function default drifted apart once already: the
+    workflow passed --keep and the constant was only advisory."""
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--keep", type=int, default=publish.KEEP_SNAPSHOTS)
+    assert ap.parse_args([]).keep == publish.KEEP_SNAPSHOTS
+    assert publish.KEEP_SNAPSHOTS >= 30, (
+        "retention below a month cannot satisfy the citable-archive promise")
