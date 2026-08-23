@@ -128,21 +128,40 @@ _DECLARED = [
                    "silently. The fast path is a public withhold request carrying "
                    "no reason, which is auditable from outside; two private routes "
                    "reach a person for anyone who prefers them."),
-        # FALSIFIED 2026-08-23, verified rather than reasoned about. The
-        # automatic route is unreachable by the people it exists for. All six
-        # surfaces link issues/new?labels=withhold; the `labels` query parameter
-        # is applied only for users with triage permission; there is no
-        # .github/ISSUE_TEMPLATE to apply it server-side (`ls -a .github` returns
-        # `workflows` and nothing else); and suppress.from_issues queries
-        # state=open&labels=withhold and reads nothing else. A CNA employee with
-        # an ordinary account files an unlabelled issue that nothing ever reads,
-        # and because the API call itself succeeds, `err` is None and no degraded
-        # banner fires either. The rehearsal that declared this MET was run from
-        # an account with write access, which is the one configuration in which
-        # it cannot reproduce.
+        # Was FALSIFIED on 2026-08-23 and fixed the same day. The automatic route
+        # was unreachable by the people it exists for: all six surfaces linked
+        # issues/new?labels=withhold, the `labels` query parameter is applied
+        # only for accounts with triage permission, and no issue template existed
+        # to apply it server-side, while from_issues queried
+        # state=open&labels=withhold and read nothing else. An ordinary account
+        # filed an unlabelled issue that nothing ever read, and since the API
+        # call itself succeeded no degraded banner fired either. The rehearsal
+        # that declared this MET ran from an account with write access, the one
+        # configuration in which the defect cannot reproduce.
+        #
+        # Now: an issue template applies the label server-side, the read is
+        # unfiltered and matches on label OR title, and the parser reads the
+        # template field and the title but never the free body, so an id
+        # mentioned in prose cannot withhold an unrelated row.
+        #
+        # The DEFERRAL POLICY also inverted, and that is the larger change.
+        # Past the per-author cap a request used to be silently dropped: the row
+        # kept publishing, nobody replied, and the degraded banner had no
+        # deferral term. Every request is now honoured for one cycle
+        # unconditionally and persists only with the `confirmed` label, so the
+        # failure mode is "a row is briefly missing" rather than "an embargoed
+        # row stays published". The cost, stated because it is real: any account
+        # can blank a row for up to one cycle, and a flood is reported as
+        # anomalous on the site the same run it happens.
+        #
+        # STILL NOT REHEARSED FROM A PERMISSIONLESS ACCOUNT. That is the one
+        # thing this condition asked for that code cannot supply, and it is
+        # Jerry's to do: file a withhold request from an account with no
+        # permissions on the repository and confirm the row leaves.
         "status": UNMET,
-        "blocks": ("the automatic route needs an issue label an ordinary account "
-                   "cannot apply, and no issue template supplies it"),
+        "blocks": ("the channel is reachable in code and covered by tests, but "
+                   "has not been exercised end to end from an account with no "
+                   "repository permissions"),
         # The rehearsal below stands as a record of what WAS verified, and its
         # last line is why it did not catch this: it checked the data branch
         # rather than the path a CNA employee would take.

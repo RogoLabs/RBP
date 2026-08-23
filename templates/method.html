@@ -493,7 +493,7 @@
   <div class="card-body">
     <p>
       <strong>To have a row withheld:</strong>
-      <a href="https://github.com/RogoLabs/RBP/issues/new?labels=withhold&title=Withhold%20CVE-">open a withhold request</a>. It is withheld on the
+      <a href="https://github.com/RogoLabs/RBP/issues/new?template=withhold.yml">open a withhold request</a>. It is withheld on the
       next build, which runs every six hours, with no human in the loop.
       <strong>Give the CVE ID and nothing else.</strong> No reason, no detail, and no
       confirmation that a vulnerability exists. A request carrying no reason does not
@@ -540,8 +540,8 @@
     {% if sup.get('requested') %}
     <p class="small text-muted mb-2">
       <strong>{{ sup.requested }} request(s) from {{ sup.authors }} author(s) this
-      run</strong>{% if sup.get('deferred') %},
-      of which <strong>{{ sup.deferred }} deferred</strong> by the anti-abuse limits
+      run</strong>{% if sup.get('needs_review') %},
+      of which <strong>{{ sup.needs_review }} need review</strong> to carry past this run
       below{% endif %}{% if sup.get('confirmed') %},
       {{ sup.confirmed }} reviewed and confirmed{% endif %}.
     </p>

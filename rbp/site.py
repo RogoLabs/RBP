@@ -1191,7 +1191,7 @@ def build(out, snap_root, data_dir):
         "# vulnerability exists. It is withheld on the next build, which runs\n"
         "# every six hours. Requests are public so the count can be audited; the\n"
         "# private routes below reach a person instead, within five business days.\n"
-        "Contact: https://github.com/RogoLabs/RBP/issues/new?labels=withhold\n"
+        "Contact: https://github.com/RogoLabs/RBP/issues/new?template=withhold.yml\n"
         "Contact: https://github.com/RogoLabs/RBP/security/advisories/new\n"
         "Contact: mailto:rbp@rogolabs.net\n"
         f"Expires: {_expires}\n"
