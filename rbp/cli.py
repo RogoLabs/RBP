@@ -17,7 +17,7 @@ import json
 import os
 
 from . import (cvelist, feeds, classify, report, attribution, coverage, inference,
-               clock, site, suppress)
+               clock, site, suppress, schema)
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
 # (CSAF aggregator + Microsoft) move to a deeper monthly cadence.
@@ -389,6 +389,11 @@ def cmd_run(args):
     # reached no artefact and no template. The launch gate depends on it.
     stats["coverage"] = cov
     stats["generated_at"] = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+    # Which code produced this run. Read by every envelope and rendered in the
+    # site footer, so a stale artefact identifies itself instead of being
+    # mistaken for a defect in whatever is being compared against it.
+    stats["source_commit"] = schema.source_commit()
+    stats["source_dirty"] = schema.source_dirty()
     stats["min_age_days"] = args.min_age_days
     json.dump(cnas, open(os.path.join(sdir, "cnas.json"), "w"), indent=1)
     json.dump(stats, open(os.path.join(sdir, "summary.json"), "w"), indent=1)

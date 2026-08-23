@@ -30,6 +30,64 @@ templates.
 from __future__ import annotations
 
 import datetime as dt
+import os
+import subprocess
+
+
+# BUILD PROVENANCE. Every artefact says which code produced it.
+#
+# Review item 1, and it is item 1 because nothing else can be verified without
+# it. A fifth of the adversarial review's blocker-grade output was spent on
+# defects that did not exist, filed against a local build produced by an older
+# revision and refuted by four reviewers who fetched origin/data and recomputed.
+# The same thing happened during the de-naming: a test compared a freshly changed
+# column contract against a site/ directory built by earlier code, and the
+# failure looked like a bug in the contract.
+#
+# The failure mode is not "the artefact is wrong". It is "nobody can tell which
+# code the artefact came from", which makes every verdict about the project
+# provisional, including the favourable ones.
+_UNKNOWN_COMMIT = "unknown"
+
+
+def source_commit():
+    """The commit this build came from, or 'unknown'.
+
+    Order matters. GITHUB_SHA is authoritative in Actions and is present even
+    when the checkout is shallow or detached. `git rev-parse` is the local
+    fallback. Neither is allowed to raise: a build must not fail because it
+    cannot describe itself, it must say so.
+    """
+    sha = (os.environ.get("GITHUB_SHA") or "").strip()
+    if sha:
+        return sha[:12]
+    try:
+        out = subprocess.run(["git", "rev-parse", "--short=12", "HEAD"],
+                             capture_output=True, text=True, timeout=10,
+                             cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if out.returncode == 0 and out.stdout.strip():
+            return out.stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return _UNKNOWN_COMMIT
+
+
+def source_dirty():
+    """True when the working tree differs from the commit above.
+
+    A dirty build is the one that produced the stale-artefact confusion, so the
+    artefact says so rather than implying the commit describes it fully. Always
+    False under Actions, where the tree is a clean checkout.
+    """
+    if os.environ.get("GITHUB_SHA"):
+        return False
+    try:
+        out = subprocess.run(["git", "status", "--porcelain"],
+                             capture_output=True, text=True, timeout=10,
+                             cwd=os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        return out.returncode == 0 and bool(out.stdout.strip())
+    except (OSError, subprocess.SubprocessError):
+        return False
 
 # Bump on ANY published key rename, removal, or meaning change. Additive fields
 # do not require a bump; a consumer pinning a major version must keep working.
@@ -168,6 +226,9 @@ def envelope(rows, summary, *, launched, snapshot_date, kind="backlog"):
     return {
         "schema_version": SCHEMA_VERSION,
         "kind": kind,
+        # Which code produced this file. See source_commit().
+        "source_commit": source_commit(),
+        "source_dirty": source_dirty(),
         "generated_at": summary.get("generated_at")
                         or dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "snapshot_date": snapshot_date,

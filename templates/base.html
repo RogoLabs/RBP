@@ -148,6 +148,14 @@
         and publish an RBP metric, and this site will point at yours instead.<br>
         Built by <a href="https://rogolabs.net">RogoLabs</a> &middot;
         <a href="https://cve.icu">CVE.ICU</a>
+        {# Build provenance, on every page. A verdict about this site should name
+           the artefact it was measured against, and until this existed nobody
+           could. #}
+        {% if summary.get('source_commit') %}<br>
+        <span class="mono">{{ summary.source_commit }}</span>{% if summary.get('source_dirty') %}
+        <span class="chip chip-none">uncommitted changes</span>{% endif %}
+        &middot; built {{ summary.get('generated_at', '')[:16] | replace('T', ' ') }}Z
+        {% endif %}
       </small>
     </div>
   </div>
