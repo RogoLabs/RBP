@@ -58,7 +58,8 @@
 <div class="card">
   <div class="card-header"><h2 class="card-title">How long these have been public</h2></div>
   <div class="card-body">
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="The backlog at launch, scrollable">
       <table class="rbp">
         <caption>
           {{ held_back | length | commafy }} reserved CVE IDs public before

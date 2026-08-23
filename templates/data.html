@@ -89,7 +89,8 @@ https://rbptracker.org/data/archive.json        <em>the index of what exists</em
       </p>
     </div>
     {% if archive %}
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Published data files, table 1, scrollable">
       <table class="rbp" style="min-width:0">
         <caption>Snapshots currently resolvable. Rows can decrease on a withhold.</caption>
         <thead>
@@ -139,7 +140,8 @@ https://rbptracker.org/data/archive.json        <em>the index of what exists</em
       never a placeholder</strong>, and
       <span class="mono">owner_nameable</span> is the field to branch on.
     </p>
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Published data files, table 2, scrollable">
       <table class="rbp" style="min-width:0">
         <thead>
           <tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">When absent</th><th scope="col">Meaning</th></tr>

@@ -88,7 +88,10 @@
 }
 .chip-late    { background: rgba(255, 193, 7, 0.18);  color: #875f00; }
 .chip-corrob  { background: rgba(25, 135, 84, 0.12);  color: #146f45; }
-.chip-block   { background: rgba(13, 110, 253, 0.10); color: #0b5bd2; }
+/* .chip-block was the "named from an ID block" owner tier. v1 publishes no
+   attribution, so no template emits it and the rule is dead. Removed rather
+   than left: dead CSS is what let a hand-typed test list look complete while
+   omitting a chip that WAS rendering. */
 /* chip-none carried --color-text-muted at 1.75, which is the EXACT ratio the
    comment further down this file claims to have fixed: that fix created a new
    token and applied it to td.unattributed, and the chip kept the old one. */
@@ -104,7 +107,6 @@
 [data-theme="dark"] .chip-ok     { color: #4ade80; }
 [data-theme="dark"] .chip-late   { color: #f0c25a; }
 [data-theme="dark"] .chip-corrob { color: #4ade80; }
-[data-theme="dark"] .chip-block  { color: #6ba5f8; }
 [data-theme="dark"] .chip-none   { background: #262a36; color: #b6bcc7; }
 
 /* ---- tables ------------------------------------------------------------ */
@@ -360,6 +362,28 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
    site's conservatism was the part a reader could not see. That is a semantic
    failure as much as a standards one. */
 :root {
+  /* THE INHERITED TOKENS, CORRECTED AT THE ROOT.
+     
+     style.css loads first and sets --color-text-secondary: #6c757d (3.95 over
+     the striped row) and --color-text-muted: #adb5bd (1.75). This project
+     forked AA-safe values into --rbp-* and then repointed rules at them ONE AT
+     A TIME, which is why the fix kept missing things: sixteen rendered
+     selectors were still on the inherited values, including .chip-unmeasured,
+     td.desc, blockquote, .nav-menu a and every .footer link.
+     
+     Repointing rule by rule is the method that failed twice. Overriding the
+     token fixes the whole class at once and cannot be missed by omission.
+     Values solved against #e9ecef, the darkest surface either lands on. */
+  --color-text-secondary: #5a6168;
+  --color-text-muted: #666b70;
+  /* Hover states are text a reader reads while pointing at it, so they carry
+     the same 4.5 bar. #0d6efd measured 3.80 on the striped row. */
+  --color-primary: #0b5bd2;
+  /* .logo:hover, .nav-menu a:hover and .footer a:hover all read this. */
+  --color-accent: #0b5bd2;
+  /* .metric-value, the big figure on every stat card, read this at 2.63. */
+  --chart-primary: #10538f;
+
   --rbp-text-secondary: #52585e;
   --rbp-text-muted: #595f66;
   --rbp-link: #0a58ca;
@@ -367,6 +391,13 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
   --rbp-thead-h: 2.5rem;
 }
 [data-theme="dark"] {
+  /* Same corrections for dark. --color-text-muted is #6b7280 there, which is
+     3.67 on the card surface and is what .histo-labels reads at. */
+  --color-text-muted: #9aa3b2;
+  /* .theme-toggle:hover reads --color-primary over --color-bg-hover. */
+  --color-primary: #6ba5f8;
+  --color-accent: #6ba5f8;
+  --chart-primary: #6ba5f8;
   --rbp-text-secondary: #b6bece;
   --rbp-text-muted: #9aa3b2;
   --rbp-link: #7cb0ff;
@@ -419,6 +450,16 @@ table.rbp th button.sortbtn {
   width: 100%;
 }
 table.rbp th button.sortbtn:hover { color: var(--rbp-link); }
+/* `all: unset` on the sort button is specificity (0,2,3) and beat the project's
+   single focus rule, so seven keyboard-operable controls had NO visible focus
+   indicator. SC 2.4.7, and it is the control a keyboard user reaches first on
+   the page the site most wants cited. Matched at the same specificity so it
+   actually applies. */
+table.rbp th button.sortbtn:focus-visible {
+  outline: 3px solid var(--rbp-link);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
 
 table.rbp caption {
   caption-side: top;
@@ -568,4 +609,14 @@ h1.visually-quiet {
     overflow-x: auto;
     white-space: pre-wrap;
   }
+}
+
+
+/* White text on a light-blue fill is 2.51 in dark theme. These three are the
+   only rules that put `white` on --color-primary, and in dark that token is a
+   pale blue chosen for TEXT on a dark ground, not for a fill behind white. */
+[data-theme="dark"] .skip-link,
+[data-theme="dark"] .page-header button:active,
+[data-theme="dark"] .chart-export-btn:hover {
+  color: #0b1220;
 }

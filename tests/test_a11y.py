@@ -336,16 +336,34 @@ SURFACES = {
     "dark": ("#0f1117", "#151821"),
 }
 
-# Every chip, plus the prose that explains what the headline number counts.
-# chip-ok is the marker that renders the nine-condition launch checklist and it
-# measured 2.41; chip-none measured 1.75, which is the exact ratio a comment in
-# rbp.css claims to have fixed.
-CONTRAST_SELECTORS = [
-    ".chip-must", ".chip-should", ".chip-ok", ".chip-late",
-    ".chip-corrob", ".chip-block", ".chip-none",
-    ".lead-unit", ".lead-sub", "td.unattributed",
-    "table.rbp td.desc", "table.rbp th", "table.rbp a",
-]
+# DISCOVERED, NOT TYPED. This list used to be seven chips written by hand, in
+# the commit that fixed a review finding ABOUT hand-typed lists. There are eight
+# chips. `.chip-unmeasured` was the missing one and was still failing at 3.95 in
+# light theme, and it is the marker the stylesheet itself calls the largest
+# column on the page. The same omission also left td.desc, blockquote,
+# .nav-menu a and every footer link on the uncorrected tokens.
+#
+# contrast.text_selectors() scans both stylesheets for every rule that sets a
+# text colour and filters to the ones this site's templates actually render, so
+# a selector is covered the moment it gains a colour and nobody has to remember.
+CONTRAST_SELECTORS = contrast.text_selectors()
+
+
+def test_the_selector_list_is_discovered_and_not_empty():
+    """An empty or collapsed scan would make every parametrised test below
+    vacuously pass, which is the failure mode this file exists to stop being."""
+    assert len(CONTRAST_SELECTORS) >= 60, (
+        f"only {len(CONTRAST_SELECTORS)} selectors discovered; the scan has "
+        "collapsed and the AA tests below are asserting almost nothing")
+    # The specific miss that motivated the change.
+    assert ".chip-unmeasured" in CONTRAST_SELECTORS
+    # And every chip, since they are written by page JavaScript rather than
+    # appearing in template markup as literal class attributes.
+    # Every chip a template still emits. `.chip-block` is deliberately absent:
+    # it was the owner-tier marker and v1 publishes no attribution, so the rule
+    # was dead CSS and was deleted rather than left to pad a coverage list.
+    for chip in ("must", "should", "ok", "late", "corrob", "none", "unmeasured"):
+        assert f".chip-{chip}" in CONTRAST_SELECTORS, chip
 
 
 @pytest.mark.parametrize("theme", ["light", "dark"])
@@ -355,9 +373,22 @@ def test_text_meets_aa_on_every_surface_it_lands_on(selector, theme):
 
     Chips render at 11.52px/600, which is neither >=18.66px nor >=14px bold, so
     the large-text exemption of 3.0 does not apply to them.
+
+    My earlier version of this test was deleted along with the hand-typed list
+    it was parametrised over, which took the assertion count from 26 to 0 while
+    the suite still reported green. That is the same class of defect as
+    everything else in this file's history: a check that stopped checking and
+    looked exactly like one that had nothing to report.
     """
-    worst = min(contrast.effective_ratio(selector, bg, theme)
-                for bg in SURFACES[theme])
+    try:
+        worst = min(contrast.effective_ratio(selector, bg, theme)
+                    for bg in SURFACES[theme])
+    except contrast.Unmeasurable as e:
+        # `inherit` and `currentColor` resolve against the parent element, which
+        # needs a DOM. Skipped rather than guessed: a guessed ratio is worse
+        # than an absent one, and this is the honest boundary of a static
+        # harness. It is also exactly what a browser-backed check would cover.
+        pytest.skip(str(e))
     assert worst >= contrast.AA_NORMAL, (
         f"{selector} renders at {worst} in {theme} theme, below "
         f"{contrast.AA_NORMAL}")
@@ -431,3 +462,37 @@ def test_effective_ratio_actually_composites_the_translucent_background():
     assert contrast.composite((255, 255, 255), 0.5, (0, 0, 0)) == (128, 128, 128)
     assert contrast.composite((10, 20, 30), 1.0, (200, 200, 200)) == (10, 20, 30)
     assert contrast.composite((10, 20, 30), 0.0, (200, 200, 200)) == (200, 200, 200)
+
+
+def test_the_sort_buttons_have_a_focus_indicator_that_wins():
+    """`all: unset` on table.rbp th button.sortbtn is specificity (0,2,3) and
+    beat the project's single focus rule, so seven keyboard-operable controls
+    had no visible focus indicator at all. SC 2.4.7, on the control a keyboard
+    user reaches first on the page the site most wants cited.
+
+    Asserted on the SELECTOR, not just on the presence of an outline somewhere:
+    a focus rule that loses the cascade is the same as no focus rule, and that
+    is precisely what was there."""
+    css = contrast.strip_comments(CSS.read_text())
+    assert "table.rbp th button.sortbtn:focus-visible" in css, (
+        "no focus rule at the sort button's own specificity; a lower-specificity "
+        "rule loses to `all: unset`")
+    block = css[css.index("table.rbp th button.sortbtn:focus-visible"):]
+    block = block[:block.index("}")]
+    assert "outline" in block and "none" not in block
+
+
+def test_every_scroll_container_is_keyboard_reachable():
+    """A scrollable region with no tab stop is unreachable without a pointer,
+    SC 2.1.1 at Level A. Nine .tablewrap containers existed and exactly one, on
+    /cves, carried tabindex. The other eight hid table content behind a scroll
+    only a mouse could move."""
+    import re as _re
+    for tpl in TEMPLATES.glob("*.html"):
+        body = tpl.read_text()
+        for m in _re.finditer(r'<div class="tablewrap"([^>]*)>', body):
+            attrs = m.group(1)
+            for a in ("tabindex", "role=", "aria-label"):
+                assert a in attrs, (
+                    f"{tpl.name}: a scroll container is missing {a}; it cannot "
+                    "be reached or announced without a pointer")

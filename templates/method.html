@@ -273,7 +273,8 @@
     {% if grader.misses %}
     <p class="mb-2"><strong>Misses.</strong> Predictions that turned out wrong, shown because
       a precision figure without its errors is marketing.</p>
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Method figures, scrollable">
       <table class="rbp" style="min-width:0">
         <thead><tr><th scope="col">CVE ID</th><th scope="col">Predicted</th><th scope="col">Actual</th><th scope="col">Graded</th></tr></thead>
         <tbody>

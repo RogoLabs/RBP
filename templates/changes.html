@@ -82,7 +82,8 @@
 <div class="card">
   <div class="card-header"><h2 class="card-title">Published</h2></div>
   <div class="card-body">
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Changes since the previous run, table 1, scrollable">
       <table class="rbp" style="min-width:0">
         <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days public before publishing</th>
           <th scope="col">First public</th><th scope="col">Published</th></tr></thead>
@@ -149,7 +150,8 @@
 <div class="card">
   <div class="card-header"><h2 class="card-title">New</h2></div>
   <div class="card-body">
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Changes since the previous run, table 2, scrollable">
       <table class="rbp" style="min-width:0">
         <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days public</th><th scope="col">Advisory summary</th></tr></thead>
         <tbody>
@@ -181,7 +183,8 @@
         rows are listed rather than dropped.
       </p>
     </div>
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Changes since the previous run, table 3, scrollable">
       <table class="rbp" style="min-width:0">
         <thead><tr><th scope="col">CVE ID</th><th scope="col">First public</th><th scope="col">Rejected</th></tr></thead>
         <tbody>
@@ -208,7 +211,8 @@
       {{ resolutions_tracked | commafy }} still tracked. This accumulates forward from the
       first run, so it is thin early on.
     </p>
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region"
+     aria-label="Changes since the previous run, table 4, scrollable">
       <table class="rbp" style="min-width:0">
         <thead><tr><th scope="col">CVE ID</th><th scope="col" class="num">Days to publish</th><th scope="col">First public</th><th scope="col">Published</th></tr></thead>
         <tbody>
