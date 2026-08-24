@@ -968,13 +968,31 @@ def _record_csaf_health(providers, unreachable, empty, capped_dirs, rows):
     if empty:
         bits.append(f"no advisories in scope: {', '.join(sorted(empty)[:8])}")
     detail = "; ".join(bits)
-    if unreachable:
-        # TRUNCATED, not FAILED: the adapter returned real rows from the
-        # providers it could read. FAILED would say the feed produced nothing,
-        # and overstating an outage teaches a reader to discount the banner as
-        # surely as understating one does.
-        record_feed("csaf", TRUNCATED, detail, rows=rows)
-    elif capped_dirs:
+    if unreachable and not rows:
+        # Nothing was read from anywhere. That is an outage, not a limit.
+        record_feed("csaf", FAILED, detail, rows=rows)
+    elif unreachable or capped_dirs:
+        # CAPPED, NOT TRUNCATED, and the distinction decides whether the site
+        # wears a banner.
+        #
+        # `degraded_state` folds TRUNCATED into "this run is incomplete" and
+        # deliberately does not fold CAPPED, because a standing limit fires on
+        # every run by design: "A warning that is always on is not a warning, it
+        # is furniture, and it teaches a reader to ignore the banner on the day
+        # it means something."
+        #
+        # An unreachable CSAF provider is a standing limit. Cisco's WAF returns
+        # 403 to a non-browser agent on every single run, and this was written as
+        # TRUNCATED first, which would have put "This run is incomplete ... not
+        # comparable to the previous run" on every page of every run from the
+        # moment it merged. Caught by simulating the live provider set before
+        # merging rather than by reading the banner on the published site.
+        #
+        # It is still NAMED and still published as a limitation, so the loss is
+        # visible; it is just not called a degradation. A provider that was
+        # working and stops is caught by `compare_magnitudes`, which compares
+        # this feed's row count to its own previous run and IS a degradation.
+        # That is the mechanism for "worse than usual", and it already exists.
         record_feed("csaf", CAPPED, detail, rows=rows)
     else:
         record_feed("csaf", OK, detail, rows=rows)

@@ -689,8 +689,52 @@ def test_csaf_reports_a_provider_it_could_not_reach(monkeypatch):
     feeds.feed_csaf({2026}, providers=("https://vendor.example/pm.json",),
                     aggregators=())
     h = feeds.FEED_HEALTH.get("csaf")
-    assert h and h["status"] == feeds.TRUNCATED, h
+    # FAILED, because this fixture has one provider and it could not be read, so
+    # the adapter returned nothing at all.
+    assert h and h["status"] == feeds.FAILED, h
     assert "unreachable" in h["detail"] and "vendor.example" in h["detail"]
+
+
+def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
+        monkeypatch):
+    """THE ONE THAT WOULD HAVE SHIPPED A PERMANENT BANNER.
+
+    Cisco's WAF returns 403 to a non-browser agent on every single run. Recording
+    that as TRUNCATED puts "This run is incomplete ... not comparable to the
+    previous run" on every page of every run, for ever, which is precisely the
+    furniture failure cli.degraded_state was written to avoid.
+
+    Caught by simulating the live provider set before merging. The loss is still
+    named and still published as a limitation; it is just not a degradation.
+    """
+    feeds.reset_health()
+    feeds._record_csaf_health(providers=["a", "b", "c"],
+                              unreachable=["www.cisco.com (403)"],
+                              empty=[], capped_dirs=[], rows=3190)
+    h = feeds.FEED_HEALTH["csaf"]
+    assert h["status"] == feeds.CAPPED, h
+    assert "www.cisco.com" in h["detail"], "the loss is not named"
+    failures, truncated, _n, capped = feeds.health_summary()
+    assert capped and not truncated and not failures
+    on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
+                                     capped=capped, dropped=0,
+                                     reports_unreadable=False, shrunk=[])
+    assert on is False, (
+        f"a standing WAF block is being reported as a degraded run: {reasons}")
+
+
+def test_a_provider_that_stops_working_is_caught_by_the_shrink_guard():
+    """The complement, so the decision above does not amount to ignoring an
+    outage. "Worse than usual" is compare_magnitudes' job, keyed on this feed's
+    own previous row count, and it IS a degradation."""
+    shrunk = feeds.compare_magnitudes(
+        {"csaf": {"rows": 3190, "status": feeds.CAPPED}},
+        {"csaf": {"rows": 400, "status": feeds.CAPPED}})
+    assert shrunk, "a 87% collapse in csaf rows was not reported"
+    on, _reasons = cli.degraded_state(failures=[], truncated=[], capped=[],
+                                      dropped=0, reports_unreadable=False,
+                                      shrunk=shrunk)
+    assert on is True
 
 
 def test_csaf_reports_a_provider_whose_directories_were_capped(monkeypatch):
