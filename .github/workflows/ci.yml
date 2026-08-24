@@ -18,8 +18,13 @@ jobs:
       - run: pip install -r requirements-dev.txt
 
       # Frozen fixtures only: deterministic, no network.
+      #
+      # tests/render is ignored here rather than left to skip itself. It skips
+      # cleanly without Playwright, but a collection-time error in its conftest
+      # would still fail this job, and this same command gates the publication in
+      # deploy.yml. The browser directory must not be able to stop a publish.
       - name: Unit + acceptance tests
-        run: python -m pytest tests/ -q
+        run: python -m pytest tests/ -q --ignore=tests/render
 
       # Hits cveawg.mitre.org. Asserts drift-proof invariants, not snapshot
       # counts. Non-blocking on PRs from forks, blocking on main.
@@ -27,4 +32,87 @@ jobs:
         if: github.event_name != 'pull_request'
         env:
           RBP_LIVE_TESTS: '1'
-        run: python -m pytest tests/ -q
+        run: python -m pytest tests/ -q --ignore=tests/render
+
+  # THE RENDER JOB (PLAN.md 8e).
+  #
+  # A four-persona panel was asked how CI should cover the half of accessibility
+  # that genuinely needs layout, and its answer was: a browser on the COMMIT PATH
+  # ONLY, nothing new on the publish path.
+  #
+  # The panel's own investigation is why. A reviewer served the built site and
+  # measured it, and found that the review's proposed assertion would not have
+  # caught the review's own defect: at 375px the card layout IS correctly active
+  # and the document still overflowed 926px, and at exactly 768px, where the
+  # collision is worst, `scrollWidth - clientWidth` is 0 and the obvious check
+  # passes while three quarters of every row hides behind a nested scrollbar.
+  # The check that does catch 768 needs the cascade, specificity resolution and
+  # media-query evaluation run for real, which is the definition of a browser.
+  # A CSS parser was evaluated and rejected on measurement rather than on taste.
+  #
+  # WHY IT LIVES IN ci.yml. The panel asked for "push and pull_request only, NOT
+  # in deploy.needs", and those are exactly this workflow's triggers. Being in a
+  # different workflow from the publication is a stronger guarantee than being a
+  # non-dependency inside it: there is no skip cascade to reason about, and
+  # deploy.yml is unchanged apart from the same --ignore above.
+  #
+  # ONE RECORDED DEVIATION. The panel also asked for `render` in `notify.needs`,
+  # so a failure opens an issue. `notify` lives in deploy.yml and cannot depend
+  # on a job in another workflow. It is not wired up, and the reason is that the
+  # notification exists for UNATTENDED scheduled publication: "a silent stop
+  # looked exactly like a quiet week". A push and a pull request are attended by
+  # definition, and a red required check on the commit that caused it reaches the
+  # person who caused it faster than a bot issue. If `render` is ever moved onto
+  # the publish path, it goes into deploy.yml and into notify.needs together.
+  #
+  # GIVEN UP, EXPLICITLY: per-tick browser coverage. Three experiments agreed
+  # that after `overflow-wrap: anywhere` and `min-width: 0`, document overflow no
+  # longer varies with feed data, so a scheduled tick has nothing new to render.
+  # If that is wrong the failure is silent, and the fix is to move this job into
+  # deploy.yml, into deploy.needs and into notify.needs.
+  render:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: pip
+      # requirements.txt for Jinja2 and the site builder; the browser
+      # requirements are a separate file so `pip install -r requirements-dev.txt`
+      # never pulls a 150 MB download for the offline suite. pytest is in
+      # requirements-dev.txt, which the render fixture also needs.
+      - run: pip install -r requirements-dev.txt -r requirements-browser.txt
+      - run: python -m playwright install --with-deps chromium
+
+      # RBP_RENDER_TESTS=1 turns every skip in tests/render into a FAILURE.
+      #
+      # Without it, a job that installed nothing, downloaded no browser, or
+      # collected zero tests reports green, and a browser job that silently skips
+      # itself is worse than no browser job because it reads as coverage. This is
+      # the same class as the fixture that never produced a degraded run, so
+      # `False == False` passed.
+      - name: Render tests
+        env:
+          RBP_RENDER_TESTS: '1'
+        run: python -m pytest tests/render -q
+
+      # The count is asserted, not eyeballed. RBP_RENDER_TESTS turns a SKIP into
+      # a failure, but it cannot turn a test that was never collected into
+      # anything at all: a renamed directory, a broken import guarded by a
+      # try/except, or a stray `-k` would leave pytest exiting 0 with "no tests
+      # ran". That reads as a green browser job covering nothing.
+      - name: Refuse an empty render suite
+        env:
+          RBP_RENDER_TESTS: '1'
+        run: |
+          N=$(python -m pytest tests/render -q --collect-only \
+              | grep -c '::' || true)
+          echo "collected $N render tests"
+          if [ "$N" -lt 20 ]; then
+            echo "::error::the render suite collected $N tests; it should be 20+."
+            echo "A browser job that collects nothing passes and covers nothing."
+            exit 1
+          fi
