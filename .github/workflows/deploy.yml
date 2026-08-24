@@ -99,7 +99,15 @@ jobs:
       # requirements.txt has no pytest; it lives in requirements-dev.txt, which
       # the build job never installed.
       - run: pip install -r requirements-dev.txt
-      - run: python -m pytest tests/ -q
+      # tests/render is IGNORED on the publish path, deliberately.
+      #
+      # PLAN.md 8e: "a browser on the COMMIT path only. Nothing new on the
+      # publish path." The render tests skip themselves without Playwright, but a
+      # collection-time error in tests/render/conftest.py would still fail this
+      # job, and this job gates a four-times-daily publication. So the browser
+      # directory is not merely un-run here, it is not collected: a layout suite
+      # must not be able to stop the site publishing.
+      - run: python -m pytest tests/ -q --ignore=tests/render
 
   build:
     needs: test

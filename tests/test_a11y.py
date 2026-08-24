@@ -11,6 +11,15 @@ a token change fails the build instead of a later audit. And they are measured
 against every background the text actually renders on, not against white: half the
 rows are not white, which is the mistake the false comment in rbp.css already
 documented making.
+
+THE OTHER HALF LIVES IN tests/render/. Contrast needs no browser and is settled
+here. Layout does: horizontal overflow at a given viewport, and the 768px
+breakpoint collision, cannot be answered without running the cascade and the
+media queries for real. This file asserts those STRUCTURALLY, on the text of the
+stylesheet, which is weaker than measuring a viewport and is why PLAN.md 8e put a
+browser on the commit path. The two are complementary and neither replaces the
+other: the structural assertions here still run offline in about ten seconds and
+still gate the publication, and tests/render never touches the publish path.
 """
 from __future__ import annotations
 

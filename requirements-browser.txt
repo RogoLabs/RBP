@@ -1,0 +1,15 @@
+# Browser-backed render tests ONLY. Deliberately NOT pulled in by
+# requirements-dev.txt.
+#
+# `pytest tests/ -q --ignore=tests/render` is the offline default and runs in
+# about 11 seconds with no browser, no download and no network. Putting
+# Playwright in requirements-dev.txt would put a ~150 MB browser download in
+# front of every contributor and every `deploy.yml` test job, to serve one CI
+# job that never touches the publish path.
+#
+# Installed only by the `render` job in ci.yml, which also runs
+# `playwright install --with-deps chromium`.
+#
+# Upper bound for the same reason as requirements.txt: a major is a new browser
+# and a new API surface, and it should arrive as a commit rather than overnight.
+playwright>=1.47,<2.0

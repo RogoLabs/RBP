@@ -32,13 +32,17 @@ def _text(path):
     return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", raw)))
 
 
-@pytest.fixture(scope="module")
-def built():
-    """The rendered site, if it has been built. These assertions are about output."""
-    out = ROOT / "site"
-    if not (out / "overview.html").exists():
-        pytest.skip("site not built; run `python -m rbp.cli build --out site`")
-    return out
+@pytest.fixture
+def built(built_site):
+    """The rendered site, built for this session from a fixture snapshot.
+
+    Was `ROOT / "site"`, skipped when absent. `site/` is gitignored, so it is
+    absent on every CI runner: all eighteen assertions in this file skipped in
+    CI, including in the `test` job that gates the publication, and ran locally
+    against whatever stale build happened to be in the working tree. See
+    tests/_sitefixture.py.
+    """
+    return built_site
 
 
 # --------------------------------------------------------------------------
@@ -192,13 +196,17 @@ def test_the_flow_versus_stock_distinction_is_on_the_holding_page():
     assert "minority of CNAs" in text, "the coverage bound is missing"
 
 
-def test_the_ask_is_anchored_on_the_in_force_document():
+def test_the_ask_is_anchored_on_the_in_force_document(built):
     """Asking for the return of a v1.0-era quarterly table under a policy that
     withdrew the arithmetic that table scored is answerable with "that was v1.0".
-    v2.0.0 names "Program metrics and audits" as its own identification channel."""
-    for path in (PLACEHOLDER, ROOT / "site" / "overview.html"):
-        if not pathlib.Path(path).exists():
-            continue
+    v2.0.0 names "Program metrics and audits" as its own identification channel.
+
+    The `if not exists(): continue` this used to carry was a skip wearing a
+    loop's clothing: it never raised, so it never reported, and on CI it checked
+    the placeholder and silently walked past the built page. Both are asserted
+    now, unconditionally.
+    """
+    for path in (PLACEHOLDER, built / "overview.html"):
         assert "metrics and audits" in _text(path), path
 
 

@@ -23,6 +23,8 @@ import os
 
 import pytest
 
+import _sitefixture
+
 # Every environment variable that changes what the site publishes or how it decides
 # to publish it. Cleared for the whole session so no test inherits an operator's
 # shell or a workflow's env block.
@@ -63,3 +65,40 @@ def _hermetic_environment():
             os.environ.pop(k, None)
         else:
             os.environ[k] = v
+
+
+# --------------------------------------------------------------------------
+# the built site, for the tests that assert on OUTPUT
+# --------------------------------------------------------------------------
+#
+# Session-scoped and hermetic. See tests/_sitefixture.py for why these exist:
+# three modules used to find the site by looking for `./site` on disk and skip
+# when it was absent, which is always, on every CI runner, including the job that
+# gates the publication.
+#
+# In the top-level conftest rather than in a helper each module imports, so the
+# fixtures are inherited by tests/render/ too and there is one build per posture
+# per session rather than one per module.
+
+
+@pytest.fixture(scope="session")
+def built_site(tmp_path_factory):
+    """The PRE-LAUNCH build: / is the holding page, the dashboard is
+    /overview.html, robots.txt disallows everything.
+
+    The default because it is the posture the site is actually in today, and
+    because it is the one the copy and suppression assertions were written
+    against: they glob the dashboard pages excluding index.html, which only means
+    what they intend when index.html is the holding page.
+    """
+    return _sitefixture.build(tmp_path_factory.mktemp("prelaunch"), launched=False)
+
+
+@pytest.fixture(scope="session")
+def built_site_launched(tmp_path_factory):
+    """The LAUNCHED build: / is the dashboard.
+
+    Not a variant to check later. Several writers are gated on `launched`, so a
+    pre-launch-only fixture cannot reach them at all.
+    """
+    return _sitefixture.build(tmp_path_factory.mktemp("launched"), launched=True)

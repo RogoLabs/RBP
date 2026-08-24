@@ -771,9 +771,75 @@ handshake proposed to close that, on the grounds that it puts a new false-green
 surface on the publication path to guard against an edit only the maintainer can
 make.
 
-**Status: NOT IMPLEMENTED.** The contrast half needs no browser and is done and
-covered. The layout half is currently asserted structurally, which is weaker than
-measuring a real viewport and is labelled as such in `tests/test_a11y.py`.
+**Status: IMPLEMENTED, 2026-08-24.** `render` in `ci.yml`, `needs: test`, 29
+tests in `tests/render/` against a headless Chromium, 4.3 seconds locally. The
+offline default is unchanged at about 10 seconds and now passes
+`--ignore=tests/render` explicitly, in `ci.yml` **and** in `deploy.yml`: the
+render tests skip themselves without Playwright, but a collection-time error in
+their conftest would still have failed the job that gates a four-times-daily
+publication.
+
+The shape shipped as specified, with one deviation and two corrections. All three
+are recorded because each of them was a belief this document held that turned out
+to be wrong when it was executed.
+
+**Deviation: `render` is NOT in `notify.needs`.** It cannot be. `notify` is a job
+in `deploy.yml` and a job cannot depend on a job in another workflow, and the
+panel's other constraint, "push and pull_request only", is precisely `ci.yml`'s
+trigger set. Living in a different workflow is a stronger version of "not in
+`deploy.needs`" than the panel asked for: there is no skip cascade to reason
+about at all. The notification is given up on the argument that it exists for
+UNATTENDED publication, where "a silent stop looked exactly like a quiet week",
+and a push or a pull request is attended by definition, with a red required check
+reaching the person who caused it faster than a bot issue would. If `render` ever
+moves onto the publish path it goes into `deploy.yml` and into `notify.needs`
+together.
+
+**Correction 1. The computed-style agreement check does not catch 768.** This
+section says the check "that does catch 768 is a computed-style agreement check".
+It is not, and `tests/render/test_mutations.py` proves it by executing the pre-fix
+stylesheet: at 768px the thead is displayed AND the cells are `nowrap`, so both
+halves report "not card layout", they agree, and an agreement check passes. What
+catches 768 is a **card-mode assertion** (at or below the boundary the card layout
+must be ON) together with the **nested-scrollbar measurement**, which is the
+one that reproduces the panel's own finding of ~74% of every row hidden. The
+agreement check earns its place on the OTHER defect, the 926px overflow at 375px,
+where the card layout is correctly active and `nowrap` was never reset. Both
+checks are needed and neither is redundant. Two mutation tests assert the
+negative result directly, so if a future browser starts reporting document
+overflow at 768 the reasoning here is revisited rather than the assertion quietly
+deleted.
+
+**Correction 2. `.focus()` does arm `:focus-visible`, sometimes.** This section
+says focus rings need real Tab traversal "since `.focus()` does not arm
+`:focus-visible`". Measured: Chromium matches `:focus-visible` on a scripted
+`.focus()` when there has been **no user interaction yet**, because it treats
+"nothing has happened" the same as "keyboard". The distinction only appears after
+a real pointer press, which is the state most readers are in. The conclusion is
+unchanged and the reason for it is different, which is exactly the kind of
+half-true premise that makes a test confidently wrong. Traversal is still driven
+by real key presses; the premise is now asserted rather than assumed.
+
+**Two false-greens closed that the panel's shape did not name.** A browser job
+that installs nothing, downloads no browser or collects zero tests exits green
+and covers nothing, so `RBP_RENDER_TESTS=1` turns every skip in that directory
+into a failure and a second step refuses a suite that collects fewer than 20
+tests. And the width sweep's own parser is covered by the OFFLINE suite in
+`tests/test_breakpoints.py`, because a parser that silently stops finding
+breakpoints leaves three fixed widths, every render check still passes, and the
+pixel that broke is the one nobody measured.
+
+**The fixture is synthetic, and that is guarded rather than hoped.** CI has no
+`snapshots/` on the commit path. `tests/render/test_mutations.py` strips the card
+layout entirely and requires `/cves` to overflow at 320px and 375px: if the
+fixture rows are ever too short or too few to exercise reflow, that test fails
+rather than every overflow assertion in the package quietly becoming vacuous.
+Three further guards in the conftest fail the build if `changes.html`,
+`backlog-at-launch.html` or `method.html` render no table, because each was a
+real way to leave five `.rbp` tables unmeasured while the suite stayed green.
+
+The contrast half needs no browser, is done, and is still covered offline;
+`tests/test_a11y.py` now says which half it is and where the other one lives.
 
 ## 9. Still open
 

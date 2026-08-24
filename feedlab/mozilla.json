@@ -1,0 +1,55 @@
+{
+ "baseline": {
+  "effective_n": 137,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 823134,
+ "cnas_effective_alone": 1,
+ "cnas_new_effective": 0,
+ "cnas_new_effective_names": [],
+ "cnas_reached": 3,
+ "disclosure": {
+  "dated_n": 606,
+  "lead_examples": [
+   "CVE-2025-5986",
+   "CVE-2025-8041",
+   "CVE-2025-8042",
+   "CVE-2025-8364",
+   "CVE-2025-54145"
+  ],
+  "lead_max_days": 29,
+  "lead_median_days": 6,
+  "lead_n": 34,
+  "lead_pct": 5.61,
+  "mirror_n": 572,
+  "undated_n": 1,
+  "unpublished_examples": [],
+  "unpublished_n": 0
+ },
+ "feed": "mozilla",
+ "health": {},
+ "ids": 607,
+ "ids_new": 20,
+ "scored_at": "2026-08-24T14:41:48+00:00",
+ "stability": null,
+ "verdict": "corroborating",
+ "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
+ "wall_seconds": 6.0,
+ "years": [
+  2025,
+  2026
+ ]
+}

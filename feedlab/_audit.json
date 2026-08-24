@@ -1,0 +1,164 @@
+{
+ "baseline_scored_at": "2026-08-24T14:38:17+00:00",
+ "feeds": {
+  "alas": {
+   "cnas_new_effective": 1,
+   "cnas_new_effective_names": [
+    "Tcpdump"
+   ],
+   "lead_n": 393,
+   "unpublished_n": 75,
+   "verdict": "detecting",
+   "wall_seconds": 0.9
+  },
+  "alpine": {
+   "cnas_new_effective": 1,
+   "cnas_new_effective_names": [
+    "naver"
+   ],
+   "lead_n": 0,
+   "unpublished_n": 107,
+   "verdict": "detecting",
+   "wall_seconds": 5.5
+  },
+  "arch": {
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "lead_n": 0,
+   "unpublished_n": 0,
+   "verdict": "unmeasurable",
+   "wall_seconds": 1.5
+  },
+  "csaf": {
+   "cnas_new_effective": 11,
+   "cnas_new_effective_names": [
+    "ABB",
+    "CERTVDE",
+    "CyberDanube",
+    "Esri",
+    "Rockwell",
+    "SICK_AG",
+    "fortinet",
+    "jci",
+    "palo_alto",
+    "schneider",
+    "siemens"
+   ],
+   "lead_n": 582,
+   "unpublished_n": 171,
+   "verdict": "detecting",
+   "wall_seconds": 193.9
+  },
+  "debian": {
+   "cnas_new_effective": 9,
+   "cnas_new_effective_names": [
+    "CyberArk",
+    "ENISA",
+    "GandC",
+    "PRJBLK",
+    "Patchstack",
+    "Perforce",
+    "Tcpdump",
+    "debian",
+    "tenable"
+   ],
+   "lead_n": 0,
+   "unpublished_n": 401,
+   "verdict": "detecting",
+   "wall_seconds": 2.3
+  },
+  "ghsa": {
+   "cnas_new_effective": 1,
+   "cnas_new_effective_names": [
+    "LY-Corporation"
+   ],
+   "lead_n": 1364,
+   "unpublished_n": 371,
+   "verdict": "detecting",
+   "wall_seconds": 49.1
+  },
+  "mozilla": {
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "lead_n": 34,
+   "unpublished_n": 0,
+   "verdict": "corroborating",
+   "wall_seconds": 6.0
+  },
+  "msrc": {
+   "cnas_new_effective": 2,
+   "cnas_new_effective_names": [
+    "Patchstack",
+    "Tcpdump"
+   ],
+   "lead_n": 4677,
+   "unpublished_n": 3,
+   "verdict": "detecting",
+   "wall_seconds": 6.1
+  },
+  "osv": {
+   "cnas_new_effective": 19,
+   "cnas_new_effective_names": [
+    "Arm",
+    "BombadilSystems",
+    "ERIC",
+    "GoogleCloud",
+    "Google_Devices",
+    "Jaspersoft",
+    "Joomla",
+    "Kong",
+    "LY-Corporation",
+    "Liferay",
+    "PRJBLK",
+    "Sonatype",
+    "Temporal",
+    "WSO2",
+    "Wordfence",
+    "naver",
+    "rami.io",
+    "rapid7",
+    "tenable"
+   ],
+   "lead_n": 4762,
+   "unpublished_n": 460,
+   "verdict": "detecting",
+   "wall_seconds": 18.1
+  },
+  "redhat": {
+   "cnas_new_effective": 3,
+   "cnas_new_effective_names": [
+    "BombadilSystems",
+    "Yugabyte",
+    "hp"
+   ],
+   "lead_n": 1515,
+   "unpublished_n": 103,
+   "verdict": "detecting",
+   "wall_seconds": 12.8
+  },
+  "samsung": {
+   "cnas_new_effective": 1,
+   "cnas_new_effective_names": [
+    "Samsung_Mobile"
+   ],
+   "lead_n": 260,
+   "unpublished_n": 76,
+   "verdict": "detecting",
+   "wall_seconds": 1.4
+  },
+  "ubuntu": {
+   "cnas_new_effective": 3,
+   "cnas_new_effective_names": [
+    "Checkmk",
+    "ENISA",
+    "Jaspersoft"
+   ],
+   "lead_n": 22,
+   "unpublished_n": 113,
+   "verdict": "detecting",
+   "wall_seconds": 486.2
+  }
+ },
+ "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
+ "scored_at": "2026-08-24T14:41:50+00:00"
+}

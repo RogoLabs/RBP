@@ -1,0 +1,80 @@
+{
+ "baseline": {
+  "effective_n": 126,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 145702213,
+ "cnas_effective_alone": 46,
+ "cnas_new_effective": 11,
+ "cnas_new_effective_names": [
+  "ABB",
+  "CERTVDE",
+  "CyberDanube",
+  "Esri",
+  "Rockwell",
+  "SICK_AG",
+  "fortinet",
+  "jci",
+  "palo_alto",
+  "schneider",
+  "siemens"
+ ],
+ "cnas_reached": 60,
+ "disclosure": {
+  "dated_n": 3019,
+  "lead_examples": [
+   "CVE-2026-28387",
+   "CVE-2026-28388",
+   "CVE-2026-28389",
+   "CVE-2026-28390",
+   "CVE-2025-68160"
+  ],
+  "lead_max_days": 728,
+  "lead_median_days": 86,
+  "lead_n": 582,
+  "lead_pct": 19.28,
+  "mirror_n": 2437,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2026-13336",
+   "CVE-2026-13337",
+   "CVE-2026-13348",
+   "CVE-2026-15937",
+   "CVE-2026-18545"
+  ],
+  "unpublished_n": 171
+ },
+ "feed": "csaf",
+ "health": {
+  "capped": false,
+  "detail": "16/17 providers read; 3190 ids; unreachable: www.cisco.com (HTTP Error 403: Forbidden); capped: www.huawei.com 12/121 directories; no advisories in scope: www.huawei.com, www.innomic.com, www.sick.com, www.suse.com",
+  "ok": false,
+  "rows": 3190,
+  "status": "truncated",
+  "truncated": true
+ },
+ "ids": 3190,
+ "ids_new": 681,
+ "scored_at": "2026-08-24T14:41:46+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "11 marginal CNA(s) and 582 lead / 171 unpublished references",
+ "wall_seconds": 193.9,
+ "years": [
+  2025,
+  2026
+ ]
+}

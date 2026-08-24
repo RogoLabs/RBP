@@ -1,0 +1,81 @@
+{
+ "baseline": {
+  "effective_n": 121,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "msrc",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 305345467,
+ "cnas_effective_alone": 78,
+ "cnas_new_effective": 19,
+ "cnas_new_effective_names": [
+  "Arm",
+  "BombadilSystems",
+  "ERIC",
+  "GoogleCloud",
+  "Google_Devices",
+  "Jaspersoft",
+  "Joomla",
+  "Kong",
+  "LY-Corporation",
+  "Liferay",
+  "PRJBLK",
+  "Sonatype",
+  "Temporal",
+  "WSO2",
+  "Wordfence",
+  "naver",
+  "rami.io",
+  "rapid7",
+  "tenable"
+ ],
+ "cnas_reached": 106,
+ "disclosure": {
+  "dated_n": 11808,
+  "lead_examples": [
+   "CVE-2025-25300",
+   "CVE-2026-4800",
+   "CVE-2025-27098",
+   "CVE-2025-71404",
+   "CVE-2025-71403"
+  ],
+  "lead_max_days": 1985,
+  "lead_median_days": 8,
+  "lead_n": 4762,
+  "lead_pct": 40.33,
+  "mirror_n": 7046,
+  "undated_n": 14,
+  "unpublished_examples": [
+   "CVE-2025-0085",
+   "CVE-2025-0088",
+   "CVE-2025-0091",
+   "CVE-2025-0094",
+   "CVE-2025-0095"
+  ],
+  "unpublished_n": 460
+ },
+ "feed": "osv",
+ "health": {},
+ "ids": 12282,
+ "ids_new": 6379,
+ "scored_at": "2026-08-24T14:41:49+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "19 marginal CNA(s) and 4762 lead / 460 unpublished references",
+ "wall_seconds": 18.1,
+ "years": [
+  2025,
+  2026
+ ]
+}

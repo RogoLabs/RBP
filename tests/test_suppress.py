@@ -306,12 +306,16 @@ PRIVATE_ROUTE = "github.com/RogoLabs/RBP/security/advisories/new"
 MAIL_ROUTE = "mailto:rbp@rogolabs.net"
 
 
-@pytest.fixture(scope="module")
-def built():
-    out = ROOT / "site"
-    if not (out / "overview.html").exists():
-        pytest.skip("site not built; run `python -m rbp.cli build --out site`")
-    return out
+@pytest.fixture
+def built(built_site):
+    """The rendered site, built for this session from a fixture snapshot.
+
+    Was `ROOT / "site"`, skipped when absent, which is always in CI. Seven
+    assertions about the correction channel's published routes skipped in the job
+    that gates the publication, on the channel whose original defect was that it
+    was unreachable by the people it exists for. See tests/_sitefixture.py.
+    """
+    return built_site
 
 
 def test_the_false_promise_is_gone():

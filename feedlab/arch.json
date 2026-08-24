@@ -1,0 +1,49 @@
+{
+ "baseline": {
+  "effective_n": 137,
+  "feeds": [
+   "alas",
+   "alpine",
+   "csaf",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 898722,
+ "cnas_effective_alone": 10,
+ "cnas_new_effective": 0,
+ "cnas_new_effective_names": [],
+ "cnas_reached": 18,
+ "disclosure": {
+  "dated_n": 0,
+  "lead_examples": [],
+  "lead_max_days": null,
+  "lead_median_days": null,
+  "lead_n": 0,
+  "lead_pct": 0.0,
+  "mirror_n": 0,
+  "undated_n": 62,
+  "unpublished_examples": [],
+  "unpublished_n": 0
+ },
+ "feed": "arch",
+ "health": {},
+ "ids": 62,
+ "ids_new": 0,
+ "scored_at": "2026-08-24T14:41:45+00:00",
+ "stability": null,
+ "verdict": "unmeasurable",
+ "verdict_reason": "every one of its 62 references is undated and none is currently unpublished, so admissibility test 2 could not be run. Not a mirror; not measured. It must not be excluded from the coverage numerator on this evidence",
+ "wall_seconds": 1.5,
+ "years": [
+  2025,
+  2026
+ ]
+}

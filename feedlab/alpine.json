@@ -1,0 +1,57 @@
+{
+ "baseline": {
+  "effective_n": 137,
+  "feeds": [
+   "alas",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 681457,
+ "cnas_effective_alone": 42,
+ "cnas_new_effective": 1,
+ "cnas_new_effective_names": [
+  "naver"
+ ],
+ "cnas_reached": 59,
+ "disclosure": {
+  "dated_n": 0,
+  "lead_examples": [],
+  "lead_max_days": null,
+  "lead_median_days": null,
+  "lead_n": 0,
+  "lead_pct": 0.0,
+  "mirror_n": 0,
+  "undated_n": 2436,
+  "unpublished_examples": [
+   "CVE-2025-141765",
+   "CVE-2026-12184",
+   "CVE-2026-22802",
+   "CVE-2026-25832",
+   "CVE-2026-291i67"
+  ],
+  "unpublished_n": 107
+ },
+ "feed": "alpine",
+ "health": {},
+ "ids": 2543,
+ "ids_new": 74,
+ "scored_at": "2026-08-24T14:41:45+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "1 marginal CNA(s) and 0 lead / 107 unpublished references",
+ "wall_seconds": 5.5,
+ "years": [
+  2025,
+  2026
+ ]
+}

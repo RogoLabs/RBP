@@ -1,0 +1,132 @@
+{
+ "probed_at": "2026-08-24T14:05:40+00:00",
+ "results": [
+  {
+   "cna": "WPScan",
+   "hosts": [
+    {
+     "host": "wpscan.com",
+     "result": "404"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "dell",
+   "hosts": [
+    {
+     "host": "www.dell.com",
+     "result": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "TR-CERT",
+   "hosts": [
+    {
+     "host": "siberguvenlik.gov.tr",
+     "result": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "sap",
+   "hosts": [
+    {
+     "host": "url.sap",
+     "result": "404"
+    },
+    {
+     "host": "www.sap.com",
+     "result": "403"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "huawei",
+   "hosts": [
+    {
+     "host": "www.huawei.com",
+     "result": "200 provider-metadata"
+    }
+   ],
+   "provider": {
+    "distributions": 121,
+    "host": "www.huawei.com",
+    "publisher": "Huawei PSIRT",
+    "url": "https://www.huawei.com/.well-known/csaf/provider-metadata.json"
+   },
+   "status": "provider"
+  },
+  {
+   "cna": "twcert",
+   "hosts": [
+    {
+     "host": "www.twcert.org.tw",
+     "result": "URLError: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate "
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "HCL",
+   "hosts": [
+    {
+     "host": "support.hcl-software.com",
+     "result": "404"
+    },
+    {
+     "host": "www.hcl-software.com",
+     "result": "JSONDecodeError: Expecting value: line 1 column 1 (char 0)"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "qnap",
+   "hosts": [
+    {
+     "host": "www.qnap.com",
+     "result": "404"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "juniper",
+   "hosts": [
+    {
+     "host": "kb.juniper.net",
+     "result": "JSONDecodeError: Expecting value: line 2 column 5 (char 6)"
+    },
+    {
+     "host": "www.juniper.net",
+     "result": "404"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  },
+  {
+   "cna": "hpe",
+   "hosts": [
+    {
+     "host": "support.hpe.com",
+     "result": "404"
+    }
+   ],
+   "provider": null,
+   "status": "none"
+  }
+ ]
+}

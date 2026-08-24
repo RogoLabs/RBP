@@ -172,6 +172,51 @@ several times over by `debian`, `ubuntu`, `osv` and `ghsa`, so the realistic dro
 That makes the split cheap to do and therefore inexcusable to defer. It ships before the
 expansion, so the expansion is never measured against a base that flattered it.
 
+> ### MEASURED 2026-08-24. Every merged feed, scored against all the others.
+>
+> `python -m rbp.feedlab audit`, offline against the corpus and the recorded baseline
+> (32,704 ids, 12 feeds, 137 effective roster CNAs). Full scorecards in `feedlab/`.
+>
+> | feed | verdict | marginal CNAs | lead refs | unpublished now |
+> |---|---|---:|---:|---:|
+> | osv | detecting | 19 | 4,762 | 460 |
+> | csaf | detecting | 11 | 582 | 171 |
+> | debian | detecting | 9 | 0 | 401 |
+> | redhat | detecting | 3 | 1,515 | 103 |
+> | ubuntu | detecting | 3 | 22 | 113 |
+> | msrc | detecting | 2 | 4,677 | 3 |
+> | alas | detecting | 1 | 393 | 75 |
+> | alpine | detecting | 1 | 0 | 107 |
+> | ghsa | detecting | 1 | 1,364 | 371 |
+> | samsung | detecting | 1 | 260 | 76 |
+> | mozilla | **corroborating** | 0 | 34 | 0 |
+> | arch | **unmeasurable** | 0 | 0 of 0 dated | 0 |
+>
+> Marginal figures are each measured against ALL THE OTHERS, so they do not sum: two feeds
+> that uniquely cover the same CNA each score 0.
+>
+> **The answer to this section's open question: the split would exclude nothing, and the
+> numerator would fall by zero CNAs.** The estimate above was "0 to 1", from an argument
+> about which feeds cover which CNAs. Measured, it is 0, and for a better reason than the
+> argument gave: no merged feed is a proven publication mirror.
+>
+> `mozilla` is corroborating rather than mirroring. It adds no marginal CNA, and it has
+> referenced 34 ids ahead of their publication, median 6 days. It can strengthen a row it
+> did not find, and it clears admissibility test 2, so it stays in the numerator.
+>
+> **`arch` is unmeasurable, and getting that wrong was this harness's own first defect.**
+> It returns 62 references and dates none of them, so its historical lead is 0 out of 0.
+> The classifier read that as "no disclosure lead" and returned `reject`, which is a claim
+> the data cannot support: the same "cannot read is not nothing to read" error that
+> `feeds.record_feed` and `inference.summarise_state` both exist to avoid, committed by the
+> tool built to police it. A feed nobody has measured is not a proven mirror, and excluding
+> it would lower a launch gate on the strength of a missing date field. Fixed, and
+> `tests/test_feedlab.py` asserts the distinction in both directions.
+>
+> Note what the table also shows: `debian` and `alpine` date nothing either, and both clear
+> test 2 only on `unpublished_n`. The distro trackers are the shape this measure is weakest
+> on, and the site's largest single source of rows is one of them.
+
 ---
 
 ## 3. The harness, which is built before the second feed
@@ -199,9 +244,26 @@ emits, for a single candidate, against the live corpus and the current merged se
 | `wall_seconds`, `bytes` | against the 15-minute warm-run budget |
 | `stability` | ids on 3 fetches 24h apart; a feed whose count swings 40% on its own has no usable shrink baseline |
 
-The harness writes `data/feedlab/<name>.json`, and the merge commit includes it. **No feed
+The harness writes `feedlab/<name>.json`, and the merge commit includes it. **No feed
 is merged without its scorecard in the diff.** That is the artefact that makes this plan
 auditable from outside, in the same way the launch checklist is.
+
+> **BUILT 2026-08-24, and the path above is a correction.** This section said
+> `data/feedlab/<name>.json`. `.gitignore` line 3 is `data/`, because the 583 MB corpus
+> lives there, so a scorecard written under `data/` could never appear in any diff and the
+> rule it exists to enforce would have been decorative from the day it was written. The
+> scorecards are in `feedlab/`, which is committed; the baseline's working state, which
+> holds every referenced id from every merged feed, stays under `data/` and stays ignored.
+> `tests/test_feedlab.py` asserts both directions with `git check-ignore`, so the split
+> cannot silently invert.
+>
+> Two fields are honest about their own limits rather than reported as measurements.
+> `stability` is null until a feed has been fetched at least twice, because one invocation
+> cannot produce "ids on 3 fetches 24h apart" and returning a number anyway is how a
+> scorecard field becomes decoration. And `disclosure_lead` is a backtest against today's
+> corpus: an id referenced while reserved and published an hour later scores 0 and reads as
+> a mirror, so the measure UNDERSTATES lead. That is the safe direction. It can refuse a
+> good feed; it cannot admit a mirror.
 
 **Three guards that must exist before feed 10, not after feed 30:**
 
@@ -221,6 +283,29 @@ auditable from outside, in the same way the launch checklist is.
   Feeds are independent; `gather` is a serial `for` loop. Parallelising it is a
   prerequisite for the count going past ~15, and it must preserve per-feed health
   recording exactly as it is, because that recording is the shrink guard's input.
+
+> **Two silent-shrink defects were found by building the harness, and both are fixed.**
+> Neither is in the list above, and both are the same shape as the ones that are: a state
+> an adapter recorded and something else discarded.
+>
+> **`gather` erased every cap in the same call that recorded it.** It re-stamped any feed
+> whose status was not in `(TRUNCATED, FAILED)`, and `CAPPED` was missing from that tuple.
+> `feed_ghsa` records `CAPPED` when it runs out of pages rather than out of data, and the
+> caller overwrote it with `ok` on every run, so `health_summary`'s `capped` list could
+> never be non-empty and `stats["limitations"]`, the field the site publishes to say which
+> feeds are read over a shorter window than the trackers, was permanently empty. The live
+> 2026-08-20 snapshot reads `ghsa ok 3321 ids`. Two tests already asserted that GHSA
+> records its cap, and both passed throughout, because both call the adapter directly and
+> the pipeline never does.
+>
+> **`feed_csaf` recorded no health at all**, on the one adapter that fans out to more than
+> a dozen third parties. A provider answering 401 on every advisory, a provider behind a
+> WAF returning 403, and a provider whose 121 directories were cut to 12 all reported
+> identically to a clean read, because `gather` filled in `ok, N ids` from the providers
+> that did work. It now records unreachable providers, capped directory listings and
+> providers that yielded nothing, named, every run. That last one is the standing version
+> of this document's own note that "the provider list has never been validated against what
+> it actually yields".
 
 ---
 
@@ -367,6 +452,37 @@ The existing `feed_csaf` already handles ROLIE and directory distributions, so a
 discovered provider costs one tuple entry. The 403 on Dell is the shape of the problem:
 some vendors serve CSAF behind a WAF that refuses a non-browser agent, and this plan does
 not authorise working around that.
+
+> ### RUN 2026-08-24 against the ten top-50 CNAs the gate cannot see. It buys nothing.
+>
+> `python -m rbp.feedlab probe-csaf --cnas WPScan,dell,TR-CERT,sap,huawei,twcert,HCL,qnap,juniper,hpe`,
+> probing only hosts each CNA itself published to the Program (advisory pages, security
+> contact, disclosure policy) rather than hosts guessed from an organisation name. Result
+> in `feedlab/_csaf_probe.json`:
+>
+> | | |
+> |---|---|
+> | serve provider metadata at the well-known path | **1 of 10** (huawei) |
+> | 404 at the well-known path | WPScan, sap, qnap, hpe, HCL, juniper |
+> | 200 but not CSAF (an HTML error page) | dell, TR-CERT, HCL, juniper |
+> | 403, a WAF refusing a non-browser agent | sap (`www.sap.com`) |
+> | TLS certificate verification failure | twcert |
+>
+> **And the one hit is not usable.** `www.huawei.com` serves provider metadata publicly,
+> listing 121 distributions, one directory per advisory. Every one of those directories
+> returns **401 Unauthorized**: `changes.csv` and `index.txt` alike. The `/clear` root
+> exists and is empty. So Huawei publishes a CSAF catalogue that no unauthenticated client
+> can read, which is the cause of this document's own Tier 0 note that Huawei "returned
+> zero advisories in scope", and the same run confirmed it live at `+0`.
+>
+> That also exposed the cap. `CSAF_MAX_DIRS = 12` against Huawei's 121 selects an arbitrary
+> eleven advisories and reports a clean read, so even an authenticated Huawei would have
+> arrived as a tenth of itself. The cap stays; it is now reported (see section 3).
+>
+> **The conclusion for the launch gate: the CSAF sweep does not buy margin.** Of the ten
+> CNAs standing between the gate and headroom, nine publish no CSAF at the well-known path
+> and the tenth publishes it behind authentication. Margin has to come from Tier 2's
+> national CERT feeds or from Tier 3, both of which are parsers rather than config lines.
 
 Tier 2 lands somewhere around **35 to 42% of roster, 51 to 61% of reachable**, and the
 range is that wide because six of eight rows are estimates.

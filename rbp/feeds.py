@@ -54,8 +54,14 @@ OK, TRUNCATED, FAILED, CAPPED = "ok", "truncated", "failed", "capped"
 
 def reset_health():
     """Clear per-run state. A module global that survives between runs in the
-    same process reports a stale feed as healthy."""
+    same process reports a stale feed as healthy.
+
+    FETCH_BYTES is per-run state for the same reason: a scorecard that adds one
+    candidate's bytes to the previous candidate's is a scorecard that gets worse
+    the more feeds you measure.
+    """
     FEED_HEALTH.clear()
+    FETCH_BYTES["total"] = 0
 
 
 def record_feed(name, status, detail="", rows=None):
@@ -225,6 +231,7 @@ def _stream_zip(url):
                         "refusing to truncate it into an invalid zip")
                 tmp.write(chunk)
         tmp.close()
+        FETCH_BYTES["total"] += total
         return zipfile.ZipFile(tmp.name), tmp.name, total
     except Exception:
         tmp.close()
@@ -307,6 +314,15 @@ class _SafeRedirect(urllib.request.HTTPRedirectHandler):
 # handlers are added, so those schemes cannot be opened at all.
 _OPENER = urllib.request.build_opener(_PinnedHTTPSHandler, _SafeRedirect)
 
+# Bytes read through the three shared fetch helpers, counted at the read rather
+# than estimated from the parsed result.
+#
+# FEEDS.md section 3 makes `bytes` a scorecard field, next to `wall_seconds`,
+# because the feed count is going up roughly fourfold against a 15-minute warm-run
+# target and "it felt quick" is how a plan acquires a feed that downloads 600 MB
+# on a schedule. Reset by reset_health(), so a scorecard measures one run.
+FETCH_BYTES = {"total": 0}
+
 
 def _get(url, timeout=90, retries=3, headers=None):
     if not _url_ok(url):
@@ -318,7 +334,9 @@ def _get(url, timeout=90, retries=3, headers=None):
     for i in range(retries):
         try:
             with _OPENER.open(urllib.request.Request(url, headers=h), timeout=timeout) as r:
-                return json.loads(r.read(MAX_BYTES)), getattr(r, "status", 200), dict(r.headers)
+                raw = r.read(MAX_BYTES)
+                FETCH_BYTES["total"] += len(raw)
+                return json.loads(raw), getattr(r, "status", 200), dict(r.headers)
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None, 404, {}
@@ -360,7 +378,9 @@ def _get_text(url, timeout=30):
     if not _url_ok(url):
         raise ValueError(f"blocked non-https/internal URL: {url}")
     with _OPENER.open(urllib.request.Request(url, headers=UA), timeout=timeout) as r:
-        return r.read(MAX_BYTES).decode("utf-8", "replace")
+        raw = r.read(MAX_BYTES)
+        FETCH_BYTES["total"] += len(raw)
+        return raw.decode("utf-8", "replace")
 
 
 def _gh_headers():
@@ -820,13 +840,23 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     aggregators into providers, then for each provider: metadata -> ROLIE feed(s)
     -> recent advisory docs -> CVEs in scope."""
     out, seen = [], set()
+    # Per-provider outcomes, so the aggregate this adapter reports is derived
+    # rather than asserted. `feed_csaf` recorded NO health at all: `gather` filled
+    # in `ok, N ids` whatever happened underneath, so a provider answering 401 on
+    # every advisory, a provider behind a WAF returning 403, and a provider whose
+    # 120 directories were cut to 12 all reported identically to a clean read.
+    # That is the silent-shrink signature on the one adapter that fans out to
+    # more than a dozen third parties.
+    unreachable, empty, capped_dirs = [], [], []
     all_providers = _expand_csaf_providers(providers, aggregators, max_providers)
     print(f"  [csaf] {len(all_providers)} providers (incl. aggregator-discovered)", file=sys.stderr)
     for meta_url in all_providers:
+        host = meta_url.split("/")[2]
         try:
             meta, _, _ = _get(meta_url, timeout=40)
         except Exception as e:  # noqa: BLE001
             print(f"  [csaf] {meta_url}: metadata skip ({e})", file=sys.stderr)
+            unreachable.append(f"{host} ({str(e)[:40]})")
             continue
         feed_urls = []
         for dist in (meta or {}).get("distributions", []):
@@ -835,7 +865,16 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                     feed_urls.append(f["url"])
         entries = []
         # Directory distributions, the half of the spec this adapter used to skip.
-        for durl in _csaf_directories(meta, max_dirs=CSAF_MAX_DIRS):
+        available = _csaf_directory_count(meta)
+        chosen = _csaf_directories(meta, max_dirs=CSAF_MAX_DIRS)
+        if available > len(chosen):
+            # Huawei publishes 121 distributions, one directory per advisory, so
+            # the cap selects an arbitrary handful and the rest are never read.
+            # Reported rather than merely capped: an arbitrary 12 of 121 is a
+            # feed that has quietly shrunk to a tenth of itself, and the site
+            # cannot tell the difference between that and a quiet vendor.
+            capped_dirs.append(f"{host} {len(chosen)}/{available} directories")
+        for durl in chosen:
             entries.extend(_csaf_directory_entries(durl, years, cap_per_provider))
         for furl in feed_urls:
             try:
@@ -887,8 +926,76 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                     if r["cve_id"] not in seen:
                         seen.add(r["cve_id"])
                         out.append(r)
-        print(f"  [csaf] {meta_url.split('/')[2]}: +{len(out) - n0}", file=sys.stderr)
+        gained = len(out) - n0
+        print(f"  [csaf] {host}: +{gained}", file=sys.stderr)
+        if gained == 0:
+            # A provider contributing nothing is not an error and is not
+            # nothing. FEEDS.md recorded that SUSE, Huawei and www.sick.com each
+            # returned zero advisories in scope and that "the provider list has
+            # never been validated against what it actually yields". This is that
+            # validation, on every run, rather than once in a document.
+            empty.append(host)
+    _record_csaf_health(all_providers, unreachable, empty, capped_dirs, len(out))
     return out
+
+
+def _csaf_directory_count(meta):
+    """How many directory distributions the provider actually offers.
+
+    Counted before the cap and before the language filter, so the health line can
+    say "12 of 121" rather than "12", which is the difference between a limit and
+    a loss.
+    """
+    return len({(d.get("directory_url") or "").rstrip("/")
+                for d in (meta or {}).get("distributions", [])
+                if d.get("directory_url")})
+
+
+def _record_csaf_health(providers, unreachable, empty, capped_dirs, rows):
+    """One health record for the fan-out adapter, derived from its providers.
+
+    Ordered worst-first, because a single status has to mean the worst thing that
+    happened: a provider that could not be reached at all is a bigger claim than
+    a provider that was capped, and a cap is a bigger claim than a provider that
+    genuinely had nothing to say.
+    """
+    n = len(providers)
+    bits = [f"{n - len(unreachable)}/{n} providers read", f"{rows} ids"]
+    if unreachable:
+        bits.append(f"unreachable: {', '.join(sorted(unreachable)[:6])}")
+    if capped_dirs:
+        bits.append(f"capped: {', '.join(sorted(capped_dirs)[:6])}")
+    if empty:
+        bits.append(f"no advisories in scope: {', '.join(sorted(empty)[:8])}")
+    detail = "; ".join(bits)
+    if unreachable and not rows:
+        # Nothing was read from anywhere. That is an outage, not a limit.
+        record_feed("csaf", FAILED, detail, rows=rows)
+    elif unreachable or capped_dirs:
+        # CAPPED, NOT TRUNCATED, and the distinction decides whether the site
+        # wears a banner.
+        #
+        # `degraded_state` folds TRUNCATED into "this run is incomplete" and
+        # deliberately does not fold CAPPED, because a standing limit fires on
+        # every run by design: "A warning that is always on is not a warning, it
+        # is furniture, and it teaches a reader to ignore the banner on the day
+        # it means something."
+        #
+        # An unreachable CSAF provider is a standing limit. Cisco's WAF returns
+        # 403 to a non-browser agent on every single run, and this was written as
+        # TRUNCATED first, which would have put "This run is incomplete ... not
+        # comparable to the previous run" on every page of every run from the
+        # moment it merged. Caught by simulating the live provider set before
+        # merging rather than by reading the banner on the published site.
+        #
+        # It is still NAMED and still published as a limitation, so the loss is
+        # visible; it is just not called a degradation. A provider that was
+        # working and stops is caught by `compare_magnitudes`, which compares
+        # this feed's row count to its own previous run and IS a degradation.
+        # That is the mechanism for "worse than usual", and it already exists.
+        record_feed("csaf", CAPPED, detail, rows=rows)
+    else:
+        record_feed("csaf", OK, detail, rows=rows)
 
 
 def feed_mozilla(years):
@@ -1045,8 +1152,23 @@ def gather(sources, years):
             record_feed(s, False, str(e)[:120])
             print(f"  [{s}] FAILED: {e}", file=sys.stderr)
             continue
-        # Do not overwrite a truncation an adapter already recorded for itself.
-        if FEED_HEALTH.get(s, {}).get("status") in (TRUNCATED, FAILED):
+        # Do not overwrite an incomplete state an adapter already recorded for
+        # itself.
+        #
+        # CAPPED was MISSING from this tuple, and the omission erased the state
+        # in the same call that recorded it. `feed_ghsa` records CAPPED when it
+        # runs out of pages rather than out of data, and this branch then
+        # overwrote it with OK on every single run, so `health_summary`'s
+        # `capped` list could never be non-empty and `stats["limitations"]`, the
+        # field the site publishes to say which feeds are read over a shorter
+        # window than the trackers, was permanently empty. The live snapshot for
+        # 2026-08-20 reads `ghsa ok 3321 ids` for exactly this reason.
+        #
+        # Same shape as the bug that made this branch necessary in the first
+        # place: a state recorded by an adapter and discarded by the caller. The
+        # fix is the membership test, and the test that catches it is a mutation
+        # test, because every assertion about ghsa's row count passes either way.
+        if FEED_HEALTH.get(s, {}).get("status") in (TRUNCATED, FAILED, CAPPED):
             FEED_HEALTH[s]["rows"] = len(rows)
         else:
             record_feed(s, OK, f"{len(rows)} ids", rows=len(rows))
