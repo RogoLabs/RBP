@@ -21,17 +21,21 @@ import re
 
 import pytest
 
+import _sitefixture
 from rbp import report, schema, site
 
 ROOT = pathlib.Path(__file__).parent.parent
 
 
-@pytest.fixture(scope="module")
-def built():
-    out = ROOT / "site"
-    if not (out / "data" / "rbp.json").exists():
-        pytest.skip("site not built")
-    return out / "data"
+@pytest.fixture
+def built(built_site):
+    """The published data directory of a site built for this session.
+
+    Was `ROOT / "site" / "data"`, skipped when absent, which is always in CI.
+    Thirteen assertions about the published JSON contract skipped in the job that
+    gates the publication. See tests/_sitefixture.py.
+    """
+    return built_site / "data"
 
 
 # --------------------------------------------------------------------------
@@ -210,16 +214,22 @@ def test_the_sanitiser_is_idempotent_on_a_real_snapshot():
     so a correct coercion cannot be mistaken for a broken pipeline."""
     import glob
     from rbp.classify import display_description
-    snaps = sorted(glob.glob(str(ROOT / "snapshots" / "*" / "backlog.json")))
-    if not snaps:
-        pytest.skip("no local snapshot")
-    rows = json.loads(pathlib.Path(snaps[-1]).read_text())
-    changed = [r["cve_id"] for r in rows
-               if display_description(r.get("description") or "")
-               != (r.get("description") or "")]
-    assert not changed, (
-        f"{len(changed)} descriptions change on a second pass, so the sanitiser is "
-        f"not idempotent: {changed[:3]}")
+
+    # The fixture snapshot ALWAYS, plus any real ones this machine happens to
+    # hold. This used to be real-snapshots-only with a `pytest.skip`, so it never
+    # ran in CI: an idempotence property asserted only where somebody had
+    # previously run the pipeline by hand.
+    sources = [("fixture", _sitefixture.ROWS + _sitefixture.HELD_BACK)]
+    for path in sorted(glob.glob(str(ROOT / "snapshots" / "*" / "backlog.json"))):
+        sources.append((path, json.loads(pathlib.Path(path).read_text())))
+    for label, rows in sources:
+        assert rows, f"{label}: no rows, so idempotence is asserted over nothing"
+        changed = [r["cve_id"] for r in rows
+                   if display_description(r.get("description") or "")
+                   != (r.get("description") or "")]
+        assert not changed, (
+            f"{label}: {len(changed)} descriptions change on a second pass, so "
+            f"the sanitiser is not idempotent: {changed[:3]}")
 
 
 def test_the_legacy_note_names_which_file_it_came_from():
