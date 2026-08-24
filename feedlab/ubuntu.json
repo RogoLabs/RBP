@@ -1,0 +1,72 @@
+{
+ "baseline": {
+  "effective_n": 134,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 549663829,
+ "cnas_effective_alone": 45,
+ "cnas_new_effective": 3,
+ "cnas_new_effective_names": [
+  "Checkmk",
+  "ENISA",
+  "Jaspersoft"
+ ],
+ "cnas_reached": 60,
+ "disclosure": {
+  "dated_n": 3882,
+  "lead_examples": [
+   "CVE-2026-61898",
+   "CVE-2026-61897",
+   "CVE-2026-53587",
+   "CVE-2026-53586",
+   "CVE-2026-53585"
+  ],
+  "lead_max_days": 30,
+  "lead_median_days": 17,
+  "lead_n": 22,
+  "lead_pct": 0.57,
+  "mirror_n": 3860,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2026-12061",
+   "CVE-2026-12072",
+   "CVE-2026-12074",
+   "CVE-2026-12841",
+   "CVE-2026-12876"
+  ],
+  "unpublished_n": 113
+ },
+ "feed": "ubuntu",
+ "health": {
+  "capped": true,
+  "detail": "hit the 200-page cap; rows beyond it were not read",
+  "ok": false,
+  "rows": null,
+  "status": "capped",
+  "truncated": true
+ },
+ "ids": 3995,
+ "ids_new": 90,
+ "scored_at": "2026-08-24T14:41:50+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "3 marginal CNA(s) and 22 lead / 113 unpublished references",
+ "wall_seconds": 486.2,
+ "years": [
+  2025,
+  2026
+ ]
+}

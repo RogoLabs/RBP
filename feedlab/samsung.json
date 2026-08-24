@@ -1,0 +1,63 @@
+{
+ "baseline": {
+  "effective_n": 136,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 117683,
+ "cnas_effective_alone": 10,
+ "cnas_new_effective": 1,
+ "cnas_new_effective_names": [
+  "Samsung_Mobile"
+ ],
+ "cnas_reached": 11,
+ "disclosure": {
+  "dated_n": 344,
+  "lead_examples": [
+   "CVE-2025-22424",
+   "CVE-2026-0018",
+   "CVE-2025-48616",
+   "CVE-2026-0056",
+   "CVE-2026-0048"
+  ],
+  "lead_max_days": 61,
+  "lead_median_days": 6,
+  "lead_n": 260,
+  "lead_pct": 75.58,
+  "mirror_n": 84,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2026-0001",
+   "CVE-2026-0022",
+   "CVE-2026-0054",
+   "CVE-2026-0058",
+   "CVE-2026-0062"
+  ],
+  "unpublished_n": 76
+ },
+ "feed": "samsung",
+ "health": {},
+ "ids": 420,
+ "ids_new": 216,
+ "scored_at": "2026-08-24T14:41:50+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "1 marginal CNA(s) and 260 lead / 76 unpublished references",
+ "wall_seconds": 1.4,
+ "years": [
+  2025,
+  2026
+ ]
+}

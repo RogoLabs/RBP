@@ -1,0 +1,65 @@
+{
+ "baseline": {
+  "effective_n": 135,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "mozilla",
+   "msrc",
+   "osv",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 13785468,
+ "cnas_effective_alone": 81,
+ "cnas_new_effective": 3,
+ "cnas_new_effective_names": [
+  "BombadilSystems",
+  "Yugabyte",
+  "hp"
+ ],
+ "cnas_reached": 104,
+ "disclosure": {
+  "dated_n": 16082,
+  "lead_examples": [
+   "CVE-2026-0871",
+   "CVE-2025-0577",
+   "CVE-2026-18917",
+   "CVE-2025-1272",
+   "CVE-2026-4633"
+  ],
+  "lead_max_days": 410,
+  "lead_median_days": 2,
+  "lead_n": 1515,
+  "lead_pct": 9.42,
+  "mirror_n": 14567,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2025-30156",
+   "CVE-2025-61620",
+   "CVE-2025-9141",
+   "CVE-2026-11053",
+   "CVE-2026-11099"
+  ],
+  "unpublished_n": 103
+ },
+ "feed": "redhat",
+ "health": {},
+ "ids": 16185,
+ "ids_new": 576,
+ "scored_at": "2026-08-24T14:41:49+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "3 marginal CNA(s) and 1515 lead / 103 unpublished references",
+ "wall_seconds": 12.8,
+ "years": [
+  2025,
+  2026
+ ]
+}

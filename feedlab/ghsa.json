@@ -1,0 +1,70 @@
+{
+ "baseline": {
+  "effective_n": 137,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-24T14:38:17+00:00"
+ },
+ "bytes": 25393461,
+ "cnas_effective_alone": 32,
+ "cnas_new_effective": 1,
+ "cnas_new_effective_names": [
+  "LY-Corporation"
+ ],
+ "cnas_reached": 53,
+ "disclosure": {
+  "dated_n": 2950,
+  "lead_examples": [
+   "CVE-2026-45742",
+   "CVE-2026-45741",
+   "CVE-2026-44829",
+   "CVE-2026-46345",
+   "CVE-2026-46670"
+  ],
+  "lead_max_days": 82,
+  "lead_median_days": 18,
+  "lead_n": 1364,
+  "lead_pct": 46.24,
+  "mirror_n": 1586,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2026-12061",
+   "CVE-2026-12072",
+   "CVE-2026-12074",
+   "CVE-2026-12075",
+   "CVE-2026-16633"
+  ],
+  "unpublished_n": 371
+ },
+ "feed": "ghsa",
+ "health": {
+  "capped": true,
+  "detail": "hit the 40-page cap; advisories beyond it were not read",
+  "ok": false,
+  "rows": null,
+  "status": "capped",
+  "truncated": true
+ },
+ "ids": 3321,
+ "ids_new": 10,
+ "scored_at": "2026-08-24T14:41:47+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "1 marginal CNA(s) and 1364 lead / 371 unpublished references",
+ "wall_seconds": 49.1,
+ "years": [
+  2025,
+  2026
+ ]
+}

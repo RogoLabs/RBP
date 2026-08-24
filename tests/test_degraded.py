@@ -615,3 +615,122 @@ def test_every_adapter_that_the_gate_depends_on_is_in_the_cron_profile():
     for name, spec in cli.PROFILES.items():
         unknown = set(spec.split(",")) - set(feeds.ADAPTERS)
         assert not unknown, f"profile {name} names non-existent adapters: {unknown}"
+
+
+# --------------------------------------------------------------------------
+# gather must not erase what an adapter recorded (found 2026-08-24)
+# --------------------------------------------------------------------------
+
+def test_gather_preserves_a_cap_an_adapter_recorded(monkeypatch):
+    """The bug the two tests above could not see, because both call the adapter
+    DIRECTLY and the pipeline never does.
+
+    `gather` re-stamped every feed whose recorded status was not in
+    `(TRUNCATED, FAILED)`. CAPPED was missing from that tuple, so a cap was
+    recorded by the adapter and overwritten with `ok` by its caller in the same
+    call chain. `health_summary`'s `capped` list could therefore never be
+    non-empty, and `stats["limitations"]`, the field the site publishes to say
+    which feeds are read over a shorter window than the trackers, was
+    permanently empty. The live 2026-08-20 snapshot reads `ghsa ok 3321 ids`.
+
+    Asserted through `gather`, which is the only place the defect exists.
+    """
+    monkeypatch.setitem(feeds.ADAPTERS, "fake", lambda years: (
+        feeds.record_feed("fake", feeds.CAPPED, "hit the 3-page cap")
+        or [{"cve_id": "CVE-2026-1", "source": "fake", "source_ref": "x",
+             "public_date": "2026-08-01", "product": "", "description": ""}]))
+    feeds.gather(["fake"], {2026})
+    h = feeds.FEED_HEALTH.get("fake")
+    assert h["status"] == feeds.CAPPED, (
+        "gather overwrote the adapter's cap with ok, so the standing limit is "
+        "invisible to health_summary and to the site")
+    assert h["rows"] == 1, "the row count still has to be filled in"
+    _f, _t, _n, capped = feeds.health_summary()
+    assert capped and "fake" in capped[0]
+
+
+def test_gather_still_stamps_a_clean_feed_ok(monkeypatch):
+    """The complement, so the fix cannot be satisfied by never stamping at all."""
+    monkeypatch.setitem(feeds.ADAPTERS, "fake", lambda years: [
+        {"cve_id": "CVE-2026-1", "source": "fake", "source_ref": "x",
+         "public_date": "2026-08-01", "product": "", "description": ""}])
+    feeds.gather(["fake"], {2026})
+    h = feeds.FEED_HEALTH.get("fake")
+    assert h["status"] == feeds.OK and h["rows"] == 1
+
+
+def test_a_cap_is_a_standing_limit_and_not_a_degraded_run():
+    """Recorded so the fix above cannot drift into the class-2-as-class-1
+    mistake. A configured cap fires by design on every run; folding it into
+    `degraded` would put "this run is incomplete" on every page of every run,
+    which is furniture rather than a warning."""
+    on, _reasons = cli.degraded_state(
+        failures=[], truncated=[], capped=["ghsa: hit the 40-page cap"],
+        dropped=0, reports_unreadable=False, shrunk=[])
+    assert on is False
+
+
+# --------------------------------------------------------------------------
+# the CSAF fan-out has to report its own providers (found 2026-08-24)
+# --------------------------------------------------------------------------
+
+def test_csaf_reports_a_provider_it_could_not_reach(monkeypatch):
+    """`feed_csaf` recorded no health at all, and it is the one adapter that fans
+    out to more than a dozen third parties.
+
+    Measured on 2026-08-24: Huawei serves provider metadata publicly at the
+    well-known path and returns **401 on every advisory directory**, and Cisco
+    returns 403 to a non-browser agent. Both read as a healthy feed, because
+    `gather` filled in `ok, N ids` from the providers that did work.
+    """
+    def fake_get(url, timeout=None, retries=3, headers=None):
+        raise OSError("HTTP Error 401: Unauthorized")
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    feeds.feed_csaf({2026}, providers=("https://vendor.example/pm.json",),
+                    aggregators=())
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert h and h["status"] == feeds.TRUNCATED, h
+    assert "unreachable" in h["detail"] and "vendor.example" in h["detail"]
+
+
+def test_csaf_reports_a_provider_whose_directories_were_capped(monkeypatch):
+    """Huawei publishes 121 distributions, one directory per advisory, against a
+    cap of 12. The cap is deliberate; selecting an arbitrary tenth of a top-50
+    CNA's output and reporting it as a clean read is not."""
+    meta = {"distributions": [
+        {"directory_url": f"https://v.example/csaf/adv{n}/en"} for n in range(40)]}
+    monkeypatch.setattr(feeds, "_get",
+                        lambda url, timeout=None, retries=3, headers=None: (meta, 200, {}))
+    monkeypatch.setattr(feeds, "_csaf_directory_entries",
+                        lambda durl, years, cap: [])
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert h and h["status"] == feeds.CAPPED, h
+    assert f"{feeds.CSAF_MAX_DIRS}/40 directories" in h["detail"]
+
+
+def test_csaf_names_providers_that_yielded_nothing(monkeypatch):
+    """FEEDS.md recorded that SUSE, Huawei and www.sick.com each returned zero
+    advisories in scope, and that "the provider list has never been validated
+    against what it actually yields". This is that validation, on every run,
+    rather than once in a document."""
+    monkeypatch.setattr(feeds, "_get",
+                        lambda url, timeout=None, retries=3, headers=None: (
+                            {"distributions": []}, 200, {}))
+    feeds.feed_csaf({2026}, providers=("https://quiet.example/pm.json",),
+                    aggregators=())
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert h and "no advisories in scope: quiet.example" in h["detail"]
+    assert h["status"] == feeds.OK, (
+        "a provider with nothing to say is not an incomplete read; overstating "
+        "that is how a banner becomes furniture")
+
+
+def test_the_directory_count_is_taken_before_the_cap_and_the_language_filter():
+    """"12 of 121" and "12" are different claims: one is a limit, the other is a
+    loss. The count has to be of what the provider OFFERS."""
+    meta = {"distributions": [{"directory_url": "https://v.example/a/en"},
+                              {"directory_url": "https://v.example/a/zh"},
+                              {"directory_url": "https://v.example/b/en"}]}
+    assert feeds._csaf_directory_count(meta) == 3
+    assert len(feeds._csaf_directories(meta, max_dirs=12)) == 2
