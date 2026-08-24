@@ -16,8 +16,8 @@ from the eight-persona review were closed.
 a v2 naming release starts from real graded n rather than from one.
 
 **The gate clears.** `GATE_TOP_N_PCT = 80.0` on top-50-CNAs-by-volume at the
-3-sighting floor, at **40 of 50**. The re-derivation is recorded in the
-constant's own comment in `rbp/site.py`.
+3-sighting floor, at 40 of 50 on 2026-08-23 and **41 of 50 on 2026-08-24**. The
+re-derivation is recorded in the constant's own comment in `rbp/site.py`.
 
 **The data branch was re-rooted.** `refs/backup/data-pre-reroot` still holds the
 old tip **locally only**; it is not on any remote and will be lost if this clone
@@ -103,13 +103,21 @@ works from outside, and this session did not change that.
 If it works, set `verified_on` for condition 4 in `rbp/launch.py` to the date and
 flip it to MET. If it does not, the failure is worth more than the fix.
 
-### 2. Decide whether the zero margin is acceptable
+### 2. Decide whether the margin is acceptable
 
-Still yours to decide, but it is no longer a decision without numbers.
+Still yours to decide, but it is no longer a decision without numbers, and the
+number moved while this file was being written.
 
-The gate clears at exactly 40 of 50 and one CNA dropping below three sightings
-un-clears it. The ten that would buy margin are WPScan, dell, TR-CERT, sap,
-huawei, twcert, HCL, qnap, juniper, hpe.
+**Corrected 2026-08-24 against origin/data.** The gate is at **41 of 50 (82.0%)**,
+not 40, clearing by one CNA rather than by zero. `hpe` crossed the three-sighting
+floor between the 08-23 and 08-24 snapshots. Nobody did anything: HPE published,
+a feed saw it three times, and the site's launch gate changed state overnight.
+
+That is the argument about margin, made by the thing itself rather than by
+anybody's opinion of it. A gate that moves without a commit can move back.
+
+The nine that would buy more headroom are WPScan, dell, TR-CERT, sap, huawei,
+twcert, HCL, qnap, juniper.
 
 **The cheap route is closed.** The CSAF sweep was the highest-leverage item in
 FEEDS.md and it returns nothing usable for any of the ten. What remains is a
@@ -118,10 +126,10 @@ scorecard and the test.
 
 So the decision is now between three real options, not two:
 
-- **Launch at zero margin** and accept that a quiet week at one CNA un-clears the
-  gate. The gate demotes the site to the pre-launch posture rather than breaking
-  it, and `publish.gate` makes the demotion a red check rather than a silent
-  non-launch. The failure is loud and reversible.
+- **Launch at one CNA of margin** and accept that a quiet fortnight at two of
+  them un-clears the gate. The gate demotes the site to the pre-launch posture
+  rather than breaking it, and `publish.gate` makes the demotion a red check
+  rather than a silent non-launch. The failure is loud and reversible.
 - **Buy margin first**, which is now measured at roughly a day per CNA and
   targets TWCERT and TR-CERT, the two on the list that probed 200 on their own
   advisory sites. Two CNAs of headroom for two days.
@@ -131,10 +139,11 @@ So the decision is now between three real options, not two:
   would be the third derivation and the least defensible.
 
 A recommendation, since the measurement produced one and the decision is still
-yours: **buy the two CNAs.** Zero margin on a figure that moves with someone
-else's publishing schedule is not a launch condition, it is a coin toss with a
-public number attached, and two days is cheap against explaining why the site
-un-launched itself in its first week.
+yours: **buy the two CNAs.** One CNA of margin on a figure that moves with
+someone else's publishing schedule is not much better than none, and the 40-to-41
+step is the evidence: it happened overnight, in the favourable direction this
+time. Two days is cheap against explaining why the site un-launched itself in its
+first week.
 
 Whichever you pick, run `python -m rbp.feedlab score <name>` before merging any
 new feed. No feed goes in without its scorecard in the diff.
