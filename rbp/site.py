@@ -1030,6 +1030,49 @@ from . import schema as _schema
 CSV_COLS = _schema.COLUMNS
 
 
+# Per-CNA breakdowns inside a summary block. Keyed BY CNA, so a de-namer that
+# reads field names cannot see them: `by_cna` was a 40-CNA table of decided,
+# precision and coverage, published live for four days.
+_PER_CNA_KEYS = ("by_cna", "by_tier_cna", "largest_stratum", "misses")
+_LEDGER_NAMES = ("owner", "predicted", "predicted_owner", "actual", "assigner",
+                 "published_assigner", "owner_tier", "owner_method",
+                 "owner_contested")
+
+
+def _strip_keys(obj, keys):
+    if isinstance(obj, dict):
+        return {k: _strip_keys(v, keys) for k, v in obj.items() if k not in keys}
+    if isinstance(obj, list):
+        return [_strip_keys(v, keys) for v in obj]
+    return obj
+
+
+def _unattributed_summary(summary):
+    """A published summary with every per-CNA breakdown removed.
+
+    The aggregate figures stay: leave-one-out precision over 29,614 decisions is
+    the strongest claim the site makes and it is name-free. What goes is which
+    CNA each decision was about.
+    """
+    if NAMING_ENABLED or not isinstance(summary, dict):
+        return summary
+    out = dict(summary)
+    if isinstance(out.get("inference"), dict):
+        out["inference"] = _strip_keys(out["inference"], _PER_CNA_KEYS)
+    return out
+
+
+def _denamed_grader(grader):
+    """The ledger, with every naming field AND every per-CNA breakdown dropped.
+
+    Both, because the ledger carries both shapes: `predicted`/`actual` name a CNA
+    in a field, and `by_cna` names forty of them in KEYS. Stripping only the
+    first left `$.by_cna.GitHub_M` in the published precision.json, which is what
+    a rebuild from the pre-cleanup snapshots produced on the first attempt.
+    """
+    return _strip_keys(grader, set(_LEDGER_NAMES) | set(_PER_CNA_KEYS))
+
+
 def _write_data(out, ctx):
     launched = ctx["launched"]
     withheld = set(ctx.get("withheld") or ())
@@ -1045,10 +1088,24 @@ def _write_data(out, ctx):
     # has no reason to fetch.
     env = _schema.envelope(ctx["rows"], ctx["summary"], launched=launched,
                            snapshot_date=ctx["snapshot_date"])
+    # DE-NAMED AT THE WRITER, not upstream of it.
+    #
+    # This is the mechanism by which /data/cnas.json served seven ranked CNAs on
+    # the live site. These four lines copy whatever the RESTORED SNAPSHOT holds
+    # straight into the published tree, and the data branch keeps 90 days of
+    # snapshots plus one per month for ever. Fixing the pipeline that WRITES a
+    # snapshot does nothing for the four already on the branch, and the archive
+    # rebuild reads them every run.
+    #
+    # So the guarantee is made here, where publication actually happens, and it
+    # holds no matter how old or how dirty the input snapshot is.
     json.dump(env, open(os.path.join(d, "rbp.json"), "w"), indent=1)
-    json.dump(ctx["summary"], open(os.path.join(d, "summary.json"), "w"), indent=1)
-    json.dump(ctx["cnas"], open(os.path.join(d, "cnas.json"), "w"), indent=1)
-    json.dump(ctx["grader"], open(os.path.join(d, "precision.json"), "w"), indent=1)
+    json.dump(_unattributed_summary(ctx["summary"]),
+              open(os.path.join(d, "summary.json"), "w"), indent=1)
+    json.dump(ctx["cnas"] if NAMING_ENABLED else [],
+              open(os.path.join(d, "cnas.json"), "w"), indent=1)
+    json.dump(ctx["grader"] if NAMING_ENABLED else _denamed_grader(ctx["grader"]),
+              open(os.path.join(d, "precision.json"), "w"), indent=1)
 
     # The closure record. resolved.json and held_back.json were computed, rendered
     # and then withheld from consumers entirely: neither reached the data branch or
@@ -1063,9 +1120,14 @@ def _write_data(out, ctx):
                                snapshot_date=ctx["snapshot_date"], kind="held-back"),
               open(os.path.join(d, "held-back.json"), "w"), indent=1)
 
-    json.dump(_schema.envelope(ctx["resolutions_published"], ctx["summary"],
-                               launched=launched, snapshot_date=ctx["snapshot_date"],
-                               kind="resolved"),
+    # `published_assigner` joined to first_public / published / days_to_publish
+    # is a dated per-CNA lateness table. 46 of 47 rows carried one, live, and the
+    # assigner is authoritative rather than inferred.
+    json.dump(_schema.envelope(
+                  _strip_keys(ctx["resolutions_published"], set(_LEDGER_NAMES))
+                  if not NAMING_ENABLED else ctx["resolutions_published"],
+                  ctx["summary"], launched=launched,
+                  snapshot_date=ctx["snapshot_date"], kind="resolved"),
               open(os.path.join(d, "resolved.json"), "w"), indent=1)
 
     # A CSV sidecar, so the column contract is machine-readable beside the file

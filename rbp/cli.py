@@ -166,8 +166,56 @@ def cmd_index(args):
     ensure_corpus(force=True)
 
 
+# --------------------------------------------------------------------------
+# v1 publishes no attribution, and that has to be true of EVERY artefact
+# --------------------------------------------------------------------------
+#
+# `site.NAMING_ENABLED` is the single flag and it was enforced at the row
+# boundary only. Five artefacts published CNA names around it, each through a
+# key the leak guard does not know about: `cna` in cnas.json,
+# `published_assigner` in resolved.json, and the `by_cna` / `largest_stratum`
+# keys inside summary.json's inference block. publish.NAME_FIELDS lists nine
+# field names and none of those is among them.
+#
+# So these strip by STRUCTURE rather than by field name: a per-CNA table is
+# keyed by CNA, and a mapping keyed by CNA is the thing that must not ship,
+# whatever the key is called.
+
+# Keys inside the inference block whose VALUES are per-CNA mappings.
+_PER_CNA_KEYS = ("by_cna", "by_tier_cna", "largest_stratum", "misses")
+
+
+def _unattributed_stratum(block):
+    """An inference summary with every per-CNA table removed.
+
+    The aggregate figures are the warrant and they stay: leave-one-out precision
+    over 29,614 decisions is the strongest claim the site makes and it is
+    name-free. What goes is the breakdown that says which CNA each decision was
+    about.
+    """
+    if not isinstance(block, dict):
+        return block
+    return {k: (_unattributed_stratum(v) if isinstance(v, dict) else v)
+            for k, v in block.items() if k not in _PER_CNA_KEYS}
+
+
+# Fields on a closure record that name the assigner. Authoritative rather than
+# inferred, which makes publishing them a STRONGER claim than anything on a
+# page, not a weaker one.
+_CLOSURE_NAME_FIELDS = ("published_assigner", "assigner", "owner",
+                        "predicted", "predicted_owner")
+
+
+def _unattributed_closure(row):
+    if not isinstance(row, dict):
+        return row
+    return {k: v for k, v in row.items() if k not in _CLOSURE_NAME_FIELDS}
+
+
 def cmd_run(args):
     today = args.today or dt.date.today().isoformat()
+    # The single flag, read once. site.py owns it; nothing here defines a second.
+    NAMING = site.NAMING_ENABLED
     years = ({int(y) for y in args.years.split(",")} if args.years
              else {int(today[:4]), int(today[:4]) - 1})
     src_str = args.sources or PROFILES.get(args.profile, PROFILES["weekly"])
@@ -212,7 +260,16 @@ def cmd_run(args):
         for f in failures + truncated:
             print(f"    - {f}")
 
-    attributor = attribution.Attributor(corpus)
+    # THE ATTRIBUTOR, and everything downstream of it, is not built when v1 is
+    # publishing no attribution.
+    #
+    # Its only outputs are product_map_owner / _confidence / _method, all three
+    # of which are in publish.NAME_FIELDS and all three of which are therefore
+    # stripped before publication. Computing a name in order to delete it is how
+    # this project acquired five leaks, a de-namer, a backstop that could not see
+    # four of them, and a KeyError that killed three consecutive scheduled builds
+    # because the de-namer removed the field the grader needed.
+    attributor = attribution.Attributor(corpus) if NAMING else attribution.NullAttributor()
     # The ids that were RESERVED last run, so an id the endpoint cannot resolve
     # this run is carried forward instead of vanishing from the count.
     prev_reserved = _previous_reserved(SNAPS, today)
@@ -281,12 +338,21 @@ def cmd_run(args):
     if _suppressed_ids:
         print(f"  dropped {len(_suppressed_ids)} suppressed id(s) from the grader "
               "ledger scope, so any earlier prediction for them is withdrawn")
-    validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
-                                            suppressed=sup,
-                                            record_for=_published_ids,
-                                            covered=_covered, sightings=_sightings,
-                                            bulk_reporters=attribution.BULK_REPORTER_NAMES,
-                                            today=today, k=args.k)
+    if NAMING:
+        validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
+                                                suppressed=sup,
+                                                record_for=_published_ids,
+                                                covered=_covered, sightings=_sightings,
+                                                bulk_reporters=attribution.BULK_REPORTER_NAMES,
+                                                today=today, k=args.k)
+    else:
+        # No inference, no grader, no ledger. MEASURED before removing it: on the
+        # live published data the entire stack changed exactly one field,
+        # `rule_basis`, whose two values are "inferred-owner" and "unattributed".
+        # That is a statement about whether our own machinery succeeded, not
+        # about the CVE. All 582 rows were rule 4.5.1.6 / SHOULD, self_disclosed
+        # false, owner null, and must_rows was 0.
+        validation = inference.unattributed_validation(k=args.k)
 
     # The 72-hour clock, and the MUST/SHOULD split that must ride on every row.
     clock.annotate(backlog, today=today)
@@ -356,8 +422,25 @@ def cmd_run(args):
     # The authoritative closure record for this interval, committed with the
     # snapshot so any diff is recomputable from artefacts rather than from
     # whatever the mutable ledger happens to hold at render time.
-    json.dump(closed, open(os.path.join(sdir, "resolved.json"), "w"), indent=1)
-    cnas = clock.per_cna(reportable, ledger, corpus, today=today)
+    # `published_assigner` joined to first_public / published / days_to_publish
+    # is a dated per-CNA lateness table, and 46 of 47 rows carried one. The
+    # assigner is authoritative rather than inferred, which makes it a stronger
+    # claim than anything the site puts on a page, not a weaker one.
+    json.dump([_unattributed_closure(c) for c in closed],
+              open(os.path.join(sdir, "resolved.json"), "w"), indent=1)
+    # THE PER-CNA TABLE, which is a leaderboard when it is not empty.
+    #
+    # /data/cnas.json was serving seven named CNAs ranked descending by
+    # outstanding count, with oldest_days and past_expectation each, on a site
+    # that says in bold on every page that it names nobody. It is on
+    # ALLOWED_SNAPSHOT, every row key is `cna` rather than `owner`, and
+    # publish.check only ever looked for NAME_FIELDS, so the backstop returned
+    # clean on it four separate ways.
+    #
+    # Not written rather than de-named. A de-named per-CNA table is a list of
+    # empty rows, and the guard that was supposed to empty it is the one that
+    # could not see it in the first place.
+    cnas = clock.per_cna(reportable, ledger, corpus, today=today) if NAMING else []
     stats = clock.summary(reportable, cnas, today=today, undated_excluded=undated,
                           epoch_excluded=len(pre_epoch))
     stats["min_age_days"] = args.min_age_days
@@ -371,8 +454,17 @@ def cmd_run(args):
     stats["inference"] = {
         "k": validation["k"],
         "run_coverage": validation["run_coverage"],
-        "leave_one_out": validation["leave_one_out"],
-        "live": {k: v for k, v in validation["live"].items() if k != "misses"},
+        # `by_cna` and `largest_stratum` are stripped, not summarised.
+        #
+        # leave_one_out.by_cna was a 40-CNA table of decided / correct / wrong /
+        # precision / coverage. That is a per-target operating table for
+        # de-anonymising the reserved space, published from the site that argues
+        # on /policy that exactly this capability is why a blanket unblinding
+        # would be unsafe. The aggregate figures it rolls up to are the warrant
+        # and they stay.
+        "leave_one_out": _unattributed_stratum(validation["leave_one_out"]),
+        "live": _unattributed_stratum(
+            {k: v for k, v in validation["live"].items() if k != "misses"}),
     }
     stats["feeds"] = {"requested": sources, "failures": failures, "attempts": attempts,
                       "detail": feeds.health_detail(),
@@ -429,11 +521,16 @@ def cmd_run(args):
     json.dump(stats, open(os.path.join(sdir, "summary.json"), "w"), indent=1)
     print("\n" + "=" * 64)
     print(f"HEADLINE core (reportable, >=2 independent sources): {len(kpi)}")
-    named = sum(v for k_, v in validation["named"].items() if k_ != inference.TIER_NONE)
-    print(f"owner named on {named}/{len(backlog)} rows | "
-          f"method precision {inference._pct(validation['leave_one_out']['precision'])} (LOO), "
-          f"{inference._pct(validation['live']['precision'])} (live, "
-          f"n={validation['live']['graded']})")
+    if NAMING:
+        named = sum(v for k_, v in validation["named"].items()
+                    if k_ != inference.TIER_NONE)
+        print(f"owner named on {named}/{len(backlog)} rows | "
+              f"method precision {inference._pct(validation['leave_one_out']['precision'])} (LOO), "
+              f"{inference._pct(validation['live']['precision'])} (live, "
+              f"n={validation['live']['graded']})")
+    else:
+        print(f"owner named on 0/{len(backlog)} rows | inference not run "
+              "(v1 publishes no attribution)")
     print(f"snapshot written: {sdir}")
     print("  report.md | backlog.csv | backlog.json")
 

@@ -662,3 +662,38 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
 
 def _pct(x):
     return "n/a" if x is None else f"{100 * x:.2f}%"
+
+
+def unattributed_validation(k=DEFAULT_K, today=None):
+    """The validation block for a run that did not infer anything.
+
+    Shaped exactly like apply_to_backlog's return so no consumer needs a branch,
+    and filled with the honest values rather than zeros pretending to be
+    measurements: precision is None, which summarise_state and the site already
+    render as "not measurable", and NOT 0.0, which reads as "measured, and
+    wrong".
+
+    The distinction is the same one this repository keeps having to relearn:
+    `feeds.record_feed` draws it between a failed feed and an empty one,
+    `summarise_state` draws it with the precision floor, and the feed scorecard
+    had to grow an `unmeasurable` verdict for it. A run that did not attempt to
+    name anything has not scored 0% at naming.
+    """
+    today = today or dt.date.today().isoformat()
+    empty = {"method": "not-run", "k": k, "decided": 0, "abstained": 0,
+             "total": 0, "correct": 0, "wrong": 0, "coverage": 0.0,
+             "precision": None, "below_floor": True, "not_run": True}
+    return {
+        "date": today, "k": k,
+        "named": {TIER_CORROBORATED: 0, TIER_BLOCK: 0, TIER_NONE: 0},
+        "run_coverage": 0.0,
+        "leave_one_out": dict(empty),
+        "live": {**empty, "graded": 0, "outstanding": 0},
+        "newly_graded": 0,
+        "withdrawn": 0,
+        "suppressed": 0,
+        # So a reader of summary.json can tell "this site does not attribute"
+        # from "this site attributes and got nothing this run".
+        "not_run": True,
+        "not_run_reason": "v1 publishes no attribution; inference is not run",
+    }
