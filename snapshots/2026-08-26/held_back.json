@@ -4811,45 +4811,6 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-47841",
-  "state": "RESERVED",
-  "public_date": "2026-08-20",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-08-20"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2956\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2956.json",
-  "description": "CVE-2026-47841",
-  "state_verified_this_run": true,
-  "days_public": 6,
-  "clock_known": true,
-  "hours_public": 144,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-20",
-  "advisory_days_public": 6,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
-  "package": "",
-  "ecosystem": "",
-  "vendor": "",
-  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2956.json",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2956.json"
-  },
-  "veto_evaluated": false,
-  "single_origin": true,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
   "cve_id": "CVE-2026-47842",
   "state": "RESERVED",
   "public_date": "2026-08-20",
