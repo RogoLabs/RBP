@@ -552,9 +552,6 @@
   "CVE-2026-52717": {
    "first_public": "2026-06-12"
   },
-  "CVE-2026-54548": {
-   "first_public": ""
-  },
   "CVE-2026-61626": {
    "first_public": ""
   },
@@ -2869,6 +2866,15 @@
    "first_public": "2026-07-15",
    "published": "2026-08-25",
    "days_to_publish": 41,
+   "closed_on": "2026-08-26"
+  },
+  {
+   "cve_id": "CVE-2026-54548",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "",
+   "published": "2026-08-26",
+   "days_to_publish": null,
    "closed_on": "2026-08-26"
   }
  ]
