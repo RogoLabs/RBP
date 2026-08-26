@@ -122,7 +122,21 @@ def _scrub(path, ids):
 # `published_assigner` is deliberately NOT here: it is read back from the
 # published CVE Record and is a restatement of a public fact. Everything else in
 # this list is this project's own guess about a party.
-_LEDGER_NAME_FIELDS = ("owner", "predicted", "predicted_owner")
+# Every field on a ledger row that carries a CNA name.
+#
+# `actual` and `published_assigner` were MISSING, and the value guard is what
+# found them: `denamed_ledger` was written to stop the ledgers naming CNAs on a
+# public branch, and it left `precision.json:graded[].actual` and
+# `resolutions.json:resolved[].published_assigner` untouched — 46 named closures
+# and the entire graded history. Both are AUTHORITATIVE assigners read from the
+# published record rather than inferred, so they are a stronger claim than
+# anything the site puts on a page, and the de-namer skipped them because it was
+# written against the inference fields it was thinking about at the time.
+#
+# Same shape as every other miss in this class: a list of field names, written
+# by someone reasoning about one subsystem, applied to files written by another.
+_LEDGER_NAME_FIELDS = ("owner", "predicted", "predicted_owner",
+                       "actual", "assigner", "published_assigner")
 
 
 def denamed_ledger(obj):
@@ -425,6 +439,17 @@ _NAME_OK_PATHS = (
     # An advisory summary is free text supplied by the feed. Two real rows had a
     # description of exactly "glibc" and exactly "openssl".
     ".description",
+    # `$.oracle` is the RESERVATION ORACLE's health block (lookups_attempted,
+    # cached_terminal, carried_forward). It is a subsystem of this codebase that
+    # happens to share its name with a certified CNA.
+    #
+    # This was the fourth distinct collision found while narrowing this guard,
+    # after feed names, package names and advisory descriptions. CNA short names
+    # are ordinary technical vocabulary: `oracle`, `glibc`, `curl`, `linux`,
+    # `chrome`, `docker`, `go`, `meta`, `arm`, `echo`, `seal`. Any guard built on
+    # matching them will keep meeting this, which is an argument for keeping the
+    # allowlist explicit and short rather than for matching more loosely.
+    "$.oracle",
 )
 
 

@@ -268,3 +268,104 @@ def test_the_prose_exclusion_does_not_reach_structured_fields(tmp_path):
 
 import json  # noqa: E402
 from rbp import publish  # noqa: E402
+
+
+def test_the_ledger_denamer_covers_the_authoritative_fields_too():
+    """`actual` and `published_assigner` were missing from _LEDGER_NAME_FIELDS.
+
+    denamed_ledger exists to stop the ledgers naming CNAs on a public branch and
+    it left precision.json's entire graded history and 46 closures in
+    resolutions.json untouched. Both carry an AUTHORITATIVE assigner read from
+    the published record, which is a stronger claim than anything on a page.
+
+    Found by the value guard, not by the field-name guard, which is the whole
+    argument for having one.
+    """
+    out = publish.denamed_ledger({
+        "graded": [{"cve_id": "CVE-1", "predicted": "suse", "actual": "GitHub_M"}],
+        "resolved": [{"cve_id": "CVE-2", "published_assigner": "GitHub_M",
+                      "days_to_publish": 79}]})
+    assert not names_in(out, _roster_names()), out
+    assert out["resolved"][0]["days_to_publish"] == 79, (
+        "the de-namer took the measurement with the name")
+
+
+# --------------------------------------------------------------------------
+# the site must be clean even from a DIRTY snapshot
+# --------------------------------------------------------------------------
+
+def test_the_site_publishes_no_name_even_from_a_named_snapshot(tmp_path):
+    """THE MECHANISM BY WHICH /data/cnas.json WENT LIVE.
+
+    site._write_data copies cnas.json, precision.json, summary.json and
+    resolved.json out of the RESTORED SNAPSHOT into the published tree. The data
+    branch keeps 90 days of snapshots plus one per month for ever, and the
+    archive rebuild reads them every run, so fixing the pipeline that writes a
+    snapshot does nothing about the ones already on the branch.
+
+    This builds from a snapshot carrying every leak and asserts the published
+    tree carries none, which is what makes the branch cleanup a tidy-up rather
+    than the thing the guarantee rests on.
+    """
+    import glob
+    from rbp import site as _site
+
+    snaps = tmp_path / "snapshots" / "2026-08-20"
+    snaps.mkdir(parents=True)
+    rows = [{"cve_id": f"CVE-2026-{n}", "owner": "suse", "owner_tier": "block",
+             "public_date": "2026-08-01", "days_public": 19, "sources": "osv",
+             "description": "a flaw", "package": "p", "rule": "4.5.1.6",
+             "rule_strength": "SHOULD", "indep_sources": 1, "single_origin": True,
+             "past_expectation": True, "clock_known": True}
+            for n in range(3)]
+    (snaps / "backlog.json").write_text(json.dumps(rows))
+    (snaps / "cnas.json").write_text(json.dumps(
+        [{"cna": "GitHub_M", "slug": "github-m", "outstanding": 222}]))
+    (snaps / "resolved.json").write_text(json.dumps(
+        [{"cve_id": "CVE-2026-9", "published_assigner": "GitHub_M",
+          "days_to_publish": 79}]))
+    (snaps / "summary.json").write_text(json.dumps({
+        "date": "2026-08-20", "total": len(rows), "past_expectation": len(rows),
+        "min_age_days": 7, "epoch": None, "oldest_days": 19, "median_days": 19,
+        "must_rows": 0, "should_rows": len(rows), "clock_unknown": 0,
+        "unmeasurable_rows": len(rows), "candidate_rows": 0, "named_cnas": 1,
+        "undated_excluded": 0, "epoch_excluded": 0, "corroborated": 0,
+        "single_origin": len(rows), "age_buckets": {"30d+": len(rows)},
+        "generated_at": "2026-08-20T00:00:00+00:00", "source_commit": "0" * 12,
+        "source_dirty": False,
+        "inference": {"k": 3, "run_coverage": 0.5,
+                      "leave_one_out": {"precision": 0.99, "coverage": 0.6,
+                                        "decided": 100,
+                                        "by_cna": {"GitHub_M": {"decided": 7211}},
+                                        "largest_stratum": "GitHub_M"},
+                      "live": {"graded": 0, "correct": 0, "precision": None,
+                               "below_floor": True, "outstanding": 0}},
+        "feeds": {"requested": ["osv"], "failures": [], "attempts": 1,
+                  "truncated": [], "detail": {}},
+        "coverage": {"total_cnas": 539, "cnas_effective": 1, "cnas_sighted": 1,
+                     "cnas_own_channel": 0, "min_sightings": 3, "pct_cnas": 0.2,
+                     "pct_effective": 0.2, "observed_pct": 1.0, "profile": "weekly",
+                     "roster_pinned": True, "covered": [], "top_n": 50,
+                     "top_covered_effective": 45, "top_covered": 45,
+                     "pct_top_effective": 90.0, "top_missed_effective": []}}))
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "precision.json").write_text(json.dumps(
+        {"graded": [{"cve_id": "CVE-1", "predicted": "suse", "actual": "GitHub_M"}],
+         "predictions": {}, "history": [],
+         "by_cna": {"GitHub_M": {"decided": 7211}}}))
+
+    out = tmp_path / "site"
+    _site.build(str(out), str(tmp_path / "snapshots"), str(data))
+
+    names = _roster_names()
+    offenders = []
+    for f in glob.glob(str(out / "data" / "**" / "*.json"), recursive=True):
+        hits = names_in(json.loads(open(f).read()), names)
+        if hits:
+            offenders.append(f"{os.path.relpath(f, out)}: {hits[0]}")
+    assert not offenders, ("the published tree names CNAs the snapshot named:\n  "
+                           + "\n  ".join(offenders))
+
+
+import os  # noqa: E402
