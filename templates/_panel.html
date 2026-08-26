@@ -11,9 +11,9 @@
   <p>A <em>Reserved but Public</em> CVE ID is one a CNA has reserved and that appears in a
   public advisory, while the CVE Record itself is still unpublished. Anyone pulling the
   CVE List sees nothing. The advisory is already out there.</p>
-  <p>That is not our term. It is the CVE Program's own, and its
+  <p>The term is the CVE Program's own. Its
   <a href="https://www.cve.org/ResourcesSupport/Glossary?activeTerm=glossaryRBP">glossary
-  definition</a> is what this site counts:</p>
+  definition</a> reads:</p>
   <blockquote>A CVE ID in the &ldquo;Reserved&rdquo; state that is referenced in one or
   more public sources but for which a CVE Record has not been published.</blockquote>
 
@@ -21,8 +21,7 @@
   <p>RBP Policy v2.0.0, approved by the CVE Board on 13 August 2026, expects a record
   within <strong>72 hours</strong> of disclosure, and sets out a real process: a Root
   notifies the CNA with a remediation timeline, CNAs must prioritise requests to publish
-  critical RBPs, and repeat failures escalate up to decertification. None of that process
-  is observable from outside, so nobody can tell whether it ran.</p>
+  critical RBPs, and repeat failures escalate up to decertification. That process runs inside the Program and is not visible in public data, so this site reports the state rather than the response to it.</p>
 
   <h2>Why no CNA is named here</h2>
   <p>The state itself is observable, and the CVE Services API will confirm it. What it
@@ -32,12 +31,8 @@
   <blockquote>The Secretariat MAY publicly identify the CNA who reserved the CVE ID 24
   hours after a CVE ID has been Publicly Disclosed. Otherwise, the Secretariat SHOULD NOT
   publicly identify the CNA until the CVE Record has been published.</blockquote>
-  <p>So this site reconstructs the owner from public data, publishes how often that
-  reconstruction is wrong, and asks for something narrower instead: unblind
-  <code>owning_cna</code> only for reserved IDs already publicly referenced for more than
-  24 hours. A blanket unblinding would be unsafe, and this project is the reason we know
-  that: the same block-boundary reasoning that recovers an owner would let anyone derive
-  pre-disclosure ownership across the whole reserved space.</p>
+  <p>So this site lists the identifier and the advisories it appears in, and leaves
+  attribution to the Program. Ownership can be estimated from public data, and this version does not publish those estimates: the same reasoning that recovers an owner for a referenced ID would work across the whole reserved space, which is a good reason for the redaction to stay as it is.</p>
 
   <h2>The Program used to publish this</h2>
   <p>The Program used to publish a count of these. A quarterly table ran on the CVE
@@ -47,7 +42,7 @@
   a fortnight after the v1.0 policy PDF was withdrawn to be
   &ldquo;replaced with a new version of the document at a later date&rdquo;
   (<a href="https://github.com/CVEProject/cve-website/issues/835">#835</a>). That
-  replacement is now v2.0.0. The series never came back. Its final column already read
+  replacement is now v2.0.0. The series has not resumed. Its final column already read
   <code>N/A</code>, so it had stopped being populated before anyone commented it out.</p>
   <p><strong>This site will not be that series, and is not comparable to it.</strong>
   That table was a quarterly <em>flow</em> of newly identified RBPs, measured with
@@ -56,8 +51,7 @@
   that reach a minority of CNAs, with the owner inferred rather than known. Both numbers
   would be real. They would not be the same measurement, and neither replaces the other.</p>
   <p>RBP Policy v2.0.0 names &ldquo;Program metrics and audits&rdquo; as one of the
-  Program's own channels for identifying RBPs. Our ask is for the public face of that
-  channel. Until then, this site is being built to publish the outside view.</p>
+  Program's own channels for identifying RBPs. If the Program publishes a figure of its own it will be measured with internal access, and this one is not a substitute for it. </p>
 
   {# The exculpatory detail, VERBATIM from the old index.html.
      tests/test_copy.py insists on it and is right to: "item 2 of three" only

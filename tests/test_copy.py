@@ -242,21 +242,33 @@ def test_no_built_page_states_an_interval_as_a_completed_fact(built):
 
 def test_the_holding_page_survives_launch_at_a_permanent_route(built):
     """placeholder.html was copied over index.html ONLY in the not-launched
-    branch, so flipping RBP_LAUNCHED would have deleted it and with it the three
-    paragraphs doing the site's framing work: the glossary provenance ("That is
-    not our term. It is the CVE Program's own"), the full 4.5.1.7 quotation, and
-    the narrow ask with its own safety reasoning.
+    branch, so flipping RBP_LAUNCHED would have deleted it and with it the
+    paragraphs doing the site's framing work.
 
-    A grep of the built dashboard returned zero occurrences of "unblind" and zero
-    of "glossary"; the only surviving ask was one line of footer small print.
-    Launch day would have quietly destroyed the most careful copy on the site."""
+    A grep of the built dashboard once returned zero occurrences of "glossary";
+    the only surviving framing was one line of footer small print. Launch day
+    would have quietly destroyed the most careful copy on the site.
+
+    ASSERTED AS CLAIMS, not as sentences. This used to probe for the phrases
+    "not our term" and "unblind". The first was a defensive framing and the
+    second was a policy ask, and both were removed in the 2026-08-26 voice pass:
+    the site describes what it measures rather than arguing for a change. What
+    has to survive is the PROVENANCE, the naming warrant, and the reason
+    ownership is not published. A test keyed to a sentence breaks on every edit
+    and says nothing about whether the point is still made.
+    """
     about = built / "about-this-count.html"
     assert about.exists(), "the holding page has no permanent route"
     text = _text(about)
-    assert "not our term" in text, "the glossary-provenance paragraph is missing"
-    assert "glossary" in text.lower()
+    low = text.lower()
+    assert "cve program's own" in low or "cve program&#39;s own" in low, (
+        "the page no longer says the term belongs to the CVE Program")
+    assert "glossary" in low, "the glossary is not cited as the source"
     assert "4.5.1.7" in text, "the naming-warrant quotation is missing"
-    assert "unblind" in text.lower(), "the narrow ask is missing"
+    assert "secretariat may publicly identify" in low, (
+        "4.5.1.7 is cited by number without being quoted")
+    assert "reserved space" in low, (
+        "the reason this site does not publish inferred ownership is missing")
 
 
 def test_the_about_route_exists_in_both_postures(tmp_path, monkeypatch):
