@@ -2378,12 +2378,13 @@
   "cve_id": "CVE-2026-44701",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "ghsa",
-  "feed_count": 1,
+  "sources": "ghsa,osv",
+  "feed_count": 2,
   "dates": {
-   "ghsa": "2026-08-26"
+   "ghsa": "2026-08-26",
+   "osv": "2026-08-26"
   },
-  "refs": "ghsa:GHSA-crx4-7mmq-j74j",
+  "refs": "ghsa:GHSA-crx4-7mmq-j74j;osv:Packagist:devcode-it/openstamanager",
   "description": "OpenSTAManager has HTML Injection in modules/utenti/edit.php",
   "state_verified_this_run": true,
   "days_public": 0,
@@ -2400,12 +2401,13 @@
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
   "indep_sources": 1,
-  "package": "",
-  "ecosystem": "",
+  "package": "devcode-it/openstamanager",
+  "ecosystem": "Packagist",
   "vendor": "",
   "advisory_url": "https://github.com/advisories/GHSA-crx4-7mmq-j74j",
   "source_urls": {
-   "ghsa": "https://github.com/advisories/GHSA-crx4-7mmq-j74j"
+   "ghsa": "https://github.com/advisories/GHSA-crx4-7mmq-j74j",
+   "osv": "https://osv.dev/list?q=CVE-2026-44701"
   },
   "veto_evaluated": false,
   "single_origin": true,
