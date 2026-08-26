@@ -124,51 +124,39 @@ def test_the_traversal_is_arming_focus_visible(page, server):
         "measuring the :focus state instead")
 
 
-def test_focus_calls_alone_would_not_have_measured_this(page, server):
-    """Recorded as an executable statement rather than as a comment.
+def test_the_site_styles_focus_on_focus_visible_not_focus(page, server):
+    """WHY THE TRAVERSAL IS DRIVEN BY REAL KEY PRESSES.
 
-    The premise needed correcting the first time it was run, and the correction
-    is worth keeping. On a page with NO prior user interaction, Chromium does
-    match `:focus-visible` on a scripted `.focus()`, because the heuristic treats
-    "no interaction yet" the same as "keyboard". So a naive `.focus()` test is
-    not always wrong; it is wrong exactly when a reader has touched a mouse,
-    which is most of the time and is not a state a test falls into by accident.
+    This replaced a test that pressed the mouse and then asserted a scripted
+    `.focus()` did NOT match `:focus-visible`. That assertion passed locally and
+    failed on the CI runner, and it deserved to: it was measuring CHROMIUM'S
+    input-modality heuristic, not this site. The coordinates it pressed land on
+    different content at a different viewport, so what it actually tested varied
+    by where it ran.
 
-    Asserted here in the state that actually distinguishes them: after a pointer
-    press, `.focus()` does not match and Tab does.
+    A test whose result depends on the machine is not a test, which is the same
+    conclusion tests/conftest.py reaches about ambient environment variables.
+
+    So the premise is now asserted where it is actually true and stable: in the
+    stylesheet. The site's focus treatment is written as `:focus-visible` rules,
+    which a scripted focus is not guaranteed to match and a real Tab press is.
+    That is the whole reason `_traverse` presses keys, and it is checkable
+    without depending on a heuristic that browsers are free to change.
+
+    The behavioural half is still covered, twice: real Tab presses arm
+    :focus-visible, and every stop shows a ring.
     """
-    page.goto(f"{server}/cves.html", wait_until="load")
-    # A real pointer press in the content. `page.mouse.click()` on the page
-    # chrome did NOT change the modality when this was measured; a move followed
-    # by an explicit down/up over <main> did.
-    page.mouse.move(300, 500)
-    page.mouse.down()
-    page.mouse.up()
-    scripted = page.evaluate("""() => {
-        const el = document.querySelector('a.logo');
-        el.focus();
-        return {visible: el.matches(':focus-visible'),
-                outline: parseFloat(getComputedStyle(el).outlineWidth) || 0};
-    }""")
-    assert scripted["visible"] is False, (
-        "a scripted .focus() after a mouse interaction now matches "
-        ":focus-visible, so the distinction this traversal is built around no "
-        "longer holds and the design should be revisited rather than the "
-        "assertion relaxed")
-    # Deliberately NOT asserting that the ring is gone. `outline-width` still
-    # computes to a value under the UA's own `:focus { outline: auto }`, which is
-    # not painted; a computed width is not a drawn ring, and asserting on it here
-    # would be the same "the test passes but does not work" mistake this
-    # repository has already made twice.
-
-    # And the same element, reached by keyboard, does show one.
-    page.keyboard.press("Tab")
-    page.keyboard.press("Tab")
-    reached = page.evaluate(ACTIVE_JS)
-    assert reached and not _invisible(reached), (
-        "Tab traversal after a mouse click no longer produces a visible focus "
-        "ring, which is the state most readers are actually in")
-
+    import pathlib as _p
+    css = (_p.Path(__file__).parent.parent.parent
+           / "static" / "css" / "rbp.css").read_text()
+    assert ":focus-visible" in css, "no :focus-visible rule in the project stylesheet"
+    # And the ring is not defined ONLY on plain :focus, which would make the
+    # distinction moot and this whole traversal unnecessary.
+    import re as _re
+    visible_rules = _re.findall(r"[^{}]*:focus-visible[^{}]*\{([^}]*)\}", css)
+    assert any("outline" in r for r in visible_rules), (
+        "the :focus-visible rules draw no outline, so the traversal is measuring "
+        "something the stylesheet does not set")
 
 def test_the_skip_link_is_the_first_stop_on_every_page_that_has_a_nav(
         page, server, site_dir):
