@@ -55,16 +55,14 @@
     <a href="{{ p }}{{ home }}" class="logo">RBP&nbsp;Tracker</a>
     <nav class="nav">
       <ul class="nav-menu">
-        <li><a href="{{ p }}{{ home }}">Overview</a></li>
-        <li><a href="{{ p }}cves.html">CVEs</a></li>
-        <li><a href="{{ p }}changes.html">Changes</a></li>
+        {# THREE LINKS, because there are three pages. cves, changes, data and
+           backlog-at-launch were removed on 2026-08-26: the list IS the front
+           door now, and what those pages carried moved into the slide-over
+           panel. A nav pointing at deleted pages is worse than no nav, and it
+           shipped that way for one build. #}
+        <li><a href="{{ p }}{{ home }}">The list</a></li>
         <li><a href="{{ p }}method.html">Method</a></li>
         <li><a href="{{ p }}policy.html">Policy</a></li>
-        <li><a href="{{ p }}data.html">Data</a></li>
-        {# Linked only once launched. Pre-launch this page IS the front door, and
-           linking the holding page from the dashboard would put a dashboard link
-           on it in the one posture where nothing may link into the dashboard. #}
-        {% if summary.epoch_excluded %}<li><a href="{{ p }}backlog-at-launch.html">At launch</a></li>{% endif %}
         {% if launched %}<li><a href="{{ p }}about-this-count.html">About</a></li>{% endif %}
       </ul>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">

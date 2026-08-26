@@ -34,6 +34,7 @@ from __future__ import annotations
 
 import importlib
 import json
+import re
 import pathlib
 
 # Content chosen to be hostile to layout and long enough to be realistic, because
@@ -216,10 +217,15 @@ def build(root, launched):
 
 # What the fixture must actually produce. Each entry was a real way to leave a
 # downstream assertion vacuous while the suite stayed green.
-REQUIRED_PAGES = ("about-this-count.html", "backlog-at-launch.html", "changes.html",
-                  "cves.html", "data.html", "method.html", "policy.html")
-REQUIRED_TABLES = ("cves.html", "changes.html", "backlog-at-launch.html",
-                   "data.html", "method.html")
+# The page set as of 2026-08-26. Eight pages became three: the list is the front
+# door, and cves / changes / data / backlog-at-launch were removed with their
+# content folded into the slide-over panel. about-this-count is the holding page,
+# written in both postures.
+REQUIRED_PAGES = ("about-this-count.html", "method.html", "policy.html")
+# The list page renders its rows from an embedded JSON island rather than
+# server-side <table> markup, so "did the table render" is now "did the row data
+# reach the page". Checked in assert_renders below.
+REQUIRED_TABLES = ("method.html",)
 
 
 def assert_renders(out, launched):
@@ -254,6 +260,17 @@ def assert_renders(out, launched):
         assert "<table" in (out / page).read_text(), (
             f"{page} rendered no table, so every assertion about its rows, its "
             "columns and its layout is vacuous")
+    # The list page carries its rows as a JSON island. An empty island is the
+    # same failure as a table that did not render: every assertion about rows
+    # becomes vacuous while the page still looks fine.
+    front = out / ("index.html" if launched else "overview.html")
+    body = front.read_text()
+    m = re.search(r'<script id="rows" type="application/json">(.*?)</script>',
+                  body, re.S)
+    assert m, f"{front.name} carries no row data island"
+    assert json.loads(m.group(1)), (
+        f"{front.name} rendered zero rows, so the list is empty and every "
+        "assertion about it proves nothing")
     assert (out / "data" / "rbp.json").exists(), "the build published no rbp.json"
     rows = json.loads((out / "data" / "rbp.json").read_text())
     body = rows.get("rows") if isinstance(rows, dict) else rows

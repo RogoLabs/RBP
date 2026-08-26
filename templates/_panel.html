@@ -1,0 +1,88 @@
+{# THE PANEL: the seven other pages, without navigating.
+   Copy is lifted VERBATIM from placeholder.html rather than rewritten. The
+   glossary provenance and the 4.5.1.7 quotation are the most carefully argued
+   passages on this site and a summary of them is a weaker claim than the
+   passages themselves. Trimming is a separate, deliberate act. #}
+<aside class="panel" id="panel" role="dialog" aria-modal="true"
+       aria-labelledby="panel-h" tabindex="-1" hidden>
+  <button class="closebtn" id="panel-close" type="button">Close</button>
+
+  <h2 id="panel-h">What is a Reserved but Public CVE ID?</h2>
+  <p>A <em>Reserved but Public</em> CVE ID is one a CNA has reserved and that appears in a
+  public advisory, while the CVE Record itself is still unpublished. Anyone pulling the
+  CVE List sees nothing. The advisory is already out there.</p>
+  <p>That is not our term. It is the CVE Program's own, and its
+  <a href="https://www.cve.org/ResourcesSupport/Glossary?activeTerm=glossaryRBP">glossary
+  definition</a> is what this site counts:</p>
+  <blockquote>A CVE ID in the &ldquo;Reserved&rdquo; state that is referenced in one or
+  more public sources but for which a CVE Record has not been published.</blockquote>
+
+  <h2>What the policy expects</h2>
+  <p>RBP Policy v2.0.0, approved by the CVE Board on 13 August 2026, expects a record
+  within <strong>72 hours</strong> of disclosure, and sets out a real process: a Root
+  notifies the CNA with a remediation timeline, CNAs must prioritise requests to publish
+  critical RBPs, and repeat failures escalate up to decertification. None of that process
+  is observable from outside, so nobody can tell whether it ran.</p>
+
+  <h2>Why no CNA is named here</h2>
+  <p>The state itself is observable, and the CVE Services API will confirm it. What it
+  will not tell you is who reserved the ID:
+  <code>"owning_cna": "[REDACTED]"</code>. CNA Rule 4.5.1.7 both permits and limits
+  naming, and it binds the Secretariat rather than anyone else:</p>
+  <blockquote>The Secretariat MAY publicly identify the CNA who reserved the CVE ID 24
+  hours after a CVE ID has been Publicly Disclosed. Otherwise, the Secretariat SHOULD NOT
+  publicly identify the CNA until the CVE Record has been published.</blockquote>
+  <p>So this site reconstructs the owner from public data, publishes how often that
+  reconstruction is wrong, and asks for something narrower instead: unblind
+  <code>owning_cna</code> only for reserved IDs already publicly referenced for more than
+  24 hours. A blanket unblinding would be unsafe, and this project is the reason we know
+  that: the same block-boundary reasoning that recovers an owner would let anyone derive
+  pre-disclosure ownership across the whole reserved space.</p>
+
+  <h2>The Program used to publish this</h2>
+  <p>The Program used to publish a count of these. A quarterly table ran on the CVE
+  Metrics page and was commented out in February 2022, as item 2 of a three-item
+  quarterly-to-annual table restructuring
+  (<a href="https://github.com/CVEProject/cve-website/issues/842">cve-website #842</a>),
+  a fortnight after the v1.0 policy PDF was withdrawn to be
+  &ldquo;replaced with a new version of the document at a later date&rdquo;
+  (<a href="https://github.com/CVEProject/cve-website/issues/835">#835</a>). That
+  replacement is now v2.0.0. The series never came back. Its final column already read
+  <code>N/A</code>, so it had stopped being populated before anyone commented it out.</p>
+  <p><strong>This site will not be that series, and is not comparable to it.</strong>
+  That table was a quarterly <em>flow</em> of newly identified RBPs, measured with
+  authoritative internal access, falling from 4,326 in Q1 2017 to 350 in Q3 2021. What is
+  being built here is a live <em>stock</em>, discovered from downstream advisory feeds
+  that reach a minority of CNAs, with the owner inferred rather than known. Both numbers
+  would be real. They would not be the same measurement, and neither replaces the other.</p>
+  <p>RBP Policy v2.0.0 names &ldquo;Program metrics and audits&rdquo; as one of the
+  Program's own channels for identifying RBPs. Our ask is for the public face of that
+  channel. Until then, this site is being built to publish the outside view.</p>
+
+  <h2>How this is measured</h2>
+  <p>Ten public advisory feeds are read every six hours and everything they
+     reference is checked against the CVE List. Nothing appears here until it has
+     been publicly referenced for at least
+     <strong>{{ summary.get('min_age_days', 7) }} days</strong>, which is
+     {{ ((summary.get('min_age_days', 7) * 24) / 72) | round(1) }}x the 72-hour
+     expectation, so ordinary latency and short coordinated-disclosure windows are
+     excluded.</p>
+  <p>The feeds reach a minority of CNAs, so <strong>every number here is a
+     floor</strong>, never a census. <a href="method.html">The method in full</a>,
+     and <a href="policy.html">the policy quotations</a>.</p>
+
+  <h2>If a row should not be listed</h2>
+  <p>Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> giving the CVE
+     ID and nothing else. No reason, no detail, no confirmation that a
+     vulnerability exists: a request naming only an identifier does not
+     distinguish an embargo from a wrong row, and asking for a reason would make
+     the request itself a disclosure. Read by a person.</p>
+
+  <h2>The data</h2>
+  <p>Everything on this page is in
+     <a href="data/rbp.json" class="mono">rbp.json</a> and
+     <a href="data/rbp.csv" class="mono">rbp.csv</a>, with a dated archive at
+     <a href="data/archive.json" class="mono">archive.json</a> so a figure cited
+     today stays resolvable. Schema and field meanings are in
+     <a href="data/schema.json" class="mono">schema.json</a>.</p>
+</aside>

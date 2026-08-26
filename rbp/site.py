@@ -1243,21 +1243,27 @@ def _write_data(out, ctx):
 # attempted below gate still wrote the dashboard to index.html. That is precisely
 # the outcome the gate exists to prevent.
 _PAGE_TEMPLATES = [
-    ("index.html", None),
-    ("cves.html", "cves.html"),
+    # ONE ROUTE. `list.html` is the front door and the list: the command bar, the
+    # rows, and a slide-over carrying what used to be seven other pages.
+    #
+    # The old index.html dashboard opened with a 104px number and ~650 words
+    # before the first CVE, and its stat tiles were instrument readings about
+    # this site's own machinery rather than about the CVEs. It is not rendered.
+    ("list.html", None),
+    # Kept as its own URL, deliberately. The panel answers quickly; these two
+    # have to stay citable at a stable address for the same reason the filters
+    # are linkable, and quotations that people rely on should not live inside a
+    # modal.
+    ("method.html", "method.html"),
+    ("policy.html", "policy.html"),
     # cnas.html and cna.html are NOT here. Both pages existed only to attribute
     # rows to named CNAs, and v1 publishes no attribution. They are not rendered
     # empty, because an empty per-CNA page is an invitation to fill it before the
     # conditions naming depends on are met. See NAMING_ENABLED.
-    ("method.html", "method.html"),
-    ("policy.html", "policy.html"),
-    ("data.html", "data.html"),
-    ("changes.html", "changes.html"),
     # A permanent home for the rows the epoch removes. Published whether or not an
     # epoch is set, so the archive exists BEFORE the day it is needed rather than
     # being designed on launch day, which is the sequencing item 6 insists on:
     # design the zero state, publish the archive, then set the epoch.
-    ("backlog-at-launch.html", "backlog-at-launch.html"),
 ]
 
 
