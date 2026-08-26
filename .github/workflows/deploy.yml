@@ -107,8 +107,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
           cache: pip
@@ -149,7 +149,7 @@ jobs:
       pages: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # The fire drill. Condition 8 requires the notification to have been
       # EXERCISED, not merely written, and a notification nobody has ever seen fire
@@ -180,7 +180,7 @@ jobs:
           echo "Nothing publishes. The site keeps serving the previous good build."
           exit 1
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.13'
           cache: pip
@@ -190,7 +190,7 @@ jobs:
       # Actions caches are evictable, so keeping it there would silently reset
       # the accuracy figure the site publishes.
       - name: Restore durable state
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: data
           path: .state
@@ -201,7 +201,7 @@ jobs:
       # because caching it would cost more to save and restore than to re-fetch
       # on the rare full rebuild.
       - name: Cache corpus index
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             data/index
@@ -285,9 +285,22 @@ jobs:
       # Upload BEFORE persisting state. A failure in the persist step must
       # not cost the publication too, and state should only advance once the
       # artefact that state describes actually exists.
-      - uses: actions/upload-pages-artifact@v3
+      # include-hidden-files IS LOAD-BEARING, and it defaults to false.
+      #
+      # v4 of this action added "hidden files (specifically dotfiles) will not be
+      # included in the artifact", and it archives with `--exclude=.[^/]*`. This
+      # site publishes /.well-known/security.txt, which is RFC 9116 and the one
+      # machine-readable place a security team looks for a contact route. Bumping
+      # v3 to v5 without this line drops it from the published site, with a green
+      # build and no warning: the file stops being served and nothing says so.
+      #
+      # Caught by reading the v4 release notes before the bump rather than by
+      # noticing a 404 later. tests/test_deploy_workflow.py asserts the pairing,
+      # so a future bump cannot arrive without it.
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
+          include-hidden-files: true
 
       # Always staged, even on a pause or a dry run: staging is local and
       # publishes nothing, and it is what makes a dry run able to show what
@@ -351,7 +364,7 @@ jobs:
   # closed automatically on the next success so the issue list reflects the current
   # state rather than a history of every wobble.
   notify:
-    # `deploy` was absent here, so a failed actions/deploy-pages@v4 opened no
+    # `deploy` was absent here, so a failed actions/deploy-pages@v5 opened no
     # issue at all: the publication step could fail and the only alarm the
     # project has stayed silent. `timed_out` is matched as well as `failure`,
     # because a deploy that hangs past its 10-minute limit is the same outage.
@@ -461,7 +474,7 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       # THE RUN LEDGER. Appended as the last step of DEPLOY, not of build.
       #
