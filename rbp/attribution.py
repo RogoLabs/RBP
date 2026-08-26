@@ -114,3 +114,22 @@ class Attributor:
                 cna, share = self.map[pnorm]
                 return cna, min(share, 0.85), "corpus-exact"
         return "unclassified", 0.0, "none"
+
+
+class NullAttributor:
+    """Attributes nothing, for the posture where the site names nobody.
+
+    A drop-in for Attributor with the same one method. classify._row calls
+    `attribute()` for every row and stores the result as product_map_owner /
+    _confidence / _method, all three of which are in publish.NAME_FIELDS and are
+    therefore stripped before anything is published.
+
+    So under v1 the real Attributor loads a 1.4 MB product-to-CNA parquet, scores
+    every row against it, and hands back three fields whose entire journey ends
+    in a de-namer. Not computing them is both faster and one fewer place a name
+    can escape from. `abstain` is the same answer the real one gives when it does
+    not know, so nothing downstream needs a branch.
+    """
+
+    def attribute(self, product, description):
+        return None, 0.0, "abstain"

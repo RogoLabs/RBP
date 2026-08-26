@@ -336,6 +336,157 @@ def prune_snapshots(state_dir, keep=KEEP_SNAPSHOTS, keep_monthly=True):
     return dropped
 
 
+# --------------------------------------------------------------------------
+# the value guard: does a certified CNA's name appear at all
+# --------------------------------------------------------------------------
+
+# Names too generic to be evidence of attribution IN FREE PROSE. Each is a real
+# roster short name that is also an ordinary word or a ubiquitous technical
+# token, so a token-scan over a .md file would fire on every mention.
+#
+# THIS EXCLUSION APPLIES TO PROSE ONLY, and getting that wrong is a mistake this
+# guard made on its first run: the list originally included suse, apple,
+# microsoft and redhat, and `backlog.csv` carrying `owner=suse` on 223 rows
+# sailed straight through the check written to catch it. Those are precisely the
+# names that leaked.
+#
+# Structured artefacts are matched on WHOLE-CELL and WHOLE-VALUE equality
+# instead, with no exclusions at all. A JSON string that is exactly "suse", or a
+# CSV cell that is exactly "suse", is a name, whatever column it is in. A
+# description that happens to contain the word cannot fire, because it is not
+# equal to it.
+_AMBIGUOUS_IN_PROSE = frozenset({
+    "Go", "Linux", "Chrome", "Docker", "Meta", "Echo", "Arm", "seal", "curl",
+    "php", "rust", "systemd", "glibc", "openssl", "mitre", "Google", "apple",
+    "oracle", "debian", "fedora", "suse", "redhat", "canonical", "microsoft",
+})
+
+
+def _roster_names():
+    """Certified CNA short names worth refusing, from the pinned roster.
+
+    Falls back to an empty set ONLY if the roster cannot be read, and says so:
+    silently degrading to "no names to look for" would turn this guard off
+    exactly the way the field-name guard was already off.
+    """
+    try:
+        from . import roster as _roster
+        names = set(_roster.load()["names"])
+    except Exception as e:  # noqa: BLE001
+        print(f"  WARNING: value guard disabled, roster unreadable ({e})")
+        return frozenset()
+    # No exclusions here. Structured formats match on whole-value equality, which
+    # is precise enough on its own; the prose exclusion is applied at the one
+    # call site that needs it.
+    return frozenset(n for n in names if n and len(n) >= 3)
+
+
+# WHERE A CNA NAME IS LEGITIMATE, stated as an explicit allowlist.
+#
+# There are two different things that look identical to a text search, and the
+# whole value of this guard depends on separating them:
+#
+#   FORBIDDEN  naming a CNA as the owner/assigner OF A SPECIFIC ROW. That is an
+#              accusation, it is what v1 does not publish, and it is what all
+#              five leaks were.
+#   ALLOWED    naming CNAs in AGGREGATE COVERAGE, and naming the FEEDS we read.
+#              `coverage.covered` is the site's own statement about its reach,
+#              published deliberately: inference refuses to name a CNA whose
+#              advisories this site does not read, so the covered set has to be
+#              inspectable. And `dates` is keyed by FEED, several of which share
+#              a name with a CNA (redhat, debian, suse, alpine, mozilla, arch).
+#              "the redhat feed referenced this ID on this date" is a fact about
+#              our feeds, not about who reserved the CVE.
+#
+# An allowlist rather than a denylist, because the failure that produced this
+# function was a denylist of nine field names that five leaks walked around. A
+# new field defaults to REFUSED and someone has to justify adding it here.
+_NAME_OK_PATHS = (
+    ".dates.",              # per-feed sighting dates, keyed by feed
+    ".coverage.covered",    # the covered set, published on purpose
+    ".coverage.sightings",  # sightings per CNA, the covered set's evidence
+    ".coverage.own_channel_cnas",
+    ".coverage.top_missed",
+    ".coverage.top_missed_effective",
+    ".coverage.off_roster",
+    ".feeds.",              # feed health, keyed by feed
+    ".sources",             # which feeds saw this row
+    ".requested",           # the configured feed list
+    # DESCRIBING THE VULNERABILITY IS NOT ATTRIBUTING IT. Some packages share a
+    # name with the CNA that maintains them: `libreswan` and `glibc` are both,
+    # and on 2026-08-25 both appeared in `package` on real rows. Saying an ID
+    # concerns the glibc package is the site's entire purpose; saying glibc
+    # reserved it is the thing v1 does not say. Refusing the first to prevent
+    # the second would empty the table.
+    ".package",
+    ".product",
+    ".vendor",
+    ".ecosystem",
+    # An advisory summary is free text supplied by the feed. Two real rows had a
+    # description of exactly "glibc" and exactly "openssl".
+    ".description",
+)
+
+
+def _name_path_allowed(path):
+    return any(ok in path for ok in _NAME_OK_PATHS)
+
+
+def _roster_name_hits(obj, names, path="$"):
+    """Every place a roster name appears as a KEY or a scalar VALUE.
+
+    Keys as well as values, because `leave_one_out.by_cna` was a mapping KEYED by
+    CNA: a walk that read only values reported it clean.
+    """
+    hits = []
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            child = f"{path}.{k}"
+            if isinstance(k, str) and k in names and not _name_path_allowed(child):
+                hits.append(f"{child} (as a key)")
+            hits.extend(_roster_name_hits(v, names, child))
+    elif isinstance(obj, list):
+        for i, v in enumerate(obj):
+            hits.extend(_roster_name_hits(v, names, f"{path}[{i}]"))
+    elif isinstance(obj, str) and obj in names and not _name_path_allowed(path):
+        hits.append(f"{path} = {obj!r}")
+    return hits
+
+
+def _roster_names_in_text(text, names, filename=""):
+    """Roster names in a non-JSON artefact.
+
+    CSV is parsed as CSV rather than grepped, so a name inside a description
+    cell is judged the same way as one in an owner column: it is a cell value,
+    and a cell value equal to a CNA short name is exactly what must not ship.
+    Whole-cell equality, not substring, so "Go" inside "Django" cannot fire.
+    """
+    import csv as _csv
+    import io
+    hits = []
+    if filename.endswith(".csv"):
+        try:
+            for i, row in enumerate(_csv.DictReader(io.StringIO(text))):
+                for col, val in row.items():
+                    if col in ("sources", "refs", "dates", "package", "product",
+                               "vendor", "ecosystem", "description"):
+                        continue        # see _NAME_OK_PATHS for why each is here
+                    if isinstance(val, str) and val.strip() in names:
+                        hits.append(f"row {i} column {col!r} = {val.strip()!r}")
+        except (_csv.Error, ValueError):
+            return [f"{filename}: unparseable CSV, cannot be checked for names"]
+        return hits
+    # Line-oriented prose. Whole-token equality against the roster, MINUS the
+    # names that are ordinary words, because this is the only branch that reads
+    # running text rather than a structured cell.
+    import re as _re
+    prose_names = names - _AMBIGUOUS_IN_PROSE
+    for tok in set(_re.findall(r"[A-Za-z0-9_.@-]{3,}", text)):
+        if tok in prose_names:
+            hits.append(f"token {tok!r}")
+    return hits
+
+
 def check(state_dir):
     """Every reason this tree must not be published. Empty list means clean."""
     problems = []
@@ -366,24 +517,54 @@ def check(state_dir):
     #
     # Walks the tree rather than globbing a shape, so the next file added to
     # ALLOWED_ROOT is covered without anyone remembering to widen a pattern.
+    # TWO GUARDS, and the second exists because the first was blind four ways.
+    #
+    # `_named_paths` asks "is this field called one of nine names we listed".
+    # Every one of the five leaks found on 2026-08-26 used a different key:
+    # `cna` in cnas.json, `published_assigner` in resolved.json, `by_cna` and
+    # `largest_stratum` inside summary.json. And the walk skipped every
+    # non-JSON file, so a backlog.csv with 223 names in an `owner` column was
+    # exempt along a second axis entirely.
+    #
+    # So the value guard below asks the question that actually matters: does a
+    # certified CNA's short name appear ANYWHERE in this file, as a value or as
+    # a key, whatever the surrounding field is called and whatever format the
+    # file is in. It cannot be evaded by renaming a field, because it does not
+    # read field names.
+    roster_names = _roster_names()
     for base, _dirs, files in os.walk(state_dir):
         if ".git" in base.split(os.sep):
             continue
         for fn in sorted(files):
-            if not fn.endswith(".json"):
-                continue
             path = os.path.join(base, fn)
-            try:
-                body = json.load(open(path))
-            except (OSError, ValueError):
-                problems.append(f"unreadable JSON about to be published: {path}")
+            rel_p = os.path.relpath(path, state_dir)
+            if fn.endswith(".json"):
+                try:
+                    body = json.load(open(path))
+                except (OSError, ValueError):
+                    problems.append(f"unreadable JSON about to be published: {path}")
+                    continue
+                found = _named_paths(body)
+                if found:
+                    problems.append(
+                        f"{rel_p} carries {len(found)} attribution field(s), first: "
+                        f"{found[0]}. v1 publishes no attribution.")
+                hits = _roster_name_hits(body, roster_names)
+            elif fn.endswith((".csv", ".jsonl", ".md", ".txt")):
+                try:
+                    hits = _roster_names_in_text(open(path, encoding="utf-8",
+                                                     errors="replace").read(),
+                                                roster_names, fn)
+                except OSError:
+                    problems.append(f"unreadable file about to be published: {path}")
+                    continue
+            else:
                 continue
-            found = _named_paths(body)
-            if found:
-                rel_p = os.path.relpath(path, state_dir)
+            if hits:
                 problems.append(
-                    f"{rel_p} carries {len(found)} attribution field(s), first: "
-                    f"{found[0]}. v1 publishes no attribution.")
+                    f"{rel_p} names {len(hits)} certified CNA(s), first: "
+                    f"{hits[0]}. v1 publishes no attribution, in any field, in "
+                    "any format.")
 
     # No artefact may name a CNA on a row the site does not count. This is the
     # content check that caught held_back.json when the path check could not,
