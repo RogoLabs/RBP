@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import pytest
 
-from _measure import page_paths
+from _measure import LIST_PAGE, page_paths
 
 # Enough to walk the chrome, the filters, the sort buttons and well into the
 # table body. /cves has more focusables than this (every row carries a link), and
@@ -116,7 +116,7 @@ def test_the_traversal_is_arming_focus_visible(page, server):
     somewhere above changed the heuristic, every stop would report `:focus`
     styling and this file would go on passing while measuring the wrong state.
     """
-    page.goto(f"{server}/cves.html", wait_until="load")
+    page.goto(f"{server}/{LIST_PAGE}", wait_until="load")
     stops, _ = _traverse(page, limit=6)
     assert stops, "Tab reached nothing"
     assert all(s["focusVisible"] for s in stops), (

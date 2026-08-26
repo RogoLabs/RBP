@@ -26,6 +26,19 @@ TEMPLATES = ROOT / "templates"
 PLACEHOLDER = ROOT / "placeholder.html"
 
 
+def _live_pages(built):
+    """The dashboard pages this build actually produced.
+
+    Was a hardcoded list naming cves.html and changes.html. Those were deleted on
+    2026-08-26 and the tests raised FileNotFoundError, which is the loud version
+    of the failure; the quiet version is a list that stops covering a page nobody
+    remembered to add. Globbed, minus the holding page, which is a standalone
+    file that shares nothing with base.html by design.
+    """
+    return [p.name for p in sorted(built.glob("*.html"))
+            if p.name not in ("about-this-count.html", "index.html")]
+
+
 def _text(path):
     """Tags stripped, whitespace collapsed, entities resolved."""
     raw = pathlib.Path(path).read_text()
@@ -80,7 +93,7 @@ def test_the_meta_description_makes_no_absolute_claim(built):
     """The one string search engines and link previews quote verbatim. It began
     "Every CVE ID that is reserved..." on a run at 27.9% effective CNA coverage.
     "Every" is the absolute the holding page was corrected to remove."""
-    for page in ("overview.html", "cves.html", "method.html"):
+    for page in _live_pages(built):
         raw = (built / page).read_text()
         m = re.search(r'<meta name="description" content="([^"]*)"', raw)
         assert m, page
@@ -329,12 +342,20 @@ def test_no_page_leads_with_a_single_cna_share(built):
     assert "largest single holder accounts for" in _text(built / "method.html")
 
 
-def test_every_lead_tile_states_its_base(built):
-    """Four tiles previously carried four different unstated denominators, and a
-    reader takes them all as shares of the headline."""
-    front = (built / "overview.html").read_text()
-    assert front.count("metric-base") >= 4, (
-        "at least one lead tile does not state its own base")
+def test_the_headline_count_states_its_own_base(built):
+    """Four lead tiles previously carried four different unstated denominators,
+    and a reader takes them all as shares of the headline.
+
+    The tiles went with the redesign on 2026-08-26: they were instrument
+    readings about this site's own machinery, not about the CVEs, and the list
+    is the front door now. The CLAIM survives them, because it is the one that
+    mattered: a number on the lead screen has to say what it is a number OF.
+    """
+    front = _text(built / "overview.html")
+    assert "reserved, public, unpublished" in front, (
+        "the headline count no longer says what it is counting")
+    # And the qualifier that makes it a floor rather than a census.
+    assert "floor" in front, "the lead screen does not say the count is a floor"
 
 
 def test_the_framing_sentence_is_on_the_lead_screen(built):
@@ -347,7 +368,7 @@ def test_the_framing_sentence_is_on_the_lead_screen(built):
 def test_the_delegation_caveat_reaches_every_page_that_names_a_cna(built):
     """A row may be an ID delegated TO a CNA rather than withheld BY it, and nothing
     observable distinguishes them."""
-    for page in ("method.html", "overview.html"):
+    for page in _live_pages(built):
         assert "CNA-LR" in _text(built / page), page
 
 
@@ -365,7 +386,7 @@ def test_link_previews_do_not_carry_the_count_before_launch(built):
     renders og:description. The gate is on promotion, and an unfurl in someone
     else's channel is promotion."""
     import re as _re
-    for page in ("overview.html", "cves.html"):
+    for page in _live_pages(built):
         raw = (built / page).read_text()
         m = _re.search(r'og:description" content="([^"]*)"', raw)
         assert m, page
@@ -376,7 +397,7 @@ def test_link_previews_do_not_carry_the_count_before_launch(built):
 def test_every_page_has_its_own_og_url_and_canonical(built):
     """One hard-coded root og:url on all seven pages meant every paste unfurled as
     the front page regardless of what was shared."""
-    for page in ("overview.html", "cves.html", "method.html"):
+    for page in _live_pages(built):
         raw = (built / page).read_text()
         assert f'og:url" content="https://rbptracker.org/{page}"' in raw, page
         assert f'rel="canonical" href="https://rbptracker.org/{page}"' in raw, page

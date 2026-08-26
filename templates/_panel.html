@@ -59,6 +59,108 @@
   Program's own channels for identifying RBPs. Our ask is for the public face of that
   channel. Until then, this site is being built to publish the outside view.</p>
 
+  {# The exculpatory detail, VERBATIM from the old index.html.
+     tests/test_copy.py insists on it and is right to: "item 2 of three" only
+     exculpates if a reader can see what items 1 and 3 were, and the first draft
+     of that claim asserted them from memory and was wrong. #}
+  <p>
+      The record shows routine maintenance rather than concealment, and all three
+      exculpatory facts belong here rather than one click away. The table was commented
+      out as <em>item 2 of a three-item</em> release, so it was not singled out:
+      <a href="https://github.com/CVEProject/cve-website/issues/842">issue&nbsp;#842</a>
+      lists item 1 as updating the Published Records and Reserved IDs tables with
+      Q4&nbsp;2021 stats and item 3 as converting the CNA-versus-CNA-LR table from
+      quarterly to annual totals. The v1.0 policy PDF had been withdrawn thirteen days
+      earlier pending a replacement. And the final column already read
+      <span>N/A</span>, so the series had stopped being populated before
+      anyone commented it out.
+    </p>
+
+  <h2>What this measures, and what it does not</h2>
+  {# VERBATIM from the old index.html. tests/test_copy.py's delegation-caveat
+     test caught its loss when that page stopped rendering. The distinction it
+     draws, a transparency measurement rather than a CNA scorecard, is the one
+     the whole project rests on. #}
+  <p>
+      <strong>This is a Program-level transparency measurement, not a CNA scorecard.</strong>
+      Which CNAs appear here is decided by how wide their ID blocks are and whether this
+      site reads their advisories, not by how they behave: a CNA with large contiguous
+      blocks and feeds we ingest is nameable, and one with neither is invisible no matter
+      what it does. RBP Policy v2.0.0 also lets a Root direct a CNA-LR to publish an
+      overdue record, so a row may be an ID <em>delegated to</em> a CNA rather than
+      withheld <em>by</em> it, and nothing observable from outside distinguishes the two.
+      <a href="method.html">The limits, in full</a>.
+    </p>
+
+  <h2>What the policy says in the CNAs' favour</h2>
+  {# MOVED HERE VERBATIM from the old index.html when that page stopped being
+     rendered on 2026-08-26. tests/test_copy.py caught the loss: the site quotes
+     the policy's hardest line, and this project's own standard is that quoting
+     only the parts that suit us would be selective. Four passages that cut the
+     other way, under the section headings they actually occupy, because two of
+     them are not in Timely Publication and filing them there would misdescribe
+     the policy. #}
+<p>
+      This site quotes the policy's hardest line at the top of this page. The same
+      document carries four passages that cut the other way, and
+      <a href="policy.html">this project's own standard</a> is that quoting only the
+      parts that suit us would be selective. They are reproduced verbatim below, under
+      the section headings they actually occupy, because two of them are not in
+      <em>Timely Publication</em> and filing them there would misdescribe the policy.
+    </p>
+
+    <p class="small text-muted mb-1"><strong>Timely Publication</strong></p>
+    <blockquote>
+      <p>
+        CNAs should ensure timely publication of CVE Records, &ldquo;recognizing that such
+        publication may, at times, coincide with ongoing vulnerability or
+        <strong>incident response</strong> activities.&rdquo;
+      </p>
+      <p class="mb-0">
+        &ldquo;The CVE Program recognizes that internal processes may necessitate
+        <strong>short delays</strong>; however, time flexibility allowed by the CNA
+        Operational Rules should not be used to intentionally delay publication once an
+        advisory or Fix has been made public.&rdquo;
+      </p>
+    </blockquote>
+
+    <p class="small text-muted mb-1"><strong>Notification and Remediation</strong></p>
+    <blockquote class="mb-2">
+      <p class="mb-0">
+        The CNA is expected to publish RBPs as soon as possible and &ldquo;no later than
+        the deadline stated by their TL-Root or Root (which may account for factors such
+        as <strong>volume, complexity, and resource constraints</strong>).&rdquo;
+      </p>
+    </blockquote>
+
+    <p class="small text-muted mb-1"><strong>Enforcement</strong></p>
+    <blockquote class="mb-2">
+      <p class="mb-0">
+        &ldquo;The CVE Program may take further action depending on the CNA's
+        <strong>volume, history</strong>, and severity of RBPs.&rdquo;
+      </p>
+    </blockquote>
+
+    <p>
+      <strong>Taking those seriously changes what this site can claim, and it already
+      has.</strong> Nothing is listed until it has been public for
+      {{ summary.get('min_age_days', 7) }} days, which is
+      {{ ((summary.get('min_age_days', 7) * 24 / expectation_hours) | round(1)) }}x the
+      {{ expectation_hours }}-hour window and well past any short delay or live incident
+      response. The median row here has been public
+      <strong>{{ summary.median_days }} days</strong>, and
+      {{ summary.age_buckets.get('180d+', 0) }} have been public more than 180 days. A
+      short delay is not what this list is measuring.
+    </p>
+    <p class="mb-0">
+      And the last two passages license the sentence this whole site is built around:
+      <strong>the only deadline that binds a specific row is one a Root set privately.</strong>
+      It accounts for volume and resource constraints, it is not published, and no
+      outside observer can see it. That is precisely why this site measures
+      <em>days public</em> and never calls a single row overdue.
+    </p>
+  </div>
+
   <h2>How this is measured</h2>
   <p>Ten public advisory feeds are read every six hours and everything they
      reference is checked against the CVE List. Nothing appears here until it has
