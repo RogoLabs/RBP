@@ -17,7 +17,7 @@ import json
 import os
 
 from . import (cvelist, feeds, classify, report, attribution, coverage, inference,
-               clock, site, suppress, schema)
+               clock, site, schema)
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
 # (CSAF aggregator + Microsoft) move to a deeper monthly cadence.
@@ -50,7 +50,6 @@ PRECISION = os.path.join(DATA, "precision.json")
 RESOLUTIONS = os.path.join(DATA, "resolutions.json")
 BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 # Runner-local handoff from `run` to `publish stage`. Never published.
-SUPPRESSED_IDS = os.path.join(DATA, ".suppressed.json")
 
 
 def degraded_state(*, failures, truncated, capped, dropped,
@@ -304,43 +303,25 @@ def cmd_run(args):
         and clock.age_days(r.get("public_date"), today) >= args.min_age_days
         and not clock.before_epoch(r)
     }
-    # The suppression lever. Loaded BEFORE inference, because a suppressed row
-    # must never reach the grader ledger, not merely be hidden from the site.
-    # backlog_size bounds the auto-withhold as a SHARE of the backlog as well as
-    # an absolute count, so the ceiling stays sane if the backlog is ever small:
-    # 25 of 522 is nothing, 25 of 40 would be most of the site.
-    sup = suppress.load(os.path.join(ROOT, suppress.DEFAULT_LIST),
-                        backlog_size=len(_published_ids))
-    # Suppressed ids leave `record_for` as well as the artefacts.
+    # THE WITHHOLD CHANNEL IS GONE, deliberately, 2026-08-26.
     #
-    # inference already refuses to RECORD a new prediction for a suppressed row,
-    # but `record_for` is also what grader.withdraw keeps: anything in the set is
-    # retained. So a row that was named on an earlier run and is withheld today
-    # would have kept its old prediction, CVE ID and inferred CNA name, alive in
-    # precision.json on the public data branch. The withhold would have been
-    # complete everywhere a reader looks and incomplete in the one file that
-    # records who this site accused.
-    # Handed to `publish` through a runner-local file rather than a second network
-    # read. `publish stage` runs as its own CLI invocation and has to scrub PRIOR
-    # snapshots too; re-reading the issues there would make staging depend on a
-    # live API call, so a transient GitHub error would stop state advancing. This
-    # file records what THIS run actually decided, which is also the honest input.
-    # data/ is gitignored, so it is never published.
-    try:
-        os.makedirs(DATA, exist_ok=True)
-        json.dump(sorted(sup.auto | {c for c in _published_ids if c in sup}),
-                  open(SUPPRESSED_IDS, "w"))
-    except OSError as e:
-        print(f"  NOTE: could not write {SUPPRESSED_IDS} ({e}); prior snapshots "
-              "will not be scrubbed this run")
-    _suppressed_ids = {c for c in _published_ids if c in sup}
-    _published_ids -= _suppressed_ids
-    if _suppressed_ids:
-        print(f"  dropped {len(_suppressed_ids)} suppressed id(s) from the grader "
-              "ledger scope, so any earlier prediction for them is withdrawn")
+    # It was a monitored GitHub-issue reader, an HMAC-keyed suppression list, a
+    # per-author cap, an anomaly threshold and a degraded-run term: about 1,470
+    # lines across five modules and six copy surfaces, plus a repository secret
+    # and an `issues: read` permission on the publishing job.
+    #
+    # It existed so a CNA could contest a row that NAMED it. v1 names nobody, and
+    # every row here is a CVE ID that is already referenced in a public advisory
+    # and has been for at least the reportable buffer. There is nothing to
+    # withhold that is not already public, and the machinery cost more than the
+    # risk it covered.
+    #
+    # WHAT REPLACES IT: an email address in /.well-known/security.txt and on
+    # /method, read by a person. Zero running cost, no credential, no API call,
+    # and no fourth thing that can silently stop working. Launch condition 4 is
+    # retired rather than met; see rbp/launch.py.
     if NAMING:
         validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
-                                                suppressed=sup,
                                                 record_for=_published_ids,
                                                 covered=_covered, sightings=_sightings,
                                                 bulk_reporters=attribution.BULK_REPORTER_NAMES,
@@ -389,7 +370,7 @@ def cmd_run(args):
     reportable = [r for r in backlog
                   if isinstance(r.get("days_public"), int)
                   and r["days_public"] >= args.min_age_days
-                  and not r.get("suppressed")]
+                  ]
     reportable, pre_epoch = clock.split_epoch(reportable)
     if pre_epoch:
         oldest = max((r["days_public"] for r in pre_epoch), default=None)
@@ -412,9 +393,7 @@ def cmd_run(args):
     # meant the ledger held 724 open IDs against 553 published rows, so sourcing
     # /changes from it would have closed 171 rows nobody ever counted, 84 of them
     # rows the clock calls unreportable at any buffer.
-    dropped_res = ledger.track(reportable, suppressed=sup)
-    if dropped_res:
-        print(f"  removed {dropped_res} suppressed id(s) from the resolution ledger")
+    ledger.track(reportable)
     ledger.save()
     if len(ledger.state["open"]) != len(reportable):
         print(f"  NOTE: ledger tracks {len(ledger.state['open'])} open vs "
@@ -499,12 +478,11 @@ def cmd_run(args):
     # Counts only, never ids. Publishing which rows are withheld would undo the
     # withholding; publishing nothing would make the lever a quiet way to shrink
     # the count, which is exactly what the site promised it was not.
-    stats["suppression"] = sup.report
     # One flag any consumer can branch on, rather than three they have to combine
     # correctly. True whenever this run's count is a lower floor than usual.
     stats["degraded"], stats["degraded_reasons"] = degraded_state(
         failures=failures, truncated=truncated, capped=capped,
-        dropped=oracle["dropped"], reports_unreadable=sup.report["degraded"],
+        dropped=oracle["dropped"], reports_unreadable=False,
         shrunk=shrunk)
     stats["limitations"] = capped
     # item 14: coverage was computed every run, printed to a build log, and

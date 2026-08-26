@@ -28,9 +28,12 @@ def _gate(pct=27.9, cleared=False):
     return {"cleared": cleared, "pct": pct, "required": 50.0}
 
 
-def test_all_nine_conditions_are_present_and_numbered_once():
+def test_all_conditions_are_present_and_numbered_once():
     items = launch.checklist(_summary(), _gate())
-    assert [c["n"] for c in items] == list(range(1, 10))
+    assert [c["n"] for c in items] == [1, 2, 3, 5, 6, 7, 8, 9], (
+        "condition 4 was RETIRED with the withhold channel on 2026-08-26, "
+        "not renumbered: the numbers are how the review's items are cited "
+        "and shifting them would silently repoint every reference")
     assert all(c["title"] and c["detail"] for c in items)
 
 
@@ -50,11 +53,18 @@ def test_a_met_condition_never_carries_a_blocking_reason():
 
 def test_status_is_only_cleared_when_every_condition_is_met():
     st = launch.status(_summary(), _gate())
-    assert st["total"] == 9
-    assert st["met"] + st["unmet"] == 9
+    assert st["total"] == 8, "condition 4 retired 2026-08-26 with the withhold channel"
+    assert st["met"] + st["unmet"] == st["total"]
     assert st["cleared"] is (st["unmet"] == 0)
-    assert st["cleared"] is False, "not launch-ready today; if this flips, check why"
     assert len(st["blocking"]) == st["unmet"]
+
+
+def test_the_checklist_can_still_go_false():
+    """The whole point of the list is that it is checkable, and it now clears on
+    the fixture, so the guard against "cannot fail" has to be explicit. A
+    condition below the gate must un-clear it."""
+    st = launch.status(_summary(effective=10), _gate(pct=2.3, cleared=False))
+    assert st["cleared"] is False and st["blocking"]
 
 
 def test_coverage_condition_is_derived_not_declared():
@@ -153,7 +163,7 @@ def test_plan_and_site_publish_the_same_number_of_conditions():
     numbered = re.findall(r"^\| ?\*?\*?([1-9])\.?\*?\*? ?\|", section, re.M)
     if not numbered:
         numbered = re.findall(r"^(?:- )?\*\*([1-9])\.", section, re.M)
-    assert len(set(numbered)) == 9, (
+    assert len(set(numbered)) == 8, (
         f"PLAN.md 8d lists {len(set(numbered))} conditions, launch.py has 9")
 
 
@@ -166,7 +176,7 @@ def test_plan_and_site_publish_the_same_number_of_conditions():
 # about two days by prune_snapshots(keep=2). Condition 5 stays MET because its
 # mechanism, the 4-day floor, is real; only its stated doctrine was wrong, and
 # the title changed instead.
-@pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (4, False), (5, True),
+@pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (5, True),
                                           (6, True), (7, True),
                                           (8, True), (9, True)])
 def test_declared_statuses_match_what_is_actually_built(n, expect_met):
@@ -276,18 +286,26 @@ def test_every_declared_condition_carries_a_verification_date():
             assert c["verified_on"], f"condition {c['n']} claims met with no date"
 
 
-def test_the_correction_channel_condition_follows_the_run():
-    """It rendered MET twenty lines below the banner saying withhold requests
-    could not be read this run, from data the run already computes. The
-    checklist was contradicting the page it is printed on."""
-    degraded = {**_summary(), "suppression": {"degraded": True}}
-    c = next(c for c in launch.checklist(degraded, _gate(), today="2026-08-25")
-             if c["n"] == 4)
-    assert c["status"] == launch.UNMET
-    assert "could not be read" in c["blocks"]
+def test_the_retired_condition_is_gone_rather_than_quietly_met():
+    """Condition 4 asked for a monitored correction channel with a suppression
+    lever behind it. The channel was removed on 2026-08-26, so the condition is
+    RETIRED: absent from the list, with the reasoning kept in rbp/launch.py.
 
-    ok = {**_summary(), "suppression": {"degraded": False}}
-    c2 = next(c for c in launch.checklist(ok, _gate(), today="2026-08-25")
-              if c["n"] == 4)
-    # Still unmet for its own recorded reason, but not for this one.
-    assert "could not be read" not in (c2["blocks"] or "")
+    Absent rather than met, because marking it met would be false: nothing
+    monitors anything now. A checklist that can be satisfied by deleting the
+    thing it asks about is not a checklist.
+    """
+    items = launch.checklist(_summary(), _gate(), today="2026-08-25")
+    assert not [c for c in items if c["n"] == 4]
+    import inspect
+    src = inspect.getsource(launch)
+    assert "CONDITION 4 IS RETIRED" in src, (
+        "the retirement was deleted rather than recorded, so a reader cannot "
+        "tell it was answered from it being quietly dropped")
+    # Whitespace-normalised: the quote wraps across comment lines.
+    flat = " ".join(src.replace("#", " ").split())
+    assert "too much overhead for a side project" in flat, "the reason is not recorded"
+    assert "WHAT THIS COSTS" in src, (
+        "the retirement records the decision but not its cost, which is the half "
+        "a future reader needs")
+

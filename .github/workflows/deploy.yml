@@ -130,7 +130,6 @@ jobs:
       RBP_REHEARSE: ${{ (inputs.dry_run == true && inputs.rehearse_launch == true) && '1' || '' }}
     permissions:
       contents: write     # the persist step pushes to the data branch
-      issues: read        # the suppression lever reads `withhold`-labelled issues
       pages: write
       id-token: write
     steps:
@@ -235,30 +234,8 @@ jobs:
 
       - name: Run pipeline
         env:
-          # The suppression lever (review item 4).
-          #
-          # The fast path reads OPEN ISSUES carrying the `withhold` label, which
-          # GITHUB_TOKEN can do with `issues: read`. An earlier version read
-          # private security advisories, which needed a fine-grained PAT with
-          # `repo` scope, because there is no permissions key for repository
-          # advisories. Dropping that removed a credential entirely: nothing to
-          # create, nothing to rotate, nothing to expire, and the whole
-          # silent-credential-failure class stopped existing rather than being
-          # mitigated with an expiry warning.
-          #
-          # A failed read does NOT fail the run. "Cannot read" and "nothing to
-          # read" are the same value, so a read that starts failing would switch
-          # the fast path off silently. Reported as a degraded run instead, which
-          # puts a banner on every page saying requests are not being honoured.
-          # Keys the committed suppression list. That file holds HMAC digests
-          # rather than CVE IDs, because a plaintext list in a public repository
-          # would be a permanent, git-archived statement that a specific reserved
-          # ID was reported as sensitive: strictly worse than the row it removes.
-          #
-          # Unlike the token, a MISSING key with a non-empty list DOES fail the
-          # run, because the alternative is publishing every row that someone
-          # reported as wrong or under embargo (PLAN 8b class 1).
-          RBP_SUPPRESS_KEY: ${{ secrets.RBP_SUPPRESS_KEY }}
+          # The withhold channel was removed on 2026-08-26: no secret, no
+          # `issues: read`, no API call. See rbp/cli.py.
           # Without this the pipeline made up to 45 anonymous api.github.com
           # calls per run against a 60/hour shared-runner-IP budget, and a 403
           # from cvelist._releases propagates through ensure_corpus to kill the

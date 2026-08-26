@@ -120,74 +120,34 @@ def _no_ungated_name(summary):
 # Conditions no run can evaluate. Declared, with the reason they are not met, so
 # the site states its own gaps rather than implying the list is shorter than it is.
 _DECLARED = [
-    {
-        "n": 4,
-        # Hand-verified on this date; _expire flips it to UNMET once stale.
-        "verified_on": "2026-08-23",
-        "title": "A monitored correction channel, with a suppression lever behind it",
-        "detail": ("A route for a CNA to contest a row, a lever that withholds it, "
-                   "and a published aggregate count so the lever cannot be used "
-                   "silently. The fast path is a public withhold request carrying "
-                   "no reason, which is auditable from outside; two private routes "
-                   "reach a person for anyone who prefers them."),
-        # Was FALSIFIED on 2026-08-23 and fixed the same day. The automatic route
-        # was unreachable by the people it exists for: all six surfaces linked
-        # issues/new?labels=withhold, the `labels` query parameter is applied
-        # only for accounts with triage permission, and no issue template existed
-        # to apply it server-side, while from_issues queried
-        # state=open&labels=withhold and read nothing else. An ordinary account
-        # filed an unlabelled issue that nothing ever read, and since the API
-        # call itself succeeded no degraded banner fired either. The rehearsal
-        # that declared this MET ran from an account with write access, the one
-        # configuration in which the defect cannot reproduce.
-        #
-        # Now: an issue template applies the label server-side, the read is
-        # unfiltered and matches on label OR title, and the parser reads the
-        # template field and the title but never the free body, so an id
-        # mentioned in prose cannot withhold an unrelated row.
-        #
-        # The DEFERRAL POLICY also inverted, and that is the larger change.
-        # Past the per-author cap a request used to be silently dropped: the row
-        # kept publishing, nobody replied, and the degraded banner had no
-        # deferral term. Every request is now honoured for one cycle
-        # unconditionally and persists only with the `confirmed` label, so the
-        # failure mode is "a row is briefly missing" rather than "an embargoed
-        # row stays published". The cost, stated because it is real: any account
-        # can blank a row for up to one cycle, and a flood is reported as
-        # anomalous on the site the same run it happens.
-        #
-        # STILL NOT REHEARSED FROM A PERMISSIONLESS ACCOUNT. That is the one
-        # thing this condition asked for that code cannot supply, and it is
-        # Jerry's to do: file a withhold request from an account with no
-        # permissions on the repository and confirm the row leaves.
-        "status": UNMET,
-        "blocks": ("the channel is reachable in code and covered by tests, but "
-                   "has not been exercised end to end from an account with no "
-                   "repository permissions"),
-        # The rehearsal below stands as a record of what WAS verified, and its
-        # last line is why it did not catch this: it checked the data branch
-        # rather than the path a CNA employee would take.
-        #
-        # Rehearsed in both directions on 2026-08-22 against CVE-2025-30083, a live
-        # row 519 days public. Withheld: absent from backlog.json, backlog.csv,
-        # rbp.json, rbp.csv, summary.json, cnas.json, held_back.json,
-        # backlog_full.json, precision.json, resolutions.json and both retained
-        # prior snapshots. Revoked by closing the issue: row restored on the next
-        # build. Verified on the data branch rather than on the site, which is where
-        # the first two attempts turned out to be incomplete.
-        #
-        # ONE DELIBERATE DEVIATION from the review's wording, recorded so a reader
-        # can judge it rather than discover it. The panel asked for a "non-public"
-        # channel. The AUTOMATIC route is a public issue carrying no reason, because
-        # the private advisory form asks for affected versions, severity and CWE and
-        # would have turned a one-line request into a form nobody finishes, and
-        # because a public request makes the withheld count auditable from outside.
-        # Two private routes exist for anyone who prefers them, human-reviewed
-        # rather than automatic. The disclosure that worried the panel is answered
-        # by asking for no reason: a request naming only an id does not distinguish
-        # an embargo from a wrong owner.
-        "item": "4",
-    },
+    # CONDITION 4 IS RETIRED, not met. Removed 2026-08-26 with the channel it
+    # described. Kept here as a comment rather than deleted, so a reader of this
+    # list can see that it was answered rather than quietly dropped, and so the
+    # decision has to be argued with rather than rediscovered.
+    #
+    # It asked for "a monitored correction channel, a suppression lever behind
+    # it, and a published aggregate withheld count". That existed: a GitHub issue
+    # reader, an HMAC-keyed list, per-author caps, an anomaly threshold and a
+    # degraded-run term, about 1,470 lines across five modules and six copy
+    # surfaces, plus a repository secret and an `issues: read` permission on the
+    # publishing job.
+    #
+    # WHY IT WENT. The panel asked for it so a CNA could contest a row that NAMED
+    # it. v1 names nobody. Every row here is a CVE ID already referenced in a
+    # public advisory and held for the reportable buffer before it is listed, so
+    # there is nothing to withhold that is not already public. Jerry's call,
+    # 2026-08-26: "if it's public after 72 hours it's public. That is too much
+    # overhead for a side project."
+    #
+    # WHAT REMAINS: an email address in /.well-known/security.txt and on /method,
+    # read by a person. No credential, no API call, no scheduled component that
+    # can silently stop working, which is the failure mode the original channel
+    # actually suffered.
+    #
+    # WHAT THIS COSTS, stated rather than hidden: there is now no automatic route
+    # and no published withheld count, so a removal is a human decision with no
+    # audit trail on the site. If the site ever names a party again, this
+    # condition comes back with it and is not optional.
     {
         "n": 5,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
@@ -378,23 +338,6 @@ def _expire(cond, today=None):
     return cond
 
 
-def _correction_channel_is_readable(cond, summary):
-    """Condition 4 cannot read MET on a run that could not read the requests.
-
-    Derived from data the run already computes. This rendered MET twenty lines
-    below the banner saying withhold requests could not be read this run, which
-    is the checklist contradicting the page it is printed on.
-    """
-    sup = (summary or {}).get("suppression") or {}
-    if not sup.get("degraded"):
-        return cond
-    cond = dict(cond)
-    cond["status"] = UNMET
-    cond["blocks"] = ("withhold requests could not be read on this run, so the "
-                      "correction channel is not monitored right now")
-    return cond
-
-
 def checklist(summary, gate, today=None):
     """The nine conditions, in the review's order, derived where derivable.
 
@@ -405,8 +348,6 @@ def checklist(summary, gate, today=None):
     out.extend(_no_ungated_name(summary))
     for c in _DECLARED:
         c = dict(c)
-        if c["n"] == 4:
-            c = _correction_channel_is_readable(c, summary)
         out.append(_expire(c, today))
     return sorted(out, key=lambda c: c["n"])
 
