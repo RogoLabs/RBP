@@ -1,5 +1,13 @@
 -r requirements.txt
 pytest>=8,<9
 pypdf>=5,<7
+# tests/test_deploy_workflow.py parses the workflows. It was written against a
+# PyYAML that happened to be installed on one machine as a transitive dependency
+# of jupyter-events, so the suite passed locally and failed on the runner with a
+# COLLECTION error, which is worse than a failed test: the same pytest invocation
+# gates the publication in deploy.yml, so an import nobody declared could have
+# stopped the site publishing. Hermeticity is about the environment the tests run
+# in as much as the state they read.
+pyyaml>=6,<7
 # Lint. See pyproject.toml for why the rule set is narrow.
 ruff>=0.6,<1.0

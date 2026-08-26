@@ -187,3 +187,85 @@ def test_every_action_used_has_a_known_minimum(workflow):
     assert not unknown, (
         f"{workflow.name} uses {unknown}, which no entry in _MIN_MAJOR covers, so "
         "the Node runtime check above skips them silently")
+
+
+# --------------------------------------------------------------------------
+# the runner has to be able to run the suite at all
+# --------------------------------------------------------------------------
+#
+# This section is here rather than somewhere about packaging because its failure
+# mode is the same as everything else in this file: deploy.yml's `test` job runs
+# `pip install -r requirements-dev.txt` and then the suite, and that suite gates
+# the publication. An import nobody declared is not a failing test, it is a
+# COLLECTION error, which stops the whole run and therefore the publish.
+#
+# That happened. tests/test_deploy_workflow.py was written against a PyYAML that
+# was installed on one machine as a transitive dependency of jupyter-events. 762
+# tests passed locally and the runner reported "1 error in 1.66s".
+
+_REQUIREMENTS = ("requirements.txt", "requirements-dev.txt", "requirements-browser.txt")
+
+def _first_party():
+    """Modules that live in this repo, so importing one proves nothing about
+    packaging. Derived from the tree rather than listed: the hand-written version
+    missed `test_focus`, which tests/render imports as a sibling, and a list that
+    needs updating whenever a test module is added is a list that will report a
+    false failure and then get deleted."""
+    names = {"rbp", "tests"}
+    for path in list((ROOT / "rbp").rglob("*.py")) + list((ROOT / "tests").rglob("*.py")):
+        names.add(path.stem)
+    return names
+
+
+def _declared():
+    """Distribution names named in any requirements file, lowercased."""
+    names = set()
+    for f in _REQUIREMENTS:
+        for line in (ROOT / f).read_text().splitlines():
+            line = line.split("#")[0].strip()
+            if not line or line.startswith("-"):
+                continue
+            names.add(re.split(r"[<>=!\[;]", line)[0].strip().lower())
+    return names
+
+
+def _third_party_imports():
+    """Top-level modules imported anywhere in rbp/ or tests/, minus stdlib."""
+    import ast
+    import sys
+    mods = set()
+    for path in list((ROOT / "rbp").rglob("*.py")) + list((ROOT / "tests").rglob("*.py")):
+        for node in ast.walk(ast.parse(path.read_text())):
+            if isinstance(node, ast.Import):
+                mods |= {a.name.split(".")[0] for a in node.names}
+            elif isinstance(node, ast.ImportFrom) and not node.level and node.module:
+                mods.add(node.module.split(".")[0])
+    return {m for m in mods
+            if m not in sys.stdlib_module_names and m not in _first_party()}
+
+
+def test_every_imported_package_is_declared_in_a_requirements_file():
+    """An import that resolves only because something else pulled it in.
+
+    Mapped import name to distribution with importlib.metadata, because the two
+    differ often enough to matter here: `yaml` is PyYAML and `jinja2` is Jinja2,
+    so a check on the import name alone would report both as undeclared and get
+    switched off.
+    """
+    from importlib.metadata import packages_distributions
+    dists = packages_distributions()
+    declared = _declared()
+    undeclared = []
+    for mod in sorted(_third_party_imports()):
+        # The distribution that provides it, as installed here. Unknown means the
+        # module is not importable in this environment at all, which the suite
+        # would already be failing on.
+        for dist in dists.get(mod, [mod]):
+            if dist.lower() in declared:
+                break
+        else:
+            undeclared.append(f"{mod} (provided by {dists.get(mod, ['?'])})")
+    assert not undeclared, (
+        "these are imported by the suite and named in no requirements file, so "
+        "they work here and fail on a clean runner as a COLLECTION error, which "
+        f"stops the publish rather than one test: {undeclared}")
