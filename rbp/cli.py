@@ -38,12 +38,12 @@ from . import (cvelist, feeds, classify, report, coverage,
 # SICK_AG, TPLink, fortinet, jci, palo_alto, schneider, siemens). 142 seconds
 # against a 9-minute warm run and a 15-minute target.
 PROFILES = {
-    "weekly": ("alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,"
+    "weekly": ("alas,ubuntu,debian,ghsa,ghsa-repos,redhat,alpine,osv,mozilla,arch,"
                "csaf,msrc,samsung"),
     # Kept as a distinct name even though it is now identical to weekly, so the
     # workflow's --profile argument and the docs do not have to change, and so a
     # future heavy source has somewhere to go.
-    "deep": ("alas,ubuntu,debian,ghsa,redhat,alpine,osv,mozilla,arch,"
+    "deep": ("alas,ubuntu,debian,ghsa,ghsa-repos,redhat,alpine,osv,mozilla,arch,"
              "csaf,msrc,samsung"),
 }
 

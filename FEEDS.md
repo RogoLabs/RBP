@@ -307,6 +307,71 @@ auditable from outside, in the same way the launch checklist is.
 > of this document's own note that "the provider list has never been validated against what
 > it actually yields".
 
+> ### MEASURED 2026-08-26. The GHSA cap, and the rows no cap could have reached.
+>
+> The recorded cap above was correct and understated. `feed_ghsa` read the newest 4,000
+> reviewed advisories in one descending scan, which is **83 days** (2026-05-18 to 08-26).
+> 9,512 reviewed advisories were published between 2026-01-01 and 08-26, so the scan
+> covered **42% of the year it reported on**, at a roughly constant count every run, which
+> is the shape `compare_magnitudes` reads as healthy.
+>
+> It now walks one publication month per shard, from January of the earliest requested year
+> to today. Measured reviewed volume per month in 2026:
+>
+> | Jan | Feb | Mar | Apr | May | Jun | Jul |
+> |---:|---:|---:|---:|---:|---:|---:|
+> | 491 | 765 | 1,639 | 1,583 | 1,701 | 1,494 | 1,278 |
+>
+> The worst month is 18 pages against a 40-page shard cap, so the cap became headroom, and
+> a month that does exceed it is named in the health record rather than folded into one
+> whole-feed count.
+>
+> **`type=reviewed` is now explicit, and the reason is a trap rather than a preference.**
+> The endpoint's default population depends on whether `published` is present, which is
+> undocumented and was measured:
+>
+> | request | population returned |
+> |---|---|
+> | `sort=published&direction=desc` | 100% reviewed |
+> | the same plus `published=<range>` | 94% unreviewed |
+>
+> So the shard window that fixes the cap widens the population by itself. Over the 83-day
+> window the old scan covered: 3,323 reviewed rows against 22,571 unreviewed, a sevenfold
+> read for advisories that cannot be RBP by construction, since unreviewed advisories are
+> GitHub's imports of already-PUBLISHED CVE records. All 371 rows `ghsa` contributed to the
+> 2026-08-20 snapshot are reviewed and none are unreviewed.
+>
+> **`ghsa-repos` is a new feed, because raising the cap reaches none of what follows.** A
+> repository advisory with no package ecosystem never enters `github/advisory-database`, so
+> `GET /advisories` cannot return it at any cap, in any window, with any `type`. Measured
+> against the 2026-08-20 snapshot: the 1,875 watchlisted repos yielded **1,030 CVE ids
+> absent from the backlog entirely, 1,018 of them RESERVED** at the reservation oracle the
+> same day. A 150-id sample of those was probed against the global endpoint and **150 of
+> 150 were absent from it**. One worked example, so the claim is checkable rather than
+> statistical: CVE-2026-12521 is public as `zephyrproject-rtos/zephyr`
+> GHSA-g5v9-xmfp-7gxm with a full technical writeup, 404 at `/advisories/GHSA-g5v9-xmfp-7gxm`,
+> and RESERVED at MITRE.
+>
+> Cost, on the scorecard's terms. A cold sweep of 1,875 repos is 164s and about 1,900
+> requests; a warm sweep is 136s and 4 requests, because the poll is conditional and a 304
+> does not decrement the rate limit (measured). Wall clock is the real cost here, not quota.
+>
+> **The state file is a cache and not durable state, which is the opposite of the obvious
+> choice.** It holds CVE ids by construction, and `publish.suppressed_ids` states the rule
+> that settles it: counts, never identifiers, because committing ids to a public branch
+> publishes the exact list the withhold lever exists to remove. Scrubbing the staged copy
+> is not an escape either, because the feed reads its rows back from that file and a
+> scrubbed copy would permanently drop those rows on the next 304. The cost, stated: an
+> evicted cache is a cold start spanning two runs, disclosed as `CAPPED` with the repo
+> counts and the resume point rather than as a quiet shrink.
+>
+> **What this feed deliberately does NOT do.** It is not in `clock.OWNER_FEEDS`, so none of
+> its rows become MUST. The note there records that restoring GitHub as an owner feed needs
+> an advisory attributed to an org rather than to GitHub-the-database, which this feed does
+> supply structurally, and a way to resolve that org to the CNA owning the id, which
+> nothing here does. It also collapses to the `github` origin in `report._ORIGIN`, so a row
+> carried by both GitHub feeds counts as one independent source rather than two.
+
 ---
 
 ## 4. The expansion, in tiers, with what each is worth

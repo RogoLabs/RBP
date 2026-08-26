@@ -215,6 +215,34 @@ jobs:
           key: corpus-index-${{ hashFiles('rbp/cvelist.py') }}-${{ github.run_id }}
           restore-keys: corpus-index-${{ hashFiles('rbp/cvelist.py') }}-
 
+      # The repo-advisory poller validators, so feed_ghsa_repos re-polls
+      # conditionally and a 304 costs no rate-limit quota.
+      #
+      # A CACHE AND NOT DURABLE STATE, which is a deliberate choice against the
+      # obvious one. This file contains CVE IDs by construction, the data branch
+      # is public, and `publish.suppressed_ids` states the rule that settles it:
+      # counts, never identifiers, because committing ids to a public branch
+      # publishes the exact list the withhold lever exists to remove. Scrubbing
+      # withheld ids out of the staged copy is not an escape either: the feed
+      # reads its rows back from this file, so a scrubbed copy would silently and
+      # permanently drop those rows on the next 304.
+      #
+      # THE COST, stated rather than hidden. An evicted cache is a cold start:
+      # about 1,900 requests against a 1,000/hour token, so two runs before the
+      # sweep completes, and the feed reports fewer rows until it does. That is
+      # disclosed rather than silent, because feed_ghsa_repos records CAPPED with
+      # the repo counts and the resume point whenever the sweep does not finish.
+      - name: Cache repo-advisory poller state
+        uses: actions/cache@v5
+        with:
+          path: data/ghsa_repos_state.json
+          # Rolling: the run id makes every run save a fresh entry, the prefix
+          # restores the most recent one. Keyed on the WATCHLIST too, so widening
+          # data/ghsa_repos.txt starts a sweep that actually visits the additions
+          # rather than restoring a state whose cursor has already passed them.
+          key: ghsa-repos-${{ hashFiles('data/ghsa_repos.txt') }}-${{ github.run_id }}
+          restore-keys: ghsa-repos-${{ hashFiles('data/ghsa_repos.txt') }}-
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 

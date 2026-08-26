@@ -483,7 +483,14 @@ def feed_debian(years):
     return out
 
 
-def feed_ghsa(years, page_cap=40):
+def _gh_headers():
+    """Auth for both GitHub feeds, resolved the same way for each.
+
+    Unauthenticated is 60 requests an hour and neither feed fits inside that:
+    `feed_ghsa` alone reads about a hundred pages of a year. The environment is
+    consulted first so Actions supplies its token, with the local `gh` CLI as the
+    fallback so a developer run behaves like a scheduled one.
+    """
     token = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     if not token:
         try:
@@ -493,56 +500,387 @@ def feed_ghsa(years, page_cap=40):
     headers = {"Accept": "application/vnd.github+json"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    out, url = [], "https://api.github.com/advisories?per_page=100&sort=published&direction=desc"
-    # Three outcomes, tracked explicitly. This loop reported ONE of them.
-    #
-    # `for _ in range(page_cap)` exhausting is a truncation, twelve lines below
-    # feed_ubuntu which records exactly that, and it recorded nothing. `gather`
-    # then stamped ghsa `ok` with the truncated count, so the live summary read
-    # {status: "ok", detail: "3321 ids"} on a feed that had silently stopped
-    # reading. Worse, a fixed cap returns a roughly CONSTANT count every run, so
-    # compare_magnitudes reads stable truncation as a healthy feed: the one
-    # detector for the failure this project calls intolerable is blind to the
-    # most likely instance of it.
-    #
-    # GHSA sources roughly 300 of 522 rows and the cap bounds that population's
-    # observation window to about 83 days, while distro trackers are observed
-    # over years. That is not merely incomplete, it silently invalidates
-    # cross-CNA comparison, so it has to be visible rather than inferred.
-    ended, pages = "exhausted", 0
+    return headers
+
+
+def _month_end(y, m):
+    nxt = dt.date(y + (m == 12), (m % 12) + 1, 1)
+    return nxt - dt.timedelta(days=1)
+
+
+def _ghsa_window(start, end, headers, page_cap):
+    """One publication-window shard. Returns (rows, "complete" | "capped")."""
+    url = ("https://api.github.com/advisories?per_page=100&type=reviewed"
+           f"&sort=published&direction=desc&published={start}..{end}")
+    rows = []
     for _ in range(page_cap):
-        pages += 1
+        data, _code, hdrs = _get(url, timeout=60, headers=headers)
+        rows += data or []
+        nxt = [p.split(";")[0].strip("<> ")
+               for p in hdrs.get("Link", "").split(",") if 'rel="next"' in p]
+        if not nxt:
+            return rows, "complete"
+        url = nxt[0]
+    return rows, "capped"
+
+
+# MEASURED 2026-08-26. Why this reads a month at a time instead of one scan.
+#
+# The single descending scan read the newest 4,000 advisories and stopped, which
+# is 83 days (2026-05-18 to 2026-08-26) against distro trackers observed over
+# years. The comment this replaces said exactly that and could not say the size
+# of the miss: 9,512 reviewed advisories were published between 2026-01-01 and
+# 08-26, so the scan covered 42% of the year it reported on. A fixed cap also
+# returns a roughly CONSTANT count every run, so compare_magnitudes reads stable
+# truncation as a healthy feed, and the one detector for the failure this project
+# calls intolerable was blind to the likeliest instance of it.
+#
+# Sharding by publication month bounds each shard to a window the cap cannot
+# swallow. Measured reviewed volume per month in 2026: Jan 491, Feb 765, Mar
+# 1,639, Apr 1,583, May 1,701, Jun 1,494, Jul 1,278. The worst month is 18 pages
+# against a 40-page shard cap, so the cap became headroom rather than a standing
+# truncation, and a month that does exceed it is NAMED in the health record
+# instead of vanishing into one whole-feed count.
+#
+# `type=reviewed` IS NOT OPTIONAL HERE, and it is not a filter the old scan
+# needed. The endpoint's default population depends on whether `published` is
+# present, which is not documented and was measured:
+#
+#     sort=published&direction=desc                     100% reviewed
+#     sort=published&direction=desc&published=<range>    94% unreviewed
+#
+# Adding the shard window therefore widens the population by itself. Over the
+# 83-day window the old scan covered: 3,323 reviewed rows against 22,571
+# unreviewed, so omitting the parameter is a sevenfold read for advisories that
+# cannot be RBP by construction. Unreviewed advisories are GitHub's imports of
+# already-published CVE records, and all 371 rows this feed contributed to the
+# 2026-08-20 snapshot are reviewed, none unreviewed.
+#
+# The shard walk starts at January of the EARLIEST requested year and runs to
+# today, not to each year's December. A CVE-2025 id can be disclosed in 2026,
+# and the old scan caught it by counting backwards from today; a per-year window
+# would have quietly dropped exactly those rows on a backfill run.
+def feed_ghsa(years, page_cap=40, today=None):
+    headers = _gh_headers()
+    today = today or dt.date.today()
+    out, capped, stopped = [], [], None
+    y, m = min(years), 1
+    while dt.date(y, m, 1) <= today:
+        start, end = dt.date(y, m, 1), min(_month_end(y, m), today)
         try:
-            data, _, hdrs = _get(url, timeout=60, headers=headers)
+            rows, ended = _ghsa_window(start, end, headers, page_cap)
+        # Broad on purpose: keep the partial results. See feed_ubuntu.
         except Exception as e:
-            print(f"  [ghsa] stopped: {e}", file=sys.stderr)
-            ended = f"stopped after {pages} page(s): {str(e)[:80]}"
+            print(f"  [ghsa] stopped at {y}-{m:02d}: {e}", file=sys.stderr)
+            stopped = f"stopped at {y}-{m:02d} of the shard walk: {str(e)[:80]}"
             break
-        stop = False
-        for a in data or []:
+        if ended == "capped":
+            capped.append(f"{y}-{m:02d}")
+        for a in rows:
             cid = a.get("cve_id")
-            y = _year(cid) if cid else None
-            if y in years:
-                out.append({"cve_id": cid, "source": "ghsa", "source_ref": a.get("ghsa_id", ""),
+            if cid and _year(cid) in years:
+                out.append({"cve_id": cid, "source": "ghsa",
+                            "source_ref": a.get("ghsa_id", ""),
                             "public_date": _d(a.get("published_at")), "product": "",
                             "description": (a.get("summary") or "")[:400]})
-            # stop on PUBLISH-date year, not CVE-ID year
-            py = _date_year(a.get("published_at"))
-            if py is not None and py < min(years):
-                stop = True
-        nxt = [p.split(";")[0].strip("<> ") for p in hdrs.get("Link", "").split(",") if 'rel="next"' in p]
-        if stop or not nxt:
-            ended = "reached the requested window"
-            break
-        url = nxt[0]
-    else:
-        # The loop ran out of iterations rather than out of data, which is
-        # exactly the truncation nothing was reporting.
-        ended = f"hit the {page_cap}-page cap; advisories beyond it were not read"
-    if ended != "reached the requested window":
-        print(f"  [ghsa] {ended}", file=sys.stderr)
-        record_feed("ghsa", CAPPED if "page cap" in ended else TRUNCATED, ended)
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    # A shard cap is a configured limit and stays CAPPED. A shard that died is
+    # not, and degrades the run. See the four states at the top of this file.
+    if stopped:
+        print(f"  [ghsa] {stopped}", file=sys.stderr)
+        record_feed("ghsa", TRUNCATED, stopped)
+    elif capped:
+        detail = (f"hit the {page_cap}-page cap in {len(capped)} month(s) "
+                  f"({', '.join(capped)}); advisories beyond it were not read")
+        print(f"  [ghsa] {detail}", file=sys.stderr)
+        record_feed("ghsa", CAPPED, detail)
     return out
+
+
+_HERE = os.path.dirname(os.path.abspath(__file__))
+# The watchlist is COMMITTED and the state is not, so they cannot share a home:
+# `data/` is gitignored wholesale ("must NEVER enter the repo", .gitignore) and
+# the state file is full of CVE ids, which is the one thing that may not reach a
+# public branch. See the cache step in deploy.yml.
+GHSA_REPOS_LIST = os.path.join(_HERE, "feed_data", "ghsa_repos.txt")
+GHSA_REPOS_STATE = os.path.join(os.path.dirname(_HERE), "data", "ghsa_repos_state.json")
+
+_GHSA_ID_RE = re.compile(r"^GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}\Z")
+_CVE_ID_RE = re.compile(r"^CVE-\d{4}-\d{4,}\Z")
+_REPO_RE = re.compile(r"^[A-Za-z0-9._-]{1,39}/[A-Za-z0-9._-]{1,100}\Z")
+_GHSA_REPO_CHUNK = 64
+
+
+def _get_cond(url, headers=None, timeout=60):
+    """GET that REPORTS 304 rather than raising it.
+
+    `_get` cannot express a conditional fetch: urllib treats everything outside
+    2xx as an error, so the one response this feed depends on being cheap arrives
+    as an exception and reads identically to a failure. Everything else is shared
+    with `_get` on purpose (the SSRF guard, the pinned opener, byte accounting),
+    so a second fetch path is not a second set of holes.
+
+    Returns (status, parsed_or_None, lowercased_headers). 304 and 404 are
+    answers, not errors, and are returned as such.
+    """
+    if not _url_ok(url):
+        raise ValueError(f"blocked non-https/internal URL: {url}")
+    h = dict(UA)
+    if headers:
+        h.update(headers)
+    try:
+        with _OPENER.open(urllib.request.Request(url, headers=h), timeout=timeout) as r:
+            raw = r.read(MAX_BYTES)
+            FETCH_BYTES["total"] += len(raw)
+            return (getattr(r, "status", 200), json.loads(raw),
+                    {k.lower(): v for k, v in r.headers.items()})
+    except urllib.error.HTTPError as e:
+        hdrs = {k.lower(): v for k, v in dict(e.headers or {}).items()}
+        if e.code in (304, 404):
+            return e.code, None, hdrs
+        raise
+
+
+def _repo_advisory_ok(a, owner, repo):
+    """A repo advisory counts only if it is published, not withdrawn, carries a
+    well-formed CVE id, and its html_url belongs to the repo that was polled.
+
+    That last clause is not distrust of GitHub. The advisory AUTHOR controls the
+    `cve_id` field, so without it a watchlisted repo could attach any id it liked
+    and this site would publish the claim as a reserved-but-public finding
+    against whichever CNA owns that id.
+    """
+    if a.get("state") != "published" or a.get("withdrawn_at"):
+        return False
+    if not _CVE_ID_RE.match(a.get("cve_id") or ""):
+        return False
+    if not _GHSA_ID_RE.match(a.get("ghsa_id") or ""):
+        return False
+    prefix = f"https://github.com/{owner}/{repo}/security/advisories/".lower()
+    return (a.get("html_url") or "").lower().startswith(prefix)
+
+
+def _read_repo_list(path):
+    try:
+        with open(path) as f:
+            names = [ln.strip() for ln in f if ln.strip() and not ln.startswith("#")]
+    except OSError:
+        return []
+    return [n for n in names if _REPO_RE.match(n)]
+
+
+def _load_repo_state(path):
+    try:
+        with open(path) as f:
+            st = json.load(f)
+    except Exception:
+        st = {}
+    if not isinstance(st, dict) or not isinstance(st.get("repos"), dict):
+        return {"schema": "ghsa-repos/1", "cursor": None, "repos": {}}
+    st.setdefault("cursor", None)
+    return st
+
+
+def _save_repo_state(path, st):
+    """Atomic, because a torn state file is indistinguishable from a cold start
+    and a cold start is the one condition that cannot be paid for in one run."""
+    tmp = path + ".tmp"
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(tmp, "w") as f:
+        json.dump(st, f, separators=(",", ":"), sort_keys=True)
+    os.replace(tmp, path)
+
+
+def _poll_repo(name, headers, entry, page_cap=20):
+    """Conditionally fetch one repo's advisories.
+
+    Returns (status, rows, last_modified) where status is one of "updated",
+    "not_modified", "not_found", "capped" or "error". Only "updated" and
+    "not_found" carry authority over the stored rows; see the caller.
+    """
+    owner, repo = name.split("/", 1)
+    url = (f"https://api.github.com/repos/{owner}/{repo}"
+           "/security-advisories?per_page=100&sort=published&direction=desc")
+    req = dict(headers)
+    if entry.get("last_modified"):
+        req["If-Modified-Since"] = entry["last_modified"]
+    rows, last_mod, pages = [], None, 0
+    while url:
+        pages += 1
+        if pages > page_cap:
+            return "capped", rows, last_mod
+        status, data, hdrs = _get_cond(url, headers=req, timeout=45)
+        if status == 304:
+            return "not_modified", [], entry.get("last_modified")
+        if status == 404:
+            return "not_found", [], None
+        if pages == 1:
+            last_mod = hdrs.get("last-modified")
+        for a in data or []:
+            if _repo_advisory_ok(a, owner, repo):
+                rows.append({"cve_id": a["cve_id"], "ghsa_id": a["ghsa_id"],
+                             "published": _d(a.get("published_at"))})
+        nxt = [p.split(";")[0].strip("<> ")
+               for p in hdrs.get("link", "").split(",") if 'rel="next"' in p]
+        url = nxt[0] if nxt else None
+        # The conditional header belongs to the FIRST page only. Replaying it on
+        # page 2 asks "has anything changed since?" of a URL that answered 200 a
+        # moment ago, and a 304 there would silently return half a repo's rows.
+        req = dict(headers)
+    return "updated", rows, last_mod
+
+
+# WHAT THIS FEED IS FOR, and why `ghsa` alone cannot do it.
+#
+# A repository advisory with no package ecosystem NEVER enters
+# github/advisory-database, so GET /advisories cannot return it at any page cap,
+# in any window, with any `type`. Raising ghsa's cap does not reach these rows;
+# only the per-repo endpoint does.
+#
+# MEASURED 2026-08-26 against the 2026-08-20 snapshot. The repos in
+# data/ghsa_repos.txt yielded 1,030 CVE ids absent from the RBP backlog
+# entirely, of which 1,018 were RESERVED at the reservation oracle that same day
+# (the other 12 had published since). A 150-id sample of those was probed against
+# the global endpoint and 150 of 150 were absent from it. One example, so the
+# claim is checkable rather than statistical: CVE-2026-12521 is public as
+# zephyrproject-rtos/zephyr GHSA-g5v9-xmfp-7gxm with a full technical writeup,
+# 404 on /advisories/GHSA-g5v9-xmfp-7gxm, and RESERVED at MITRE.
+#
+# A PARTIAL SWEEP MUST NOT SHRINK THE FEED, which is the whole reason the state
+# file stores rows rather than only validators. `gather` rebuilds refs from
+# scratch every run, so a feed that returned only what it polled this run would
+# report a smaller count whenever the rate budget stopped the sweep early, and a
+# feed shrinking quietly is the failure this project treats as intolerable. Every
+# stored row is returned every run; polling only decides which entries get
+# REFRESHED. That is the same reasoning as classify's `previous_reserved`.
+#
+# The three states that may mutate stored rows, and the two that may not:
+#   200  authoritative, replaces the repo's rows wholesale
+#   404  authoritative-absent (renamed, deleted, or made private), clears them
+#   304  nothing changed, keep them, and costs no rate-limit quota (measured)
+#   error / budget stop  UNKNOWN, never absent, keep them
+#   page cap  a partial list is not a restatement, so it is not allowed to
+#             replace a complete one either; the stored rows stand and the cap is
+#             named in the health record
+def feed_ghsa_repos(years, budget_buffer=150, page_cap=20,
+                    list_path=None, state_path=None):
+    list_path = list_path or GHSA_REPOS_LIST
+    state_path = state_path or GHSA_REPOS_STATE
+    headers = _gh_headers()
+    repos = _read_repo_list(list_path)
+    if not repos:
+        record_feed("ghsa-repos", FAILED, f"no repo list at {os.path.basename(list_path)}")
+        return []
+    st = _load_repo_state(state_path)
+    entries = st["repos"]
+
+    # Round-robin from the saved cursor, so a budget stop resumes where it left
+    # off instead of re-polling the head of the list every run and never reaching
+    # the tail.
+    start = repos.index(st["cursor"]) if st.get("cursor") in repos else 0
+    order = repos[start:] + repos[:start]
+
+    counts = {"updated": 0, "not_modified": 0, "not_found": 0, "capped": 0, "error": 0}
+    polled, stopped_at = 0, None
+
+    # Chunked rather than one big pool, for two reasons that are both about the
+    # budget. The rate check costs a round trip per call, so it runs once per
+    # chunk instead of once per repo (1,875 extra round trips was most of this
+    # feed's wall clock). And a chunk boundary is the only place a CURSOR is
+    # meaningful: results are applied in list order, so the resume point is the
+    # head of the first chunk not yet applied, with nothing half-done behind it.
+    for base in range(0, len(order), _GHSA_REPO_CHUNK):
+        chunk = order[base:base + _GHSA_REPO_CHUNK]
+        for name in chunk:
+            entries.setdefault(name, {"last_modified": None, "rows": []})
+        with concurrent.futures.ThreadPoolExecutor(max_workers=8) as ex:
+            futures = [ex.submit(_poll_repo, n, headers, entries[n], page_cap)
+                       for n in chunk]
+            results = []
+            for n, f in zip(chunk, futures):
+                try:
+                    results.append((n, f.result(), None))
+                # Broad on purpose: one unreachable repo is not a feed failure,
+                # and its stored rows survive it. See feed_ubuntu.
+                except Exception as e:
+                    results.append((n, None, e))
+        for name, res, err in results:
+            entry = entries[name]
+            if err is not None:
+                counts["error"] += 1
+                entry["consecutive_errors"] = entry.get("consecutive_errors", 0) + 1
+                print(f"  [ghsa-repos] {name}: {str(err)[:90]}", file=sys.stderr)
+                continue
+            status, rows, last_mod = res
+            polled += 1
+            counts[status] += 1
+            entry.pop("consecutive_errors", None)
+            if status == "updated":
+                entry["rows"], entry["last_modified"] = rows, last_mod
+            elif status == "not_found":
+                entry["rows"], entry["last_modified"] = [], None
+                entry["not_found_since"] = entry.get("not_found_since") or str(dt.date.today())
+            if status != "not_found":
+                entry.pop("not_found_since", None)
+        nxt = base + _GHSA_REPO_CHUNK
+        if nxt < len(order) and _rate_exhausted(budget_buffer):
+            stopped_at = order[nxt]
+            break
+    st["cursor"] = stopped_at
+    _save_repo_state(state_path, st)
+
+    out, seen = [], set()
+    for name, entry in entries.items():
+        for r in entry.get("rows", []):
+            cid = r.get("cve_id", "")
+            if _year(cid) not in years or cid in seen:
+                continue
+            seen.add(cid)
+            # "<owner/repo>\t<GHSA>", tab-separated for the same reason csaf
+            # carries "<provider>\t<id>\t<url>": report._derive_meta has to
+            # rebuild the advisory URL, and a repository advisory lives under the
+            # repo's own path rather than at /advisories/<id>. Without the repo
+            # name the row would fall through to the cve.org last resort, which
+            # renders NOTHING for a RESERVED id, so the site would publish a row
+            # whose only evidence link disproved it.
+            out.append({"cve_id": cid, "source": "ghsa-repos",
+                        "source_ref": f"{name}\t{r.get('ghsa_id', '')}",
+                        "public_date": r.get("published", ""), "product": name,
+                        "description": f"{name} repository advisory {r.get('ghsa_id', '')}"})
+
+    detail = (f"{polled} of {len(repos)} repos polled "
+              f"({counts['updated']} changed, {counts['not_modified']} unchanged, "
+              f"{counts['not_found']} gone, {counts['error']} errored)")
+    if counts["error"] > max(5, polled * 0.2):
+        record_feed("ghsa-repos", TRUNCATED, f"{detail}; error rate above 20%")
+    elif stopped_at:
+        # A budget stop is a configured limit reached, exactly like a page cap,
+        # and the sweep resumes next run. It is CAPPED, not a degradation.
+        record_feed("ghsa-repos", CAPPED,
+                    f"{detail}; the rate budget stopped the sweep, resuming at {stopped_at}")
+    elif counts["capped"]:
+        record_feed("ghsa-repos", CAPPED,
+                    f"{detail}; {counts['capped']} repo(s) hit the {page_cap}-page cap")
+    print(f"  [ghsa-repos] {detail}", file=sys.stderr)
+    return out
+
+
+def _rate_exhausted(buffer):
+    """True when the GitHub core budget is down to its reserve.
+
+    Read from the rate_limit endpoint rather than tracked from response headers
+    because the 304s this feed depends on do not decrement anything, so a locally
+    maintained counter drifts pessimistic and would stop a sweep that had budget
+    left. The endpoint itself is not rate limited.
+    """
+    try:
+        data, _code, _h = _get("https://api.github.com/rate_limit", timeout=15,
+                               retries=1, headers=_gh_headers())
+        return int(data["resources"]["core"]["remaining"]) < buffer
+    # Unknown budget is not an exhausted budget: a failed check must not stop a
+    # sweep that has quota, or a transient blip becomes a permanently short feed.
+    except Exception:
+        return False
 
 
 def feed_redhat(years):
@@ -1135,7 +1473,8 @@ def feed_samsung(years, url="https://security.samsungmobile.com/securityUpdate.s
 
 
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
-            "ghsa": feed_ghsa, "redhat": feed_redhat, "alpine": feed_alpine,
+            "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
+            "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
             "arch": feed_arch, "samsung": feed_samsung}
 

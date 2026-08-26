@@ -47,9 +47,12 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
 1. **Corpus.** The full CVE List (`cvelistV5`, ~365k records) is downloaded and
    indexed to parquet. It contains zero `RESERVED` records, which is the whole
    problem: the reserved population is invisible in the bulk data.
-2. **Feeds.** 12 public advisory sources are read for CVE IDs
-   (`alas`, `alpine`, `arch`, `csaf`, `debian`, `ghsa`, `mozilla`, `msrc`, `osv`,
-   `redhat`, `samsung`, `ubuntu`).
+2. **Feeds.** 13 public advisory sources are read for CVE IDs
+   (`alas`, `alpine`, `arch`, `csaf`, `debian`, `ghsa`, `ghsa-repos`, `mozilla`,
+   `msrc`, `osv`, `redhat`, `samsung`, `ubuntu`). `ghsa-repos` polls repository
+   security advisories one repo at a time, because an advisory with no package
+   ecosystem never enters GitHub's advisory database and no page of the global
+   endpoint can return it.
 3. **Classify.** Every referenced ID is checked against the CVE Services
    reservation endpoint, which returns the true state for any ID. `RESERVED` plus
    a public reference is an RBP.

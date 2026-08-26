@@ -117,7 +117,8 @@
   var NAMES = {osv:"OSV", ghsa:"GitHub", redhat:"Red Hat", debian:"Debian",
                ubuntu:"Ubuntu", alpine:"Alpine", alas:"Amazon Linux",
                msrc:"Microsoft", mozilla:"Mozilla", arch:"Arch",
-               csaf:"CSAF advisory", samsung:"Samsung"};
+               csaf:"CSAF advisory", samsung:"Samsung",
+               "ghsa-repos":"GitHub repo advisory"};
   var MAXDAYS = ROWS.reduce(function (m, r) { return Math.max(m, r.days_public || 0); }, 1);
 
   // WINDOWED. The previous table put every row in the DOM at once and it was the

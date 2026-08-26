@@ -250,6 +250,22 @@ _ORIGIN_KIND = {
     # identifier and release date, which is exactly the shape 4.5.1.4 and
     # 4.5.1.6 mean by Publicly Disclosing.
     "samsung": "advisory",
+    # A repository advisory is a published advisory with its own identifier and
+    # release date, on the vendor's own security tab. Absence from this map is a
+    # deliberate fail-safe that reads an unmapped adapter as a tracker, and
+    # leaving a vendor's own advisory page in it would have been wrong rather
+    # than safe.
+    #
+    # It is still NOT in OWNER_FEEDS below, and that gap is the point. Read the
+    # note there: restoring GitHub as an owner feed needs an advisory attributed
+    # to an ORG rather than to GitHub-the-database, which this feed does supply
+    # structurally (_repo_advisory_ok rejects an advisory whose html_url is not
+    # the polled repo's). What is still missing is the other half, a mapping from
+    # a repo owner to the CNA that owns the id, so `zephyrproject-rtos/zephyr`
+    # cannot yet be resolved to the CNA whose 72-hour clock it would start.
+    # Without it, promoting this feed would upgrade SHOULD to MUST on evidence
+    # nothing has connected to an assigner.
+    "ghsa-repos": "advisory",
 }
 
 

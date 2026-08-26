@@ -69,6 +69,14 @@ def _derive_meta(row):
         if s == "ghsa":
             gh = next((r.split(":", 1)[1] for r in refs if r.startswith("ghsa:")), "")
             return f"https://github.com/advisories/{gh}" if gh else ""
+        if s == "ghsa-repos":
+            # The vendor's own security tab, which is the whole reason this feed
+            # exists: these advisories are NOT at /advisories/<id>, they 404
+            # there. refs carry "ghsa-repos:<owner/repo>\t<GHSA>".
+            ref = next((r.split(":", 1)[1] for r in refs if r.startswith("ghsa-repos:")), "")
+            parts = ref.split("\t")
+            return (f"https://github.com/{parts[0]}/security/advisories/{parts[1]}"
+                    if len(parts) > 1 and parts[0] and parts[1] else "")
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
         if s == "csaf":
@@ -81,7 +89,11 @@ def _derive_meta(row):
             return parts[2] if len(parts) > 2 and parts[2].startswith("http") else ""
         return ""
     url = ""
-    for s in ("redhat", "ubuntu", "debian", "alas", "alpine", "msrc", "mozilla", "ghsa", "osv", "csaf"):
+    for s in ("redhat", "ubuntu", "debian", "alas", "alpine", "msrc", "mozilla",
+              # Ahead of ghsa: for a row carried by both, the repo's own advisory
+              # page is the same advisory at the publisher's address rather than
+              # at the database's.
+              "ghsa-repos", "ghsa", "osv", "csaf"):
         if s in srcs and _u(s):
             url = _u(s)
             break
@@ -169,7 +181,20 @@ _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redha
            # from the Android bulletin, and OSV carries those too, but Samsung
            # shipping a fix is a separate public event from Google shipping one,
            # so the two corroborate rather than mirror.
-           "samsung": "samsung"}
+           "samsung": "samsung",
+           # ghsa-repos reads the SAME advisory as ghsa from a different
+           # endpoint, so it collapses to the same origin. Omitting it would
+           # have scored one disclosure as two independent sources on every row
+           # an advisory carries an ecosystem, which is the exact mirror
+           # double-count osv -> github exists to prevent.
+           #
+           # The refinement this deliberately does not make: a repo advisory is
+           # published by the REPO OWNER, not by GitHub, so expanding it per
+           # owner the way csaf expands per provider would let it corroborate
+           # independently. That needs a repo-owner-to-CNA mapping that does not
+           # exist here, and the conservative direction is fewer independent
+           # sources, because the headline counts only rows with two or more.
+           "ghsa-repos": "github"}
 # A CNA may be NAMED as owner only when its own feed corroborates it (or it is the
 # authoritative RESERVED assigner), never on a bare product-map guess.
 # The owner-feed mapping lives in clock.OWNER_FEEDS and nowhere else. A dead
