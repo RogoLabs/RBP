@@ -6,7 +6,7 @@ RBP Policy v2.0.0 (CVE Board approved 2026-08-13) sets one expectation:
     A CVE Record should be published within 72 hours of either (a) disclosure
     by the CNA or (b) the CNA becoming aware of a third-party disclosure.
 
-and aligns itself to two CNA Operational Rules v4.1.0 sections that are NOT
+and aligns itself to two CNA Operational Rules v4.2.0 sections that are NOT
 interchangeable:
 
     4.5.1.4  MUST publish within 72 hours of *the CNA itself* disclosing.

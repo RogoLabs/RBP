@@ -593,7 +593,7 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
              "CPE, or references to key on, so any enrichment or scanning that sources from the "
              "CVE List silently skips it until the record lands.")
     L.append("- Rule context: **RBP Policy v2.0.0** (CVE Board approved 2026-08-13) and **CNA "
-             "Operational Rules v4.1.0** (approved 2025-05-14); both are pinned verbatim in "
+             "Operational Rules v4.2.0** (approved 2026-08-20); both are pinned verbatim in "
              "tests/fixtures and CI fails if either moves. A CVE Record should be published "
              "**within 72h** of disclosure by the CNA or of the CNA becoming aware of a "
              "third-party disclosure. §4.5.1.4 states this as a **MUST** *when the assigning CNA "

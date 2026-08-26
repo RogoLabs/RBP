@@ -82,8 +82,26 @@ def test_4535_requires_rejecting_unpublished_ids():
 
 
 def test_rules_version_is_pinned():
-    assert RULES["version"] == "4.1.0"
-    assert RULES["approved"] == "May 14, 2025"
+    assert RULES["version"] == "4.2.0"
+    assert RULES["approved"] == "August 20, 2026"
+
+
+def test_the_cited_sections_survived_the_4_2_0_revision():
+    """4.2.0 was approved 2026-08-20 and the live test caught the move.
+
+    Every one of the six sections this site quotes is textually IDENTICAL in
+    4.2.0, checked substring-exact against the live document on 2026-08-26. That
+    is why the version bump is a re-capture rather than a re-argument: the
+    citations still say what the site says they say.
+
+    Recorded as an assertion rather than a commit message, because the next
+    version bump needs to answer the same question and a reader needs to know
+    which sections were checked.
+    """
+    assert RULES["prior_version"] == "4.1.0"
+    assert set(RULES["unchanged_since_prior"]) == set(RULES["rules"])
+    assert set(RULES["rules"]) == {"4.5.1.3", "4.5.1.4", "4.5.1.5",
+                                   "4.5.1.6", "4.5.1.7", "4.5.3.5"}
 
 
 # --------------------------------------------------------------------------

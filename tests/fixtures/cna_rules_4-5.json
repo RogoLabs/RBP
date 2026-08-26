@@ -2,9 +2,9 @@
  "source": "CVE Numbering Authority (CNA) Operational Rules",
  "url": "https://www.cve.org/ResourcesSupport/AllResources/CNARules",
  "origin": "https://raw.githubusercontent.com/CVEProject/cve-website/dev/src/assets/data/cnaRules.json",
- "version": "4.1.0",
- "approved": "May 14, 2025",
- "captured": "2026-08-20",
+ "version": "4.2.0",
+ "approved": "August 20, 2026",
+ "captured": "2026-08-26",
  "rules": {
   "4.5.1.3": "4.5.1.3 CNAs SHOULD publish a CVE Record to the CVE List within 24 hours of Publicly Disclosing a CVE ID assigned by the CNA. CNAs MAY publish or update CVE Records as part of the CNA's processes to manage Vulnerability advisories or other public information that references the CVE ID.",
   "4.5.1.4": "4.5.1.4 CNAs MUST publish a CVE Record to the CVE List within 72 hours of Publicly Disclosing a CVE ID assigned by the CNA. If the CNA does not publish within 72 hours, then the CNA's Root MAY direct the appropriate CNA-LR to publish a CVE Record for the assigned CVE ID. Ownership of the CVE Record MAY be transferred. See also 4.2.1.2.",
@@ -12,5 +12,15 @@
   "4.5.1.6": "4.5.1.6 CNAs SHOULD publish CVE Records within 72 hours of becoming aware that a CVE ID assigned by the CNA has been Publicly Disclosed by a party other than the CNA.",
   "4.5.1.7": "4.5.1.7 The Secretariat MAY publicly identify the CNA who reserved the CVE ID 24 hours after a CVE ID has been Publicly Disclosed. Otherwise, the Secretariat SHOULD NOT publicly identify the CNA until the CVE Record has been published.",
   "4.5.3.5": "4.5.3.5 CNAs MUST reject unused or unpublished CVE IDs."
- }
+ },
+ "prior_version": "4.1.0",
+ "prior_approved": "May 14, 2025",
+ "unchanged_since_prior": [
+  "4.5.1.3",
+  "4.5.1.4",
+  "4.5.1.5",
+  "4.5.1.6",
+  "4.5.1.7",
+  "4.5.3.5"
+ ]
 }
