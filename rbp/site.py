@@ -18,6 +18,7 @@ from __future__ import annotations
 import csv
 import datetime as dt
 import glob
+import collections
 import hashlib
 import io
 import json
@@ -117,9 +118,93 @@ REHEARSE = (os.environ.get("RBP_REHEARSE") or "").strip() in ("1", "true", "yes"
 # the number has to be the one that floors it. Split across two modules, the raw
 # value reached summary.json while the floored one reached precision.json, and both
 # published. Re-exported for the tests that reference it.
-from . import inference as _inference
+# THE PRECISION FLOOR, and the one implementation of the rule.
+#
+# Moved here from rbp.inference on 2026-08-26. It is a PUBLISHING rule, not a
+# block-inference one: it decides whether a ratio is fit to print, and it was the
+# last thing keeping the publish path importing 699 lines that no longer run.
+# inference imports it back, so there is still exactly one implementation.
+# Owned here rather than in site.py, because whoever computes the number has to be
+# the one that floors it. Split across two modules, the raw value reached
+# summary.json while the floored one reached precision.json, and both published.
+MIN_GRADED = 20
 
-GRADER_MIN_N = _inference.MIN_GRADED
+
+def summarise_state(state):
+    """The live accuracy record, FLOORED here and nowhere else.
+
+    The floor used to live only in site.py, applied while building the derived
+    file, so Grader.summary published the raw value straight into summary.json.
+    Two files from the same run then said different things about the site's own
+    accuracy: summary.json carried `precision: 1.0` on a single graded case while
+    precision.json carried `precision: null, below_floor: true`. A consumer reading
+    the first got "100% accurate" from n=1, a stronger claim than the leave-one-out
+    figure over 29,000 decisions sitting beside it.
+
+    A module-level function over raw state, so the site can floor a ledger it loaded
+    from disk without either recomputing the rule or depending on a summary block
+    that may be absent. One implementation, two callers.
+
+    Precision is over SCORED verdicts only. A rejection closes a prediction without
+    revealing an assigner, so counting it as a miss would penalise the method for an
+    outcome it never predicted.
+    """
+    graded = [g for g in (state.get("graded") or []) if g.get("scored", True)]
+    correct = sum(1 for g in graded if g.get("correct"))
+    n = len(graded)
+
+    by_tier = collections.defaultdict(lambda: [0, 0])
+    # Per-CNA strata. The out-of-sample warrant was 100% on n=224 and 213 of those
+    # 224 were one CNA, so eleven cases informed every other CNA in the Program. A
+    # global figure that clears a floor while the tail error rate is 2 in 3 is not
+    # a measurement of the tail, and the tail is where both known-wrong rows were.
+    by_cna = collections.defaultdict(lambda: [0, 0])
+    for g in graded:
+        by_tier[g.get("tier", "?")][0] += 1
+        by_tier[g.get("tier", "?")][1] += int(bool(g.get("correct")))
+        who = g.get("actual") or g.get("predicted") or "unknown"
+        by_cna[who][0] += 1
+        by_cna[who][1] += int(bool(g.get("correct")))
+
+    def floored(a, b):
+        """(precision, below_floor). The floor applies per stratum, not just
+        globally: a CNA below it reads "not separately measurable" rather than
+        inheriting the global figure, which is what one shared number silently
+        does."""
+        if a < MIN_GRADED:
+            return None, True
+        return round(b / a, 4), False
+
+    prec, below = floored(n, correct)
+    return {
+        "graded": n,
+        "correct": correct,
+        "precision": prec,
+        "below_floor": below,
+        "floor": MIN_GRADED,
+        "outstanding": len(state.get("predictions") or {}),
+        "closed_unscored": sum(1 for g in (state.get("graded") or [])
+                               if not g.get("scored", True)),
+        "by_tier": {t: {"graded": a, "correct": b,
+                        "precision": floored(a, b)[0],
+                        "below_floor": floored(a, b)[1]}
+                    for t, (a, b) in sorted(by_tier.items())},
+        "by_cna": {c: {"graded": a, "correct": b,
+                       "precision": floored(a, b)[0],
+                       "below_floor": floored(a, b)[1]}
+                   for c, (a, b) in sorted(by_cna.items(), key=lambda kv: -kv[1][0])},
+        "strata": len(by_cna),
+        "misses": [g for g in graded if not g.get("correct")][-25:],
+    }
+
+
+
+# --------------------------------------------------------------------------
+# pipeline entry point
+# --------------------------------------------------------------------------
+
+
+GRADER_MIN_N = MIN_GRADED
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -812,7 +897,7 @@ def load(snap_root, data_dir):
         # summary.json said precision 1.0 at graded 1, precision.json said null with
         # below_floor true, and both were live on the data branch.
         "grader": {
-            **_inference.summarise_state(grader),
+            **summarise_state(grader),
             "history": grader.get("history", [])[-30:],
         },
         "expectation_hours": clock.EXPECTATION_HOURS,
@@ -826,7 +911,7 @@ def load(snap_root, data_dir):
         "very_stale": age_hours is not None and age_hours > 24,
         # The floor, for templates that explain why a figure is withheld. Sourced
         # from inference so there is exactly one definition of it.
-        "precision_floor": _inference.MIN_GRADED,
+        "precision_floor": MIN_GRADED,
         "launched": launched,
         "gate": gate,
         # Where the dashboard actually lives, so the nav and the logo point at

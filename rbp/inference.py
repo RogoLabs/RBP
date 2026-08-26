@@ -73,19 +73,17 @@ TIER_NONE = "abstain"                      # not named
 # strong-majority signal rather than a weak corpus plurality.
 VETO_CONFIDENCE = 0.85
 
-# A CNA must be sighted at least this many times before this site will name it.
-# One incidental reference is not evidence that we read that CNA's output, and a
-# gate keyed on a single sighting reopens on any stray row with no code change.
-MIN_SIGHTINGS = 3
+# The sighting floor. Owned by rbp.coverage, because it decides what
+# `cnas_effective` means and that is the launch gate; inference borrows it so the
+# threshold to NAME a CNA and the threshold to COUNT one can never drift apart.
+from .coverage import MIN_SIGHTINGS  # noqa: E402,F401
+# The precision floor lives with the code that publishes it.
+from .site import MIN_GRADED, summarise_state  # noqa: E402,F401
 
 # Minimum graded verdicts before a precision figure is published at all, globally
 # or per stratum. At n=1 the site rendered "100.00%" in a headline tile, which is a
 # stronger claim than the leave-one-out figure over 29,000 decisions beside it.
 #
-# Owned here rather than in site.py, because whoever computes the number has to be
-# the one that floors it. Split across two modules, the raw value reached
-# summary.json while the floored one reached precision.json, and both published.
-MIN_GRADED = 20
 
 
 class BlockInferencer:
@@ -477,79 +475,6 @@ class Grader:
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
         json.dump(self.state, open(self.path, "w"), indent=1)
 
-
-def summarise_state(state):
-    """The live accuracy record, FLOORED here and nowhere else.
-
-    The floor used to live only in site.py, applied while building the derived
-    file, so Grader.summary published the raw value straight into summary.json.
-    Two files from the same run then said different things about the site's own
-    accuracy: summary.json carried `precision: 1.0` on a single graded case while
-    precision.json carried `precision: null, below_floor: true`. A consumer reading
-    the first got "100% accurate" from n=1, a stronger claim than the leave-one-out
-    figure over 29,000 decisions sitting beside it.
-
-    A module-level function over raw state, so the site can floor a ledger it loaded
-    from disk without either recomputing the rule or depending on a summary block
-    that may be absent. One implementation, two callers.
-
-    Precision is over SCORED verdicts only. A rejection closes a prediction without
-    revealing an assigner, so counting it as a miss would penalise the method for an
-    outcome it never predicted.
-    """
-    graded = [g for g in (state.get("graded") or []) if g.get("scored", True)]
-    correct = sum(1 for g in graded if g.get("correct"))
-    n = len(graded)
-
-    by_tier = collections.defaultdict(lambda: [0, 0])
-    # Per-CNA strata. The out-of-sample warrant was 100% on n=224 and 213 of those
-    # 224 were one CNA, so eleven cases informed every other CNA in the Program. A
-    # global figure that clears a floor while the tail error rate is 2 in 3 is not
-    # a measurement of the tail, and the tail is where both known-wrong rows were.
-    by_cna = collections.defaultdict(lambda: [0, 0])
-    for g in graded:
-        by_tier[g.get("tier", "?")][0] += 1
-        by_tier[g.get("tier", "?")][1] += int(bool(g.get("correct")))
-        who = g.get("actual") or g.get("predicted") or "unknown"
-        by_cna[who][0] += 1
-        by_cna[who][1] += int(bool(g.get("correct")))
-
-    def floored(a, b):
-        """(precision, below_floor). The floor applies per stratum, not just
-        globally: a CNA below it reads "not separately measurable" rather than
-        inheriting the global figure, which is what one shared number silently
-        does."""
-        if a < MIN_GRADED:
-            return None, True
-        return round(b / a, 4), False
-
-    prec, below = floored(n, correct)
-    return {
-        "graded": n,
-        "correct": correct,
-        "precision": prec,
-        "below_floor": below,
-        "floor": MIN_GRADED,
-        "outstanding": len(state.get("predictions") or {}),
-        "closed_unscored": sum(1 for g in (state.get("graded") or [])
-                               if not g.get("scored", True)),
-        "by_tier": {t: {"graded": a, "correct": b,
-                        "precision": floored(a, b)[0],
-                        "below_floor": floored(a, b)[1]}
-                    for t, (a, b) in sorted(by_tier.items())},
-        "by_cna": {c: {"graded": a, "correct": b,
-                       "precision": floored(a, b)[0],
-                       "below_floor": floored(a, b)[1]}
-                   for c, (a, b) in sorted(by_cna.items(), key=lambda kv: -kv[1][0])},
-        "strata": len(by_cna),
-        "misses": [g for g in graded if not g.get("correct")][-25:],
-    }
-
-
-
-# --------------------------------------------------------------------------
-# pipeline entry point
-# --------------------------------------------------------------------------
 
 def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K,
                      record_for=None, covered=None, sightings=None,
