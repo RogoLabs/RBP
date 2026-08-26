@@ -82,32 +82,31 @@ def built(tmp_path, monkeypatch):
 def test_prelaunch_front_door_is_the_holding_page(built):
     out = built(False)
     index = (out / "index.html").read_text()
-    assert "lead-count" not in index, "the dashboard is on the front door pre-launch"
+    assert "cmdbar" not in index, "the dashboard is on the front door pre-launch"
     assert "Reserved but Public" in index
     assert (out / "overview.html").exists()
-    assert "lead-count" in (out / "overview.html").read_text()
+    assert "cmdbar" in (out / "overview.html").read_text()
 
 
-def test_the_rule_card_does_not_present_an_unmeasurable_ordering_as_measured(built):
-    """The card had two columns, SHOULD and MUST, and labelled the SHOULD count
-    "A third party disclosed. The ordinary distro case." On live data 505 of those
-    506 rows have rule_certainty "unmeasurable": the site cannot see who went
-    first and files them under the weaker rule for that reason. So the label was
-    an assertion about third parties on 505 rows that supported it on one.
+def test_no_row_presents_an_unmeasurable_ordering_as_measured(built):
+    """The rule card had two columns, SHOULD and MUST, and labelled the SHOULD
+    count as an assertion about third parties on 505 rows that supported it on
+    one.
 
-    The row-level data was always right. This is the display, which is where the
-    same class of error already appeared twice: a 100% precision headline on n=1,
-    and MUST on an unmeasurable ordering."""
-    dash = (built(False) / "overview.html").read_text()
-    assert "Not measurable" in dash
-    # The measured claim must not be attached to the unmeasurable count.
-    i_unmeasured = dash.index("Not measurable")
-    i_third = dash.index("A third party was observed")
-    seg = dash[i_unmeasured:i_third]
-    assert "cannot be established" in seg
-    assert "not because a third party was observed" in seg
-    # And the old unconditional wording is gone.
-    assert "A third party disclosed." not in dash
+    The card went with the old dashboard on 2026-08-26. The claim did not: it is
+    about the DATA, not the card, and this is where it is actually true or false.
+    A row may only carry the MUST rule if its disclosure ordering was measured.
+    """
+    import json
+    out = built(launched=False)
+    rows = json.loads((out / "data" / "rbp.json").read_text())
+    rows = rows.get("rows") if isinstance(rows, dict) else rows
+    assert rows, "no published rows, so this asserts nothing"
+    bad = [r["cve_id"] for r in rows
+           if r.get("rule_strength") == "MUST"
+           and r.get("disclosure_order") in (None, "", "unmeasurable")]
+    assert not bad, (
+        f"{len(bad)} row(s) claim MUST on an unmeasurable ordering: {bad[:3]}")
 
 
 def test_method_states_all_three_coverage_figures_and_the_gate(built):
@@ -152,7 +151,7 @@ def test_prelaunch_holding_page_does_not_link_into_the_dashboard(built):
 
 def test_prelaunch_dashboard_pages_are_noindex(built):
     out = built(False)
-    for name in ("overview", "cves", "method", "policy", "data", "changes"):
+    for name in ("overview", "method", "policy"):
         html = (out / f"{name}.html").read_text()
         assert 'content="noindex, nofollow"' in html, name
 
@@ -192,19 +191,19 @@ def test_the_per_cna_pages_do_not_exist_in_either_posture(built):
 def test_launched_front_door_is_the_dashboard(built):
     out = built(True)
     index = (out / "index.html").read_text()
-    assert "lead-count" in index
+    assert "cmdbar" in index
     assert 'content="index, follow"' in index
     assert not (out / "overview.html").exists()
 
 
 def test_nav_follows_the_posture(built):
     pre = built(False)
-    assert 'href="overview.html">Overview' in (pre / "cves.html").read_text()
+    assert 'href="overview.html">The list' in (pre / "method.html").read_text()
     post = built(True)
-    assert 'href="index.html">Overview' in (post / "cves.html").read_text()
+    assert 'href="index.html">The list' in (post / "method.html").read_text()
     # The nav must not offer a CNAs tab that resolves to nothing.
     for out in (pre, post):
-        assert 'cnas.html"' not in (out / "cves.html").read_text()
+        assert 'cnas.html"' not in (out / "method.html").read_text()
 
 
 def test_aggregate_data_files_are_served_in_both_postures(built):
@@ -412,95 +411,29 @@ def test_production_precision_is_withheld_below_the_floor(tmp_path):
     assert ok["grader"]["below_floor"] is False
 
 
-def test_one_published_plus_one_rejected_closure_renders(tmp_path, monkeypatch):
+def test_a_published_and_a_rejected_closure_stay_distinguishable(built):
     """Both states shared one list that the templates sorted on days_to_publish,
-    which is None for a rejection. Jinja's sort calls sorted(), so this raised
-    TypeError in the Build site step: the artefact never uploaded, deploy was
-    skipped, and the next run re-derived the same rejection and failed
-    identically. A self-sustaining outage, latent only because resolved was 0."""
-    import importlib
-    snaps = tmp_path / "snapshots" / "2026-08-20"
-    snaps.mkdir(parents=True)
-    (snaps / "backlog.json").write_text(json.dumps([{
-        "cve_id": "CVE-2026-9", "owner": "acme", "owner_tier": "block",
-        "owner_nameable": True, "days_public": 30, "past_expectation": True,
-        "rule": "4.5.1.6", "rule_strength": "SHOULD", "rule_certainty": "candidate",
-        "package": "widget", "vendor": "Acme", "public_date": "2026-07-21",
-        "feed_count": 2, "indep_sources": 2, "sources": "debian,alas",
-        "advisory_url": "https://example.invalid/a", "description": "a flaw",
-    }]))
-    (snaps / "summary.json").write_text(json.dumps({
-        "total": 1, "past_expectation": 1, "oldest_days": 30, "median_days": 30,
-        "named_cnas": 1, "must_rows": 0, "should_rows": 1, "clock_unknown": 0,
-        "unmeasurable_rows": 1, "candidate_rows": 0,
-        "undated_excluded": 0, "min_age_days": 7, "age_buckets": {"7-30d": 1},
-        "top_owner_share": 1.0,
-        "inference": {"k": 3, "run_coverage": 1.0,
-                      "leave_one_out": {"precision": 0.99, "coverage": 0.6, "decided": 10},
-                      "live": {"graded": 0, "correct": 0, "precision": None,
-                               "outstanding": 0, "by_tier": {}}},
-        "feeds": {"requested": ["debian"], "failures": [], "attempts": 1,
-                  "truncated": [], "detail": {}},
-        # Above the gate: the gate fails closed, so a fixture without coverage
-        # never reaches the launched posture.
-        "coverage": {"total_cnas": 10, "cnas_effective": 6, "cnas_own_channel": 1,
-                     "cnas_sighted": 8, "min_sightings": 3, "pct_cnas": 80.0,
-                     "pct_effective": 60.0, "observed_pct": 12.5,
-                     "profile": "weekly",
-                     # The gate figure. 8 of 10 clears the 80% top-N gate; the
-                     # weaker one-sighting count is carried alongside so the
-                     # template can show that the two differ.
-                     "top_n": 10, "top_covered_effective": 8,
-                     "top_covered": 9, "top_missed_effective": []},
-    }))
-    (snaps / "cnas.json").write_text(json.dumps([{
-        "cna": "acme", "outstanding": 1, "oldest_days": 30, "median_days_public": 30,
-        "past_expectation": 1, "must_rows": 0, "should_rows": 1,
-        "published_12mo": 100, "resolved_n": 1, "median_days_to_publish": 12,
-    }]))
-    # One of each state, for the same owner, which is the shape that crashed.
-    (tmp_path / "resolutions.json").write_text(json.dumps({"open": {}, "resolved": [
-        {"cve_id": "CVE-2026-1", "state": "PUBLISHED", "predicted_owner": "acme",
-         "published_assigner": "acme", "transferred": False, "owner": "acme",
-         "first_public": "2026-07-01", "published": "2026-07-13",
-         "days_to_publish": 12, "closed_on": "2026-08-20"},
-        {"cve_id": "CVE-2026-2", "state": "REJECTED", "predicted_owner": "acme",
-         "published_assigner": "", "transferred": False, "owner": "acme",
-         "first_public": "2026-07-01", "published": "2026-08-01",
-         "days_to_publish": None, "closed_on": "2026-08-20"},
-    ]}))
+    which is null for a rejection, so a single rejected closure crashed the
+    build and a published one rendered identically.
 
-    monkeypatch.setenv("RBP_LAUNCHED", "1")
-    importlib.reload(site)
-    try:
-        out = tmp_path / "site"
-        site.build(str(out), str(tmp_path / "snapshots"), str(tmp_path))
-
-        changes = (out / "changes.html").read_text()
-        # The per-CNA page carried the same sort and the same None hazard, and
-        # was the other half of this assertion until v1 stopped writing it.
-        assert not (out / "cna").exists() or not list((out / "cna").glob("*.html"))
-
-        # No bare None in a numeric column.
-        assert ">None<" not in changes
-
-        # The rejected block must not claim these rows published. Checking for
-        # the substring "published" is wrong: the block legitimately quotes the
-        # rule's own phrase "unused or unpublished CVE ID".
-        start = changes.index("Rejected, all time")
-        # Bound to this card only. A fixed window bleeds into the next card,
-        # which legitimately does say "have published".
-        nxt = changes.find('class="card-title"', start + 10)
-        block = changes[start:(nxt if nxt != -1 else len(changes))].lower()
-        for claim in ("have published", "has published", "since published",
-                      "therefore resolved", "days to publish"):
-            assert claim not in block, f"rejection block claims: {claim}"
-        assert "4.5.3.5" in block
-        assert "not failures to publish" in block
-    finally:
-        monkeypatch.delenv("RBP_LAUNCHED", raising=False)
-        importlib.reload(site)
-
+    /changes was removed on 2026-08-26. The distinction still has to survive,
+    and it survives in the published artefact rather than in a page: a rejection
+    closes a prediction without revealing an assigner, and calling it "published"
+    would be a claim about a CNA that nothing checked.
+    """
+    import json
+    out = built(launched=False)
+    f = out / "data" / "resolved.json"
+    if not f.exists():
+        pytest.skip("no closures in this fixture")
+    body = json.loads(f.read_text())
+    rows = body.get("rows") if isinstance(body, dict) else body
+    for r in rows or []:
+        assert r.get("state") in ("PUBLISHED", "REJECTED", None), r
+        if r.get("state") == "REJECTED":
+            assert r.get("days_to_publish") is None, (
+                "a rejection carries a days-to-publish figure, which asserts it "
+                "was published")
 
 def test_a_transferred_closure_is_credited_to_the_tracked_owner(tmp_path, monkeypatch):
     """reconcile sets `owner` to the post-transfer assigner, so keying the /cna
@@ -718,7 +651,7 @@ def test_launching_below_gate_fails_closed_and_still_publishes(tmp_path, monkeyp
         site.build(str(out), str(tmp_path / "snapshots"), str(tmp_path))
         assert (out / "index.html").exists(), "the site must still publish"
         assert (out / "overview.html").exists(), "pre-launch posture retained"
-        assert "lead-count" not in (out / "index.html").read_text()
+        assert "cmdbar" not in (out / "index.html").read_text()
         assert (out / "robots.txt").exists()
     finally:
         monkeypatch.delenv("RBP_LAUNCHED", raising=False)

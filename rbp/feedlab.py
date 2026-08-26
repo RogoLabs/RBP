@@ -57,7 +57,7 @@ import sys
 import time
 
 from . import feeds, roster as roster_mod
-from .inference import MIN_SIGHTINGS
+from .coverage import MIN_SIGHTINGS
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)

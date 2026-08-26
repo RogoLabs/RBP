@@ -290,10 +290,18 @@ def test_the_archive_obeys_the_same_naming_invariants(built):
         "dated archive files are written without the artefact invariants")
 
 
-def test_data_page_tells_readers_not_to_cite_the_moving_file(built):
-    page = (built.parent / "data.html").read_text()
-    assert "Do not cite" in page
-    assert "data/archive/" in page
+def test_the_front_door_tells_readers_not_to_cite_the_moving_file(built_site):
+    """rbp.json is overwritten four times a day, so citing it cites whatever it
+    says next week. The dated archive is what a citation should point at.
+
+    /data was removed on 2026-08-26 and its content moved into the slide-over on
+    the front door, so this reads the page that actually ships.
+    """
+    front = (built_site / "overview.html").read_text()
+    assert "archive" in front.lower(), (
+        "the front door does not mention the dated archive at all")
+    assert "archive.json" in front, (
+        "the archive index is not linked where a citer will look")
 
 
 def test_the_archive_is_judged_by_the_rules_that_applied_when_it_was_written(tmp_path):

@@ -32,60 +32,60 @@ import pytest
 
 from rbp import breakpoints
 
-from _measure import (asset_versions, card_mode_disagreements,
+from _measure import (LIST_PAGE, asset_versions, card_mode_disagreements,
+                      rows_not_stacked, rows_refusing_to_wrap, rows_squeezed,
+                      row_overflow,
                       document_overflow, file_hash, measure, nested_overflow,
                       rbp_tables_in_card_mode)
 from test_focus import _invisible, _traverse
 
 BOUNDARY = breakpoints.card_layout_boundary()
 
-# The pre-fix stylesheets, as CSS. rbp.css opened the card layout at
-# `max-width: 767px`, so at exactly 768 style.css's mobile block was on and the
-# card layout was not.
-DEFECT_768 = f"""
-@media (max-width: {BOUNDARY}px) {{
-  table.rbp thead {{ display: table-header-group !important; }}
-  table.rbp, table.rbp tbody, table.rbp tr {{ display: revert !important; }}
-  table.rbp td {{ display: table-cell !important; white-space: nowrap !important; }}
-  table.rbp {{ min-width: 600px !important; }}
-  table.rbp td[data-label]::before {{ content: none !important; }}
-  /* .tablewrap keeps its base `overflow: auto`. This line is the mutation's
-     whole point and the first version of it left the line out, so the page
-     overflowed 2,562px at the document level and the "document overflow does
-     NOT catch 768" assertion below failed. The card layout releases the wrapper
-     to `overflow: visible`; the pre-fix stylesheet opened that block at 767, so
-     at exactly 768 the wrapper was still a scroll container and the page still
-     fitted. A mutation that does not reproduce the absorption is not
-     reproducing the defect. */
-  .tablewrap {{ max-height: calc(100vh - 8rem) !important; overflow: auto !important; }}
-}}
+# THE DEFECT CLASSES, REWRITTEN FOR THE ROW LAYOUT (2026-08-26).
+#
+# These used to reintroduce `table.rbp` defects, and the table is gone: the list
+# is a CSS grid, `grid-template-columns: 12px 1fr auto`, that collapses to two
+# columns at 640px. Deleting the mutations with the table would have left the
+# layout guard with no subject while every test still passed, which is exactly
+# the false-green this file exists to prevent. So the defects are the SAME
+# CLASSES expressed in the new layout.
+
+# The 768px collision, in grid form: the row keeps its three-column desktop
+# layout at a phone width, so the age box squeezes the content column to
+# nothing. Same failure, same cause: a breakpoint that did not fire.
+DEFECT_NO_COLLAPSE = """
+@media (max-width: 640px) {
+  .rbprow > summary { grid-template-columns: 12px 1fr auto !important; }
+  .agebox { grid-column: auto !important; border-left: 1px solid !important;
+            border-top: 0 !important; min-width: 92px; }
+}
 """
 
-# The 375px defect: the card layout IS active and `white-space: nowrap` was never
-# reset, so stacked block cells still refuse to wrap.
-DEFECT_NOWRAP = f"""
-@media (max-width: {BOUNDARY}px) {{
-  table.rbp td {{ white-space: nowrap !important; overflow-wrap: normal !important; }}
-}}
+# The 926px-at-375px defect: content that refuses to wrap and pushes the page
+# sideways. It was `th, td { white-space: nowrap }` inherited from style.css;
+# here it is the same declaration on the parts that carry long strings.
+DEFECT_NOWRAP = """
+.rdesc, .cve, .pkg, .where { white-space: nowrap !important;
+                             overflow-wrap: normal !important; }
+"""
+
+# A fixed floor the layout cannot reflow below, which is what `min-width: 940px`
+# on the old table was.
+DEFECT_MIN_WIDTH = """
+.rbplist { min-width: 940px !important; }
+.rbprow { min-width: 940px !important; }
 """
 
 # The non-.rbp figure tables inheriting `min-width: 600px` from style.css with
 # nothing to undo them: /method had 1,656px of horizontal page scroll at 375px.
-DEFECT_TABLE_SM = f"""
-@media (max-width: {BOUNDARY}px) {{
-  table.table-sm {{ min-width: 600px !important; display: table !important;
-                    overflow-x: visible !important; }}
-  table.table-sm th, table.table-sm td {{ white-space: nowrap !important; }}
-}}
-"""
-
-# No card layout at all, which is where rbp.css started: zero @media rules.
-DEFECT_NO_CARD_LAYOUT = """
-table.rbp thead { display: table-header-group !important; }
-table.rbp, table.rbp tbody, table.rbp tr { display: revert !important; }
-table.rbp td { display: table-cell !important; white-space: nowrap !important; }
-table.rbp { min-width: 940px !important; }
-.tablewrap { overflow: visible !important; }
+# /method kept its tables when the list page lost its own, so this defect class
+# still has a subject and still needs a guard.
+DEFECT_TABLE_SM = """
+@media (max-width: 768px) {
+  table.table-sm { min-width: 600px !important; display: table !important;
+                   overflow-x: visible !important; }
+  table.table-sm th, table.table-sm td { white-space: nowrap !important; }
+}
 """
 
 DEFECT_NO_FOCUS_RING = """
@@ -103,24 +103,27 @@ def _broken(pg, server, name, css):
 # 1. the 768px collision
 # --------------------------------------------------------------------------
 
-def test_the_card_mode_check_catches_the_768px_collision(page, server):
-    _broken(page, server, "cves.html", DEFECT_768)
-    m = measure(page, BOUNDARY)
-    rbp, in_card = rbp_tables_in_card_mode(m)
-    assert rbp, "no .rbp table on the page, so this mutation proves nothing"
-    assert len(in_card) != len(rbp), (
-        "the card-mode check did not notice that the card layout is off at "
-        f"{BOUNDARY}px, which is the defect this job exists to catch")
+def test_the_stacking_check_catches_a_breakpoint_that_did_not_fire(page, server):
+    """The direct descendant of the 768px collision. A row still in its
+    three-column desktop layout at a phone width puts the age box beside the
+    content and squeezes the column carrying the evidence."""
+    _broken(page, server, LIST_PAGE, DEFECT_NO_COLLAPSE)
+    m = measure(page, 375)
+    assert m["rows"], "no rows rendered, so this mutation proves nothing"
+    assert rows_not_stacked(m, 640), (
+        "the stacking check did not notice that the row layout never collapsed")
 
 
-def test_the_nested_scrollbar_check_catches_the_768px_collision(page, server):
-    """The measurement the panel's reviewer made: ~74% of every row hidden."""
-    _broken(page, server, "cves.html", DEFECT_768)
-    hidden = [t for t in nested_overflow(measure(page, BOUNDARY)) if t["rbp"]]
-    assert hidden, (
-        "the nested-scrollbar check reported nothing while the table is in "
-        "table layout at a 768px viewport with a 600px floor and nowrap cells")
-    assert max(t["hidden_pct"] for t in hidden) > 20, hidden
+def test_the_squeeze_check_catches_a_crushed_content_column(page, server):
+    """At 768px the old table hid roughly three quarters of every row while the
+    document reported no overflow at all. This is that measurement for the grid:
+    the page fits, and the column carrying the CVE ID and its sources does not."""
+    _broken(page, server, LIST_PAGE, DEFECT_NO_COLLAPSE)
+    m = measure(page, 320)
+    assert m["rows"], "no rows rendered"
+    assert rows_squeezed(m) or rows_not_stacked(m, 640), (
+        "the row survived a 320px viewport in three-column layout with no "
+        "squeeze reported, so neither check is measuring the collapse")
 
 
 def test_the_document_overflow_check_does_NOT_catch_768(page, server):
@@ -132,7 +135,7 @@ def test_the_document_overflow_check_does_NOT_catch_768(page, server):
     load-bearing and the reasoning in PLAN.md 8e should be revisited rather than
     this assertion being deleted.
     """
-    _broken(page, server, "cves.html", DEFECT_768)
+    _broken(page, server, LIST_PAGE, DEFECT_NO_COLLAPSE)
     assert document_overflow(measure(page, BOUNDARY)) == 0, (
         "document overflow now detects the 768px collision; the panel measured "
         "0 here, and the nested-scrollbar check exists because of it")
@@ -144,7 +147,7 @@ def test_the_agreement_check_does_NOT_catch_768_either(page, server):
     Both halves report "not card layout", so they agree. The agreement check is
     for the other defect, and mutation 2 is where it earns its place.
     """
-    _broken(page, server, "cves.html", DEFECT_768)
+    _broken(page, server, LIST_PAGE, DEFECT_NO_COLLAPSE)
     assert not card_mode_disagreements(measure(page, BOUNDARY))
 
 
@@ -152,21 +155,22 @@ def test_the_agreement_check_does_NOT_catch_768_either(page, server):
 # 2. the 926px-at-375px defect
 # --------------------------------------------------------------------------
 
-def test_the_agreement_check_catches_an_unreset_nowrap(page, server):
+def test_the_wrap_check_catches_an_unreset_nowrap(page, server):
     """The card layout IS correctly active and the page still overflows, because
     style.css sets `white-space: nowrap` at this breakpoint and the card layout
     never reset it. This is the defect the review's own proposed assertion would
     have missed."""
-    _broken(page, server, "cves.html", DEFECT_NOWRAP)
-    bad = card_mode_disagreements(measure(page, 375))
-    assert bad, ("the agreement check did not notice a hidden thead beside "
-                 "nowrap cells")
+    _broken(page, server, LIST_PAGE, DEFECT_NOWRAP)
+    m = measure(page, 375)
+    assert rows_refusing_to_wrap(m), (
+        "the wrap check did not notice row text set to nowrap, which is what "
+        "pushed the page 926px sideways at 375px")
 
 
 def test_the_document_overflow_check_also_catches_an_unreset_nowrap(page, server):
     """Both checks fire on this one, which is why the document check stays: it is
     necessary, and it is only insufficient."""
-    _broken(page, server, "cves.html", DEFECT_NOWRAP)
+    _broken(page, server, LIST_PAGE, DEFECT_NOWRAP + DEFECT_MIN_WIDTH)
     assert document_overflow(measure(page, 375)) > 0
 
 
@@ -174,9 +178,11 @@ def test_the_document_overflow_check_also_catches_an_unreset_nowrap(page, server
 # 3. the figure tables
 # --------------------------------------------------------------------------
 
-def test_the_document_overflow_check_catches_the_table_sm_floor(page, server):
-    """/method had 1,656px of horizontal page scroll at 375px from the coverage
-    figures and the launch checklist inheriting a 600px floor."""
+def test_the_document_overflow_check_still_covers_the_pages_that_kept_tables(
+        page, server):
+    """/method kept its figures tables, and they had 1,656px of horizontal page
+    scroll at 375px before `table.table-sm { min-width: 0 }` existed. The list
+    page no longer has a table; that page does, so the check keeps a subject."""
     _broken(page, server, "method.html", DEFECT_TABLE_SM)
     assert document_overflow(measure(page, 375)) > 0
 
@@ -196,7 +202,7 @@ def test_the_fixture_content_is_wide_enough_to_overflow(page, server, width):
     every rule it exists to protect. So: strip the card layout the way rbp.css
     was before it had any @media rule at all, and require the page to break.
     """
-    _broken(page, server, "cves.html", DEFECT_NO_CARD_LAYOUT)
+    _broken(page, server, LIST_PAGE, DEFECT_MIN_WIDTH)
     over = document_overflow(measure(page, width))
     assert over > 0, (
         f"with the card layout removed entirely, /cves still fits in {width}px. "
@@ -211,7 +217,7 @@ def test_the_fixture_content_is_wide_enough_to_overflow(page, server, width):
 def test_the_focus_check_catches_a_removed_ring(page, server):
     """One outline rule existed in the entire project before the a11y work. This
     is what that state looks like to the traversal."""
-    _broken(page, server, "cves.html", DEFECT_NO_FOCUS_RING)
+    _broken(page, server, LIST_PAGE, DEFECT_NO_FOCUS_RING)
     stops, _ = _traverse(page, limit=8)
     assert stops, "Tab reached nothing"
     assert any(_invisible(s) for s in stops), (
@@ -221,7 +227,7 @@ def test_the_focus_check_catches_a_removed_ring(page, server):
 def test_a_transparent_ring_counts_as_no_ring(page, server):
     """`outline: 3px solid transparent` satisfies a source-level grep and shows a
     reader nothing. The check is on the painted result, not on the declaration."""
-    _broken(page, server, "cves.html",
+    _broken(page, server, LIST_PAGE,
             "*:focus-visible { outline: 3px solid transparent !important; "
             "box-shadow: none !important; }")
     stops, _ = _traverse(page, limit=8)

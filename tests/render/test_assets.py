@@ -17,7 +17,7 @@ from __future__ import annotations
 import pathlib
 import urllib.request
 
-from _measure import asset_versions, file_hash, page_paths
+from _measure import LIST_PAGE, asset_versions, file_hash, page_paths
 
 REPO_CSS = pathlib.Path(__file__).parent.parent.parent / "static" / "css"
 
@@ -63,7 +63,7 @@ def test_the_browser_fetched_the_versioned_stylesheets_and_got_them(page, server
                 ((p.name, p) for p in (site_dir / "static" / "css").glob("*.css"))}
     seen = {}
     page.on("response", lambda r: seen.__setitem__(r.url, r.status))
-    page.goto(f"{server}/cves.html", wait_until="load")
+    page.goto(f"{server}/{LIST_PAGE}", wait_until="load")
     for css, v in expected.items():
         url = f"{server}/static/css/{css}?v={v}"
         assert url in seen, (
@@ -79,25 +79,30 @@ def test_the_page_actually_has_the_stylesheet_applied(page, server):
     unstyled page, a wrong stylesheet, or a cascade that failed to reach the
     table all read as a failure rather than as a page with no overflow.
     """
-    page.goto(f"{server}/cves.html", wait_until="load")
+    page.goto(f"{server}/{LIST_PAGE}", wait_until="load")
     applied = page.evaluate("""() => {
-        const t = document.querySelector('table.rbp');
-        const wrap = t && t.closest('.tablewrap');
+        const row = document.querySelector('.rbprow');
+        const rail = row && row.querySelector('.rail i');
+        const chip = document.querySelector('.chip');
         return {
-          hasTable: !!t,
-          hasWrap: !!wrap,
-          wrapOverflow: wrap ? getComputedStyle(wrap).overflowX : null,
-          bodyFont: getComputedStyle(document.body).fontFamily,
+          hasRow: !!row,
+          railBg: rail ? getComputedStyle(rail).backgroundColor : null,
+          chipRadius: chip ? getComputedStyle(chip).borderRadius : null,
         };
     }""")
-    assert applied["hasTable"] and applied["hasWrap"]
-    assert applied["wrapOverflow"] == "auto", (
-        "`.tablewrap { overflow-x: auto }` is not in effect, so the stylesheet "
-        "is not applied and every overflow measurement here is meaningless")
+    assert applied["hasRow"], "no .rbprow on the list page"
+    # Values only the project's own stylesheet produces. An unstyled page, a
+    # wrong stylesheet, or a cascade that failed to reach the rows all read as a
+    # failure here rather than as a page with no overflow.
+    assert applied["railBg"] not in (None, "rgba(0, 0, 0, 0)"), (
+        "the age rail has no background, so rbp.css is not in effect and every "
+        "layout measurement in this package is meaningless")
+    assert applied["chipRadius"] and applied["chipRadius"].startswith("999"), (
+        "the source chips are unstyled")
 
 
 def test_the_served_tree_is_what_the_http_server_returns(server, site_dir):
     """Belt and braces on the fixture itself: the directory asserted about above
     is the directory being served."""
-    html = urllib.request.urlopen(f"{server}/cves.html", timeout=10).read().decode()
-    assert html == (site_dir / "cves.html").read_text()
+    html = urllib.request.urlopen(f"{server}/{LIST_PAGE}", timeout=10).read().decode()
+    assert html == (site_dir / LIST_PAGE).read_text()

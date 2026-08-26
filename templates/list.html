@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+{% block title %}Reserved but Public CVE IDs{% endblock %}
+{% block og_title %}{{ summary.total | commafy }} reserved CVE IDs are public and unpublished{% endblock %}
+
+{% block content %}
+{# ONE ROUTE. The command bar and the list are the page; everything else is in
+   the panel. See templates/_panel.html. #}
+<div class="cmdbar">
+  <div class="cmd-in">
+    <div class="cmd-count">
+      <b id="n" class="mono">{{ summary.total | commafy }}</b>
+      <span>reserved, public, unpublished</span>
+    </div>
+    <div class="cmd-grow">
+      <input type="search" id="q" autocomplete="off"
+             placeholder="Filter by CVE ID, package or advisory text"
+             aria-label="Filter rows by CVE ID, package or advisory text">
+    </div>
+    <label class="cmd-lab" for="src">seen in
+      <select id="src" aria-label="Filter by source"><option value="">any source</option></select>
+    </label>
+    <label class="cmd-lab" for="minage">public
+      <select id="minage" aria-label="Filter by how long the ID has been public">
+        <option value="">any age</option>
+        <option value="90">90+ days</option>
+        <option value="180">180+ days</option>
+        <option value="365">365+ days</option>
+      </select>
+    </label>
+    <button type="button" class="linkbtn" id="panel-open"
+            aria-expanded="false" aria-controls="panel">What is this?</button>
+  </div>
+</div>
+
+<main id="main">
+  <p class="sr-only" id="listnote" role="status" aria-live="polite"></p>
+  <div class="rbplist" id="list"></div>
+  <div class="more-wrap"><button type="button" class="morebtn" id="more" hidden></button></div>
+</main>
+
+{% include "_panel.html" %}
+<div class="scrim" id="scrim" hidden></div>
+
+<script id="rows" type="application/json">{{ rows | tojson }}</script>
+<script>
+(function () {
+  "use strict";
+  var ROWS = JSON.parse(document.getElementById("rows").textContent);
+  var NAMES = {osv:"OSV", ghsa:"GitHub", redhat:"Red Hat", debian:"Debian",
+               ubuntu:"Ubuntu", alpine:"Alpine", alas:"Amazon Linux",
+               msrc:"Microsoft", mozilla:"Mozilla", arch:"Arch",
+               csaf:"CSAF advisory", samsung:"Samsung"};
+  var MAXDAYS = ROWS.reduce(function (m, r) { return Math.max(m, r.days_public || 0); }, 1);
+
+  // WINDOWED. The previous table put every row in the DOM at once and it was the
+  // slowest thing on the page at 577 rows. Rendering a page at a time keeps the
+  // first paint flat as the backlog grows, and "show more" is a real control
+  // rather than infinite scroll, which hides how much is left.
+  var PAGE = 100, shown = PAGE, filtered = ROWS;
+
+  function $(id) { return document.getElementById(id); }
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  var els = {q: $("q"), src: $("src"), minage: $("minage")};
+
+  var seen = {};
+  ROWS.forEach(function (r) {
+    (r.sources || "").split(",").forEach(function (s) { if (s) { seen[s] = 1; } });
+  });
+  Object.keys(seen).sort().forEach(function (s) {
+    var o = document.createElement("option");
+    o.value = s; o.textContent = NAMES[s] || s;
+    els.src.appendChild(o);
+  });
+
+  function chips(r) {
+    var urls = r.source_urls || {};
+    var names = (r.sources || "").split(",").filter(Boolean);
+    Object.keys(urls).forEach(function (k) {
+      if (names.indexOf(k) === -1) { names.push(k); }
+    });
+    if (!names.length) { return '<span class="chip nolink">not recorded</span>'; }
+    return names.sort().map(function (k) {
+      var lab = esc(NAMES[k] || k);
+      return urls[k]
+        ? '<a class="chip" href="' + esc(urls[k]) + '" rel="noopener">' + lab + "</a>"
+        : '<span class="chip nolink">' + lab + "</span>";
+    }).join("");
+  }
+
+  function detail(r) {
+    var d = r.dates || {}, urls = r.source_urls || {};
+    var items = Object.keys(d).sort().map(function (k) {
+      return "<dt>" + esc(NAMES[k] || k) + "</dt><dd>first seen " + esc(d[k]) +
+        (urls[k] ? ' &middot; <a href="' + esc(urls[k]) + '" rel="noopener">open advisory</a>' : "") +
+        "</dd>";
+    }).join("");
+    if (!items) { items = "<dt>&mdash;</dt><dd>no per-feed dates recorded</dd>"; }
+    return '<p class="seen">Where it surfaced, and when</p><dl class="dl">' + items + "</dl>";
+  }
+
+  function rowHtml(r) {
+    var h = Math.max(6, Math.round(100 * (r.days_public || 0) / MAXDAYS));
+    return '<details class="rbprow"><summary class="rowhead">' +
+      '<span class="rail" aria-hidden="true"><i style="height:' + h + '%"></i></span>' +
+      '<span class="rowbody"><span class="idline">' +
+        '<span class="cve mono">' + esc(r.cve_id) + "</span>" +
+        (r.package ? '<span class="pkg mono">' + esc(r.package) + "</span>" : "") +
+      "</span>" +
+      (r.description ? '<span class="rdesc">' + esc(r.description) + "</span>" : "") +
+      '<span class="where"><span class="wlab">showing up in</span>' + chips(r) + "</span>" +
+      "</span>" +
+      '<span class="agebox"><span class="agenum mono">' + esc(r.days_public) + "</span>" +
+      '<span class="agelab">days public</span></span>' +
+      "</summary><div class=\"detail\">" + detail(r) + "</div></details>";
+  }
+
+  function matches(r) {
+    var q = els.q.value.trim().toLowerCase(),
+        s = els.src.value,
+        a = parseInt(els.minage.value, 10) || 0;
+    if (a && (r.days_public || 0) < a) { return false; }
+    if (s && (r.sources || "").split(",").indexOf(s) < 0) { return false; }
+    if (q) {
+      var hay = (r.cve_id + " " + (r.package || "") + " " + (r.description || "") +
+                 " " + (r.sources || "")).toLowerCase();
+      if (hay.indexOf(q) < 0) { return false; }
+    }
+    return true;
+  }
+
+  function render(reset) {
+    if (reset !== false) { shown = PAGE; }
+    filtered = ROWS.filter(matches)
+      .sort(function (x, y) { return (y.days_public || 0) - (x.days_public || 0); });
+    var slice = filtered.slice(0, shown);
+    $("n").textContent = filtered.length.toLocaleString();
+    $("n").classList.toggle("dim", filtered.length === 0);
+
+    if (!filtered.length) {
+      $("list").innerHTML =
+        '<div class="empty"><b>Nothing matches ' + describeFilters() + ".</b>" +
+        "<p>" + ROWS.length.toLocaleString() + " rows are being tracked. " +
+        "Try a different term, or widen a filter.</p>" +
+        '<button type="button" class="morebtn" id="clear">Clear filters</button></div>';
+      $("clear").addEventListener("click", function () {
+        els.q.value = ""; els.src.value = ""; els.minage.value = "";
+        render(); writeUrl(); els.q.focus();
+      });
+      $("more").hidden = true;
+    } else {
+      $("list").innerHTML = slice.map(rowHtml).join("");
+      var left = filtered.length - slice.length;
+      $("more").hidden = left <= 0;
+      $("more").textContent = left > 0
+        ? "Show " + Math.min(PAGE, left).toLocaleString() + " more of " + left.toLocaleString()
+        : "";
+    }
+    // Announced, because a filter that changes the list without saying so is
+    // invisible to a screen reader.
+    $("listnote").textContent = filtered.length.toLocaleString() + " of " +
+      ROWS.length.toLocaleString() + " rows shown";
+  }
+
+  function describeFilters() {
+    var bits = [];
+    if (els.q.value.trim()) { bits.push("\u201c" + els.q.value.trim() + "\u201d"); }
+    if (els.src.value) { bits.push("in " + (NAMES[els.src.value] || els.src.value)); }
+    if (els.minage.value) { bits.push("public " + els.minage.value + "+ days"); }
+    return bits.join(" ") || "that filter";
+  }
+
+  // LINKABLE FILTERS. Any view here can be linked, which is the difference
+  // between a page you look at and a page you can point at, on a site whose
+  // whole purpose is to be cited.
+  //
+  // replaceState while typing so the Back button is not filled with one entry
+  // per keystroke; pushState when a SELECT commits, so Back undoes a deliberate
+  // choice. The panel is deliberately NOT in the URL: nobody links to an open
+  // modal, and putting it there makes Back close it instead of leaving.
+  function writeUrl(push) {
+    var p = new URLSearchParams();
+    Object.keys(els).forEach(function (k) { if (els[k].value) { p.set(k, els[k].value); } });
+    var s = p.toString(), url = s ? "?" + s : location.pathname;
+    if (push) { history.pushState(null, "", url); } else { history.replaceState(null, "", url); }
+  }
+  function readUrl() {
+    var p = new URLSearchParams(location.search);
+    Object.keys(els).forEach(function (k) { if (p.get(k) !== null) { els[k].value = p.get(k); } });
+  }
+
+  els.q.addEventListener("input", function () { render(); writeUrl(false); });
+  els.src.addEventListener("change", function () { render(); writeUrl(true); });
+  els.minage.addEventListener("change", function () { render(); writeUrl(true); });
+  window.addEventListener("popstate", function () { readUrl(); render(); });
+  $("more").addEventListener("click", function () {
+    shown += PAGE; render(false);
+    var rows = $("list").querySelectorAll(".rbprow");
+    if (rows[shown - PAGE]) { rows[shown - PAGE].querySelector("summary").focus(); }
+  });
+
+  // The panel. Focus moves in and comes back out, and Escape closes it.
+  var panel = $("panel"), scrim = $("scrim"), opener = $("panel-open");
+  function setPanel(open) {
+    panel.hidden = !open; scrim.hidden = !open;
+    panel.classList.toggle("on", open); scrim.classList.toggle("on", open);
+    opener.setAttribute("aria-expanded", open ? "true" : "false");
+    document.body.classList.toggle("locked", open);
+    (open ? panel : opener).focus();
+  }
+  opener.addEventListener("click", function () { setPanel(true); });
+  $("panel-close").addEventListener("click", function () { setPanel(false); });
+  scrim.addEventListener("click", function () { setPanel(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && !panel.hidden) { setPanel(false); }
+  });
+
+  readUrl();
+  render();
+})();
+</script>
+{% endblock %}

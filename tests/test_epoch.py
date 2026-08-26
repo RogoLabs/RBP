@@ -177,13 +177,16 @@ def test_epoch_eligible_rows_are_what_gets_diffed(tmp_path):
 # the archive, and the zero state
 # --------------------------------------------------------------------------
 
-def test_the_archive_route_exists_whether_or_not_an_epoch_is_set():
-    """Sequencing: design the zero state, publish the archive, THEN set the epoch.
-    Never the reverse. So the page has to exist before the day it is needed."""
-    from rbp import site
-    targets = [t for _, t in site.pages_for(False)]
-    assert "backlog-at-launch.html" in targets
-    assert "backlog-at-launch.html" in [t for _, t in site.pages_for(True)]
+def test_the_held_back_rows_stay_reachable_whether_or_not_an_epoch_is_set(built_site):
+    """The epoch removes rows from the count. They must not vanish with it.
+
+    /backlog-at-launch was removed on 2026-08-26 with the other four pages, so
+    the promise moved to where it is machine-checkable: held-back rows are
+    published as data on every run, epoch or no epoch, so the count can always be
+    reconciled against what it excludes.
+    """
+    data = {p.name for p in (built_site / "data").glob("*.json")}
+    assert "held-back.json" in data, sorted(data)
 
 
 def test_the_archive_page_never_names_a_cna():

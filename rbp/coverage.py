@@ -10,6 +10,21 @@ grounded in data, not vibes.
 from __future__ import annotations
 
 
+# A CNA must be sighted at least this many times before this site counts it as
+# observable. One incidental reference is not evidence that we read that CNA's
+# output, and a gate keyed on a single sighting reopens on any stray row with no
+# code change.
+#
+# DEFINED HERE, not in inference, since 2026-08-26. It is a coverage threshold:
+# it decides what `cnas_effective` means, and `cnas_effective` is the launch
+# gate. Inference borrowed it to decide whether to NAME a CNA, and while both
+# uses exist they must stay the same number, so the publish-path module owns it
+# and the off-path one imports it. The dependency used to point the other way,
+# which meant coverage, the gate, and feedlab all reached into a module that no
+# longer runs.
+MIN_SIGHTINGS = 3
+
+
 def _year(cid):
     try:
         return int(cid.split("-")[1])
@@ -99,7 +114,6 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     # Gate figure: seen often enough that the site would be willing to name it.
     # Deliberately the SAME constant inference uses to decide whether to attach a
     # name, so the gate cannot clear on CNAs the site would refuse to name.
-    from .inference import MIN_SIGHTINGS
     effective = {a for a, n in sightings.items() if a and n >= MIN_SIGHTINGS}
 
     # THE GATE FIGURE, from 2026-08-23. Top-N-by-volume measured on the SAME

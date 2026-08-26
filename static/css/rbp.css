@@ -387,6 +387,11 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
   --rbp-text-secondary: #52585e;
   --rbp-text-muted: #595f66;
   --rbp-link: #0a58ca;
+  /* The days-public signal. NOT --color-warning: that is #ffc107 and
+     renders at 1.37:1 on white, which the contrast harness caught the
+     moment the list page used it. Semantic colour still has to be
+     readable; a signal nobody can read is decoration. */
+  --rbp-age: #8A5013;
   /* Two sticky offsets have to agree, so the header height is a token. */
   --rbp-thead-h: 2.5rem;
 }
@@ -401,6 +406,7 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
   --rbp-text-secondary: #b6bece;
   --rbp-text-muted: #9aa3b2;
   --rbp-link: #7cb0ff;
+  --rbp-age: #D9A05B;
 }
 
 table.rbp th { color: var(--rbp-text-secondary); }
@@ -674,3 +680,107 @@ span.src-nolink { color: var(--rbp-text-muted); border-style: dashed; }
    rule, applied where prose actually is. */
 .page-header p, .card-body > p, .lead-plain, .caveat p { max-width: 68ch; }
 .lead-plain { font-size: 1.1rem; }
+
+/* ==========================================================================
+   THE LIST PAGE. One route: a command bar, the rows, and a slide-over panel.
+   Built on the EXISTING tokens rather than a new palette, so the themes and the
+   computed contrast tests in tests/test_a11y.py keep applying unchanged.
+   ========================================================================== */
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
+  clip:rect(0 0 0 0);white-space:nowrap;border:0}
+body.locked{overflow:hidden}
+
+/* ---- the command bar: the only persistent chrome ---- */
+.cmdbar{position:sticky;top:0;z-index:20;background:var(--color-bg-content);
+  border-bottom:1px solid var(--color-border)}
+.cmd-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
+  max-width:1080px;margin:0 auto;padding:12px 20px}
+.cmd-count{display:flex;align-items:baseline;gap:9px;flex:0 0 auto}
+.cmd-count b{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;line-height:1}
+.cmd-count b.dim{opacity:.45}
+.cmd-count span{color:var(--rbp-text-muted);font-size:.8rem;max-width:19ch;line-height:1.25}
+.cmd-grow{flex:1 1 240px;min-width:180px}
+.cmd-grow input{width:100%;padding:8px 12px;border:1px solid var(--color-border);
+  border-radius:6px;background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit}
+.cmd-lab{font-size:.78rem;color:var(--rbp-text-muted);display:flex;align-items:center;gap:6px}
+.cmd-lab select{padding:7px 9px;border:1px solid var(--color-border);border-radius:6px;
+  background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit;font-size:.82rem}
+.linkbtn{background:none;border:none;color:var(--rbp-link);cursor:pointer;
+  padding:6px 2px;font:inherit;text-decoration:underline;text-underline-offset:3px}
+
+/* ---- rows ---- */
+.rbplist{display:flex;flex-direction:column;gap:8px;margin:18px 0 10px}
+.rbprow{background:var(--color-bg-content);border:1px solid var(--color-border);
+  border-radius:8px;overflow:hidden}
+.rbprow > summary{list-style:none;cursor:pointer;display:grid;
+  grid-template-columns:12px 1fr auto;align-items:stretch}
+.rbprow > summary::-webkit-details-marker{display:none}
+/* THE AGE RAIL. Days public as height, so the oldest rows read without anyone
+   parsing a number. Honest structure: the list is sorted by age, so position
+   already carries this. Semantic colour, never the link accent. */
+.rail{background:var(--color-bg-secondary);position:relative}
+.rail i{position:absolute;bottom:0;left:0;right:0;background:var(--rbp-age);display:block}
+.rowbody{padding:12px 16px;min-width:0}
+.idline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.cve{font-weight:600;font-size:.98rem}
+.pkg{font-size:.78rem;color:var(--rbp-text-muted);background:var(--color-bg-secondary);
+  border:1px solid var(--color-border);border-radius:4px;padding:1px 6px}
+.rdesc{color:var(--rbp-text-secondary);font-size:.87rem;margin-top:4px;display:block;max-width:74ch}
+.agebox{padding:12px 16px;display:flex;flex-direction:column;justify-content:center;
+  gap:1px;border-left:1px solid var(--color-border);text-align:right}
+.agenum{font-size:1.15rem;font-weight:600;color:var(--rbp-age);
+  font-variant-numeric:tabular-nums;line-height:1}
+.agelab{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--rbp-text-muted)}
+.rbprow .detail{border-top:1px solid var(--color-border);background:var(--color-bg-secondary);
+  padding:12px 16px 14px 28px}
+.seen{font-size:.7rem;color:var(--rbp-text-muted);text-transform:uppercase;
+  letter-spacing:.08em;margin:0 0 6px}
+.dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.84rem;margin:0}
+.dl dt{color:var(--rbp-text-muted)}
+.dl dd{margin:0}
+
+.more-wrap{display:flex;justify-content:center;margin:4px 0 56px}
+.morebtn{border:1px solid var(--color-border);background:var(--color-bg-content);
+  color:var(--rbp-link);border-radius:6px;padding:8px 18px;font:inherit;cursor:pointer}
+.morebtn:hover,.morebtn:focus-visible{border-color:var(--rbp-link)}
+.empty{padding:44px 20px;text-align:center;color:var(--rbp-text-muted);
+  background:var(--color-bg-content);border:1px solid var(--color-border);border-radius:8px}
+.empty b{display:block;color:var(--color-text-primary);font-size:1rem;margin-bottom:6px}
+
+/* ---- the slide-over: seven pages, no navigation ---- */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:30}
+.panel{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);z-index:31;
+  background:var(--color-bg-content);border-left:1px solid var(--color-border);
+  overflow-y:auto;padding:24px 28px 56px}
+.panel h2{font-size:1.08rem;margin:26px 0 8px}
+.panel h2:first-of-type{margin-top:8px}
+.panel p{font-size:.9rem;color:var(--rbp-text-secondary);max-width:60ch}
+.panel blockquote{margin:10px 0;padding:8px 14px;border-left:3px solid var(--color-border);
+  color:var(--rbp-text-secondary);font-size:.89rem}
+.closebtn{position:absolute;top:18px;right:22px;background:var(--color-bg-content);
+  border:1px solid var(--color-border);border-radius:6px;padding:4px 11px;
+  cursor:pointer;color:var(--rbp-text-muted);font:inherit;font-size:.82rem}
+
+@media (max-width:640px){
+  .rbprow > summary{grid-template-columns:8px 1fr}
+  .agebox{grid-column:2;border-left:none;border-top:1px solid var(--color-border);
+    flex-direction:row;align-items:baseline;gap:7px;text-align:left}
+  .cmd-count span{display:none}
+  .cmd-grow{flex:1 1 100%}
+  .panel{padding:20px 18px 48px}
+}
+
+/* The evidence chips on the list page. Shares its look with a.src on the old
+   table, under the class the list template uses. */
+.where{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center}
+.wlab{font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--rbp-text-muted);margin-right:2px}
+a.chip,span.chip{display:inline-block;padding:2px 9px;border-radius:999px;
+  font-size:.76rem;white-space:nowrap;text-decoration:none;
+  border:1px solid var(--rbp-link);color:var(--rbp-link)}
+a.chip:hover,a.chip:focus-visible{background:var(--rbp-link);color:var(--color-bg-content)}
+/* A feed with no per-ID page is still a place the ID is showing up. Shown, and
+   visibly not a link, rather than dropped. */
+span.chip.nolink{border-style:dashed;border-color:var(--color-border);color:var(--rbp-text-muted)}

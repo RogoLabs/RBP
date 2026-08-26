@@ -16,7 +16,14 @@ import glob
 import json
 import os
 
-from . import (cvelist, feeds, classify, report, attribution, coverage, inference,
+# ATTRIBUTION AND INFERENCE ARE NOT IMPORTED HERE.
+#
+# v1 publishes no attribution, so neither module runs on the publish path. They
+# are imported lazily inside the one branch that would use them, which makes the
+# claim checkable rather than asserted: if this import list ever grows them back,
+# something on the four-times-daily path is reaching into 834 lines that exist to
+# guess which CNA owns a reserved ID.
+from . import (cvelist, feeds, classify, report, coverage,
                clock, site, schema)
 
 # Source profiles: the weekly cron stays lean; the heavy enterprise/ICS sources
@@ -211,6 +218,49 @@ def _unattributed_closure(row):
     return {k: v for k, v in row.items() if k not in _CLOSURE_NAME_FIELDS}
 
 
+# The two shims that stand in for attribution when nothing is attributed.
+#
+# Local, so `rbp.cli` does not import 834 lines it never calls. Both mirror the
+# real shapes exactly: a three-tuple from attribute(), and a validation block
+# keyed like apply_to_backlog's, so no consumer needs a branch and nothing
+# breaks on the day naming is switched back on.
+
+# Block half-width for the k-either-side test. Only meaningful when naming.
+DEFAULT_K = 3
+
+
+class _NoAttribution:
+    """Attributes nothing. `abstain` is what the real Attributor returns when it
+    does not know, so downstream needs no special case."""
+
+    def attribute(self, product, description):
+        return None, 0.0, "abstain"
+
+
+def _no_attribution_validation(k=DEFAULT_K, today=None):
+    """The validation block for a run that did not infer anything.
+
+    precision is None, NOT 0.0. "Did not attempt" and "attempted and scored
+    nothing" are different facts, and the site already renders None as "not
+    measurable". Same distinction feeds.record_feed draws between a failed feed
+    and an empty one.
+    """
+    today = today or dt.date.today().isoformat()
+    empty = {"method": "not-run", "k": k, "decided": 0, "abstained": 0,
+             "total": 0, "correct": 0, "wrong": 0, "coverage": 0.0,
+             "precision": None, "below_floor": True, "not_run": True}
+    return {
+        "date": today, "k": k,
+        "named": {"block-corroborated": 0, "block": 0, "abstain": 0},
+        "run_coverage": 0.0,
+        "leave_one_out": dict(empty),
+        "live": {**empty, "graded": 0, "outstanding": 0},
+        "newly_graded": 0, "withdrawn": 0, "suppressed": 0,
+        "not_run": True,
+        "not_run_reason": "v1 publishes no attribution; inference is not run",
+    }
+
+
 def cmd_run(args):
     today = args.today or dt.date.today().isoformat()
     # The single flag, read once. site.py owns it; nothing here defines a second.
@@ -268,7 +318,11 @@ def cmd_run(args):
     # this project acquired five leaks, a de-namer, a backstop that could not see
     # four of them, and a KeyError that killed three consecutive scheduled builds
     # because the de-namer removed the field the grader needed.
-    attributor = attribution.Attributor(corpus) if NAMING else attribution.NullAttributor()
+    if NAMING:
+        from . import attribution
+        attributor = attribution.Attributor(corpus)
+    else:
+        attributor = _NoAttribution()
     # The ids that were RESERVED last run, so an id the endpoint cannot resolve
     # this run is carried forward instead of vanishing from the count.
     prev_reserved = _previous_reserved(SNAPS, today)
@@ -290,7 +344,7 @@ def cmd_run(args):
     _covered = set(cov.get("covered") or [])
     _sightings = cov.get("sightings") or {}
     print(f"  covered set: {len(_covered)} CNAs sighted, naming gated on it "
-          f"(min {inference.MIN_SIGHTINGS} sightings)")
+          f"(min {coverage.MIN_SIGHTINGS} sightings)")
 
     # Name what the gate allows, and grade what earlier runs predicted.
     # Which rows will actually be published, decided BEFORE inference so the
@@ -321,6 +375,7 @@ def cmd_run(args):
     # and no fourth thing that can silently stop working. Launch condition 4 is
     # retired rather than met; see rbp/launch.py.
     if NAMING:
+        from . import attribution, inference
         validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
                                                 record_for=_published_ids,
                                                 covered=_covered, sightings=_sightings,
@@ -333,7 +388,7 @@ def cmd_run(args):
         # That is a statement about whether our own machinery succeeded, not
         # about the CVE. All 582 rows were rule 4.5.1.6 / SHOULD, self_disclosed
         # false, owner null, and must_rows was 0.
-        validation = inference.unattributed_validation(k=args.k)
+        validation = _no_attribution_validation(k=args.k)
 
     # The 72-hour clock, and the MUST/SHOULD split that must ride on every row.
     clock.annotate(backlog, today=today)
@@ -500,6 +555,7 @@ def cmd_run(args):
     print("\n" + "=" * 64)
     print(f"HEADLINE core (reportable, >=2 independent sources): {len(kpi)}")
     if NAMING:
+        from . import inference
         named = sum(v for k_, v in validation["named"].items()
                     if k_ != inference.TIER_NONE)
         print(f"owner named on {named}/{len(backlog)} rows | "
@@ -527,9 +583,9 @@ def main():
     r.add_argument("--workers", type=int, default=classify.DEFAULT_WORKERS,
                    help=f"concurrent reservation lookups (default {classify.DEFAULT_WORKERS}; "
                         "the endpoint allows 25,000/min, so this is ~22%% of the ceiling)")
-    r.add_argument("--k", type=int, default=inference.DEFAULT_K,
+    r.add_argument("--k", type=int, default=DEFAULT_K,
                    help="published neighbours required on EACH side, all agreeing, "
-                        f"before a CNA is named (default {inference.DEFAULT_K}: measured "
+                        f"before a CNA is named (default {DEFAULT_K}: measured "
                         "100%% precision at 59.8%% coverage out-of-sample)")
     r.add_argument("--min-age-days", type=int, default=report.DEFAULT_MIN_AGE_DAYS,
                    help="only report RBPs provably public >= this many days (default "

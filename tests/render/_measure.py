@@ -18,6 +18,13 @@ import re
 # the pages under test
 # --------------------------------------------------------------------------
 
+# The page carrying the row list. It was cves.html; since 2026-08-26 the list IS
+# the front door, so it is index.html launched and overview.html pre-launch. Named
+# once here rather than hardcoded in four files, which is how the render suite
+# ended up pointing at a deleted page.
+LIST_PAGE = "index.html"
+
+
 def page_paths(site_dir):
     """Every HTML page the build produced, discovered rather than listed.
 
@@ -31,7 +38,7 @@ def page_paths(site_dir):
 # One evaluate() per width, returning everything the checks need. Split into
 # several round trips it would be several layout flushes and several chances for
 # the viewport and the measurement to disagree.
-MEASURE_JS = """
+MEASURE_JS = r"""
 () => {
   const de = document.documentElement;
   const tables = [...document.querySelectorAll('table')].map(t => {
@@ -52,11 +59,31 @@ MEASURE_JS = """
       wrapOverflowX: wcs ? wcs.overflowX : null,
     };
   });
+  // THE ROW LAYOUT, which replaced the table on 2026-08-26. Same questions:
+  // has the breakpoint fired, and is anything refusing to wrap.
+  const rows = [...document.querySelectorAll('.rbprow')].map(r => {
+    const sum = r.querySelector('summary');
+    const cs = sum ? getComputedStyle(sum) : null;
+    const cols = cs ? cs.gridTemplateColumns.trim().split(/\s+/).length : 0;
+    const desc = r.querySelector('.rdesc');
+    const age = r.querySelector('.agebox');
+    return {
+      cols,
+      stacked: cols <= 2,
+      descWhiteSpace: desc ? getComputedStyle(desc).whiteSpace : null,
+      scrollWidth: r.scrollWidth,
+      clientWidth: r.clientWidth,
+      ageLeft: age ? Math.round(age.getBoundingClientRect().left) : null,
+      bodyWidth: (() => { const b = r.querySelector('.rowbody');
+                          return b ? Math.round(b.getBoundingClientRect().width) : null; })(),
+    };
+  });
   return {
     scrollWidth: de.scrollWidth,
     clientWidth: de.clientWidth,
     innerWidth: window.innerWidth,
     tables,
+    rows,
   };
 }
 """
@@ -127,3 +154,48 @@ def asset_versions(html):
 
 def file_hash(path):
     return hashlib.sha256(pathlib.Path(path).read_bytes()).hexdigest()[:10]
+
+
+# --------------------------------------------------------------------------
+# the ROW layout, which replaced the table
+# --------------------------------------------------------------------------
+
+def row_overflow(m):
+    """Rows whose content is wider than the row itself.
+
+    The row equivalent of the nested scrollbar: the page can fit while the row's
+    own content is clipped or pushed, and a reader sees a truncated line rather
+    than a horizontal scrollbar telling them so.
+    """
+    return [{"cols": r["cols"], "hidden_px": r["scrollWidth"] - r["clientWidth"]}
+            for r in m.get("rows", [])
+            if r["clientWidth"] and r["scrollWidth"] - r["clientWidth"] > 1]
+
+
+def rows_not_stacked(m, boundary):
+    """Rows still in the desktop three-column layout below the boundary.
+
+    The direct descendant of the 768px collision: a breakpoint that did not
+    fire, leaving the age box beside the content instead of under it and
+    squeezing the column that carries the evidence.
+    """
+    if m["innerWidth"] > boundary:
+        return []
+    return [r for r in m.get("rows", []) if not r["stacked"]]
+
+
+def rows_refusing_to_wrap(m):
+    """Row text set to `nowrap`, which is what pushed the page 926px sideways at
+    375px when the card layout was active and style.css's rule was never reset."""
+    return [r for r in m.get("rows", []) if r["descWhiteSpace"] == "nowrap"]
+
+
+def rows_squeezed(m, floor=120):
+    """Rows whose content column has been crushed below a readable width.
+
+    At 768px the old table hid roughly three quarters of every row while the
+    document reported no overflow at all. This is that measurement for the grid:
+    the page fits, and the column carrying the CVE ID and its sources does not.
+    """
+    return [r for r in m.get("rows", [])
+            if r["bodyWidth"] is not None and r["bodyWidth"] < floor]

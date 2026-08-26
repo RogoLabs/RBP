@@ -126,19 +126,24 @@ def test_the_render_guard_catches_a_missing_page(tmp_path):
         _sitefixture.assert_renders(fake, launched=False)
 
 
-def test_the_render_guard_catches_a_page_that_rendered_no_table(tmp_path,
-                                                               built_site):
-    """The subtler half. Every page present, and one of them rendered its prose
-    and skipped its table because the fixture stopped supplying the data behind
-    it. That is how changes.html and backlog-at-launch.html were producing five
-    unmeasured .rbp tables while every test passed."""
+def test_the_render_guard_catches_a_list_that_rendered_no_rows(tmp_path,
+                                                              built_site):
+    """The subtler half, and it moved with the redesign.
+
+    The list page carries its rows as a JSON island rather than server-side
+    <table> markup, so the way it goes quiet is an EMPTY ISLAND, not a missing
+    table. The page still renders, the command bar still shows, and every
+    assertion about rows becomes vacuous. Same failure, new shape.
+    """
     import shutil
     fake = tmp_path / "site"
     shutil.copytree(built_site, fake)
-    body = (fake / "changes.html").read_text()
-    (fake / "changes.html").write_text(re.sub(r"<table.*?</table>", "", body,
-                                              flags=re.S))
-    with pytest.raises(AssertionError, match="rendered no table"):
+    front = fake / "overview.html"
+    body = front.read_text()
+    front.write_text(re.sub(
+        r'(<script id="rows" type="application/json">).*?(</script>)',
+        r"\g<1>[]\g<2>", body, flags=re.S))
+    with pytest.raises(AssertionError, match="rendered zero rows"):
         _sitefixture.assert_renders(fake, launched=False)
 
 

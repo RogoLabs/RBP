@@ -369,3 +369,28 @@ def test_the_site_publishes_no_name_even_from_a_named_snapshot(tmp_path):
 
 
 import os  # noqa: E402
+
+
+def test_the_publish_path_does_not_even_import_the_attribution_stack():
+    """834 lines that exist to guess which CNA owns a reserved ID, on a site that
+    names nobody.
+
+    Asserted as an IMPORT-GRAPH property rather than a comment, because "we do
+    not call it" is a claim someone can break with one convenient import and
+    nobody would notice: the code would still work, and it would be back on the
+    four-times-daily path.
+    """
+    import subprocess
+    import sys
+    out = subprocess.run(
+        [sys.executable, "-c",
+         "import rbp.cli, sys;"
+         "print([m for m in sys.modules if m in ('rbp.inference','rbp.attribution')])"],
+        capture_output=True, text=True, cwd=str(pathlib.Path(__file__).parent.parent))
+    assert out.returncode == 0, out.stderr
+    assert out.stdout.strip() == "[]", (
+        f"importing rbp.cli pulls in {out.stdout.strip()}; the attribution stack "
+        "is back on the publish path")
+
+
+import pathlib  # noqa: E402
