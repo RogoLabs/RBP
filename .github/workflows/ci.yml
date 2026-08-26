@@ -32,6 +32,17 @@ jobs:
         if: github.event_name != 'pull_request'
         env:
           RBP_LIVE_TESTS: '1'
+          # THE SAME FIX deploy.yml already carries, which this workflow never
+          # got. Without a token these tests make anonymous api.github.com calls
+          # against a 60/hour SHARED-RUNNER-IP budget, so they fail with
+          # "403: rate limit exceeded" whenever the runner pool is busy or the
+          # workflow is dispatched a few times in an afternoon. Observed
+          # 2026-08-26: three test_corpus tests red on rate limiting alone,
+          # while the offline suite passed.
+          #
+          # A test that fails for reasons unrelated to the code teaches people to
+          # ignore it, which is the same lesson as a banner that is always on.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: python -m pytest tests/ -q --ignore=tests/render
 
   # THE RENDER JOB (PLAN.md 8e).
