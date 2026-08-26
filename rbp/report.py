@@ -87,7 +87,26 @@ def _derive_meta(row):
             break
     if not url:   # last-resort: never leave a row without a place to look it up
         url = f"https://www.cve.org/CVERecord?id={cid}"
-    return pkg, eco, vendor, url
+
+    # EVERY place this ID is showing up, not just the first one.
+    #
+    # The loop above picks a single `advisory_url` by source precedence and
+    # throws the rest away, which made "where is this showing up" a question the
+    # published data could not answer: a row seen in OSV, Red Hat and Debian
+    # rendered one link and a comma-joined list of names. That list is the whole
+    # claim the site makes. An ID being referenced in three independent public
+    # advisories while unpublished IS the finding, and it was being shown as a
+    # string.
+    #
+    # cve.org is deliberately NOT a fallback here. For a RESERVED id it renders
+    # nothing, so a link to it is worse than no link: it looks like evidence and
+    # disproves itself.
+    source_urls = {}
+    for s in sorted(srcs):
+        u = _u(s)
+        if u:
+            source_urls[s] = u
+    return pkg, eco, vendor, url, source_urls
 
 
 # How long an ID must be provably public before it is reportable, in days.
@@ -306,7 +325,8 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     sdir = os.path.join(snap_root, today)
     os.makedirs(sdir, exist_ok=True)
     for r in backlog:
-        r["package"], r["ecosystem"], r["vendor"], r["advisory_url"] = _derive_meta(r)
+        (r["package"], r["ecosystem"], r["vendor"], r["advisory_url"],
+         r["source_urls"]) = _derive_meta(r)
 
     # An owner may be NAMED only at/above the confidence gate AND corroborated by that
     # CNA's own feed (never a bare product-map guess). Applied to EVERY shared surface -

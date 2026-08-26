@@ -277,8 +277,12 @@ def test_no_table_keeps_a_min_width_floor_at_narrow_widths():
 def test_the_mobile_layout_labels_every_cell():
     """With thead hidden, a hedge has to sit next to the claim it qualifies."""
     src = (TEMPLATES / "cves.html").read_text()
-    for label in ("CVE ID", "Days public", "Rule", "Package",
-                  "Independent sources", "Sources", "Advisory summary"):
+    # The columns as they are TODAY. The table was rebuilt on 2026-08-26 around
+    # the question the site answers: which reserved IDs are showing up, and
+    # where. `Rule` was dropped because every live row reads 4.5.1.6, and
+    # `Independent sources` because the evidence column now shows the sources
+    # themselves and a reader can count them.
+    for label in ("CVE ID", "Showing up in", "Days public", "What it is"):
         assert f'data-label="{label}"' in src, label
 
 

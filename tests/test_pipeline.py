@@ -373,14 +373,14 @@ def test_a_csaf_row_links_to_the_advisory_not_to_a_blank_cve_page():
     row it was evidence for. ICS and OT rows are the population this reaches."""
     from rbp.report import _derive_meta
     url = "https://cert-portal.siemens.com/productcert/csaf/ssa-123456.json"
-    _pkg, _eco, _vendor, out = _derive_meta({
+    _pkg, _eco, _vendor, out, urls = _derive_meta({
         "cve_id": "CVE-2026-1", "sources": "csaf",
         "refs": f"csaf:Siemens ProductCERT\t SSA-123456\t{url}".replace("\t ", "\t"),
     })
     assert out == url, out
 
     # And a malformed ref must fall back rather than emit a broken link.
-    _p, _e, _v, fallback = _derive_meta({
+    _p, _e, _v, fallback, fb_urls = _derive_meta({
         "cve_id": "CVE-2026-1", "sources": "csaf", "refs": "csaf:Siemens"})
     assert fallback == "https://www.cve.org/CVERecord?id=CVE-2026-1"
 

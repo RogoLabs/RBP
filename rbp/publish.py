@@ -417,6 +417,7 @@ def _roster_names():
 # new field defaults to REFUSED and someone has to justify adding it here.
 _NAME_OK_PATHS = (
     ".dates.",              # per-feed sighting dates, keyed by feed
+    ".source_urls",         # one advisory URL per feed, keyed by feed
     ".coverage.covered",    # the covered set, published on purpose
     ".coverage.sightings",  # sightings per CNA, the covered set's evidence
     ".coverage.own_channel_cnas",

@@ -4,23 +4,24 @@
 {% block content %}
 <div class="page-header">
   <h1>Reserved but Public CVE IDs</h1>
-  <p class="text-muted">
-    {{ summary.total | commafy }} CVE IDs in the Reserved state, publicly referenced for at
-    least {{ summary.get('min_age_days', 7) }} days, with no published record. That is the CVE
-    Program's own definition of a Reserved but Public ID, so this is a count of a state and
-    not a count of violations. Sorted oldest first; filters are in the URL, so any view
-    here can be linked.
+  <p class="lead-plain">
+    <strong>{{ summary.total | commafy }} CVE IDs</strong> are reserved, referenced in a
+    public advisory, and still have no published record in the CVE List.
+    Each row links to every place it is showing up.
+  </p>
+  <p class="small text-muted">
+    That is the CVE Program's own definition of a Reserved but Public ID, so this is a
+    count of a <em>state</em>, not a count of violations. Nothing appears here until it
+    has been publicly referenced for at least {{ summary.get('min_age_days', 7) }} days.
+    <a href="method.html">How this is measured</a>.
   </p>
 </div>
 
 <div class="filters">
   <input type="search" id="q" placeholder="CVE ID, package, vendor, advisory text" aria-label="Search">
-  <label for="rule">Rule</label>
-  <select id="rule">
-    <option value="">any</option>
-    <option value="{{ rule_must }}">{{ rule_must }} MUST</option>
-    <option value="{{ rule_should }}">{{ rule_should }} SHOULD</option>
-  </select>
+  {# The Rule filter went with the Rule column on 2026-08-26. Every live row
+     reads 4.5.1.6 / SHOULD, so the control offered a choice between "all 642
+     rows" and "no rows", which is a control that cannot help anyone. #}
   {# The Owner filter and the Inferred owner column were here. v1 publishes no
      attribution, so there is nothing to filter on and no per-CNA page to link
      to. See site.NAMING_ENABLED. #}
@@ -65,12 +66,13 @@
            (SC 2.1.1, level A) while aria-sort was maintained correctly: the state
            was announceable and the control was inoperable. #}
         <th scope="col" data-sort="cve_id"><button type="button" class="sortbtn">CVE ID</button></th>
+        {# THE COLUMN THIS SITE EXISTS FOR. Every other column describes the ID;
+           this one is the evidence. A reserved ID referenced in three independent
+           public advisories IS the finding, and it used to render as the string
+           "osv,ghsa,debian" in a mono span. #}
+        <th scope="col">Showing up in</th>
         <th scope="col" class="num" data-sort="days_public" aria-sort="descending"><button type="button" class="sortbtn">Days public</button></th>
-        <th scope="col" data-sort="rule"><button type="button" class="sortbtn">Rule</button></th>
-        <th scope="col" data-sort="package"><button type="button" class="sortbtn">Package</button></th>
-        <th scope="col" class="num" data-sort="indep_sources"><button type="button" class="sortbtn">Independent sources</button></th>
-        <th scope="col" data-sort="sources"><button type="button" class="sortbtn">Sources</button></th>
-        <th scope="col">Advisory summary</th>
+        <th scope="col">What it is</th>
       </tr>
     </thead>
     <tbody id="body"></tbody>
@@ -121,7 +123,6 @@
   var countEl = document.getElementById('count');
   var els = {
     q: document.getElementById('q'),
-    rule: document.getElementById('rule'),
     minage: document.getElementById('minage')
   };
   var sortKey = 'days_public', sortDir = -1;
@@ -156,9 +157,34 @@
         .join(' ').toLowerCase();
       if (hay.indexOf(q) === -1) return false;
     }
-    if (els.rule.value && r.rule !== els.rule.value) return false;
     if (els.minage.value && !(r.days_public >= +els.minage.value)) return false;
     return true;
+  }
+
+  // Feed name -> what a reader calls it. Unmapped feeds fall back to the raw
+  // key rather than being hidden: a source with no display name is still a place
+  // the ID is showing up, and dropping it would understate the evidence.
+  var FEED_NAMES = {
+    osv: 'OSV', ghsa: 'GitHub', redhat: 'Red Hat', debian: 'Debian',
+    ubuntu: 'Ubuntu', alpine: 'Alpine', alas: 'Amazon Linux', msrc: 'Microsoft',
+    mozilla: 'Mozilla', arch: 'Arch', csaf: 'CSAF advisory', samsung: 'Samsung'
+  };
+
+  function sourceLinks(r) {
+    var urls = r.source_urls || {};
+    var names = (r.sources || '').split(',').filter(Boolean);
+    // Union, so a feed that saw the row but publishes no per-ID page is still
+    // named. Shown as plain text rather than as a dead link.
+    Object.keys(urls).forEach(function (k) {
+      if (names.indexOf(k) === -1) { names.push(k); }
+    });
+    if (!names.length) { return '<span class="text-muted">not recorded</span>'; }
+    return names.sort().map(function (k) {
+      var label = esc(FEED_NAMES[k] || k);
+      return urls[k]
+        ? '<a class="src" href="' + esc(urls[k]) + '" rel="noopener">' + label + '</a>'
+        : '<span class="src src-nolink">' + label + '</span>';
+    }).join('');
   }
 
   function render() {
@@ -181,24 +207,21 @@
       // out at 2,488px min-content in a 351px wrapper, a 7.1x overflow that
       // min-width guaranteed could never reflow, so 86% of every row was off
       // screen and Inferred owner was never visible on a phone.
+      var where = sourceLinks(r);
       return '<tr>' +
-        '<td class="id" data-label="CVE ID"><a href="' + esc(r.advisory_url) + '">' + esc(r.cve_id) + '</a></td>' +
+        '<td class="id" data-label="CVE ID">' + esc(r.cve_id) + '</td>' +
+        '<td class="where" data-label="Showing up in">' + where + '</td>' +
         '<td class="num" data-label="Days public">' + esc(r.days_public) + late + '</td>' +
-        '<td data-label="Rule">' + ruleChip(r) + '</td>' +
-        '<td data-label="Package">' + esc(r.package || r.vendor || '') + '</td>' +
-        // The honest count. feed_count treats GHSA and its own OSV mirror as two.
-        '<td class="num" data-label="Independent sources">' + esc(r.indep_sources == null ? r.feed_count : r.indep_sources) +
-          (r.feed_count > (r.indep_sources == null ? r.feed_count : r.indep_sources)
-            ? ' <span class="qualifier">of ' + esc(r.feed_count) + ' feeds</span>' : '') + '</td>' +
-        '<td class="mono small" data-label="Sources">' + esc(r.sources) + '</td>' +
-        '<td class="desc" data-label="Advisory summary">' + esc(r.description) + '</td>' +
-      '</tr>';
+        '<td class="desc" data-label="What it is">' +
+          (r.package ? '<span class="pkg">' + esc(r.package) + '</span> ' : '') +
+          esc(r.description || '') + '</td>' +
+        '</tr>';
     }).join('');
 
     // An explicit empty state. render() replaced innerHTML wholesale, so a filter
     // matching nothing produced an empty tbody and announced nothing at all.
     if (!rows.length) {
-      body.innerHTML = '<tr><td colspan="8">' +
+      body.innerHTML = '<tr><td colspan="4">' +
         '<div class="empty-state"><strong>No rows match these filters.</strong><br>' +
         'The snapshot holds ' + ROWS.length + ' rows. Clear a filter to see them.' +
         '</div></td></tr>';

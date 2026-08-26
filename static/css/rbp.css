@@ -642,3 +642,35 @@ h1.visually-quiet {
   .nav-menu { gap: var(--spacing-sm); }
   .nav-menu a { padding-left: 0.4rem; padding-right: 0.4rem; }
 }
+
+/* ---- "Showing up in": the evidence column ------------------------------- */
+/*
+   This is the column the site exists for. A reserved ID referenced in three
+   independent public advisories IS the finding, and it used to render as the
+   string "osv,ghsa,debian" in a mono span next to a separate integer count.
+   Now every source is the link to the page it is showing up on, and the count
+   is the number of chips a reader can see without counting anything.
+*/
+.where { line-height: 2; }
+a.src, span.src {
+  display: inline-block;
+  margin: 0 0.3rem 0.2rem 0;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+a.src { border-color: var(--rbp-link); color: var(--rbp-link); }
+a.src:hover, a.src:focus-visible { background: var(--rbp-link); color: var(--color-bg-content); }
+/* A feed with no per-ID page is still a place the ID is showing up. Shown, and
+   visibly not a link, rather than dropped. */
+span.src-nolink { color: var(--rbp-text-muted); border-style: dashed; }
+.desc .pkg { font-family: var(--font-mono, monospace); font-size: 0.85em; opacity: 0.85; }
+
+/* THE MEASURE. Body prose ran at 140-146 characters per line against a 45-75
+   readable band, on every page, because only .lead-unit had a max-width. One
+   rule, applied where prose actually is. */
+.page-header p, .card-body > p, .lead-plain, .caveat p { max-width: 68ch; }
+.lead-plain { font-size: 1.1rem; }

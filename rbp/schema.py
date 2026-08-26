@@ -131,7 +131,7 @@ COLUMNS = [
     "clock_origin", "advisory_date", "advisory_days_public",
     # provenance
     "sources", "feed_count", "indep_sources", "single_origin", "refs",
-    "advisory_url",
+    "advisory_url", "source_urls",
     # what it is
     "vendor", "package", "ecosystem", "description",
     # run integrity
@@ -206,6 +206,13 @@ FIELDS = {
                        "Whether a product-map verdict existed to contest the name "
                        "at all. false means silence, not agreement."),
     "sources": ("string", '""', "Comma-joined feed names that referenced this ID."),
+    "source_urls": ("object", "{}",
+                    "One advisory URL per feed that referenced this ID, keyed by "
+                    "feed name. This is the evidence: each entry is a public page "
+                    "naming an ID the CVE List has not published. Empty only for "
+                    "feeds that publish no per-ID page. cve.org is never used as a "
+                    "fallback, because it renders nothing for a RESERVED ID and a "
+                    "link that disproves itself is worse than no link."),
     "feed_count": ("integer", "never absent", "Number of feeds, including mirrors."),
     "indep_sources": ("integer", "never absent",
                       "Number of INDEPENDENT origins, collapsing feeds that share "
