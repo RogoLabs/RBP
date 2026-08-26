@@ -16,6 +16,7 @@ import pathlib
 import pandas as pd
 import pytest
 
+from rbp import inference
 from rbp.inference import (
     DEFAULT_K,
     TIER_BLOCK,
@@ -437,3 +438,82 @@ def test_no_withdrawn_identifier_is_committed_in_tracked_code():
         if any(n in body for n in needles):
             offenders.append(f)
     assert offenders == [], f"withdrawn attributions committed in {offenders}"
+
+
+# --------------------------------------------------------------------------
+# the de-named ledger, which is the shape the pipeline actually reads back
+# --------------------------------------------------------------------------
+
+def _denamed_ledger_grader(tmp_path, ids):
+    """A grader whose open predictions have been through publish.denamed_ledger,
+    which is what comes back from the public data branch on every run."""
+    from rbp import publish
+    state = {"graded": [], "history": [],
+             "predictions": {c: {"predicted": "acme", "tier": "block-corroborated",
+                                 "k": 3, "on": "2026-08-22"} for c in ids}}
+    named = tmp_path / "precision.json"
+    named.write_text(json.dumps(state))
+    stripped = publish.denamed_ledger(json.loads(named.read_text()))
+    assert all("predicted" not in v for v in stripped["predictions"].values()), (
+        "denamed_ledger stopped stripping `predicted`, so this test no longer "
+        "reproduces the shape the pipeline reads")
+    path = tmp_path / "denamed.json"
+    path.write_text(json.dumps(stripped))
+    return inference.Grader(str(path))
+
+
+def test_a_denamed_prediction_does_not_kill_the_run(tmp_path):
+    """THE CRASH THAT STOPPED THREE CONSECUTIVE SCHEDULED BUILDS.
+
+    `publish.denamed_ledger` strips `predicted` before precision.json reaches the
+    public data branch. The next run restores that file and feeds it straight
+    back to the grader, which read `p["predicted"]` unguarded:
+    `KeyError: 'predicted'` at inference.py, killing the build after the whole
+    feed gather had already run. The site went 19 hours stale.
+
+    The de-namer's own docstring anticipated the consequence, "an open prediction
+    with no name cannot be graded when the row publishes", and the code that had
+    to honour it was never changed.
+    """
+    g = _denamed_ledger_grader(tmp_path, ["CVE-2026-1000"])
+    corpus = pd.DataFrame([("CVE-2026-1000", "PUBLISHED", "acme", "v", "p")],
+                          columns=["cve_id", "state", "assigner", "vendor", "product"])
+    newly, summary = g.grade(corpus, today="2026-08-26")
+    assert newly == [], "a nameless prediction was graded against something"
+    assert summary is not None
+
+
+def test_an_ungradable_prediction_is_closed_rather_than_retried(tmp_path):
+    """Left in place it would be retried on every run for ever, and the open
+    count would never fall."""
+    g = _denamed_ledger_grader(tmp_path, ["CVE-2026-1000"])
+    corpus = pd.DataFrame([("CVE-2026-1000", "PUBLISHED", "acme", "v", "p")],
+                          columns=["cve_id", "state", "assigner", "vendor", "product"])
+    g.grade(corpus, today="2026-08-26")
+    assert "CVE-2026-1000" not in g.state["predictions"]
+
+
+def test_the_loss_is_counted_rather_than_absorbed(tmp_path):
+    """"Could not be measured" and "nothing to measure" are different facts, and
+    this project does not let them read the same way. A precision figure that
+    silently stops growing is the quietest possible version of the first."""
+    g = _denamed_ledger_grader(tmp_path, ["CVE-2026-1000", "CVE-2026-1001"])
+    corpus = pd.DataFrame(
+        [("CVE-2026-1000", "PUBLISHED", "acme", "v", "p"),
+         ("CVE-2026-1001", "PUBLISHED", "acme", "v", "p")],
+        columns=["cve_id", "state", "assigner", "vendor", "product"])
+    g.grade(corpus, today="2026-08-26")
+    assert g.state["ungradable"] == 2
+
+
+def test_a_named_prediction_still_grades_normally(tmp_path):
+    """The complement, so the guard cannot be satisfied by never grading."""
+    path = tmp_path / "p.json"
+    path.write_text(json.dumps({"graded": [], "history": [], "predictions": {
+        "CVE-2026-1000": {"predicted": "acme", "tier": "block-corroborated",
+                          "k": 3, "on": "2026-08-22"}}}))
+    g = inference.Grader(str(path))
+    corpus = pd.DataFrame([("CVE-2026-1000", "PUBLISHED", "acme", "v", "p")],
+                          columns=["cve_id", "state", "assigner", "vendor", "product"])
+    newly, _s = g.grade(corpus, today="2026-08-26")
+    assert len(newly) == 1 and newly[0]["outcome"] == "correct"

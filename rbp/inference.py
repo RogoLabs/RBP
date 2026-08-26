@@ -402,10 +402,32 @@ class Grader:
         terminal = corpus_df[corpus_df["state"].isin(["PUBLISHED", "REJECTED"])]
         truth = dict(zip(terminal["cve_id"], zip(terminal["assigner"], terminal["state"])))
 
-        newly = []
+        newly, ungradable = [], []
         for cve_id, p in list(self.state["predictions"].items()):
             hit = truth.get(cve_id)
             if not hit:
+                continue
+            # A PREDICTION WITH NO NAME CANNOT BE GRADED.
+            #
+            # publish.denamed_ledger strips `predicted` from precision.json
+            # before it reaches the public data branch, and its docstring says
+            # so plainly: "an open prediction with no name cannot be graded when
+            # the row publishes, so live precision restarts." What it did not
+            # say is that the ledger is READ BACK from that branch on the next
+            # run, so the de-named shape is the shape this loop actually meets.
+            # It read p["predicted"] unguarded and raised KeyError, which killed
+            # three consecutive scheduled builds and left the site 19 hours
+            # stale. All 251 open predictions on origin/data are {tier, k, on}.
+            #
+            # Dropped rather than skipped, because a prediction that can never
+            # be graded is not outstanding, it is closed with no verdict; left
+            # in place it would be retried on every run for ever. COUNTED and
+            # returned, because "could not be measured" and "nothing to measure"
+            # are different facts and this project does not let them read the
+            # same way.
+            if not p.get("predicted"):
+                ungradable.append(cve_id)
+                del self.state["predictions"][cve_id]
                 continue
             actual, state = hit
             # Outcome, not just correct/wrong. A transfer is the policy's own
@@ -431,6 +453,13 @@ class Grader:
             del self.state["predictions"][cve_id]
 
         self.state["graded"].extend(newly)
+        # A running total, so the loss is visible on /method rather than being
+        # inferred from a number that quietly stopped growing.
+        if ungradable:
+            self.state["ungradable"] = (self.state.get("ungradable") or 0) + len(ungradable)
+            print(f"  grader: {len(ungradable)} prediction(s) closed with no verdict; "
+                  "the ledger no longer records what was predicted "
+                  f"({self.state['ungradable']} cumulative)")
         summary = self.summary()
         if newly:
             self.state["history"].append({
