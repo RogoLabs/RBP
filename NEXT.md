@@ -208,14 +208,36 @@ worth more than the fix.
 
 ## What to be careful of
 
-**Merging to `main` publishes.** `deploy.yml` fires on `push: branches: [main]`.
-No repository variables are set, so the site deploys in its **pre-launch** posture:
-holding page at `/`, dashboard at `/overview.html`, `robots.txt` disallowing
-everything. Promotion is a separate, deliberate act.
+**THE SITE IS LAUNCHED.** `RBP_LAUNCHED=1` was set as a repository variable on
+2026-08-26 at 18:00Z. `/` serves the list, `/overview.html` is gone, there is no
+`robots.txt`, and the pages are indexable. Verified against the live host, not
+assumed.
 
-**The render job and the lint step have never executed in CI.** Both run clean
-locally. Neither can affect a publication, by construction: they are in `ci.yml`,
-and `deploy.yml` does not reference them.
+Two days earlier this same section read "no repository variables are set, so the
+site deploys in its pre-launch posture", and it was true when it was written. It
+was still sitting here, unchanged and now false, when it was quoted back into a
+pull-request description as a reason merging was low-risk. **A launch is a
+settings change, deliberately, so that it is not a commit; the cost is that
+nothing in the repository changes when it happens and no test can see it.** If you
+flip a repository variable, this paragraph is part of the flip.
+
+**Merging to `main` publishes to that live site.** `deploy.yml` fires on
+`push: branches: [main]`, four scheduled runs a day plus every push. There is no
+staging environment. `RBP_PAUSE=1` holds a publication; a `workflow_dispatch` with
+`dry_run=true` builds the artefact and discards it, which is the way to see what a
+change does to real data without shipping it.
+
+**The coverage gate can still demote it.** `publish.gate` fails the build red if a
+launched posture is requested below `GATE_TOP_N_PCT`, and `site._gate_status`
+serves the pre-launch page rather than a launched one. So a fortnight of quiet at
+two top-50 CNAs does not break the site; it takes the front door back to the
+holding page and turns the check red. Loud and reversible, which is the design,
+and worth knowing before it happens on a live site rather than after.
+
+**The render job and the lint step first executed in CI on 2026-08-26** (run
+33009236143), green: 753 offline, 32 browser, lint clean. Neither can affect a
+publication, by construction: they are in `ci.yml`, and `deploy.yml` does not
+reference them.
 
 **PLAN.md predates the pivot in places.** Section 301 documents a `/data` page
 route that no longer exists, and 837-838 describes conftest guards on templates
