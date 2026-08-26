@@ -77,9 +77,15 @@ def _row(n, public_date="2026-08-05", days=19):
         "clock_known": True,
         "hours_public": (days + n) * 24,
         "past_expectation": True,
-        "disclosure_order": "unmeasurable",
-        "self_disclosed": False,
-        "rule": "4.5.1.6",
+        # A MUST row carries the evidence MUST requires. The fixture used to
+        # set rule_strength MUST on every fifth row while leaving
+        # disclosure_order "unmeasurable" and self_disclosed False, which is a
+        # state the pipeline cannot produce: 4.5.1.4 is claimed only where the
+        # owning CNA's own feed carried the advisory FIRST. An incoherent fixture
+        # makes the invariant that forbids it untestable.
+        "disclosure_order": "owner-first" if n % 5 == 0 else "unmeasurable",
+        "self_disclosed": n % 5 == 0,
+        "rule": "4.5.1.4" if n % 5 == 0 else "4.5.1.6",
         "rule_strength": "MUST" if n % 5 == 0 else "SHOULD",
         "rule_basis": "unattributed",
         "rule_certainty": "unmeasurable",

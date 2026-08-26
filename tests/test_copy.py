@@ -474,3 +474,42 @@ def test_no_page_claims_the_site_names_cnas():
         low = body.lower()
         assert "the site names cnas" not in low, name
         assert "this site names cnas" not in low, name
+
+
+def test_the_method_page_says_the_must_reading_is_switched_off(built):
+    """/method describes when the site claims rule 4.5.1.4 MUST. Under v1 it can
+    never claim it: that reading needs an owner and v1 attributes nothing, so
+    every one of the published rows is 4.5.1.6 SHOULD and the ordering is
+    recorded as unmeasurable.
+
+    Measured on the live site 2026-08-26: 640 of 640 rows, every one of them.
+
+    A page that describes a capability without saying it is switched off is a
+    page claiming a distinction it does not draw.
+    """
+    text = _text(built / "method.html")
+    assert "no row takes 4.5.1.4" in text, (
+        "/method describes the MUST reading without saying v1 cannot reach it")
+
+
+def test_a_must_row_never_ships_without_the_evidence_must_requires(built):
+    """The other half, on the data rather than the copy.
+
+    4.5.1.4 is claimed only where the owning CNA's own feed carried the advisory
+    first. So a row may carry MUST only alongside a measured ordering; MUST on an
+    unmeasurable ordering is the site asserting a breach it did not observe.
+
+    Not "no row claims MUST": the fixture deliberately exercises that rendering
+    branch, and asserting the absence would test the fixture rather than the
+    rule. On the LIVE site today all 640 rows are SHOULD, which is what the
+    /method paragraph above says and what makes it true.
+    """
+    import json
+    rows = json.loads((built / "data" / "rbp.json").read_text())
+    rows = rows.get("rows") if isinstance(rows, dict) else rows
+    assert rows, "no rows, so this asserts nothing"
+    bad = [r["cve_id"] for r in rows
+           if r.get("rule_strength") == "MUST"
+           and r.get("disclosure_order") in (None, "", "unmeasurable")]
+    assert not bad, (
+        f"{len(bad)} row(s) claim MUST on an ordering nobody measured: {bad[:3]}")
