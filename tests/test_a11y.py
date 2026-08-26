@@ -128,41 +128,72 @@ def test_the_sticky_header_can_actually_stick():
     assert "overflow: auto" in body or "overflow:auto" in body
 
 
-def test_sorting_is_reachable_without_a_pointer():
-    """Sorting was a click listener on a non-focusable th: seven columns unreachable
-    without a pointer (SC 2.1.1, level A), while aria-sort was maintained correctly,
-    so the state was announceable and the control was inoperable."""
-    src = (TEMPLATES / "cves.html").read_text()
-    sortable = len(re.findall(r'<th[^>]*data-sort=', src))
-    buttons = len(re.findall(r'class="sortbtn"', src))
-    assert sortable > 0
-    assert buttons >= sortable, (
-        f"{sortable} sortable columns, {buttons} focusable controls")
-    # And the listener must be bound to the button, not the th.
-    assert "querySelector('button.sortbtn')" in src
+def test_every_click_handler_is_bound_to_something_focusable():
+    """SC 2.1.1, level A, generalised from the defect that produced it.
 
+    The original: sorting was a click listener on a non-focusable `th`, so seven
+    columns were unreachable without a pointer while `aria-sort` was maintained
+    correctly, meaning the state was announceable and the control was inoperable.
+    The table is gone since 2026-08-26, and the RULE is not: every click listener
+    on the list page must be bound to an element a keyboard can reach.
 
-def test_the_scroll_container_is_reachable_and_named():
-    src = (TEMPLATES / "cves.html").read_text()
-    m = re.search(r'<div class="tablewrap"([^>]*)>', src)
-    assert m, "tablewrap not found"
-    attrs = m.group(1)
-    for a in ("tabindex", "role=", "aria-label"):
-        assert a in attrs, f"the scroll container has no {a}"
+    Discovered from the handlers rather than checked against a list of controls,
+    because the failure mode is someone ADDING a handler, not someone deleting
+    one. The previous version of this test read templates/cves.html for the whole
+    time that template was no longer being rendered.
+    """
+    # The page AS ASSEMBLED: list.html plus what it includes. `panel-close` is
+    # declared in _panel.html and bound in list.html, so reading either file alone
+    # gets a wrong answer, and the wrong answer from reading only the binding side
+    # is a false FAILURE, which at least fails loudly. The reverse split would be
+    # silent.
+    src = (TEMPLATES / "list.html").read_text()
+    for inc in re.findall(r'{%\s*include\s+"([^"]+)"', src):
+        src += "\n" + (TEMPLATES / inc).read_text()
+
+    # One level of indirection: `var panel = $("panel")` then `panel.addEventListener`.
+    # Not anchored on `var`, because the declarations are comma-chained and only
+    # the first binding on the line carries the keyword.
+    alias = dict(re.findall(r'(\w+)\s*=\s*\$\("([^"]+)"\)', src))
+    targets = set(re.findall(r'\$\("([^"]+)"\)\.addEventListener\("click"', src))
+    for name in re.findall(r'\b(\w+)\.addEventListener\("click"', src):
+        if name in alias:
+            targets.add(alias[name])
+        elif name not in ("document", "window"):
+            targets.add(name)
+    assert targets, "no click handlers found; this test has stopped reading the page"
+
+    # The modal backdrop is deliberately NOT focusable. It duplicates the close
+    # button and Escape, both of which are reachable, and a focusable backdrop
+    # between the dialog and the page is a keyboard trap rather than a control.
+    exempt = {"scrim"}
+    for eid in sorted(targets - exempt):
+        focusable = re.search(
+            rf'<button[^>]*\bid="{re.escape(eid)}"'
+            rf'|<\w+[^>]*\bid="{re.escape(eid)}"[^>]*\btabindex='
+            rf'|<\w+[^>]*\btabindex=[^>]*\bid="{re.escape(eid)}"', src)
+        assert focusable, (
+            f"a click handler is bound to #{eid}, which is not a <button> and "
+            "declares no tabindex, so it is unreachable without a pointer")
+
+    # And the rows open with the keyboard, which is why they are <details>/<summary>
+    # rather than a div carrying a handler.
+    assert '<details class="rbprow">' in src
 
 
 def test_a_filter_matching_nothing_announces_something():
-    """render() replaced #body.innerHTML wholesale with no aria-live anywhere, so a
-    filter that matched nothing announced nothing at all."""
-    src = (TEMPLATES / "cves.html").read_text()
+    """render() replaced the list wholesale with no aria-live anywhere, so a filter
+    that matched nothing announced nothing at all.
+
+    Repointed to list.html on 2026-08-26. The rule survived the pivot; the file it
+    was reading did not.
+    """
+    src = (TEMPLATES / "list.html").read_text()
     assert 'aria-live="polite"' in src
-    assert "empty-state" in src, "no explicit empty-state row"
-
-
-def test_export_links_are_hidden_on_a_zero_row_table():
-    """They produce a header-only file."""
-    src = (TEMPLATES / "cves.html").read_text()
-    assert "getElementById('exports')" in src
+    assert 'class="empty"' in src, "no explicit empty state for a filter that matches nothing"
+    # The announcement has to carry the NUMBER, not just fire. "Results updated"
+    # tells a screen-reader user nothing they could not already assume.
+    assert 'rows shown' in src
 
 
 def test_every_table_header_cell_declares_a_scope():
@@ -197,24 +228,50 @@ def test_no_template_has_a_malformed_table_tag():
                 f"{tpl.name}: {opens} <{tag}> vs {closes} </{tag}>")
 
 
-def test_the_primary_table_has_a_caption_carrying_the_hedge():
-    """So the qualifier travels with the table into a copy, a print or a screen
-    reader rather than living in a caveat block below it."""
-    src = (TEMPLATES / "cves.html").read_text()
-    assert "<caption>" in src
-    cap = src[src.index("<caption>"):src.index("</caption>")]
-    # Was "inferred": the hedge used to be that the OWNER was inferred. v1
-    # publishes no owner, so the hedge the caption must carry is the stronger
-    # one, that the site does not attribute these rows at all.
-    assert "does not say which cna" in cap.lower()
-    assert "floor" in cap.lower()
+def test_the_hedge_travels_with_the_rows(built_site, built_site_launched):
+    """So the qualifier travels with the list into a copy, a print or a screen
+    reader rather than living somewhere a reader has to go and find.
+
+    This was a <table><caption>. The pivot replaced the table with <details> rows
+    on 2026-08-26 and the caption went with it: the same words are in the
+    slide-over panel, but a panel is a hidden dialog, so a reader who selects the
+    list and pastes it into a ticket carries the rows and none of the
+    qualification. The test kept reading templates/cves.html and kept passing.
+
+    Asserted on the BUILT page, in document order, because "the words exist
+    somewhere in the file" is exactly the claim that was true while the words were
+    unreachable.
+    """
+    for out, name in ((built_site, "overview.html"),
+                      (built_site_launched, "index.html")):
+        body = (out / name).read_text()
+        island = body.index('<script id="rows"')
+        head = body[:island]
+        # Both halves of the hedge, before the rows, outside the dialog.
+        panel = head.index('<aside class="panel"') if '<aside class="panel"' in head else len(head)
+        before_rows = head[:panel]
+        assert "floor" in before_rows.lower(), (
+            "the front page does not say the count is a floor before the rows")
+        assert "does not say which cna" in before_rows.lower(), (
+            "the front page does not say it names nobody before the rows")
+        # And it is actually rendered. `hidden` on the hedge leaves every string
+        # assertion above true while removing the thing they are about, which is
+        # the same shape as the caption that was still in a template nobody
+        # rendered. Caught by mutation, not by inspection.
+        hedge = re.search(r'<p class="listhedge"([^>]*)>', before_rows)
+        assert hedge, "the hedge is not a .listhedge element before the rows"
+        assert "hidden" not in hedge.group(1), "the hedge is rendered hidden"
 
 
 def test_the_front_page_has_exactly_one_h1():
     """document.querySelectorAll('h1') was empty on the page that will be ranked
     and linked most, and the outline started at H2."""
-    src = (TEMPLATES / "index.html").read_text()
-    assert src.count("<h1") == 1
+    src = (TEMPLATES / "list.html").read_text()
+    assert src.count("<h1") == 1, (
+        "the front page has no h1, or has more than one. It had NONE from the "
+        "2026-08-26 pivot until this test was repointed at the template that is "
+        "actually rendered: the outline started at the panel's h2, inside a "
+        "hidden dialog, on the most-linked page on the site")
     assert "{% block og_title %}" in src, "no og_title override on the front page"
     title = re.search(r"\{% block title %\}(.*?)\{% endblock %\}", src)
     assert title and title.group(1).strip() != "RBP Tracker", (
@@ -274,16 +331,21 @@ def test_no_table_keeps_a_min_width_floor_at_narrow_widths():
     assert "overflow-x: auto" in block
 
 
-def test_the_mobile_layout_labels_every_cell():
-    """With thead hidden, a hedge has to sit next to the claim it qualifies."""
-    src = (TEMPLATES / "cves.html").read_text()
-    # The columns as they are TODAY. The table was rebuilt on 2026-08-26 around
-    # the question the site answers: which reserved IDs are showing up, and
-    # where. `Rule` was dropped because every live row reads 4.5.1.6, and
-    # `Independent sources` because the evidence column now shows the sources
-    # themselves and a reader can count them.
-    for label in ("CVE ID", "Showing up in", "Days public", "What it is"):
-        assert f'data-label="{label}"' in src, label
+def test_every_value_in_a_row_is_labelled_next_to_itself():
+    """A hedge has to sit next to the claim it qualifies, at every width.
+
+    This was a table with `thead { display: none }` on mobile and `data-label`
+    on each cell. Since 2026-08-26 the rows are <details> blocks with no header
+    row at ANY width, so the labels are not a mobile affordance any more: they
+    are the only thing naming each value, and a bare number with no unit beside
+    it is the defect the original test existed to prevent.
+    """
+    src = (TEMPLATES / "list.html").read_text()
+    # Rendered in rowHtml(), so they are on every row rather than in a header.
+    assert '"days public"' in src or ">days public<" in src, "the age number has no unit"
+    assert "showing up in" in src, "the source chips have no label"
+    # And the detail panel names what its dates are.
+    assert "Where it surfaced, and when" in src
 
 
 def test_print_preserves_the_certainty_vocabulary():
@@ -315,13 +377,23 @@ def test_focus_is_visible_somewhere():
 
 
 def test_the_empty_state_is_not_styled_as_a_warning():
-    """Empty is not a warning. /changes shipped as an h1 plus one grey sentence,
-    167 characters of <main>, as item four of seven in the primary nav, and that is
-    also what launch day looks like."""
+    """Empty is not a warning, and launch day is empty by design.
+
+    Repointed to list.html on 2026-08-26. The zero state moved with the front
+    page and then was DROPPED in the move: the pivot left the list page with a
+    filter-matched-nothing state and no snapshot-has-no-rows state at all, so an
+    epoch set on launch morning would have rendered "0" over a blank page. This
+    test read templates/index.html throughout and passed.
+    """
     assert ".empty-state" in CSS.read_text()
-    changes = (TEMPLATES / "changes.html").read_text()
-    assert "empty-state" in changes
-    assert "caveat warn" not in changes.split("empty-state")[1][:400]
+    src = (TEMPLATES / "list.html").read_text()
+    assert "{% if not summary.total %}" in src, (
+        "the list page has no zero state; with an epoch set this is launch day")
+    block = src[src.index("{% if not summary.total %}"):]
+    block = block[:block.index("{% endif %}")]
+    assert "empty-state" in block, "the zero state is styled as something else"
+    assert "caveat warn" not in block, "the zero state is styled as a warning"
+    assert "not a fault" in block
 
 
 # --------------------------------------------------------------------------
@@ -344,9 +416,21 @@ from rbp import contrast
 # The opaque surfaces a chip or a line of prose actually lands on. Taken from
 # the real tokens rather than invented: --color-bg-primary, --color-bg-content
 # and --color-bg-secondary in each theme.
+#
+# THE STRIPED ROW IS ONE OF THEM, and its absence here is how a 2.6:1 failure on
+# every even table row of /method and /status survived a suite whose own docstring
+# says the ratios are "measured against every background the text actually renders
+# on, not against white: half the rows are not white". Half the rows were not
+# white and this list did not have the colour they were.
+#
+# --color-bg-secondary IS the stripe now, in both themes, because style.css was
+# corrected to use the token instead of a hardcoded translucent fill. Listed
+# separately anyway rather than deduplicated, so that if the stripe is ever given
+# its own colour again the sweep has somewhere to put it.
+_STRIPE = {"light": "#e9ecef", "dark": "#1a1d27"}
 SURFACES = {
-    "light": ("#f8f9fa", "#ffffff", "#e9ecef"),
-    "dark": ("#0f1117", "#151821"),
+    "light": ("#f8f9fa", "#ffffff", "#e9ecef", _STRIPE["light"]),
+    "dark": ("#0f1117", "#151821", "#1e2130", _STRIPE["dark"]),
 }
 
 # DISCOVERED, NOT TYPED. This list used to be seven chips written by hand, in
@@ -405,6 +489,155 @@ def test_text_meets_aa_on_every_surface_it_lands_on(selector, theme):
     assert worst >= contrast.AA_NORMAL, (
         f"{selector} renders at {worst} in {theme} theme, below "
         f"{contrast.AA_NORMAL}")
+
+
+# The most cases the sweep above may decline to measure.
+#
+# ONE, and it is named below. The number is a ceiling on how blind this harness
+# is allowed to be, and it is deliberately not slack: a skip and a pass are
+# indistinguishable in a green run, so every skip is a selector whose contrast
+# nobody is checking while the suite reports coverage of it.
+MAX_UNMEASURABLE = 1
+
+
+def test_the_contrast_sweep_is_not_quietly_skipping_itself():
+    """The hole the skip channel reopened, and the second time this file has lost
+    its own coverage without going red.
+
+    The first time, the parametrised list was hand-typed and got deleted with the
+    selectors it named: 26 assertions to 0, still green. That was fixed by
+    DERIVING the list from the stylesheet. The skip channel then did the same
+    thing from the other end. `contrast.rule_colors` required a trailing semicolon
+    on the `color:` declaration, which is optional CSS that nobody writes when
+    minifying, so every minified rule the 2026-08-26 pivot added parsed as
+    declaring no colour at all. Fourteen cases skipped, saying the selectors
+    "inherit", which was false of all fourteen: `a.chip`, `a.chip:hover`,
+    `a.chip:focus-visible` and `span.chip.nolink` are the front page's only
+    interactive elements and every one of them declares its own colour.
+
+    So the count is asserted, the way ci.yml asserts that the render suite
+    collected something. RBP_RENDER_TESTS turns a skip into a failure in the
+    browser job; nothing did the equivalent here.
+    """
+    unmeasurable = []
+    for selector in CONTRAST_SELECTORS:
+        for theme in ("light", "dark"):
+            try:
+                min(contrast.effective_ratio(selector, bg, theme)
+                    for bg in SURFACES[theme])
+            except contrast.Unmeasurable:
+                unmeasurable.append(f"{selector} ({theme})")
+    assert len(unmeasurable) <= MAX_UNMEASURABLE, (
+        f"{len(unmeasurable)} contrast cases cannot be measured, above the "
+        f"ceiling of {MAX_UNMEASURABLE}. Each one is a selector this suite "
+        f"reports on and does not check:\n  " + "\n  ".join(unmeasurable) +
+        "\n\nA selector that genuinely inherits is a correct answer; a selector "
+        "the PARSER cannot read is a defect in rbp/contrast.py. Check which "
+        "before raising the ceiling.")
+
+
+def test_the_only_permitted_skip_is_the_one_that_genuinely_inherits():
+    """The ceiling above bounds the COUNT. This names the case, so raising the
+    count silently is not enough to hide a new one: `.table` is styled only inside
+    [data-theme="dark"], so in light theme it inherits from body, which needs a
+    DOM. That is a correct answer from a static harness rather than a gap in it.
+    """
+    unmeasurable = set()
+    for selector in CONTRAST_SELECTORS:
+        for theme in ("light", "dark"):
+            try:
+                min(contrast.effective_ratio(selector, bg, theme)
+                    for bg in SURFACES[theme])
+            except contrast.Unmeasurable:
+                unmeasurable.add((selector, theme))
+    assert unmeasurable <= {(".table", "light")}, (
+        f"an unexpected selector cannot be measured: {sorted(unmeasurable)}")
+
+
+def test_a_root_override_does_not_silently_undo_the_dark_theme():
+    """The equal-specificity trap, which cost nine selectors and hid behind a
+    harness that agreed with itself.
+
+    `:root` and `[data-theme="dark"]` both have specificity (0,1,0), so between
+    them SOURCE ORDER decides. rbp.css loads after style.css. So when rbp.css
+    corrects a token at `:root` and does not also re-assert it for dark, the
+    light-theme value wins in dark theme, and nothing about the light theme looks
+    wrong.
+
+    That happened to `--color-text-secondary`: corrected to #5a6168 at `:root`,
+    solved against the light surfaces, beating style.css's dark #9ca3b4. Measured
+    in a browser at 2.54:1 across `.text-muted`, `.nav-menu a`, `.footer`,
+    `.footer a`, `blockquote`, `.chip-unmeasured`, `.metric-label`,
+    `.theme-toggle` and `.page-header small`. `contrast.tokens` returned
+    `{**light, **dark}` and reported 7.02 for all of them.
+
+    The rbp.css comment argues that overriding the TOKEN "cannot be missed by
+    omission", against repointing rules one at a time. It is right, and this is
+    its one failure mode: the omission moves from the rules to the other theme.
+
+    Structural, so it fires on the NEXT token rather than on this one.
+    """
+    import re as _re
+    style = contrast.strip_comments((pathlib.Path(contrast.CSS) / "style.css").read_text())
+    rbp = contrast.strip_comments((pathlib.Path(contrast.CSS) / "rbp.css").read_text())
+
+    def decls(css, selector):
+        out = {}
+        for m in _re.finditer(r"([^{}]*?)\{([^{}]*)\}", css, _re.S):
+            sel = m.group(1).strip()
+            if selector == "root" and (':root' not in sel or 'data-theme' in sel):
+                continue
+            if selector == "dark" and 'data-theme="dark"' not in sel:
+                continue
+            for name, value in _re.findall(
+                    r"(--(?:color|rbp|chart)-[\w-]+)\s*:\s*([^;]+);", m.group(2)):
+                out[name.strip()] = value.strip()
+        return out
+
+    style_dark = decls(style, "dark")
+    rbp_root = decls(rbp, "root")
+    rbp_dark = decls(rbp, "dark")
+
+    # A token that style.css themes, that rbp.css then overrides at :root, and
+    # that rbp.css does NOT re-assert for dark. rbp.css loads second, so its
+    # :root value wins in BOTH themes and the dark value is dead.
+    clobbered = sorted(t for t in rbp_root
+                       if t in style_dark and t not in rbp_dark)
+    assert not clobbered, (
+        "rbp.css overrides these at :root, style.css themes them for dark, and "
+        "rbp.css does not re-assert them there. rbp.css loads second and :root "
+        "has the same specificity as [data-theme=\"dark\"], so the LIGHT value "
+        f"wins in dark theme: {clobbered}")
+
+
+def test_no_table_stripe_is_a_translucent_fill_without_a_dark_override():
+    """The defect the SURFACES list could not see, asserted at its source.
+
+    A translucent stripe has no rendered colour in the stylesheet: it exists only
+    once composited over whatever is beneath it, which is a different colour in
+    each theme. `rgba(248, 249, 250, 0.5)` with no dark override composited to
+    #8b8d95 over the dark card and carried body text at 2.6:1 and links at 1.56:1.
+
+    rbp.css already described this defect in a comment and restated the rule
+    correctly, SCOPED to `table.rbp`, and left the unscoped original in place. So
+    the correction covered one table and the bug covered every other one, and then
+    the pivot deleted the pages `table.rbp` was on.
+
+    Asserted on the rule rather than on a ratio, because the ratio depends on what
+    the stripe lands over and the point is that a stripe must not depend on that.
+    """
+    for name in ("style.css", "rbp.css"):
+        css = contrast.strip_comments((pathlib.Path(contrast.CSS) / name).read_text())
+        for m in re.finditer(r'([^{}]*nth-child\([^)]*\)[^{}]*)\{([^{}]*)\}', css):
+            sel, body = m.group(1).strip(), m.group(2)
+            bg = re.search(r'background(?:-color)?\s*:\s*([^;}]+)', body)
+            if not bg:
+                continue
+            value = bg.group(1).strip()
+            assert not value.startswith("rgba"), (
+                f"{name}: `{sel}` stripes with the translucent fill {value!r}. "
+                "A stripe has to be an opaque token, or it has no colour until it "
+                "is composited and no theme override can reach it.")
 
 
 def test_the_harness_reproduces_the_ratios_the_review_measured():

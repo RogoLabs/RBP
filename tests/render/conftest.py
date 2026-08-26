@@ -116,7 +116,7 @@ def server(site_dir):
 
 
 class _QuietHandler(http.server.SimpleHTTPRequestHandler):
-    def log_message(self, *_a):  # noqa: D102
+    def log_message(self, *_a):
         pass
 
 
@@ -138,7 +138,7 @@ def _playwright():
 def browser(_playwright):
     try:
         b = _playwright.chromium.launch()
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         _unavailable(f"chromium would not launch ({e}); "
                      "run `playwright install --with-deps chromium`")
     try:

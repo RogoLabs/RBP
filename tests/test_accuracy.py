@@ -16,10 +16,8 @@ both known-wrong rows were outside the 213.
 """
 from __future__ import annotations
 
-import json
 
 import pandas as pd
-import pytest
 
 from rbp import inference, site
 
@@ -61,7 +59,23 @@ def test_site_does_not_recompute_the_floor():
     import inspect
     src = inspect.getsource(site.load)
     assert "summarise_state" in src
-    assert "GRADER_MIN_N" not in src, "site still applies its own floor"
+    # Was `assert "GRADER_MIN_N" not in src`, naming an alias that site.py
+    # exported for this test and nothing else and that has now been deleted.
+    #
+    # The property is not that the floor's NAME is absent from load(): load hands
+    # it to the templates as `precision_floor`, so a page can say why a figure is
+    # withheld, and that is a use rather than a second implementation. What must
+    # not happen is load COMPARING against it, which is what produced two
+    # published answers to one question. Parsed rather than grepped, because
+    # "MIN_GRADED" appearing is the wrong question.
+    import ast
+    tree = ast.parse(inspect.getsource(site.load).lstrip())
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Compare):
+            names = {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
+            assert "MIN_GRADED" not in names, (
+                "site.load compares against the precision floor; the floor is "
+                "applied in summarise_state and nowhere else")
 
 
 def test_the_grader_and_the_site_cannot_disagree(tmp_path):

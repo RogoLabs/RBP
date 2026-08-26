@@ -9,7 +9,6 @@ the list contributed zero.
 """
 from __future__ import annotations
 
-import pytest
 
 from rbp import feeds
 

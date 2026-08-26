@@ -438,7 +438,6 @@ def test_the_baseline_working_state_stays_out_of_the_repo():
     """The other half. The baseline holds every referenced id from every merged
     feed, tens of thousands of them, and a diff containing all of them is a diff
     nobody reads."""
-    import pathlib
     import subprocess
     probe = subprocess.run(
         ["git", "check-ignore", "-q", feedlab.BASELINE],

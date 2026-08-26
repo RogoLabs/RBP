@@ -56,56 +56,21 @@
   </div>
 </div>
 
+{# The cadence card and the standing-limits card moved to /status on 2026-08-26.
+   Both answer "what happened on this run", which is a different question from
+   "how is the count built", and this page is the second one. #}
 <div class="card">
-  <div class="card-header"><h2 class="card-title">Does this site actually run every six hours?</h2></div>
+  <div class="card-header"><h2 class="card-title">Is the pipeline healthy?</h2></div>
   <div class="card-body">
-    {% if cadence %}
-    <p>
-      <strong>{{ cadence.delivered }} of {{ cadence.expected }} scheduled runs
-      published in the last {{ cadence.days }} days</strong>
-      ({{ cadence.pct }}%){% if cadence.last %}, most recently
-      <span class="mono">{{ cadence.last }}</span>{% endif %}.
-    </p>
     <p class="mb-0">
-      Counted from a ledger appended by the step that actually publishes, so a run
-      that built and failed to deploy is not counted as delivered. This exists
-      because the six-hourly claim had no evidence behind it and was false at
-      least twice: two scheduled ticks on 2026-08-21 produced nothing, with no
-      pushes in the window, and nothing on the site could have told you.
-    </p>
-    {% else %}
-    <p class="mb-0">
-      <strong>Not yet evidenced.</strong> The run ledger starts empty and is
-      appended by each successful publish, so this fills in over the first week.
-      It reads as unknown rather than as zero, because a fresh repository and a
-      stopped pipeline must not look the same.
-    </p>
-    {% endif %}
-  </div>
-</div>
-
-{% if summary.get('limitations') %}
-<div class="card">
-  <div class="card-header"><h2 class="card-title">Standing limits on what this site reads</h2></div>
-  <div class="card-body">
-    <p>
-      These fire on <strong>every run, by design</strong>. They are not a fault and not a
-      bad day; they are the permanent shape of what the feeds can see, and they are here
-      rather than in a banner because a warning that is always on is not a warning.
-    </p>
-    <ul class="mb-2">
-      {% for lim in summary.limitations %}<li class="mono small">{{ lim }}</li>{% endfor %}
-    </ul>
-    <p class="mb-0">
-      The consequence worth stating plainly: a paginated advisory API read to a fixed cap
-      is observed over a <strong>much shorter window</strong> than a distribution tracker
-      read in full, so counts from the two are not directly comparable, and a CNA whose
-      advisories arrive mainly through a capped feed will be under-represented here
-      relative to one carried by a tracker.
+      How often this site has actually published, which feeds the last run read,
+      what each returned and which standing caps fire on every run are all on
+      <a href="status.html">the status page</a>. They are kept apart from this page
+      deliberately: those figures describe <em>one run</em> and change four times a
+      day, while everything here is a claim about the method and is true of every run.
     </p>
   </div>
 </div>
-{% endif %}
 
 <div class="card">
   <div class="card-header"><h2 class="card-title">The clock</h2></div>
@@ -168,7 +133,7 @@
         {% endif %}
         Those rows are not less real and are not younger: age derives from the advisory
         date, so an ID that went public 500 days ago is 500 days old whether or not it is
-        counted here. They remain in the <a href="data.html">raw data</a>. The epoch keys
+        counted here. They remain in the <a href="data/rbp.json">raw data</a>. The epoch keys
         on the advisory date rather than on when this site first saw a row, so adding a
         feed cannot retroactively inflate the count.
       </p>
@@ -301,35 +266,19 @@
 </div>
 
 <div class="card">
-  <div class="card-header"><h2 class="card-title">Feeds read this run</h2></div>
+  {# Retitled on 2026-08-26. This card is about HOW FAR the feeds reach, which is
+     a property of the feed set and true of every run. Whether any individual feed
+     failed, truncated or shrank on the LAST run moved to /status, along with the
+     per-feed table that says so one feed at a time rather than in two prose
+     caveats. #}
+  <div class="card-header"><h2 class="card-title">Which feeds are read, and how far they reach</h2></div>
   <div class="card-body">
     <p class="mono small">{{ summary.feeds.requested | join(', ') }}</p>
-    {% if summary.feeds.failures %}
-    <div class="caveat warn">
-      <p><strong>Degraded coverage.</strong> {{ summary.feeds.failures | length }} of
-        {{ summary.feeds.attempts }} feed fetches failed this run, so these counts are a
-        lower floor than usual and are <strong>not</strong> comparable to the previous
-        run.</p>
-      <ul class="mb-0">{% for f in summary.feeds.failures %}<li class="mono small">{{ f }}</li>{% endfor %}</ul>
-    </div>
-    {% else %}
     <p class="small text-muted">
-      No feed failed outright this run. A feed that fails is reported here rather than
-      simply yielding fewer rows, because counts are a floor and a silent shrink would
-      read as improvement.
+      What each of these returned on the most recent run, and whether any of them
+      failed, stopped early or shrank, is on <a href="status.html">the status page</a>.
+      Counts here are a floor: only configured feeds are read.
     </p>
-    {% endif %}
-    {% if summary.feeds.truncated %}
-    <div class="caveat warn">
-      <p class="mb-0">
-        <strong>Truncated this run:</strong>
-        {{ summary.feeds.truncated | join(', ') }}. These feeds returned real rows and
-        silently stopped at a page cap, so their contribution is incomplete and the count
-        is a lower floor than usual. Truncation is neither a success nor a failure and is
-        counted separately from both.
-      </p>
-    </div>
-    {% endif %}
     {% if summary.coverage %}
     <p class="small text-muted mb-2">
       <strong>How much of the CNA landscape this site can see.</strong> Three
@@ -569,104 +518,57 @@
 
 <div class="card">
   <div class="card-header">
-    <h2 class="card-title">Reporting a row, and what gets withheld</h2>
+    <h2 class="card-title">Asking for a row to be removed</h2>
   </div>
   <div class="card-body">
+    {# REWRITTEN 2026-08-26, when this section was found still describing a channel
+       deleted a week earlier.
+
+       What it described: a monitored GitHub-issue reader, an HMAC-keyed suppression
+       list, a per-run ceiling of 25, a cap of 5 per author, a `confirmed` label that
+       bypassed the caps, and two metric cards counting withheld rows. All of that
+       went with rbp/suppress.py. The page went on promising it, including "withheld
+       on the next build, with no human in the loop" printed over a mailto: link, and
+       two metric cards that could only ever read zero. A correction channel described
+       in more detail than it exists is worse than none, because the people who read
+       this section are the ones who would have to use it. #}
     <p>
-      <strong>To have a row withheld:</strong>
-      <a href="mailto:rbp@rogolabs.net">open a withhold request</a>. It is withheld on the
-      next build, which runs every six hours, with no human in the loop.
-      <strong>Give the CVE ID and nothing else.</strong> No reason, no detail, and no
-      confirmation that a vulnerability exists. A request carrying no reason does not
-      distinguish an embargo from a wrong owner from a CNA that would rather not be
-      listed, and that is the design: the request is public, so it should say nothing
-      beyond the identifier.
-    </p>
-    <p>
-      Public deliberately. It means anyone can check that the withheld counts below
-      match the requests actually visible, so this lever cannot be used to quietly
-      shrink the headline. An earlier version of this page routed reports to private
-      security advisories instead. That form asks for affected versions, severity and
-      CWE, because it is built for reporting a vulnerability in this site's own code, and
-      it also required a long-lived credential the workflow would have had to hold.
-      Friction in this channel is a likelier failure than disclosure, and a worse one.
-    </p>
-    <p>
-      If you would rather not post publicly,
-      <a href="https://github.com/RogoLabs/RBP/security/advisories/new">report privately</a> or email
-      <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a>. Both reach a person rather
-      than the pipeline, so they are handled within five business days rather than on the
-      next build. Ownership disputes are also worth raising with the reserving CNA's Root
-      or the Secretariat through the
-      <a href="https://cveform.mitre.org/">CVE Program request form</a>, since they hold
-      the authoritative <span class="mono">owning_cna</span> this site can only infer.
+      <strong>Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> giving the
+      CVE ID and nothing else.</strong> No reason, no detail, and no confirmation that
+      a vulnerability exists. A request carrying no reason does not distinguish an
+      embargo from a wrong owner from a CNA that would rather not be listed, and that
+      is deliberate: nothing you send should say more than the identifier.
     </p>
     <p>
-      No proof of affiliation is required, deliberately. Nobody should have to prove who
-      they are before asking that a row about them not be listed, and the cost of that
-      openness is that anyone can withhold a row. Which is why the counts are published,
-      and why the requests are visible:
+      <strong>A person reads it.</strong> There is no automatic route and no queue.
+      The removal is a human decision, applied by hand, and it takes effect on the
+      next build. No proof of affiliation is required: nobody should have to prove who
+      they are before asking that a row about them not be listed.
     </p>
-    {% set sup = summary.suppression or {} %}
-    <div class="metric-grid">
-      <div class="metric-card">
-        <div class="metric-value">{{ (sup.get('from_reports') or 0) | commafy }}</div>
-        <div class="metric-label">Withheld on request this run</div>
-      </div>
-      <div class="metric-card">
-        <div class="metric-value">{{ (sup.get('committed') or 0) | commafy }}</div>
-        <div class="metric-label">Withheld by reviewed entry</div>
-      </div>
-    </div>
-    {% if sup.get('requested') %}
-    <p class="small text-muted mb-2">
-      <strong>{{ sup.requested }} request(s) from {{ sup.authors }} author(s) this
-      run</strong>{% if sup.get('needs_review') %},
-      of which <strong>{{ sup.needs_review }} need review</strong> to carry past this run
-      below{% endif %}{% if sup.get('confirmed') %},
-      {{ sup.confirmed }} reviewed and confirmed{% endif %}.
-    </p>
-    {% endif %}
-    <p class="small text-muted">
-      <strong>Because the channel is unauthenticated, the removal is bounded.</strong>
-      Nobody should have to prove who they are to ask that a row about them not be
-      listed, and the cost is that a bot could file requests. Note what that would
-      achieve: rows leave, so the count goes <em>down</em>. It is defacement rather
-      than exploitation, and the damage is proportional to rows removed, so the
-      defence is bounding the number rather than authenticating the asker.
-      At most <strong>{{ sup.get('ceiling') or 25 }}</strong> rows may be withheld
-      automatically per run and at most <strong>5 per author</strong>, and the ceiling
-      is also capped at a share of the backlog so it stays sane if the backlog is
-      small. <strong>Oldest requests are honoured first</strong>, so a flood filed
-      today cannot displace a request filed last week: a cap that could starve the
-      request it exists to protect would turn vandalism against this site into denial
-      of its correction channel, which is the more serious of the two. A reviewed
-      request carries a <span class="mono">confirmed</span> label and bypasses every
-      limit. Closing an issue revokes it, and takes effect on the next read rather
-      than waiting for anything.
-    </p>
-    <p class="small text-muted{% if not sup.get('degraded') %} mb-0{% endif %}">
-      Counts, never identifiers: publishing which rows are withheld would undo the
-      withholding. Publishing nothing would make this a quiet way to shrink the headline,
-      which is the one thing a suppression lever must not be. A withheld row is removed
-      from every published artefact including the accuracy ledger, not merely stripped of
-      its owner, because for an embargo the listing itself is the disclosure.
-      {% if sup.get('capped') %}
-      <strong>{{ sup.capped }} further report(s) exceeded the per-run ceiling</strong> and
-      need a reviewed entry; the ceiling exists so a single report cannot empty the site.
-      {% endif %}
-    </p>
-    {% if sup.get('degraded') %}
-    <div class="caveat warn">
+    <div class="caveat">
       <p class="mb-0">
-        <strong>Withhold requests could not be read on this run.</strong>
-        {{ sup.detail }}. Any request filed as an issue is <strong>not</strong> being
-        honoured until this is fixed. Stated here rather than failing silently, because a
-        correction channel that has quietly stopped working is worse than one that never
-        existed.
+        <strong>What this costs, stated rather than left to be discovered.</strong>
+        An earlier version of this site had an automated channel: a monitored issue
+        reader, per-author caps, and a published count of rows withheld. It was
+        removed on 26 August 2026, on the reasoning that every row here is a CVE ID
+        already referenced in a public advisory and held for the reportable buffer
+        before it appears, and that this version names no CNA at all, so there was
+        nothing to withhold that was not already public. The cost is real anyway:
+        there is now <strong>no published count of withheld rows</strong>, so a
+        removal leaves no audit trail on this site. If this site ever names a party
+        again, the automated channel and the count come back with it, and that is not
+        optional.
       </p>
     </div>
-    {% endif %}
+    <p class="small text-muted mb-0">
+      Ownership disputes are worth raising with the reserving CNA's Root or with the
+      Secretariat through the
+      <a href="https://cveform.mitre.org/">CVE Program request form</a>, since they hold
+      the authoritative <span class="mono">owning_cna</span> this site does not publish.
+      To report a vulnerability in this site's own code, use
+      <a href="https://github.com/RogoLabs/RBP/security/advisories/new">a private security
+      advisory</a> instead.
+    </p>
   </div>
 </div>
 
@@ -677,10 +579,15 @@
   </div>
   <div class="card-body">
     <p>
-      Coverage is one of nine conditions, not the only one. An adversarial review of
-      this project found that several of its own findings had assumed the coverage
-      gate was the whole test, so the full list is published here rather than kept
-      internally. <strong>{{ launch.met }} of {{ launch.total }} are met.</strong>
+      {# COUNTED, not typed. The review asked for nine conditions; condition 4 was
+         retired on 2026-08-26 with the channel it described, and the numbering was
+         deliberately not closed up because the numbers are how the review's items
+         are cited. The prose still said "nine" while the table rendered eight rows
+         and the roll-up said "8 of 8". #}
+      Coverage is one of {{ launch.total }} conditions, not the only one. An adversarial
+      review of this project found that several of its own findings had assumed the
+      coverage gate was the whole test, so the full list is published here rather than
+      kept internally. <strong>{{ launch.met }} of {{ launch.total }} are met.</strong>
       Promotion means announcing this site and its numbers; it does not describe
       deployment, which happens continuously and is what you are reading now.
     </p>
@@ -706,10 +613,12 @@
       </tbody>
     </table>
     <p class="small text-muted mb-0">
-      This list is advisory to a human and does not stop a build. Nine conditions
-      each able to halt a publication that runs four times a day would freeze the
-      site over paperwork, which is the failure this project has already made once
-      in a smaller way.
+      This list is advisory to a human and does not stop a build. {{ launch.total }}
+      conditions each able to halt a publication that runs four times a day would
+      freeze the site over paperwork, which is the failure this project has already
+      made once in a smaller way. The numbering skips 4: that condition was retired
+      with the channel it asked about rather than marked met, because a checklist you
+      can satisfy by deleting the thing it asks about is not a checklist.
     </p>
   </div>
 </div>

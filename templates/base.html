@@ -55,14 +55,20 @@
     <a href="{{ p }}{{ home }}" class="logo">RBP&nbsp;Tracker</a>
     <nav class="nav">
       <ul class="nav-menu">
-        {# THREE LINKS, because there are three pages. cves, changes, data and
+        {# FOUR LINKS, because there are four pages. cves, changes, data and
            backlog-at-launch were removed on 2026-08-26: the list IS the front
            door now, and what those pages carried moved into the slide-over
            panel. A nav pointing at deleted pages is worse than no nav, and it
-           shipped that way for one build. #}
+           shipped that way for one build, which is why
+           test_every_internal_link_in_the_built_site_resolves exists.
+
+           Status is in the nav rather than reachable only from the degraded
+           notice. A status page you can only find when something is already
+           broken cannot be used to check whether anything is broken. #}
         <li><a href="{{ p }}{{ home }}">The list</a></li>
         <li><a href="{{ p }}method.html">Method</a></li>
         <li><a href="{{ p }}policy.html">Policy</a></li>
+        <li><a href="{{ p }}status.html">Status</a></li>
         {% if launched %}<li><a href="{{ p }}about-this-count.html">About</a></li>{% endif %}
       </ul>
       <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
@@ -127,21 +133,36 @@
   el.hidden = false;
 })();
 </script>
-{# Degradation belongs beside staleness, on EVERY page, including /cna. PLAN.md
-   states the rule ("never publish a degraded run without a banner") and it was
-   broken on every single run: ubuntu truncates every time, and the only
-   disclosure was one line on /method, which simultaneously asserted that no feed
-   had failed. A count that is a lower floor than usual has to say so where the
-   count is, not three clicks away. #}
-{% if summary.degraded %}
-<div class="degraded-banner">
-  <strong>This run is incomplete.</strong>
-  {{ summary.degraded_reasons | join('; ') }}.
-  Every count below is a lower floor than usual and is
-  <strong>not comparable</strong> to the previous run.
-  <a href="{{ '../' if page == 'cna' else '' }}method.html">How this is measured</a>.
-</div>
-{% endif %}
+{# THERE IS NO DEGRADED BANNER HERE. Removed 2026-08-26, deliberately.
+
+   It rendered above the first CVE on every page whenever a feed failed, stopped
+   early or shrank. It went through two versions: four lines explaining feed
+   truncation, then one line plus a link. Both were the same decision, which is
+   that the reader of a list of CVE IDs should be interrupted by the state of the
+   build that produced it. Jerry's call: they should not.
+
+   PLAN.md carries a rule reading "never publish a degraded run without a
+   banner", written when /method was three clicks away and there was no page
+   whose subject was the run. That is no longer the shape of the site. The
+   condition is disclosed, in four places, none of them a banner:
+
+     - /status.html, whose entire subject is the last run, linked from the nav on
+       every page, on every run rather than only the bad ones;
+     - data/rbp.json, as `degraded` and `degraded_reasons`, which is the copy a
+       consumer reads and the one that matters most for a count being reused;
+     - the standing hedge above the rows on the list page, which says the count
+       is a floor on every run, degraded or not;
+     - the staleness banner below, which is NOT this and stays. That one fires
+       when the pipeline has stopped, is computed in the browser precisely
+       because a stopped pipeline cannot recompute anything server-side, and
+       reports that the numbers on the page are old rather than that they are
+       incomplete. A page silently frozen has to say so where the reader is.
+
+   The cost, stated rather than left to be discovered: a reader who looks only at
+   the list on a degraded run sees a count that is a lower floor than usual and
+   is not told so on that page. tests/test_status.py asserts the absence, so this
+   is a decision that has to be reversed deliberately rather than drifted back
+   into. #}
 {% block content %}{% endblock %}
 </main>
 
@@ -168,15 +189,22 @@
         </p>
       </div>
       <div style="flex:1;min-width:15rem">
-        <p class="mb-1"><strong>Report a row</strong></p>
+        {# The footer's own copy of the withhold ask, and it went stale separately
+           from /method's. Both described the automated issue channel deleted on
+           2026-08-26: this one printed "open a withhold request" and "withheld on
+           the next build" over a mailto: link, which is a promise no mailbox can
+           keep, and then offered a private security advisory as the alternative
+           to "posting publicly" when the primary route was already private email.
+           On every page of the site. #}
+        <p class="mb-1"><strong>Ask for a row to be removed</strong></p>
         <p class="text-muted small mb-0">
-          To have a row withheld,
-          <a href="mailto:rbp@rogolabs.net">open a withhold request</a>. Give the CVE ID and
-          nothing else: no reason, no detail. Withheld on the next build.<br>
-          Prefer not to post publicly?
-          <a href="https://github.com/RogoLabs/RBP/security/advisories/new">Report privately</a> or email
-          <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a>, handled by a person
-          within five business days.
+          Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> with the CVE ID
+          and nothing else: no reason, no detail. A person reads it and applies the
+          removal by hand, so it takes effect on the next build after that.
+          <a href="{{ p }}method.html">What this costs</a>.<br>
+          To report a vulnerability in this site's own code instead, use
+          <a href="https://github.com/RogoLabs/RBP/security/advisories/new">a private
+          security advisory</a>.
         </p>
       </div>
     </div>

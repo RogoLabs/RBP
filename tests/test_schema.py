@@ -22,7 +22,7 @@ import re
 import pytest
 
 import _sitefixture
-from rbp import report, schema, site
+from rbp import schema, site
 
 ROOT = pathlib.Path(__file__).parent.parent
 
@@ -276,7 +276,11 @@ def test_the_archive_is_described_as_stable_not_immutable(built):
     idx = json.loads((built / "archive.json").read_text())
     assert idx["stable_not_immutable"] is True
     assert "can go down" in idx["note"] or "stable, not immutable" in idx["note"].lower()
-    page = (ROOT / "templates" / "data.html").read_text()
+    # The human-readable half. Moved into the slide-over on 2026-08-26 when /data
+    # was deleted: without it the only place the site said so was the JSON key
+    # asserted above, and a promise about permanence that lives only in a JSON key
+    # is not a promise anyone has been told about.
+    page = (ROOT / "templates" / "_panel.html").read_text()
     assert "Stable, not immutable" in page
     assert "can go" in page and "down" in page
 

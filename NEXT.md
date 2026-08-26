@@ -1,197 +1,232 @@
 # Where this stands, and what to pick up next
 
-Rewritten 2026-08-24. Everything below is a fact checked against the repo or the
-live feeds on that date, not a plan. The previous version of this file listed
-three things waiting; two of them are done and the third is still yours.
+Rewritten 2026-08-26, after the single-page pivot and the cleanup that followed
+it. Everything below is checked against the repo on that date, not planned.
+
+The previous version of this file was written on 08-24 and was superseded within
+two days without being touched. Its first action item told you to rehearse a
+withhold channel that had been deleted; its headline figure was a launch
+condition that had been retired. **If you change what the site does, this file is
+part of the change.**
 
 ---
 
-## What shipped before this session
+## What the site is now
 
-`main` was at the merge of `denaming-and-gate`, 648 tests. All eighteen blockers
-from the eight-persona review were closed.
+**A list.** "Here are the CVE IDs that are reserved and public, and where they are
+showing up." Five routes:
 
-**v1 publishes no attribution.** No CNA is named as owning an RBP row.
-`site.NAMING_ENABLED` is the single flag. Inference and the grader still run, so
-a v2 naming release starts from real graded n rather than from one.
+| route | what it is |
+|---|---|
+| `/` | the rows, a command bar over them, and a slide-over carrying the argument |
+| `/method.html` | how the count is built, the coverage table, the launch checklist |
+| `/policy.html` | the policy text and what changed in v2.0.0 |
+| `/status.html` | whether the last run was complete, per-feed health, cadence, movement |
+| `/about-this-count.html` | the holding-page copy in the site chrome, written in both postures |
+
+It previously led with the count as an instrument panel: a 104px number and around
+650 words before the first CVE, over a seven-column table. `cves`, `changes`,
+`data` and `backlog-at-launch` are gone and their content is in the slide-over.
+
+**No CNA is named.** `site.NAMING_ENABLED` is the single flag. Inference and the
+grader still run, so a v2 naming release starts from real graded n rather than
+from one.
 
 **The gate clears.** `GATE_TOP_N_PCT = 80.0` on top-50-CNAs-by-volume at the
-3-sighting floor, at 40 of 50 on 2026-08-23 and **41 of 50 on 2026-08-24**. The
-re-derivation is recorded in the constant's own comment in `rbp/site.py`.
+3-sighting floor. 41 of 50 on 2026-08-24. The re-derivation is in the constant's
+own comment in `rbp/site.py`.
 
-**The data branch was re-rooted.** `refs/backup/data-pre-reroot` still holds the
-old tip **locally only**; it is not on any remote and will be lost if this clone
-is.
+**745 offline tests in about thirteen seconds, plus 32 browser tests.** The offline
+suite gates the publication; the browser suite and the linter are on the commit
+path only and cannot stop a publish.
 
 ---
 
-## What shipped in this session
+## What shipped in the cleanup, 2026-08-26
 
-736 tests, 707 of which run offline in about ten seconds.
+A full review of the tree after the pivot. The theme, in one sentence: **the pivot
+changed what renders and the guards were only partly repointed**, so 735 tests
+passed while three defects sat on shipping pages.
 
-### The render job, PLAN.md 8e. Implemented.
+### Live defects that a green suite was not seeing
 
-`render` in `ci.yml`, `needs: test`, 29 tests in `tests/render/` against a
-headless Chromium, 4.4 seconds. Not in `deploy.yml` at all, so the publish path
-cannot depend on it and there is no skip cascade to reason about. Both `test`
-jobs now pass `--ignore=tests/render` explicitly, so a collection error in the
-browser directory cannot stop a publication.
+- **The front page had no `<h1>`.** The outline started at the panel's `h2`,
+  inside a hidden dialog. The test for exactly this passed throughout, because it
+  read `templates/index.html` after that template stopped being rendered.
+- **`/method` linked to `/data.html`, which 404s**, inside a
+  `{% if summary.epoch %}` block. The link checker was correct; the end-to-end
+  fixture sets `epoch: None`, so it could not see the markup. It would have
+  appeared the morning an epoch was set, which is launch day.
+- **`/method` said "one of nine conditions" above "8 of 8 are met."** Condition 4
+  was retired and the prose was not.
+- **Every even table row failed AA in dark theme at 2.6:1**, links at 1.56:1.
+  `rbp.css` already carried a comment describing this exact defect and a corrected
+  rule *scoped to `table.rbp`*, leaving the unscoped original live. The pivot then
+  deleted every page `table.rbp` was on, so the fix covered one table and the bug
+  covered the rest of the site.
+- **The launch-day zero state was gone**, dropped in the move to `list.html`. An
+  epoch set on launch morning would have rendered `0` over a blank page.
+- **Three surfaces still promised the deleted withhold channel**: `/method` in
+  full, the footer on every page, and the holding page.
 
-Three corrections came out of executing the panel's decision, and all three are
-recorded in PLAN.md 8e:
+### Guards that had stopped guarding
 
-- **The agreement check does not catch 768.** With the pre-fix stylesheets the
-  thead is displayed AND the cells are `nowrap`, so both halves say "not card
-  layout", they agree, and the check passes. What catches 768 is the card-mode
-  assertion and the nested-scrollbar measurement. The agreement check catches the
-  other defect, the 926px overflow at 375px. `tests/render/test_mutations.py`
-  asserts both negatives directly.
-- **`.focus()` does arm `:focus-visible`** when there has been no prior user
-  interaction, because Chromium treats "nothing has happened" as "keyboard". The
-  distinction only appears after a pointer press. Conclusion unchanged, reason
-  different.
-- **`notify.needs` could not be honoured.** `notify` is in `deploy.yml` and a job
-  cannot depend on a job in another workflow. Deviation and reasoning are in the
-  `ci.yml` comment.
+- **14 tests asserted against templates that are never rendered.** Repointed where
+  the concern was still live, deleted where the pivot made it obsolete.
+- **The contrast sweep silently skipped 14 cases.** `contrast.rule_colors`
+  required a trailing `;` on the `color:` declaration, which nobody writes when
+  minifying, so every rule the pivot added parsed as declaring no colour and
+  skipped saying it "inherits". All 14 pass once measured. There is a cap now.
+- **The scrubber and the guard had drifted.** `publish._named_paths`'s docstring
+  says "the guard must refuse exactly what the scrubber removes or the two drift".
+  They differed by three fields, and nothing tested the claim.
+- **Four overlapping lists of "fields that name a CNA"**, two byte-identical, on a
+  rule whose whole value is that a new field cannot be forgotten. One definition
+  now, in `schema.py`.
+- **The withhold lever had no writer.** `cli.py` stopped writing
+  `.suppressed.json` when the channel was removed, nothing replaced it, and
+  `data/` is recreated empty on every runner. The lever the site promised in
+  writing read an absent file on every run. It is `RBP_WITHHOLD` now, a repository
+  variable, and not the `data` branch: that branch is public, so committing the
+  ids there would publish the list the lever exists to remove.
 
-Widths are parsed from the `@media` preludes of both stylesheets by
-`rbp/breakpoints.py` and bracketed as {b-1, b, b+1}, never typed. That parser is
-covered by the OFFLINE suite, because a parser that silently stops finding
-breakpoints leaves three fixed widths and every render check still passes.
+### Also fixed
 
-### The margin question, and what measures it. Answered with numbers.
+**/about-this-count had no site chrome.** It served a byte-for-byte copy of the
+standalone `placeholder.html`: no header, no nav, no footer, no theme toggle, and
+its own teal palette. It is in the nav as "About", so clicking it landed a reader
+somewhere that looked like a different site with no way back. The words now live
+in `templates/_about-copy.html` and two shells wrap them, `about.html` with the
+site chrome and `holding.html` for the pre-launch front door, which still must not
+link into the dashboard.
 
-`rbp/feedlab.py`, the scoring harness FEEDS.md section 3 asks for. Scorecards in
-`feedlab/`, which is committed; the multi-megabyte baseline stays under `data/`,
-which is not.
+### Removed
 
-**The CSAF sweep buys nothing.** Probed all ten top-50 CNAs the gate cannot see.
-One of ten serves CSAF at the well-known path, and it is unusable: Huawei
-publishes 121 advisory directories and every one of them returns **401**. Six are
-404, one is a WAF 403, one fails TLS verification. Margin has to come from Tier
-2's national CERT feeds or from Tier 3, both parsers rather than config lines.
+1,351 lines of unrendered templates; `placeholder.html`, whose copy moved into the
+partial above unchanged; 18 KB of imported CSS styling components this
+site does not have; `env.get_template("cna.html")` for a template that did not
+exist, so flipping `NAMING_ENABLED` raised `TemplateNotFound` on the first build.
 
-**Every merged feed is now scored against all the others.** 10 detecting, 1
-corroborating (`mozilla`), 1 unmeasurable (`arch`). The detecting/corroborating
-split, applied today, would exclude nothing and cost **zero** CNAs, against
-FEEDS.md's estimate of "0 to 1". The full table is in FEEDS.md section 2.
+### Added
 
-**Two silent-shrink defects, found by building the harness and both fixed.**
-`gather` erased every `CAPPED` state in the same call that recorded it, so
-`stats["limitations"]` was permanently empty and the live snapshot reads
-`ghsa ok 3321 ids` on a feed that had hit its page cap. And `feed_csaf` recorded
-no health at all, on the one adapter that fans out to seventeen third parties, so
-Huawei's 401s and Cisco's 403 read as a clean run. Both are mutation-tested.
+`/status.html`, and a linter.
+
+**The degraded banner is gone from the pages that carry the count.** It rendered
+above the first CVE on every page whenever a feed failed, stopped early or shrank.
+It was first shortened to one line plus a link, and then removed outright on
+Jerry's call: the reader of a list of CVE IDs should not be interrupted by the
+state of the build that produced it.
+
+PLAN.md carries a rule reading "never publish a degraded run without a banner",
+written when `/method` was three clicks away and no page had the run as its
+subject. **That rule is superseded by this decision, not overlooked**, and the
+condition is still disclosed in four places, none of them a banner:
+
+- `/status.html`, whose whole subject is the last run, in the nav on every page
+  and on every run rather than only the bad ones;
+- `degraded` and `degraded_reasons` in `data/rbp.json`, which is what a consumer
+  reusing the count actually reads;
+- the standing hedge above the rows, which says the count is a floor on every run;
+- the staleness banner, which is a different thing and stays: it fires when the
+  pipeline has *stopped*, is computed in the browser because a stopped pipeline
+  cannot recompute anything server-side, and says the numbers are old rather than
+  incomplete.
+
+The cost, stated rather than left to be found: a reader who looks only at the list
+on a degraded run is not told on that page that the count is a lower floor than
+usual. `tests/test_status.py` asserts the absence in both postures, so reversing
+this is a deliberate act rather than a drift.
+
+There was no linter: 52 `# noqa` directives and no tool
+anywhere that reads one. Every rule now selected found a real defect on its first
+run.
 
 ---
 
 ## The three things waiting for you
 
-### 1. Rehearse the withhold channel from a permissionless account
+### 1. Decide whether the margin is acceptable
 
-**Unchanged, and still nobody's job but yours.** Launch condition 4 is
-deliberately UNMET. The channel is reachable in code and covered by tests, and
-the original defect hid specifically in the configuration where the requester has
-no repository permissions. No test written from inside the repo can prove it
-works from outside, and this session did not change that.
+**Unchanged, and still yours.** The gate is at 41 of 50 (82.0%), clearing by one
+CNA. It moved from 40 to 41 overnight on 08-24 because HPE published and a feed
+saw it three times. A gate that moves without a commit can move back.
 
-    file a withhold request from a spare GitHub account that has no access
-    to RogoLabs/RBP, using the template at
-    https://github.com/RogoLabs/RBP/issues/new?template=withhold.yml
-    then confirm the row leaves on the next build
+The CSAF sweep is closed: one of ten uncovered top-50 CNAs serves CSAF at the
+well-known path and it returns 401 on all 121 advisories. What remains is a parser
+each, at FEEDS.md's rate of 2 to 3 CNAs per working day including the scorecard.
 
-If it works, set `verified_on` for condition 4 in `rbp/launch.py` to the date and
-flip it to MET. If it does not, the failure is worth more than the fix.
+The nine that would buy headroom: WPScan, dell, TR-CERT, sap, huawei, twcert, HCL,
+qnap, juniper.
 
-### 2. Decide whether the margin is acceptable
+- **Launch at one CNA of margin.** A quiet fortnight at two of them un-clears the
+  gate. The failure is loud and reversible: `publish.gate` makes it a red check
+  and the site demotes to the pre-launch posture rather than breaking.
+- **Buy margin first.** Target TWCERT and TR-CERT, the two that probed 200 on
+  their own advisory sites. Two CNAs for two days.
+- **Widen the gate's basis.** Nothing has touched `GATE_TOP_N_PCT`, deliberately:
+  it has been re-derived once already and moving it to solve a margin problem
+  would be the least defensible derivation yet.
 
-Still yours to decide, but it is no longer a decision without numbers, and the
-number moved while this file was being written.
-
-**Corrected 2026-08-24 against origin/data.** The gate is at **41 of 50 (82.0%)**,
-not 40, clearing by one CNA rather than by zero. `hpe` crossed the three-sighting
-floor between the 08-23 and 08-24 snapshots. Nobody did anything: HPE published,
-a feed saw it three times, and the site's launch gate changed state overnight.
-
-That is the argument about margin, made by the thing itself rather than by
-anybody's opinion of it. A gate that moves without a commit can move back.
-
-The nine that would buy more headroom are WPScan, dell, TR-CERT, sap, huawei,
-twcert, HCL, qnap, juniper.
-
-**The cheap route is closed.** The CSAF sweep was the highest-leverage item in
-FEEDS.md and it returns nothing usable for any of the ten. What remains is a
-parser each, at FEEDS.md's own rate of 2 to 3 CNAs per working day including the
-scorecard and the test.
-
-So the decision is now between three real options, not two:
-
-- **Launch at one CNA of margin** and accept that a quiet fortnight at two of
-  them un-clears the gate. The gate demotes the site to the pre-launch posture
-  rather than breaking it, and `publish.gate` makes the demotion a red check
-  rather than a silent non-launch. The failure is loud and reversible.
-- **Buy margin first**, which is now measured at roughly a day per CNA and
-  targets TWCERT and TR-CERT, the two on the list that probed 200 on their own
-  advisory sites. Two CNAs of headroom for two days.
-- **Widen the gate's basis** so one CNA cannot decide it. Nothing in this session
-  touched `GATE_TOP_N_PCT`, deliberately: the threshold was re-derived once
-  already after two metric changes, and moving it again to solve a margin problem
-  would be the third derivation and the least defensible.
-
-A recommendation, since the measurement produced one and the decision is still
-yours: **buy the two CNAs.** One CNA of margin on a figure that moves with
-someone else's publishing schedule is not much better than none, and the 40-to-41
-step is the evidence: it happened overnight, in the favourable direction this
-time. Two days is cheap against explaining why the site un-launched itself in its
-first week.
+The recommendation from 08-24 stands: **buy the two CNAs.** One CNA of margin on a
+figure that moves with someone else's publishing schedule is not much better than
+none.
 
 Whichever you pick, run `python -m rbp.feedlab score <name>` before merging any
 new feed. No feed goes in without its scorecard in the diff.
 
-### 3. FEEDS.md section 3's three remaining guards
+### 2. FEEDS.md section 3's three remaining guards
 
-Not started, and correctly so: they are "before feed 10, not after feed 30", and
-no feed has been added. They become due the moment option 2 above is chosen.
+Due the moment option 2 above is chosen, and correctly not started before then:
+they are "before feed 10, not after feed 30".
 
 - per-feed shrink baselines survive a profile change
 - a failure budget expressed as a fraction, not a count
 - `gather` parallelised, preserving per-feed health recording exactly
 
 The second is the one not to defer past the first new feed. One measurement to
-carry forward: the scorecard baseline fetched all 12 feeds in 784 seconds, and
-`ubuntu` alone was 486 of them. That is a cold fetch through `feedlab` rather
-than the pipeline's warm run, so it is not directly comparable to the 9-minute
-figure in FEEDS.md, but the shape is: one feed is most of the wall clock, and
-`gather` is a serial loop.
+carry forward: the scorecard baseline fetched all 12 feeds in 784 seconds and
+`ubuntu` alone was 486 of them. One feed is most of the wall clock and `gather` is
+a serial loop.
+
+### 3. Rehearse the withhold lever end to end
+
+**New, and it replaces the retired condition 4.** The lever now reads
+`RBP_WITHHOLD`, and it has never fired in production. The last version of this
+mechanism was falsified on 2026-08-23 because it was unreachable by the people it
+existed for, and nothing reported that; this one was unreachable for four days for
+a different reason and nothing reported that either.
+
+    set the repository variable RBP_WITHHOLD to one live CVE ID, wait for the
+    next scheduled run, and confirm the row leaves every surface: the page, the
+    rows island, data/rbp.json, data/rbp.csv, the dated archive, and the staged
+    data branch. Then unset it and confirm the row comes back.
+
+Covered by tests, which is not the same claim. If it does not work, the failure is
+worth more than the fix.
 
 ---
 
 ## What to be careful of
 
 **Merging to `main` publishes.** `deploy.yml` fires on `push: branches: [main]`.
-No repository variables are set, so `RBP_LAUNCHED` is unset and the site deploys
-in its **pre-launch** posture: holding page at `/`, dashboard at
-`/overview.html`, `robots.txt` disallowing everything. Promotion is a separate,
-deliberate act.
+No repository variables are set, so the site deploys in its **pre-launch** posture:
+holding page at `/`, dashboard at `/overview.html`, `robots.txt` disallowing
+everything. Promotion is a separate, deliberate act.
 
-**The render job has never executed in CI.** It runs clean locally, 29 tests in
-4.4 seconds, and the first push is the first time GitHub's runner installs
-Chromium for it. It cannot affect a publication if it fails, by construction.
+**The render job and the lint step have never executed in CI.** Both run clean
+locally. Neither can affect a publication, by construction: they are in `ci.yml`,
+and `deploy.yml` does not reference them.
 
-**PLAN.md 8c is settled but worth re-reading.** The decision not to notify
-Wordfence and WPScan was taken on 2026-08-23 against corrected exposure figures,
-after the original figures turned out to be wrong by a factor of seventeen. The
-correction block is still in 8c; do not let a future reader find only the
-original table.
+**PLAN.md predates the pivot in places.** Section 301 documents a `/data` page
+route that no longer exists, and 837-838 describes conftest guards on templates
+that were deleted. It is the design record, not a description of the current
+tree; `README.md` is the second.
 
 **The lesson that still costs the most time.** Every fix in these sessions was
 mutation-tested by reintroducing the defect and confirming a test failed, and
 first passes typically catch about half. Almost every survivor is **fixture
-blindness rather than a product bug**. It happened twice more this session: two
-existing tests asserted that GHSA records its page cap and both passed while
-`gather` erased it, because both call the adapter directly and the pipeline never
-does; and the feed scorecard's own classifier called `arch` a publication mirror
-on 0 dated references out of 0, which is the "cannot read is not nothing to read"
-error committed by the tool built to police it.
+blindness rather than a product bug**, and this session was the clearest case yet:
+the suite was green, and it was green partly because 14 of its tests were reading
+files nobody rendered and 14 more were skipping while reporting coverage.
 
 On this project, *the test passes* and *the test works* are different claims.

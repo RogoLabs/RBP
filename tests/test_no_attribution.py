@@ -145,14 +145,39 @@ def test_a_run_that_did_not_infer_reports_unmeasurable_not_zero():
 def test_the_not_run_validation_matches_the_real_one_key_for_key():
     """A shim that drifts from the real return shape breaks a consumer on the day
     naming is switched back on, which is the one day nobody is looking at this
-    path."""
+    path.
+
+    DERIVED FROM THE REAL FUNCTION, which is what this test's name claimed and
+    what it did not do. It computed the real keys from the source with a regex,
+    left that in an unused local, and compared the shim against a hand-typed list
+    of nine names. A key added to the real block was not checked by anything,
+    which is exactly the drift this exists to catch, in the test written to catch
+    it.
+
+    Parsed rather than grepped: the regex matched every quoted key anywhere in the
+    body, nested literals included, so it could not have been used as it stood.
+    """
+    import ast
     import inspect
-    src = inspect.getsource(inference.apply_to_backlog)
-    real_keys = set(re.findall(r'^\s*"(\w+)":', src, re.M))
-    shim = set(inference.unattributed_validation().keys())
-    missing = {k for k in ("date", "k", "named", "run_coverage", "leave_one_out",
-                           "live", "newly_graded", "withdrawn", "suppressed")} - shim
-    assert not missing, f"the shim is missing {missing} that the real block returns"
+    tree = ast.parse(inspect.getsource(inference.apply_to_backlog).lstrip())
+    returns = [n for n in ast.walk(tree.body[0])
+               if isinstance(n, ast.Return) and isinstance(n.value, ast.Dict)]
+    assert returns, "apply_to_backlog no longer returns a dict literal; this " \
+                    "test can no longer read its shape and must be rewritten"
+    real = {k.value for k in returns[-1].value.keys if isinstance(k, ast.Constant)}
+    shim = set(inference.unattributed_validation())
+
+    missing = real - shim
+    assert not missing, (
+        f"the shim is missing {sorted(missing)}, which the real block returns. A "
+        "consumer branching on the shim gets a KeyError on the day naming comes "
+        "back on.")
+    # The shim may add keys the real block does not have; `not_run` and its reason
+    # are the whole point of it. It may not SILENTLY add them, so they are named.
+    extra = shim - real
+    assert extra <= {"not_run", "not_run_reason"}, (
+        f"the shim invents {sorted(extra - {'not_run', 'not_run_reason'})}, which "
+        "no consumer of the real block will ever see")
 
 
 def test_the_not_run_validation_carries_no_name():
@@ -172,7 +197,6 @@ def test_the_pipeline_reads_the_one_flag_rather_than_defining_a_second():
     assert "NAMING_ENABLED =" not in src.replace("NAMING = site.NAMING_ENABLED", "")
 
 
-import re  # noqa: E402
 
 
 # --------------------------------------------------------------------------
@@ -266,8 +290,7 @@ def test_the_prose_exclusion_does_not_reach_structured_fields(tmp_path):
     assert problems, "the prose exclusion leaked into the structured check again"
 
 
-import json  # noqa: E402
-from rbp import publish  # noqa: E402
+from rbp import publish
 
 
 def test_the_ledger_denamer_covers_the_authoritative_fields_too():
@@ -288,6 +311,71 @@ def test_the_ledger_denamer_covers_the_authoritative_fields_too():
     assert not names_in(out, _roster_names()), out
     assert out["resolved"][0]["days_to_publish"] == 79, (
         "the de-namer took the measurement with the name")
+
+
+def test_the_scrubber_and_the_guard_refuse_exactly_the_same_fields():
+    """`publish._named_paths`'s own docstring: "the guard must refuse exactly what
+    the scrubber removes or the two drift". They had drifted.
+
+    `denamed_ledger` dropped _LEDGER_NAME_FIELDS plus six names unioned in by
+    hand. `_named_paths` refused _LEDGER_NAME_FIELDS plus THREE, unioned in by
+    hand somewhere else. So the scrubber removed `owner_contested`,
+    `product_map_confidence` and `product_map_method` and the guard would have
+    let all three through, on the exact invariant the docstring asserts. Nothing
+    tested it: the claim was made in prose and was false when it was written.
+
+    Both now read one list. This asserts the property rather than the
+    implementation, so re-introducing a hand-written union on either side fails
+    here even if it happens to be correct on the day.
+    """
+    from rbp import schema
+    probe = {f: "GitHub_M" for f in schema.LEDGER_NAME_FIELDS}
+    probe["cve_id"] = "CVE-2026-1"
+    probe["days_to_publish"] = 12
+
+    scrubbed = set(probe) - set(publish.denamed_ledger(probe))
+    refused = {path for path in publish._named_paths(probe)}
+
+    assert scrubbed == refused, (
+        "the scrubber and the guard disagree.\n"
+        f"  removed but not refused: {sorted(scrubbed - refused)}\n"
+        f"  refused but not removed: {sorted(refused - scrubbed)}")
+    # And neither of them ate the measurement alongside the name.
+    assert publish.denamed_ledger(probe)["days_to_publish"] == 12
+
+
+def test_there_is_one_definition_of_what_names_a_cna():
+    """Four lists across three modules, two of them byte-identical.
+
+    The value of `NAME_FIELDS` is entirely that "adding a new owner_* field cannot
+    leak by being forgotten here". Forgotten in one of two copies is the same leak
+    with one more step, and the two copies of the per-CNA key list lived in the
+    two modules that write the two different artefacts.
+
+    Asserted by identity, not equality: two lists that happen to be equal today
+    are exactly the state this replaced.
+    """
+    from rbp import cli, schema, site
+    assert site.NAME_FIELDS is schema.ROW_NAME_FIELDS
+    assert site._LEDGER_NAMES is schema.LEDGER_NAME_FIELDS
+    assert site._PER_CNA_KEYS is schema.PER_CNA_KEYS
+    assert cli._PER_CNA_KEYS is schema.PER_CNA_KEYS
+    assert cli._CLOSURE_NAME_FIELDS is schema.LEDGER_NAME_FIELDS
+    assert publish._LEDGER_NAME_FIELDS is schema.LEDGER_NAME_FIELDS
+
+
+def test_the_row_fields_and_the_ledger_fields_both_cover_the_owner_family():
+    """They are different shapes, not different opinions: a ledger entry records
+    a prediction and its verdict, so it has `predicted`/`actual` where a row has
+    `owner`. What must not differ is the owner_* family, which appears in both.
+    """
+    from rbp import schema
+    family = {f for f in schema.ROW_NAME_FIELDS
+              if f.startswith(("owner_", "product_map_"))}
+    missing = family - set(schema.LEDGER_NAME_FIELDS)
+    assert not missing, (
+        f"{sorted(missing)} qualify a name on a row and are not stripped from a "
+        "ledger entry, which is where the same row is recorded with its verdict")
 
 
 # --------------------------------------------------------------------------
@@ -368,7 +456,7 @@ def test_the_site_publishes_no_name_even_from_a_named_snapshot(tmp_path):
                            + "\n  ".join(offenders))
 
 
-import os  # noqa: E402
+import os
 
 
 def test_the_publish_path_does_not_even_import_the_attribution_stack():
@@ -393,4 +481,4 @@ def test_the_publish_path_does_not_even_import_the_attribution_stack():
         "is back on the publish path")
 
 
-import pathlib  # noqa: E402
+import pathlib

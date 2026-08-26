@@ -59,8 +59,7 @@ BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 # Runner-local handoff from `run` to `publish stage`. Never published.
 
 
-def degraded_state(*, failures, truncated, capped, dropped,
-                   reports_unreadable, shrunk):
+def degraded_state(*, failures, truncated, capped, dropped, shrunk):
     """One flag a consumer can branch on, plus the reasons. `(bool, [str])`.
 
     EXTRACTED FROM cli.run so it can be tested. It could not be before, and the
@@ -73,8 +72,13 @@ def degraded_state(*, failures, truncated, capped, dropped,
     base.html rendered "This run is incomplete ... not comparable to the previous
     run" on every page of every run, three hundred lines above a card that
     compares this run to the previous one. A warning that is always on is not a
-    warning, it is furniture, and it teaches a reader to ignore the banner on the
-    day it means something.
+    warning, it is furniture, and it teaches a reader to ignore the one that
+    means something.
+
+    The banner itself was removed on 2026-08-26 and this flag now drives /status
+    and the `degraded` key in rbp.json. The distinction matters MORE for those,
+    not less: a banner a reader learns to skip costs attention, and a JSON flag
+    that is true on every run costs a consumer the ability to branch on it at all.
 
     Degraded means THIS RUN IS WORSE THAN USUAL. The standing caps are published
     separately as `limitations`, because they are real, permanent, and something
@@ -87,10 +91,12 @@ def degraded_state(*, failures, truncated, capped, dropped,
            for _ in [0] if truncated]
         + [f"{dropped} id(s) unresolved and not carried forward"
            for _ in [0] if dropped]
-        # A correction route that has silently stopped working is exactly the
-        # failure shape this project keeps hitting, so it is a visible one.
-        + ["correction reports could not be read this run"
-           for _ in [0] if reports_unreadable]
+        # `reports_unreadable` stood here: a fifth reason, for a correction route
+        # that had silently stopped working. It was the right instinct and it went
+        # with the automated withhold channel on 2026-08-26. The caller passed a
+        # hardcoded False from that day on, so the branch could not fire and the
+        # parameter was a keyword every caller had to supply to say "no". The
+        # instinct still applies if an automated route ever comes back.
         + [f"{len(shrunk)} feed(s) returned far fewer ids than last run"
            for _ in [0] if shrunk])
     return bool(reasons), reasons
@@ -123,7 +129,7 @@ def _previous_reserved(snap_root, today):
             return set()
         rows = json.load(open(os.path.join(dirs[-1], "backlog.json")))
         return {r["cve_id"] for r in rows if isinstance(r, dict) and r.get("cve_id")}
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"  NOTE: no usable previous snapshot for carry-forward ({e})")
         return set()
 
@@ -188,7 +194,13 @@ def cmd_index(args):
 # whatever the key is called.
 
 # Keys inside the inference block whose VALUES are per-CNA mappings.
-_PER_CNA_KEYS = ("by_cna", "by_tier_cna", "largest_stratum", "misses")
+#
+# ONE DEFINITION, in schema.py since 2026-08-26. This was a byte-identical second
+# copy of site._PER_CNA_KEYS, on a rule whose entire value is that adding a new
+# per-CNA key cannot leak by being forgotten. Forgotten in one of two copies is
+# the same leak with an extra step, and the two copies were in the two modules
+# that write the two different artefacts.
+_PER_CNA_KEYS = schema.PER_CNA_KEYS
 
 
 def _unattributed_stratum(block):
@@ -208,8 +220,11 @@ def _unattributed_stratum(block):
 # Fields on a closure record that name the assigner. Authoritative rather than
 # inferred, which makes publishing them a STRONGER claim than anything on a
 # page, not a weaker one.
-_CLOSURE_NAME_FIELDS = ("published_assigner", "assigner", "owner",
-                        "predicted", "predicted_owner")
+#
+# The ledger list, not a fifth hand-written subset of it. A closure record IS a
+# ledger entry, and this used to name five of the twelve fields, so a closure
+# carrying `owner_tier` or `product_map_owner` shipped it.
+_CLOSURE_NAME_FIELDS = schema.LEDGER_NAME_FIELDS
 
 
 def _unattributed_closure(row):
@@ -460,8 +475,8 @@ def cmd_run(args):
     # is a dated per-CNA lateness table, and 46 of 47 rows carried one. The
     # assigner is authoritative rather than inferred, which makes it a stronger
     # claim than anything the site puts on a page, not a weaker one.
-    json.dump([_unattributed_closure(c) for c in closed],
-              open(os.path.join(sdir, "resolved.json"), "w"), indent=1)
+    schema.write_json(os.path.join(sdir, "resolved.json"),
+                      [_unattributed_closure(c) for c in closed])
     # THE PER-CNA TABLE, which is a leaderboard when it is not empty.
     #
     # /data/cnas.json was serving seven named CNAs ranked descending by
@@ -518,7 +533,7 @@ def cmd_run(args):
         if _pd:
             _prev_detail = ((json.load(open(os.path.join(_pd[-1], "summary.json")))
                              .get("feeds") or {}).get("detail") or {})
-    except Exception:  # noqa: BLE001
+    except Exception:
         _prev_detail = {}
     shrunk = feeds.compare_magnitudes(_prev_detail, feeds.health_detail())
     if shrunk:
@@ -537,8 +552,7 @@ def cmd_run(args):
     # correctly. True whenever this run's count is a lower floor than usual.
     stats["degraded"], stats["degraded_reasons"] = degraded_state(
         failures=failures, truncated=truncated, capped=capped,
-        dropped=oracle["dropped"], reports_unreadable=False,
-        shrunk=shrunk)
+        dropped=oracle["dropped"], shrunk=shrunk)
     stats["limitations"] = capped
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.
@@ -550,8 +564,8 @@ def cmd_run(args):
     stats["source_commit"] = schema.source_commit()
     stats["source_dirty"] = schema.source_dirty()
     stats["min_age_days"] = args.min_age_days
-    json.dump(cnas, open(os.path.join(sdir, "cnas.json"), "w"), indent=1)
-    json.dump(stats, open(os.path.join(sdir, "summary.json"), "w"), indent=1)
+    schema.write_json(os.path.join(sdir, "cnas.json"), cnas)
+    schema.write_json(os.path.join(sdir, "summary.json"), stats)
     print("\n" + "=" * 64)
     print(f"HEADLINE core (reportable, >=2 independent sources): {len(kpi)}")
     if NAMING:
@@ -569,7 +583,16 @@ def cmd_run(args):
     print("  report.md | backlog.csv | backlog.json")
 
 
-def main():
+def build_parser():
+    """The argument parser, split out from main() so tests can produce the exact
+    namespace cmd_run receives.
+
+    tests/test_cmd_run assembled one by hand first and spent its first run dying
+    on missing attributes rather than on anything about the function under test.
+    A hand-built namespace is also a namespace that silently stops matching the
+    parser: a new flag with no default would be absent in the test and present in
+    production, which is the direction that hides a bug rather than showing one.
+    """
     ap = argparse.ArgumentParser(prog="rbp")
     sub = ap.add_subparsers(dest="cmd", required=True)
     r = sub.add_parser("run")
@@ -604,7 +627,11 @@ def main():
     b.set_defaults(func=cmd_build)
     i = sub.add_parser("index")
     i.set_defaults(func=cmd_index)
-    args = ap.parse_args()
+    return ap
+
+
+def main():
+    args = build_parser().parse_args()
     args.func(args)
 
 

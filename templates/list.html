@@ -7,10 +7,22 @@
    the panel. See templates/_panel.html. #}
 <div class="cmdbar">
   <div class="cmd-in">
-    <div class="cmd-count">
+    {# THE PAGE'S H1, and it has to be a real one.
+
+       The built front page had NO h1 at all after the pivot: the outline started
+       at the panel's h2, inside a hidden dialog, so the most-linked page on the
+       site had no heading a reader or a crawler could see.
+       tests/test_a11y.py had a test for exactly this and it was pointed at the
+       deleted dashboard template, so it passed throughout.
+
+       The heading is the count and its unit, because that is what the page is,
+       and it is the same markup the command bar already rendered rather than a
+       banner added above the list: the pivot removed 650 words before the first
+       CVE and this must not put them back. #}
+    <h1 class="cmd-count">
       <b id="n" class="mono">{{ summary.total | commafy }}</b>
       <span>reserved, public, unpublished</span>
-    </div>
+    </h1>
     <div class="cmd-grow">
       <input type="search" id="q" autocomplete="off"
              placeholder="Filter by CVE ID, package or advisory text"
@@ -34,6 +46,62 @@
 
 <main id="main">
   <p class="sr-only" id="listnote" role="status" aria-live="polite"></p>
+  {# THE LAUNCH-DAY ZERO STATE, and it is not the same thing as the JS empty
+     state below.
+
+     `.empty` inside render() means "your filter matched nothing" and is a
+     property of what the reader typed. THIS means the snapshot itself has no
+     reportable rows, which is the EXPECTED state on the morning an epoch is set:
+     counting restarts and nothing has aged past the buffer yet. PLAN.md item 6
+     sequences it deliberately, design the zero state, publish the archive, then
+     set the epoch, because an unexplained zero on launch day reads as a broken
+     site rather than as a clean slate working.
+
+     It was on the old dashboard and the pivot dropped it. The test that guarded
+     it kept passing, because it read templates/index.html after that template
+     stopped being rendered. Server-side rather than in the JS, because with zero
+     rows there is nothing for the JS to have an opinion about, and because a
+     reader with JS off must still get the explanation. Not styled as a warning:
+     empty is not a fault. #}
+  {% if not summary.total %}
+  <div class="empty-state">
+    <strong>No reportable rows in this snapshot.</strong><br>
+    {% if summary.epoch %}
+    Counting starts {{ summary.epoch }}, and a row is reportable only once it has been
+    public for {{ summary.get('min_age_days', 7) }} days, so the first rows appear once
+    something disclosed on or after the epoch has aged in. This is the expected state
+    immediately after launch, not a fault.
+    {% if summary.epoch_excluded %}
+    <br><strong>{{ summary.epoch_excluded | commafy }}</strong> reserved IDs were already
+    public before the epoch and are held back, including the oldest. They are in
+    <a href="data/rbp.json">the raw data</a> and in
+    <a href="data/archive.json">the dated archive</a>.
+    {% endif %}
+    {% else %}
+    Either every previously listed record has published, or the feeds returned nothing
+    this run. <a href="status.html">The status page</a> says which.
+    {% endif %}
+  </div>
+  {% endif %}
+  {# THE HEDGE, and it has to be HERE rather than in the panel.
+
+     It was a <caption> on the old table, so the qualifier travelled with the data
+     into a copy, a print or a screen reader rather than living in a caveat block
+     somewhere below it. The pivot replaced the table with <details> rows and the
+     caption went with it; the same words are in the slide-over, but a slide-over
+     is a hidden dialog, so a reader who selects the list and pastes it into a
+     ticket carries the rows and none of the qualification.
+
+     Two sentences, not a paragraph. The pivot removed ~650 words from in front of
+     the first CVE and this must not start putting them back: everything beyond
+     "this is a floor" and "we do not name anyone" is one click away in the panel. #}
+  <p class="listhedge">
+    <strong>A floor, not a total.</strong> Only configured feeds are read, so rows
+    exist that this site cannot see. It does not say which CNA reserved any of
+    these IDs.
+    <button type="button" class="linkbtn" id="hedge-more"
+            aria-expanded="false" aria-controls="panel">Why</button>
+  </p>
   <div class="rbplist" id="list"></div>
   <div class="more-wrap"><button type="button" class="morebtn" id="more" hidden></button></div>
 </main>
@@ -213,10 +281,39 @@
     (open ? panel : opener).focus();
   }
   opener.addEventListener("click", function () { setPanel(true); });
+  // The hedge's own "Why" opens the same panel. Bound rather than duplicated, so
+  // there is one panel and one open path; setPanel returns focus to `opener`,
+  // which is the command-bar button, and that is the right place to land because
+  // it is the persistent control rather than a sentence the reader has scrolled past.
+  $("hedge-more").addEventListener("click", function () { setPanel(true); });
   $("panel-close").addEventListener("click", function () { setPanel(false); });
   scrim.addEventListener("click", function () { setPanel(false); });
+
+  // FOCUS IS TRAPPED while the panel is open, and it was not.
+  //
+  // The panel declares role="dialog" aria-modal="true", which tells a screen
+  // reader to hide the rest of the document, and nothing enforced the same thing
+  // for the keyboard: Tab walked straight out of the dialog into the list behind
+  // the scrim, where the reader could focus and activate controls they cannot see
+  // and cannot reach the close button again without cycling the whole page. A
+  // dialog that announces itself as modal and is not is worse than one that never
+  // claimed to be, because assistive technology acts on the claim.
+  var FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, ' +
+                  '[tabindex]:not([tabindex="-1"])';
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && !panel.hidden) { setPanel(false); }
+    if (e.key === "Escape" && !panel.hidden) { setPanel(false); return; }
+    if (e.key !== "Tab" || panel.hidden) { return; }
+    var items = [].slice.call(panel.querySelectorAll(FOCUSABLE))
+                  .filter(function (el) { return el.offsetParent !== null; });
+    if (!items.length) { e.preventDefault(); panel.focus(); return; }
+    var first = items[0], last = items[items.length - 1];
+    // The panel itself is tabindex="-1" and takes focus on open, so the first Tab
+    // lands inside without this; the wrap is for the two ends.
+    if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+      e.preventDefault(); last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault(); first.focus();
+    }
   });
 
   readUrl();

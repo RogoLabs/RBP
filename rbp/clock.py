@@ -44,6 +44,8 @@ import json
 import math
 import os
 
+from . import schema
+
 EXPECTATION_HOURS = 72
 
 RULE_MUST = "4.5.1.4"      # the CNA itself disclosed
@@ -347,7 +349,7 @@ def age_days(public_date, today):
     gave no usable date."""
     try:
         return (dt.date.fromisoformat(today) - dt.date.fromisoformat(public_date)).days
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
 
@@ -409,7 +411,7 @@ class ResolutionLedger:
                 loaded = json.load(open(path))
                 if isinstance(loaded, dict):
                     self.state.update(loaded)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
 
     def track(self, rows, suppressed=()):
@@ -506,13 +508,13 @@ class ResolutionLedger:
 
     def save(self):
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-        json.dump(self.state, open(self.path, "w"), indent=1)
+        schema.write_json(self.path, self.state)
 
 
 def _days_between(a, b):
     try:
         return (dt.date.fromisoformat(b) - dt.date.fromisoformat(a)).days
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
 

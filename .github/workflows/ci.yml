@@ -17,6 +17,21 @@ jobs:
           cache: pip
       - run: pip install -r requirements-dev.txt
 
+      # LINT, and there was none. This repository carried 52 `# noqa` directives
+      # and no tool anywhere that reads one: no config file, no lint step in
+      # either workflow. One of them was malformed in a way no linter accepts,
+      # which is how you can tell. The rule set is narrow and every rule in it
+      # found a real defect on its first run, including a repeated dict key in
+      # the site render context and a test that derived the values it was meant
+      # to compare and then compared a hand-typed list instead. See
+      # pyproject.toml for what is selected and what is deliberately not.
+      #
+      # On the COMMIT path only, like the render job. A lint failure must not be
+      # able to stop a four-times-daily publication: it is a code-quality signal,
+      # and deploy.yml does not run it.
+      - name: Lint
+        run: python -m ruff check .
+
       # Frozen fixtures only: deterministic, no network.
       #
       # tests/render is ignored here rather than left to skip itself. It skips

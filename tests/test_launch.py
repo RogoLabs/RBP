@@ -228,7 +228,8 @@ def test_the_workflow_only_sets_the_rehearsal_flag_on_a_dry_run():
     import pathlib
     wf = (pathlib.Path(__file__).parent.parent / ".github" / "workflows"
           / "deploy.yml").read_text()
-    line = next(l for l in wf.splitlines() if l.strip().startswith("RBP_REHEARSE:"))
+    line = next(ln for ln in wf.splitlines()
+                if ln.strip().startswith("RBP_REHEARSE:"))
     assert "inputs.dry_run == true" in line, (
         "RBP_REHEARSE is not gated on dry_run, so it is a gate bypass")
     assert "rehearse_launch == true" in line

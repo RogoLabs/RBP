@@ -252,7 +252,7 @@ def _summary(r):
 def _age(public_date, today):
     try:
         return (dt.date.fromisoformat(today) - dt.date.fromisoformat(public_date)).days
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
 
@@ -418,9 +418,10 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     # test: the unit tests used a two-row fixture and checked backlog.json and
     # held_back.json, so they were blind to the third writer.
     from . import site as _site_full
-    json.dump(_site_full._denamed([r for r in backlog if not r.get("suppressed")],
-                                  "backlog_full.json"),
-              open(os.path.join(sdir, "backlog_full.json"), "w"), indent=1)
+    schema.write_json(
+        os.path.join(sdir, "backlog_full.json"),
+        _site_full._denamed([r for r in backlog if not r.get("suppressed")],
+                            "backlog_full.json"))
     # Excluded rows, with the reason. An epoch that removes the oldest and
     # strongest evidence has to read as deliberate conservatism, not be
     # discovered later as a discrepancy between two numbers.
@@ -474,8 +475,8 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     held = _site._denamed(held, "held_back.json")
     _site.assert_artefact(gated_rows, "backlog.json")
     _site.assert_artefact(held, "held_back.json")
-    json.dump(held, open(os.path.join(sdir, "held_back.json"), "w"), indent=1)
-    json.dump(gated_rows, open(os.path.join(sdir, "backlog.json"), "w"), indent=1)
+    schema.write_json(os.path.join(sdir, "held_back.json"), held)
+    schema.write_json(os.path.join(sdir, "backlog.json"), gated_rows)
 
     # WoW diff: compare like-for-like (full backlog both sides, not full-vs-reportable)
     prev = _prev_snapshot(snap_root, today)
@@ -504,7 +505,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     if cov is not None:
         from . import coverage
         md += "\n" + coverage.markdown(cov)
-    open(os.path.join(sdir, "report.md"), "w").write(md)
+    schema.write_text(os.path.join(sdir, "report.md"), md)
     return sdir, md, kpi_core
 
 
@@ -557,7 +558,7 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
                  f"−{len(resolved_ids)} resolved. Resolved = the record finally published, the "
                  "pipeline self-closes, confirming these were real gaps, not tool noise.\n")
 
-    total_hard, total_soft = len(hard), len(soft)
+    total_hard = len(hard)
     L.append("## Totals\n")
     L.append(f"**Reportable** = provably public ≥ {min_age} days (a conservative buffer well past the "
              "72h publish rule), the single threshold; no separate 30-day tier.\n")

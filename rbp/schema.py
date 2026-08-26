@@ -30,6 +30,7 @@ templates.
 from __future__ import annotations
 
 import datetime as dt
+import json
 import os
 import subprocess
 
@@ -99,6 +100,113 @@ def source_dirty():
 # indexing by position must fail loudly rather than silently read `sources` where
 # it expected `owner`, which is the entire reason this constant exists.
 SCHEMA_VERSION = 2
+
+# --------------------------------------------------------------------------
+# Writing an artefact. One implementation.
+# --------------------------------------------------------------------------
+
+
+def write_json(path, obj, indent=1):
+    """Write one JSON artefact and CLOSE IT.
+
+    Every artefact writer in this project was `json.dump(obj, open(p, "w"),
+    indent=1)`: thirty of them, across six modules, none closing the handle and
+    each repeating the indent. Both halves of that are worth fixing.
+
+    THE HANDLE. It works on CPython, where the refcount drops to zero at the end
+    of the statement and the file is flushed and closed there. That is a
+    documented implementation detail rather than a language guarantee, and the
+    failure mode if it ever stops holding is a truncated JSON artefact on the
+    publish path, which is the single failure this project treats as unacceptable:
+    a feed shrinking silently has bitten it twice, and a half-written rbp.json is
+    the same shape of error with the site's own name on it. It also means the
+    suite cannot be run under `-W error::ResourceWarning`.
+
+    THE INDENT. Repeated thirty times, and already inconsistent: the classify
+    cache was written with no indent at all while everything beside it used 1.
+
+    Not atomic. A temp-file-and-rename would also protect against a crash
+    mid-write leaving a partial file where the next step expects a whole one.
+    That is a real improvement and a separate change: it needs the same directory
+    for the temp file and a decision about what to do on Windows, and doing it
+    here in one function is exactly what makes it a one-line change later.
+    """
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(obj, fh, indent=indent)
+
+
+def write_text(path, text):
+    """Write one text artefact and close it. See write_json."""
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
+# --------------------------------------------------------------------------
+# THE DE-NAMING VOCABULARY. One definition, here, because four disagreed.
+# --------------------------------------------------------------------------
+#
+# v1 publishes no attribution, and enforcing that means every writer and every
+# guard has to agree on what "names a CNA" means. Before 2026-08-26 they did not:
+#
+#   site.NAME_FIELDS             9 row-level fields
+#   site._LEDGER_NAMES           9 ledger fields
+#   site._PER_CNA_KEYS           4 per-CNA table keys
+#   cli._PER_CNA_KEYS            the same 4, a second copy
+#   cli._CLOSURE_NAME_FIELDS     5 closure fields
+#   publish._LEDGER_NAME_FIELDS  6 ledger fields
+#
+# Two of those were byte-identical duplicates of each other, and the whole point
+# of the list is that "adding a new owner_* field cannot leak by being forgotten
+# here". Forgotten in ONE of two copies is the same leak with an extra step.
+#
+# Defined in schema.py rather than in site.py or publish.py because schema has no
+# internal imports, so every module can reach it without a cycle, and because
+# what counts as a name is part of the published contract rather than a property
+# of whoever happens to be writing the file.
+#
+# WHY THERE ARE STILL THREE LISTS. They are three different shapes, not three
+# opinions about one shape:
+#
+#   ROW_NAME_FIELDS      fields on a published ROW
+#   LEDGER_NAME_FIELDS   fields inside a ledger entry, which records a prediction
+#                        and its later verdict, so it has `predicted`/`actual`
+#                        where a row has `owner`
+#   PER_CNA_KEYS         keys whose VALUES are mappings keyed by CNA. These leak
+#                        by KEY rather than by value, so a field-name check
+#                        cannot see them: stripping only the first list left
+#                        `$.by_cna.GitHub_M` in a published precision.json.
+
+# Fields on a published row that carry or qualify a name. `owner_tier` and
+# `owner_method` hold no name of their own ("abstain",
+# "block-k3-vetoed-by-product-map"); they are in here anyway, because they are an
+# assertion that this site formed a view about who owns the row, and on a row
+# published as unattributed that is a statement it has chosen not to make.
+ROW_NAME_FIELDS = ("owner", "owner_tier", "owner_method", "owner_contested",
+                   "predicted_owner", "product_map_owner",
+                   "product_map_confidence", "product_map_method",
+                   "owner_is_inferred")
+
+# Fields inside a ledger entry. `actual` and `published_assigner` were missing
+# once, and they are the two that carry an AUTHORITATIVE name rather than an
+# inferred one, which makes publishing them a stronger claim than anything on a
+# page rather than a weaker one.
+# `owner_is_inferred` was on the row list and not this one until 2026-08-26, when
+# the test below started asserting the owner_* family appears in both. It carries
+# no name, being a boolean, and it is stripped for the same reason `owner_tier` is:
+# on a row this site publishes as unattributed, recording that it formed a view is
+# a statement it has chosen not to make, and a ledger on a public branch publishes
+# it just as surely as a page does.
+LEDGER_NAME_FIELDS = ("owner", "owner_tier", "owner_method", "owner_contested",
+                      "owner_is_inferred", "predicted", "predicted_owner",
+                      "actual", "assigner", "published_assigner",
+                      "product_map_owner", "product_map_confidence",
+                      "product_map_method")
+
+# Keys whose values are per-CNA mappings. Stripped by STRUCTURE, because a
+# per-CNA table is keyed by CNA and a mapping keyed by CNA is the thing that must
+# not ship, whatever the key is called.
+PER_CNA_KEYS = ("by_cna", "by_tier_cna", "largest_stratum", "misses")
+
 
 # The one column contract. Order is part of it: a consumer indexing by position
 # breaks silently on a reorder, so this list is the order and it does not change

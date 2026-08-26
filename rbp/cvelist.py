@@ -20,6 +20,8 @@ from collections import Counter, defaultdict
 
 import pandas as pd
 
+from . import schema
+
 RELEASES_API = "https://api.github.com/repos/CVEProject/cvelistV5/releases"
 UA = {"User-Agent": "rbptracker.org (+https://github.com/RogoLabs/RBP)"}
 
@@ -123,7 +125,7 @@ def download_baseline(dest, url=None, date=None):
     print(f"downloading baseline {date} ({url.rsplit('/', 1)[-1]})")
     urllib.request.urlretrieve(url, dest)
     if date:
-        open(stamp, "w").write(date)
+        schema.write_text(stamp, date)
     return dest
 
 
@@ -150,7 +152,7 @@ def _iter_records(zip_path):
                 raise RuntimeError("baseline decompressed size exceeded ceiling, aborting")
             try:
                 yield json.loads(z.read(name))
-            except Exception:  # noqa: BLE001
+            except Exception:
                 continue
 
 
@@ -199,13 +201,6 @@ def build_index(zip_path, out_dir):
     return corpus, prod
 
 
-def load_index(out_dir):
-    return (
-        pd.read_parquet(os.path.join(out_dir, "corpus.parquet")),
-        pd.read_parquet(os.path.join(out_dir, "product_cna.parquet")),
-    )
-
-
 # --------------------------------------------------------------------------
 # incremental refresh
 # --------------------------------------------------------------------------
@@ -219,13 +214,17 @@ SCHEMA = 2
 
 COLUMNS = ["cve_id", "state", "assigner", "date_published", "vendor", "product"]
 
+# `load_index` stood here: a two-line read of both parquets that nothing called,
+# in rbp/ or in tests. `ensure_corpus` does its own conditional read, so this was
+# the reader for a path that no longer exists. Removed 2026-08-26.
+
 
 def _read_state(index_dir):
     path = os.path.join(index_dir, STATE_FILE)
     if os.path.exists(path):
         try:
             return json.load(open(path))
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
     return {}
 
@@ -233,7 +232,7 @@ def _read_state(index_dir):
 def _write_state(index_dir, **kw):
     state = _read_state(index_dir)
     state.update(kw)
-    json.dump(state, open(os.path.join(index_dir, STATE_FILE), "w"), indent=1)
+    schema.write_json(os.path.join(index_dir, STATE_FILE), state)
 
 
 def _delta_rows(url):
@@ -250,7 +249,7 @@ def _delta_rows(url):
             continue
         try:
             rec = json.loads(z.read(name))
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
         meta = rec.get("cveMetadata", {})
         cid = meta.get("cveId")
