@@ -5,13 +5,28 @@ Reads the newest snapshot plus both ledgers and renders rbptracker.org. No
 network, no runtime API calls: every page is a file, and the data the tables
 sort and filter is embedded as JSON so the browser never fetches anything.
 
-Editorial stance, binding here and recorded in PLAN.md 2a: the site leads with
-the COUNT. It is the dashboard the CVE Program should have published, so it
-reads like an instrument panel rather than a campaign. The `owning_cna`
-redaction is the immediate subhead, because it explains why the count had to be
-assembled from outside. The Program's removed RBP metric gets its own section
-lower down. The per-CNA page is reachable but never the lead, and it carries no
-verdict, because RBP Policy v2.0.0 has no threshold for a CNA to be over.
+EDITORIAL STANCE, rewritten 2026-08-26 with the pivot it had stopped describing.
+
+The site is A LIST. "Here are the CVE IDs that are reserved and public, and where
+they are showing up." The front door is the rows, a command bar over them, and a
+slide-over carrying everything that used to be a separate page.
+
+It previously led with the COUNT, as an instrument panel: a 104px number and
+around 650 words before the first CVE, over a seven-column table that answered
+the first half of the question and none of the second. Four pages are rendered
+now, and this docstring described the eight-page version for the whole time it
+was wrong, which is the argument for it being here rather than in PLAN.md.
+
+What has not changed, and is the part that binds:
+
+  - no verdict, because RBP Policy v2.0.0 has no threshold for a CNA to be over;
+  - no attribution at all under v1, see NAMING_ENABLED, so there is no per-CNA
+    page and no CNA is named on any row;
+  - the `owning_cna` redaction is the reason the count had to be assembled from
+    outside, and it is answered in the panel rather than assumed;
+  - a count that is a lower floor than usual says so where the count is. The
+    explanation lives on /status; the disclosure does not move off the page
+    carrying the number.
 """
 from __future__ import annotations
 
@@ -30,6 +45,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import clock
 from . import launch as launch_mod
+from . import schema as _schema
 
 # Pre-launch posture. The dashboard is built and reachable either way, because
 # the repo is public and the data files are served regardless; the gate is on
@@ -41,7 +57,8 @@ from . import launch as launch_mod
 #   launched:     / IS the dashboard.
 #
 # Flip with RBP_LAUNCHED=1, wired to a repository variable so it is a settings
-# change rather than a commit. The launch gate is 50% CNA coverage (PLAN.md).
+# change rather than a commit. The gate itself is GATE_TOP_N_PCT below; do not
+# restate the number here, because the two said different things for four days.
 # Minimum coverage before the front door may become the dashboard, measured on
 # cnas_effective: CNAs seen at least MIN_SIGHTINGS times, which is the same floor
 # inference uses before it will attach a name to a row.
@@ -53,7 +70,7 @@ from . import launch as launch_mod
 # produced a red check forever, with nothing to distinguish a threshold that was
 # merely distant from one that was unreachable. That was found by reading a
 # summary artefact, not by a test, so test_gate_threshold_is_reachable now
-# asserts the gate figure can in principle reach GATE_PCT.
+# asserts the gate figure can in principle reach GATE_TOP_N_PCT.
 #
 # The objection that motivated own-channel still stands and is answered instead
 # by the floor: a single stray sighting no longer credits a CNA as covered.
@@ -114,19 +131,22 @@ LAUNCHED = _validated_launched(os.environ.get("RBP_LAUNCHED"))
 # the deploy job is skipped and the artefact is discarded.
 REHEARSE = (os.environ.get("RBP_REHEARSE") or "").strip() in ("1", "true", "yes")
 
-# The precision floor now lives in inference.MIN_GRADED, because whoever computes
-# the number has to be the one that floors it. Split across two modules, the raw
-# value reached summary.json while the floored one reached precision.json, and both
-# published. Re-exported for the tests that reference it.
 # THE PRECISION FLOOR, and the one implementation of the rule.
 #
-# Moved here from rbp.inference on 2026-08-26. It is a PUBLISHING rule, not a
-# block-inference one: it decides whether a ratio is fit to print, and it was the
-# last thing keeping the publish path importing 699 lines that no longer run.
-# inference imports it back, so there is still exactly one implementation.
-# Owned here rather than in site.py, because whoever computes the number has to be
-# the one that floors it. Split across two modules, the raw value reached
-# summary.json while the floored one reached precision.json, and both published.
+# Moved here from rbp.inference on 2026-08-26. It is a PUBLISHING rule rather than
+# a block-inference one: it decides whether a ratio is fit to print, and it was
+# the last thing keeping the publish path importing 699 lines that no longer run.
+# `inference` imports it back, so there is still exactly one implementation.
+#
+# Why one implementation matters here specifically: split across two modules, the
+# raw value reached summary.json while the floored one reached precision.json, so
+# two files from the same run published different figures for this site's own
+# accuracy.
+#
+# (Three overlapping comment blocks stood here after the move, two of them saying
+# the floor lived in inference and one saying it was "owned here rather than in
+# site.py", inside site.py. Left as a note because the move is exactly when this
+# happens.)
 MIN_GRADED = 20
 
 
@@ -204,8 +224,6 @@ def summarise_state(state):
 # --------------------------------------------------------------------------
 
 
-GRADER_MIN_N = MIN_GRADED
-
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 TEMPLATES = os.path.join(ROOT, "templates")
@@ -228,7 +246,7 @@ def _read(path, default):
         return json.load(open(path))
     except FileNotFoundError:
         return default
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise SystemExit(f"{path} exists but is unreadable: {e}. Refusing to "
                          "publish from a corrupt ledger.") from e
 
@@ -244,7 +262,7 @@ def _read_strict(path):
     """
     try:
         return json.load(open(path))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise SystemExit(f"cannot read {path}: {e}") from e
 
 
@@ -286,9 +304,12 @@ NAMING_ENABLED = False
 # Every field that carries or qualifies a name. Stripped as a set, so adding a
 # new owner_* field cannot leak by being forgotten here: schema.COLUMNS is
 # asserted against this list in tests.
-NAME_FIELDS = ("owner", "owner_tier", "owner_method", "owner_contested",
-               "predicted_owner", "product_map_owner", "product_map_confidence",
-               "product_map_method", "owner_is_inferred")
+#
+# ONE DEFINITION, in schema.py since 2026-08-26. There were four overlapping
+# lists across three modules and two of them were byte-identical duplicates, on a
+# rule whose entire value is that a new field cannot be forgotten. Re-exported
+# under the local name so the call sites below read the same as they did.
+NAME_FIELDS = _schema.ROW_NAME_FIELDS
 
 
 def _denamed(rows, source="artefact"):
@@ -398,8 +419,19 @@ def _gate_status(summary):
 
     pct = round(100 * top_eff / top_n, 1)
     needed = -(-int(GATE_TOP_N_PCT * top_n) // 100)      # ceil, in whole CNAs
-    cleared = pct >= GATE_TOP_N_PCT
+    # CLEARED IS DERIVED FROM THE MARGIN, not from the rounded percentage.
+    #
+    # It was `pct >= GATE_TOP_N_PCT`, and `pct` is rounded to one decimal, so the
+    # two could disagree: any figure in [79.95, 80.0) rounds to 80.0 and clears
+    # while `needed` is still one CNA above `top_eff`, publishing
+    # `cleared: true, margin: -1`. At top_n = 50 the granularity is 2% and it
+    # cannot happen; `top_n` is a parameter, and a gate that is only correct at
+    # one value of its own input is correct by accident.
+    #
+    # One comparison, in whole CNAs, which is also the unit the gate is argued in
+    # everywhere else: "40 of 50", not "80.0%".
     margin = top_eff - needed
+    cleared = margin >= 0
     return {
         "cleared": cleared,
         "pct": pct,
@@ -654,7 +686,7 @@ def _publish_keep():
     try:
         from .publish import KEEP_SNAPSHOTS
         return KEEP_SNAPSHOTS
-    except Exception:  # noqa: BLE001
+    except Exception:
         return None
 
 
@@ -672,34 +704,32 @@ def _drop_withheld(rows, withheld, label):
 
 
 def withheld_ids(data_dir):
-    """Ids this run withheld, read from the runner-local file. Never published.
+    """Ids this build must not publish. Delegates; see publish.suppressed_ids.
 
     THE SITE READS THIS ITSELF rather than relying on the workflow having
     scrubbed the tree first, and the distinction is the whole of review item 4.
 
     `publish.stage` was the only code that scrubbed withheld ids, and it runs
-    AFTER the site is built (deploy.yml: Run pipeline, Build site, upload,
-    then Stage durable state). It scrubs `.state`, which is the data branch. The
+    AFTER the site is built (deploy.yml: Run pipeline, Build site, upload, then
+    Stage durable state). It scrubs `.state`, which is the data branch. The
     runner's own `snapshots/` tree, which `site.build` reads, was never touched,
-    so on the run where a withhold first fires the site published the withheld id
-    twice: inside /data/archive/<yesterday>/rbp.json, and as plain text on
-    /changes under "no longer listed". For an embargo the id IS the sensitive
-    fact, so that defeats the lever for a full six-hour cycle.
+    so on the run where a withhold first fired the site published the withheld id
+    twice: in /data/archive/<yesterday>/rbp.json and as plain text under "no
+    longer listed". For an embargo the id IS the sensitive fact, so that defeats
+    the lever for a full six-hour cycle.
 
     Doing it here rather than adding a scrub step ahead of the build is
     deliberate. A workflow ordering constraint is invisible to anyone reading the
-    Python, holds only in CI, and breaks silently the first time someone
-    reorders a step. This holds in a local build too.
+    Python, holds only in CI, and breaks silently the first time someone reorders
+    a step. This holds in a local build too.
 
-    Empty on any problem, and that is the safe direction: an unreadable file
-    means nothing is withheld from the SITE, while `publish.check` still refuses
-    to stage a suppressed row, so the failure cannot reach the data branch.
+    DELEGATED since 2026-08-26. This used to be a second implementation of the
+    same read against the same file: same path, same empty-on-error contract,
+    same intent, maintained twice. One of them normalising ids and the other not
+    would be a withhold that worked on the data branch and not on the page.
     """
-    try:
-        ids = json.load(open(os.path.join(data_dir, ".suppressed.json")))
-    except Exception:  # noqa: BLE001
-        return set()
-    return {str(i).strip().upper() for i in ids if i}
+    from .publish import suppressed_ids
+    return suppressed_ids(data_dir)
 
 
 def load(snap_root, data_dir):
@@ -803,8 +833,6 @@ def load(snap_root, data_dir):
         [r for r in _closures if r.get("state", "PUBLISHED") == "PUBLISHED"])[:200]
     _rejected_closures = [r for r in _closures if r.get("state") == "REJECTED"][-200:]
 
-    graded = grader.get("graded", [])
-
     # item 13: freshness measured, not asserted. The site claimed "Updated every
     # six hours" as static copy while nothing anywhere computed staleness, and a
     # scheduled workflow can stop silently (GitHub disables cron after 60 days of
@@ -865,8 +893,9 @@ def load(snap_root, data_dir):
         # to share one list that the templates sorted on days_to_publish, which
         # is None for a rejection, and Jinja's sort filter calls sorted(), so one
         # published plus one rejected closure raised TypeError and killed the
-        # whole build. changes.html is in PAGES, so that killed the pre-launch
-        # build too, the artefact never uploaded, deploy was skipped, and the
+        # whole build. The page rendering it was in PAGES, so that killed the
+        # pre-launch build too, the artefact never uploaded, deploy was skipped,
+        # and the
         # next run re-derived the same rejection and failed identically. A
         # self-sustaining outage, latent only because resolved is currently 0.
         #
@@ -913,7 +942,9 @@ def load(snap_root, data_dir):
         # from inference so there is exactly one definition of it.
         "precision_floor": MIN_GRADED,
         "launched": launched,
-        "gate": gate,
+        # `gate` is set once, above, with the reasoning. It was in this dict
+        # twice with the same value; harmless, and the kind of duplicate a merge
+        # leaves behind on a dict whose whole job is to be the one context.
         # Where the dashboard actually lives, so the nav and the logo point at
         # it in both postures.
         "home": "index.html" if launched else "overview.html",
@@ -1009,8 +1040,9 @@ def _changes(rows, prev_dir, latest_dir, withheld=frozenset()):
     # Withheld ids leave BOTH sides of the diff.
     #
     # Dropping them only from `rows` would move each one into `gone`, and `gone`
-    # minus the authoritative closures is `no_longer_listed`, which changes.html
-    # renders as a plain list of CVE IDs. So the lever that exists to remove an
+    # minus the authoritative closures is `no_longer_listed`, which /status
+    # renders as a plain list of CVE IDs (it was /changes until 2026-08-26; the
+    # page moved and the hazard did not). So the lever that exists to remove an
     # id from the site would have published it, in a list captioned as rows that
     # stopped being listed. That is worse than not withholding at all: it is a
     # short, high-signal list of exactly the ids someone asked to have removed.
@@ -1109,8 +1141,9 @@ def _env():
 # indep_sources == 1, all of them GHSA plus its own OSV mirror.
 # The published column contract lives in rbp/schema.py, once. This was a 25-field
 # list here and a 26-field list in a different order in report.build, under a
-# comment claiming the two CSVs were identical.
-from . import schema as _schema
+# comment claiming the two CSVs were identical. Imported at the top of the module
+# with the others since 2026-08-26, because NAME_FIELDS is now defined from it and
+# a module-level constant cannot read an import that happens 800 lines later.
 
 CSV_COLS = _schema.COLUMNS
 
@@ -1118,10 +1151,8 @@ CSV_COLS = _schema.COLUMNS
 # Per-CNA breakdowns inside a summary block. Keyed BY CNA, so a de-namer that
 # reads field names cannot see them: `by_cna` was a 40-CNA table of decided,
 # precision and coverage, published live for four days.
-_PER_CNA_KEYS = ("by_cna", "by_tier_cna", "largest_stratum", "misses")
-_LEDGER_NAMES = ("owner", "predicted", "predicted_owner", "actual", "assigner",
-                 "published_assigner", "owner_tier", "owner_method",
-                 "owner_contested")
+_PER_CNA_KEYS = _schema.PER_CNA_KEYS
+_LEDGER_NAMES = _schema.LEDGER_NAME_FIELDS
 
 
 def _strip_keys(obj, keys):
@@ -1184,13 +1215,13 @@ def _write_data(out, ctx):
     #
     # So the guarantee is made here, where publication actually happens, and it
     # holds no matter how old or how dirty the input snapshot is.
-    json.dump(env, open(os.path.join(d, "rbp.json"), "w"), indent=1)
-    json.dump(_unattributed_summary(ctx["summary"]),
-              open(os.path.join(d, "summary.json"), "w"), indent=1)
-    json.dump(ctx["cnas"] if NAMING_ENABLED else [],
-              open(os.path.join(d, "cnas.json"), "w"), indent=1)
-    json.dump(ctx["grader"] if NAMING_ENABLED else _denamed_grader(ctx["grader"]),
-              open(os.path.join(d, "precision.json"), "w"), indent=1)
+    _schema.write_json(os.path.join(d, "rbp.json"), env)
+    _schema.write_json(os.path.join(d, "summary.json"),
+                       _unattributed_summary(ctx["summary"]))
+    _schema.write_json(os.path.join(d, "cnas.json"), ctx["cnas"] if NAMING_ENABLED else [])
+    _schema.write_json(
+        os.path.join(d, "precision.json"),
+        ctx["grader"] if NAMING_ENABLED else _denamed_grader(ctx["grader"]))
 
     # The closure record. resolved.json and held_back.json were computed, rendered
     # and then withheld from consumers entirely: neither reached the data branch or
@@ -1201,33 +1232,36 @@ def _write_data(out, ctx):
     # this project's single strongest piece of evidence and the epoch would have
     # deleted it from the site with no home anywhere.
     assert_artefact(ctx["held_back"], "held-back.json", ctx["cnas"], covered)
-    json.dump(_schema.envelope(ctx["held_back"], ctx["summary"], launched=launched,
-                               snapshot_date=ctx["snapshot_date"], kind="held-back"),
-              open(os.path.join(d, "held-back.json"), "w"), indent=1)
+    _schema.write_json(
+        os.path.join(d, "held-back.json"),
+        _schema.envelope(ctx["held_back"], ctx["summary"], launched=launched,
+                         snapshot_date=ctx["snapshot_date"], kind="held-back"))
 
     # `published_assigner` joined to first_public / published / days_to_publish
     # is a dated per-CNA lateness table. 46 of 47 rows carried one, live, and the
     # assigner is authoritative rather than inferred.
-    json.dump(_schema.envelope(
-                  _strip_keys(ctx["resolutions_published"], set(_LEDGER_NAMES))
-                  if not NAMING_ENABLED else ctx["resolutions_published"],
-                  ctx["summary"], launched=launched,
-                  snapshot_date=ctx["snapshot_date"], kind="resolved"),
-              open(os.path.join(d, "resolved.json"), "w"), indent=1)
+    _schema.write_json(
+        os.path.join(d, "resolved.json"),
+        _schema.envelope(
+            _strip_keys(ctx["resolutions_published"], set(_LEDGER_NAMES))
+            if not NAMING_ENABLED else ctx["resolutions_published"],
+            ctx["summary"], launched=launched,
+            snapshot_date=ctx["snapshot_date"], kind="resolved"))
 
     # A CSV sidecar, so the column contract is machine-readable beside the file
     # rather than only prose on /data.
-    json.dump({"schema_version": _schema.SCHEMA_VERSION,
-               "columns": _schema.COLUMNS,
-               "fields": {k: {"type": t, "absent": a, "meaning": m}
-                          for k, (t, a, m) in _schema.FIELDS.items()}},
-              open(os.path.join(d, "rbp.csv.meta.json"), "w"), indent=1)
+    _schema.write_json(
+        os.path.join(d, "rbp.csv.meta.json"),
+        {"schema_version": _schema.SCHEMA_VERSION,
+         "columns": _schema.COLUMNS,
+         "fields": {k: {"type": t, "absent": a, "meaning": m}
+                    for k, (t, a, m) in _schema.FIELDS.items()}})
 
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=CSV_COLS, extrasaction="ignore")
     w.writeheader()
     w.writerows(ctx["rows"])
-    open(os.path.join(d, "rbp.csv"), "w").write(buf.getvalue())
+    _schema.write_text(os.path.join(d, "rbp.csv"), buf.getvalue())
 
     # THE DATED ARCHIVE (Part 2 condition 7).
     #
@@ -1259,7 +1293,7 @@ def _write_data(out, ctx):
                                   source=f"archive/{date}"),
                 withheld, f"archive/{date}")
             snap_sum = json.load(open(sum_path))
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
         # Validated against ITS OWN covered set and cnas.json, not today's.
         #
@@ -1275,15 +1309,16 @@ def _write_data(out, ctx):
         # the version that fails closed on correct history is still failing.
         try:
             snap_cnas = json.load(open(os.path.join(snap, "cnas.json")))
-        except Exception:  # noqa: BLE001
+        except Exception:
             snap_cnas = []
         snap_covered = set((snap_sum.get("coverage") or {}).get("covered") or [])
         assert_artefact(snap_rows, f"archive/{date}/rbp.json", snap_cnas, snap_covered)
         dd = os.path.join(arch_root, date)
         os.makedirs(dd, exist_ok=True)
-        json.dump(_schema.envelope(snap_rows, snap_sum, launched=launched,
-                                   snapshot_date=date, kind="backlog"),
-                  open(os.path.join(dd, "rbp.json"), "w"), indent=1)
+        _schema.write_json(
+            os.path.join(dd, "rbp.json"),
+            _schema.envelope(snap_rows, snap_sum, launched=launched,
+                             snapshot_date=date, kind="backlog"))
         archive.append({
             "date": date,
             "url": f"data/archive/{date}/rbp.json",
@@ -1293,13 +1328,14 @@ def _write_data(out, ctx):
             "corroborated": snap_sum.get("corroborated"),
         })
     archive_index = sorted(archive, key=lambda a: a["date"], reverse=True)
-    json.dump({"schema_version": _schema.SCHEMA_VERSION,
-               "stable_not_immutable": True,
-               "note": ("A withhold request removes a row from every published "
-                        "artefact including these, so a figure can go down. This "
-                        "archive is stable, not immutable."),
-               "snapshots": archive_index},
-              open(os.path.join(d, "archive.json"), "w"), indent=1)
+    _schema.write_json(
+        os.path.join(d, "archive.json"),
+        {"schema_version": _schema.SCHEMA_VERSION,
+         "stable_not_immutable": True,
+         "note": ("A request to remove a row removes it from every published "
+                  "artefact including these, so a figure can go down. This "
+                  "archive is stable, not immutable."),
+         "snapshots": archive_index})
     _archive_index = archive_index
 
     # One file per CNA, so anyone can pull just their own rows. NOT WRITTEN under
@@ -1314,8 +1350,8 @@ def _write_data(out, ctx):
             os.makedirs(per, exist_ok=True)
         for c in (ctx["cnas"] if launched else []):
             mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
-            json.dump({"cna": c["cna"], "summary": c, "rows": mine},
-                      open(os.path.join(per, f"{c['slug']}.json"), "w"), indent=1)
+            _schema.write_json(os.path.join(per, f"{c['slug']}.json"),
+                               {"cna": c["cna"], "summary": c, "rows": mine})
 
     # Returned so /data can render the citable routes. The pages render AFTER the
     # data files for exactly this reason.
@@ -1329,7 +1365,7 @@ def _write_data(out, ctx):
 # the outcome the gate exists to prevent.
 _PAGE_TEMPLATES = [
     # ONE ROUTE. `list.html` is the front door and the list: the command bar, the
-    # rows, and a slide-over carrying what used to be seven other pages.
+    # rows, and a slide-over carrying what used to be four other pages.
     #
     # The old index.html dashboard opened with a 104px number and ~650 words
     # before the first CVE, and its stat tiles were instrument readings about
@@ -1341,6 +1377,12 @@ _PAGE_TEMPLATES = [
     # modal.
     ("method.html", "method.html"),
     ("policy.html", "policy.html"),
+    # The run's own health, moved off the front page on 2026-08-26. The degraded
+    # banner rendered above the count on every page; it was correct and it was in
+    # the wrong place, because a reader who came for the list met a paragraph
+    # about feed truncation first. The front page keeps one line and a link; the
+    # explanation, the per-feed table and the cadence evidence are here.
+    ("status.html", "status.html"),
     # cnas.html and cna.html are NOT here. Both pages existed only to attribute
     # rows to named CNAs, and v1 publishes no attribution. They are not rendered
     # empty, because an empty per-CNA page is an invitation to fill it before the
@@ -1374,17 +1416,18 @@ def build(out, snap_root, data_dir):
     pages = pages_for(launched)
     for template, target in pages:
         # `page_file` is the page's own path, for a per-page og:url and canonical.
-        # A single hard-coded root og:url on all seven pages meant every paste
+        # A single hard-coded root og:url on every page meant every paste
         # unfurled as the front page regardless of what was actually shared.
         html = env.get_template(template).render(
             **ctx, page=target,
             page_file="" if target == "index.html" else target)
-        open(os.path.join(out, target), "w").write(html)
+        _schema.write_text(os.path.join(out, target), html)
 
     if not launched:
         # GitHub Pages cannot set X-Robots-Tag, and a meta tag cannot cover the
         # JSON and CSV under data/. robots.txt is the only lever that reaches them.
-        open(os.path.join(out, "robots.txt"), "w").write(
+        _schema.write_text(
+            os.path.join(out, "robots.txt"),
             "# Pre-launch. The count is built on partial CNA coverage and is not\n"
             "# ready to be indexed or cited. See PLAN.md launch gate.\n"
             "User-agent: *\nDisallow: /\n")
@@ -1395,7 +1438,8 @@ def build(out, snap_root, data_dir):
     os.makedirs(wk, exist_ok=True)
     _expires = (dt.datetime.now(dt.timezone.utc)
                 + dt.timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
-    open(os.path.join(wk, "security.txt"), "w").write(
+    _schema.write_text(
+        os.path.join(wk, "security.txt"),
         "# rbptracker.org\n"
         "# This site lists reserved CVE IDs that appear in public advisories.\n"
         "# Every row here is a CVE ID already referenced in a public advisory.\n"
@@ -1422,56 +1466,63 @@ def build(out, snap_root, data_dir):
     #
     # So it lives at /about-this-count.html in both postures, and pre-launch it is
     # ALSO the front door.
-    landing = os.path.join(ROOT, "placeholder.html")
-    if not os.path.exists(landing):
-        raise SystemExit("placeholder.html missing; cannot build the front door")
-    shutil.copyfile(landing, os.path.join(out, "about-this-count.html"))
+    #
+    # ONE COPY, TWO SHELLS since 2026-08-26. This used to be a standalone
+    # placeholder.html at the repo root, copied byte-for-byte to both routes. That
+    # made /about-this-count a page with no header, no nav, no footer and no theme
+    # toggle, in a palette nothing else on the site uses, reachable from the nav as
+    # "About" and offering no way back. It read as a different website.
+    #
+    # The reason it was standalone is real and it survives: pre-launch the front
+    # door must not link into the dashboard, because linking to it effectively
+    # launches it, and base.html's nav does exactly that. So the words live in
+    # templates/_about-copy.html and two shells wrap them:
+    #
+    #   about.html    extends base.html, full chrome   -> /about-this-count.html
+    #   holding.html  standalone, links nowhere inside -> /index.html, pre-launch
+    #
+    # Rendered rather than copied, so `asset_v` cache-busting and the og:url both
+    # work on the About page, which a static copy could not have.
+    _schema.write_text(
+        os.path.join(out, "about-this-count.html"),
+        env.get_template("about.html").render(
+            **ctx, page="about", page_file="about-this-count.html"))
     if not launched:
-        # Kept as a standalone file rather than a template: it shares nothing
-        # with the dashboard by design, and it must not link into it before launch.
-        shutil.copyfile(landing, os.path.join(out, "index.html"))
+        _schema.write_text(
+            os.path.join(out, "index.html"),
+            env.get_template("holding.html").render(**ctx))
 
-    # Per-CNA detail pages are NOT written under v1.
+    # PER-CNA DETAIL PAGES ARE GONE, not merely switched off.
     #
     # They existed to be the page a CNA lands on when someone sends them the
-    # link, carrying the full row list attributed to that CNA. With no
-    # attribution published there is no such page to write, and writing an empty
-    # one would leave a URL shaped like an accusation waiting for content.
+    # link, carrying the full row list attributed to that CNA. v1 publishes no
+    # attribution, so there is no such page to write, and writing an empty one
+    # would leave a URL shaped like an accusation waiting for content.
     #
-    # The previous behaviour, kept here because the reasoning still applies if
-    # NAMING_ENABLED is ever flipped: the pages were withheld until launch,
-    # because report.py states the project's own rule that a named CNA gets a
-    # private preview before any row naming it circulates, and a six-hourly
-    # public deploy breaks that rule on every run. noindex was not sufficient,
-    # since the pages remained fetchable and linkable.
-    written_cna = 0
-    if NAMING_ENABLED:
-        cna_dir = os.path.join(out, "cna")
-        if launched:
-            os.makedirs(cna_dir, exist_ok=True)
-        tpl = env.get_template("cna.html")
-        for c in (ctx["cnas"] if launched else []):
-            mine = [r for r in ctx["rows"] if r.get("owner") == c["cna"]]
-            # Keyed on the TRACKED owner. reconcile sets `owner` to the
-            # post-transfer assigner, so keying on it gave a CNA-LR that
-            # published someone else's overdue record under 4.5.1.5 a resolution
-            # history it never had, while clock.by_owner keyed the median tile on
-            # the tracked owner. The same page showed two different parties' data.
-            resolved = [r for r in ctx["resolutions_published"]
-                        if (r.get("predicted_owner") or r.get("owner")) == c["cna"]]
-            # already ordered by _by_days_desc; the template must not re-sort
-            html = tpl.render(**ctx, page="cna", cna=c, cna_rows=mine,
-                              cna_resolved=resolved,
-                              page_file=f"cna/{c['slug']}.html")
-            open(os.path.join(cna_dir, f"{c['slug']}.html"), "w").write(html)
-            written_cna += 1
+    # This used to be `if NAMING_ENABLED:` around a loop rendering cna.html, kept
+    # under a comment saying the reasoning "still applies if NAMING_ENABLED is
+    # ever flipped". It did not apply, because templates/cna.html was deleted
+    # with the rest of the attribution surface and flipping the flag raised
+    # TemplateNotFound on the first build. A branch that cannot execute is not a
+    # preserved behaviour; it is a claim that a future maintainer would have
+    # discovered was false at the worst moment. Removed 2026-08-26, with the
+    # reasoning kept because the reasoning is the part worth having:
+    #
+    #   the pages were withheld until launch, because report.py states this
+    #   project's rule that a named CNA gets a private preview before any row
+    #   naming it circulates, and a six-hourly public deploy breaks that rule on
+    #   every run. noindex was not sufficient, since the pages remained fetchable
+    #   and linkable.
+    #
+    # Restoring naming means writing that template again, deliberately, against
+    # the conditions in PLAN.md 8d. See NAMING_ENABLED.
 
     posture = "LAUNCHED, / is the dashboard" if launched else \
               "pre-launch, / is the holding page and the dashboard is /overview.html"
     # Report what was written, not what was available. Printing the available
     # count while withholding the pages is the same class of untruth the review
     # found elsewhere on this site.
-    print(f"site: {len(pages)} pages + {written_cna} CNA pages -> {out}"
+    print(f"site: {len(pages)} pages -> {out}"
           + ("" if NAMING_ENABLED else " (v1 publishes no attribution)"))
     print(f"      {posture}")
     return ctx

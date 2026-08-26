@@ -187,3 +187,83 @@ def test_the_skip_link_is_the_first_stop_on_every_page_that_has_a_nav(
             f"{name}: the first Tab stop is <{stops[0]['tag']} "
             f"class={stops[0]['cls']!r}>, not the skip link")
     assert checked, "no page in the build has a nav, which cannot be right"
+
+
+# --------------------------------------------------------------------------
+# the slide-over is a MODAL, and had to start behaving like one
+# --------------------------------------------------------------------------
+
+def test_tab_cannot_walk_out_of_the_open_panel(page, server):
+    """The panel declares role="dialog" aria-modal="true" and nothing enforced it
+    for the keyboard.
+
+    aria-modal tells a screen reader to hide the rest of the document. It does
+    nothing to Tab order. So a keyboard reader could tab straight out of the open
+    dialog into the list behind the scrim, focus and activate controls they cannot
+    see, and have no way back to the close button short of cycling the whole page.
+    A dialog that announces itself as modal and is not is worse than one that
+    never claimed to be, because assistive technology acts on the claim.
+
+    Needs a browser twice over: Tab order is a rendered property, and `offsetParent`
+    visibility filtering only means anything once the cascade has run.
+    """
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}")
+    # A real pointer press first, so focus behaviour is the one most readers get
+    # rather than the no-interaction-yet special case this file documents.
+    pg.click("#panel-open")
+    assert pg.evaluate("() => !document.getElementById('panel').hidden"), (
+        "the panel did not open")
+
+    inside = """
+    () => {
+      const p = document.getElementById('panel');
+      const el = document.activeElement;
+      return { in: !!el && p.contains(el), tag: el ? el.tagName : null,
+               text: el ? (el.textContent || '').trim().slice(0, 40) : null };
+    }
+    """
+    # Well past the number of focusables the panel holds, so a trap that only
+    # holds for one lap is not enough.
+    for i in range(60):
+        pg.keyboard.press("Tab")
+        st = pg.evaluate(inside)
+        assert st["in"], (
+            f"Tab #{i + 1} left the open dialog and landed on "
+            f"{st['tag']} {st['text']!r}, which is behind the scrim")
+
+    # And backwards, which is the direction a wrap is usually forgotten in.
+    for i in range(20):
+        pg.keyboard.press("Shift+Tab")
+        st = pg.evaluate(inside)
+        assert st["in"], (
+            f"Shift+Tab #{i + 1} left the open dialog and landed on "
+            f"{st['tag']} {st['text']!r}")
+
+
+def test_escape_closes_the_panel_and_returns_focus(page, server):
+    """Focus has to come back somewhere the reader can act from. Left on
+    document.body, the next Tab restarts at the top of the page, which for a
+    reader who opened the panel from a row halfway down the list means losing
+    their place entirely."""
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}")
+    pg.click("#panel-open")
+    pg.keyboard.press("Escape")
+    assert pg.evaluate("() => document.getElementById('panel').hidden"), (
+        "Escape did not close the panel")
+    assert pg.evaluate(
+        "() => document.activeElement === document.getElementById('panel-open')"), (
+        "focus was not returned to the control that opened the panel")
+
+
+def test_the_page_behind_the_panel_is_not_scrollable_through_it(page, server):
+    """`body.locked` exists for this; it is asserted because a class that is
+    applied and styles nothing looks identical to one that works."""
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}")
+    pg.click("#panel-open")
+    overflow = pg.evaluate(
+        "() => getComputedStyle(document.body).overflow")
+    assert overflow in ("hidden", "clip"), (
+        f"the page behind the open dialog still scrolls (body overflow: {overflow})")

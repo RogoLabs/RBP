@@ -339,7 +339,7 @@ def _expire(cond, today=None):
 
 
 def checklist(summary, gate, today=None):
-    """The nine conditions, in the review's order, derived where derivable.
+    """The conditions, in the review's order, derived where derivable.
 
     Everything the run can observe is derived. What cannot be is declared with a
     verification date and expires, so no condition is permanently true.
@@ -355,7 +355,12 @@ def checklist(summary, gate, today=None):
 def status(summary, gate, today=None):
     """Roll-up. `cleared` means every condition is met, which is not the same
     question as `site._gate_status`'s coverage check and must never be conflated
-    with it: coverage is one of the nine."""
+    with it: coverage is one condition of several.
+
+    `total` is len(items) and every consumer must read it rather than typing a
+    number. /method said "nine conditions" above "8 of 8 are met" for the whole
+    life of the retirement of condition 4.
+    """
     items = checklist(summary, gate, today)
     unmet = [c for c in items if c["status"] != MET]
     return {

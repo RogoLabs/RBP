@@ -35,7 +35,6 @@ CSS = os.path.join(os.path.dirname(HERE), "static", "css")
 # needs 3.0. The chips render at 11.52px/600, which is neither, so the bar for
 # them is 4.5 and the "but they are bold" defence does not apply.
 AA_NORMAL = 4.5
-AA_LARGE = 3.0
 
 
 def parse_hex(value):
@@ -95,17 +94,35 @@ def _read(name):
 
 
 def tokens(theme="light"):
-    """Every `--color-*` custom property for a theme, as written.
+    """Every `--color-*` custom property for a theme, as the CASCADE resolves it.
 
-    Light is the bare `:root` block. Dark is `:root` first, then the
-    `[data-theme="dark"]` overrides applied on top, which is how the cascade
-    actually behaves: the dark block redefines only some tokens and inherits the
-    rest, so reading it alone gives a palette the browser never renders.
+    Light is every `:root` block. Dark is every `:root` AND every
+    `[data-theme="dark"]` block, because the dark block redefines only some
+    tokens and inherits the rest, so reading it alone gives a palette the browser
+    never renders.
+
+    IN SOURCE ORDER, and that is the correction. This used to collect the two
+    families separately and return `{**light, **dark}`, which models "the dark
+    block always wins". It does not. `:root` and `[data-theme="dark"]` have EQUAL
+    specificity, both (0,1,0), so source order decides and a `:root` block that
+    appears later beats an earlier dark one.
+
+    That is not hypothetical. style.css sets `--color-text-secondary: #9ca3b4`
+    in its `[data-theme="dark"]` block; rbp.css then overrides the same token to
+    #5a6168 at `:root`, as an AA correction solved against the LIGHT surfaces;
+    and rbp.css loads second. So in dark theme the browser resolved the token to
+    the light value and rendered `.text-muted` at 2.54:1 on the footer of every
+    page, while this function returned #9ca3b4 and reported 7.02.
+
+    A harness that is confidently wrong is the failure this module's own
+    docstring warns about, and it was wrong in the direction that reports a pass.
     """
     # Comments stripped. Without this a token whose declaration is followed by
     # an explanatory comment captured the comment text as part of its value.
+    # style.css first, then rbp.css: the order base.html links them, which is the
+    # order the cascade sees.
     css = strip_comments(_read("style.css") + "\n" + _read("rbp.css"))
-    light, dark = {}, {}
+    out = {}
     # --rbp-* as well as --color-*: the project defines its own AA-corrected
     # tokens and rules point at either family.
     for m in re.finditer(r"([^{}]*?)\{([^{}]*)\}", css, re.S):
@@ -115,15 +132,17 @@ def tokens(theme="light"):
         found = re.findall(r"(--(?:color|rbp|chart)-[\w-]+)\s*:\s*([^;]+);", body)
         if not found:
             continue
-        target = dark if "data-theme=\"dark\"" in selector else (
-            light if selector.endswith(":root") or ":root" in selector else None)
-        if target is None:
+        is_dark = 'data-theme="dark"' in selector
+        is_root = not is_dark and ":root" in selector
+        if not (is_dark or is_root):
+            continue
+        # In LIGHT, a [data-theme="dark"] block does not apply at all. In DARK,
+        # both apply and the later declaration wins, whichever kind it is.
+        if is_dark and theme != "dark":
             continue
         for name, value in found:
-            target[name.strip()] = value.strip()
-    if theme == "dark":
-        return {**light, **dark}
-    return light
+            out[name.strip()] = value.strip()
+    return out
 
 
 class Unmeasurable(ValueError):
@@ -201,10 +220,24 @@ def rule_colors(selector, css=None):
         return None, None
     color = bg = None
     # Later declarations win, and each property falls back independently.
+    #
+    # THE VALUE ENDS AT `;` OR AT THE CLOSING BRACE. It used to require the
+    # semicolon, and a trailing semicolon on the last declaration in a block is
+    # optional CSS that nobody writes when minifying. Every rule the 2026-08-26
+    # pivot added is minified with `color` last:
+    #
+    #     a.chip,span.chip{...;color:var(--rbp-link)}
+    #     .agelab{...;color:var(--rbp-text-muted)}
+    #     .dl dt{color:var(--rbp-text-muted)}
+    #
+    # so this returned (None, None) for all of them, `effective_ratio` raised
+    # Unmeasurable, and tests/test_a11y skipped fourteen cases reporting that the
+    # selectors "declare no colour", which was false of every one. The chips are
+    # the front page's only interactive elements. The suite was green throughout.
     for m in matches:
         body = m.group(1)
-        c_ = re.search(r"(?<!-)\bcolor\s*:\s*([^;]+);", body)
-        b_ = re.search(r"\bbackground(?:-color)?\s*:\s*([^;]+);", body)
+        c_ = re.search(r"(?<!-)\bcolor\s*:\s*([^;}]+)", body)
+        b_ = re.search(r"\bbackground(?:-color)?\s*:\s*([^;}]+)", body)
         if c_:
             color = c_.group(1).strip()
         if b_:

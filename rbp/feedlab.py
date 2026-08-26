@@ -372,7 +372,7 @@ def build_baseline(sources, years, corpus_df):
     for name in sources:
         try:
             rows, stats = fetch(name, years)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             # Recorded, not skipped. A baseline missing a feed because it threw
             # is a baseline that makes every later candidate look better than it
             # is, and the whole point of a marginal number is what it is marginal
@@ -561,7 +561,7 @@ def probe_csaf(shortnames=None, roster_url=None, per_cna_hosts=2, sleep=0.3):
             url = f"https://{host}{CSAF_WELL_KNOWN}"
             try:
                 meta, code, _hdrs = feeds._get(url, timeout=20, retries=1)
-            except Exception as e:  # noqa: BLE001
+            except Exception as e:
                 tried.append({"host": host, "result": _short(e)})
                 time.sleep(sleep)
                 continue

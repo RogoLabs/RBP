@@ -190,7 +190,7 @@ def health_detail():
             out.setdefault(parent, {}).setdefault("parts", {})[child] = v
         else:
             out.setdefault(parent, {}).update(v)
-    for parent, v in out.items():
+    for v in out.values():
         parts = v.get("parts") or {}
         if parts and any(p["status"] != OK for p in parts.values()):
             if any(p["status"] == FAILED for p in parts.values()):
@@ -247,7 +247,7 @@ def _public_ips(host):
     whole host if ANY record is private/loopback/link-local/reserved)."""
     try:
         infos = socket.getaddrinfo(host, None)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return []
     ips = []
     for info in infos:
@@ -341,7 +341,7 @@ def _get(url, timeout=90, retries=3, headers=None):
             if e.code == 404:
                 return None, 404, {}
             last = e
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             last = e
         time.sleep(1.5 * (i + 1))
     raise last
@@ -388,7 +388,7 @@ def _gh_headers():
     if not token:
         try:
             token = subprocess.check_output(["gh", "auth", "token"], text=True).strip()
-        except Exception:  # noqa: BLE001
+        except Exception:
             token = None
     h = {"Accept": "application/vnd.github+json"}
     if token:
@@ -424,7 +424,10 @@ def feed_ubuntu(years, page_cap=200):
     while offset < page_cap * limit:
         try:
             data, code, _ = _get(f"https://ubuntu.com/security/cves.json?limit={limit}&offset={offset}", timeout=60)
-        except Exception as e:  # noqa: BLE001, keep partial results
+        # Broad on purpose: keep the partial results. A page that fails mid-sweep
+        # truncates the feed, which is recorded, rather than discarding every page
+        # already read.
+        except Exception as e:
             print(f"  [ubuntu] stopped at offset {offset}: {e}", file=sys.stderr)
             ended = f"error at offset {offset}: {str(e)[:80]}"
             break
@@ -485,7 +488,7 @@ def feed_ghsa(years, page_cap=40):
     if not token:
         try:
             token = subprocess.check_output(["gh", "auth", "token"], text=True).strip()
-        except Exception:  # noqa: BLE001
+        except Exception:
             token = None
     headers = {"Accept": "application/vnd.github+json"}
     if token:
@@ -511,7 +514,7 @@ def feed_ghsa(years, page_cap=40):
         pages += 1
         try:
             data, _, hdrs = _get(url, timeout=60, headers=headers)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"  [ghsa] stopped: {e}", file=sys.stderr)
             ended = f"stopped after {pages} page(s): {str(e)[:80]}"
             break
@@ -552,7 +555,8 @@ def feed_redhat(years):
                 data, code, _ = _get(
                     f"https://access.redhat.com/hydra/rest/securitydata/cve.json"
                     f"?after={y}-01-01&before={y}-12-31&per_page={per}&page={page}", timeout=90)
-            except Exception as e:  # noqa: BLE001, keep partial results
+            # Broad on purpose: keep the partial results. See feed_ubuntu.
+            except Exception as e:
                 print(f"  [redhat] stopped ({y} p{page}): {e}", file=sys.stderr)
                 break
             rows = data or []
@@ -579,7 +583,8 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
         for repo in repos:
             try:
                 data, code, _ = _get(f"https://secdb.alpinelinux.org/{br}/{repo}.json", timeout=60)
-            except Exception as e:  # noqa: BLE001: one branch failure shouldn't drop the feed
+            # One branch failure must not drop the whole feed.
+            except Exception as e:
                 print(f"  [alpine] skip {br}/{repo}: {e}", file=sys.stderr)
                 continue
             for pkg in (data or {}).get("packages", []):
@@ -626,7 +631,7 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
         tmp_path = None
         try:
             zf, tmp_path, nbytes = _stream_zip(url)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             record_feed(f"osv:{eco}", False, str(e)[:120])
             print(f"  [osv:{eco}] FAILED: {e}", file=sys.stderr)
             continue
@@ -637,7 +642,7 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
                 continue
             try:
                 rec = json.loads(zf.read(name))
-            except Exception:  # noqa: BLE001
+            except Exception:
                 continue
             cves = [a for a in (rec.get("aliases") or []) if a.startswith("CVE-") and _year(a) in years]
             if not cves:
@@ -681,7 +686,7 @@ def feed_msrc(years):
     try:
         idx, _, _ = _get("https://api.msrc.microsoft.com/cvrf/v3.0/updates",
                          timeout=40, headers={"Accept": "application/json"})
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"  [msrc] index skip: {e}", file=sys.stderr)
         return []
     months = [(u["ID"], u["CvrfUrl"], _d(u.get("InitialReleaseDate")))
@@ -693,7 +698,7 @@ def feed_msrc(years):
         mid, url, mdate = item
         try:
             doc, _, _ = _get(url, timeout=90, headers={"Accept": "application/json"})
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"  [msrc] skip {mid}: {e}", file=sys.stderr)
             return []
         rows = []
@@ -773,11 +778,11 @@ def _csaf_directory_entries(directory_url, years, cap):
                 break
         if out:
             return out
-    except Exception:  # noqa: BLE001
+    except Exception:
         pass
     try:
         raw = _get_text(f"{base}/index.txt", timeout=90)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return []
     wanted = {str(y) for y in years}
     paths = [p.strip() for p in raw.splitlines() if p.strip()]
@@ -820,7 +825,7 @@ def _expand_csaf_providers(providers, aggregators, max_providers):
     for agg in aggregators:
         try:
             data, _, _ = _get(agg, timeout=40)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"  [csaf] aggregator skip {agg}: {e}", file=sys.stderr)
             continue
         for p in (data or {}).get("csaf_providers", []):
@@ -854,7 +859,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         host = meta_url.split("/")[2]
         try:
             meta, _, _ = _get(meta_url, timeout=40)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"  [csaf] {meta_url}: metadata skip ({e})", file=sys.stderr)
             unreachable.append(f"{host} ({str(e)[:40]})")
             continue
@@ -879,13 +884,14 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         for furl in feed_urls:
             try:
                 fd, _, _ = _get(furl, timeout=90)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 continue
             for e in (fd or {}).get("feed", {}).get("entry", []):
                 upd = e.get("updated", "") or e.get("published", "")
                 if _date_year(upd) is not None and _date_year(upd) < min(years):
                     continue
-                href = next((l["href"] for l in e.get("link", []) if l.get("rel") == "self"), None)
+                href = next((ln["href"] for ln in e.get("link", [])
+                             if ln.get("rel") == "self"), None)
                 if href:
                     entries.append((upd, href))
         entries.sort(reverse=True)
@@ -895,7 +901,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             upd, href = item
             try:
                 d, _, _ = _get(href, timeout=40)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 return []
             doc = (d or {}).get("document", {})
             pub = (doc.get("publisher", {}) or {}).get("name", "")
@@ -1009,7 +1015,7 @@ def feed_mozilla(years):
             listing, _, _ = _get(
                 f"https://api.github.com/repos/mozilla/foundation-security-advisories/"
                 f"contents/announce/{y}", timeout=40, headers=hdrs)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             print(f"  [mozilla] {y} listing skip: {e}", file=sys.stderr)
             continue
         files = [f for f in (listing or []) if f.get("name", "").endswith(".yml") and f.get("download_url")]
@@ -1017,7 +1023,7 @@ def feed_mozilla(years):
         def _one(f):
             try:
                 text = _get_text(f["download_url"])
-            except Exception:  # noqa: BLE001
+            except Exception:
                 return []
             cves = {c for c in re.findall(r"CVE-\d{4}-\d+", text) if _year(c) in years}
             if not cves:
@@ -1091,7 +1097,7 @@ def feed_samsung(years, url="https://security.samsungmobile.com/securityUpdate.s
     """
     try:
         html = _get_text(url, timeout=60)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         record_feed("samsung", False, str(e)[:120])
         print(f"  [samsung] FAILED: {e}", file=sys.stderr)
         return []
@@ -1148,7 +1154,7 @@ def gather(sources, years):
     for s in sources:
         try:
             rows = ADAPTERS[s](years)
-        except Exception as e:  # noqa: BLE001
+        except Exception as e:
             record_feed(s, False, str(e)[:120])
             print(f"  [{s}] FAILED: {e}", file=sys.stderr)
             continue

@@ -58,7 +58,7 @@ def load(path=None):
     path = path or ROSTER_PATH
     try:
         d = json.load(open(path))
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise SystemExit(
             f"cannot read the pinned CNA roster at {path}: {e}. The coverage "
             "denominator and therefore the launch gate depend on it. Refusing to "

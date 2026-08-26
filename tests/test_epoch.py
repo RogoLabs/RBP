@@ -23,7 +23,6 @@ from __future__ import annotations
 import importlib
 import json
 
-import pytest
 
 
 # --------------------------------------------------------------------------
@@ -189,34 +188,67 @@ def test_the_held_back_rows_stay_reachable_whether_or_not_an_epoch_is_set(built_
     assert "held-back.json" in data, sorted(data)
 
 
-def test_the_archive_page_never_names_a_cna():
+def test_the_held_back_rows_are_never_named(built_site):
     """These rows are outside the reportable set, so they are outside the set this
-    site is willing to attribute, at any age."""
-    import pathlib
-    tpl = (pathlib.Path(__file__).parent.parent / "templates"
-           / "backlog-at-launch.html").read_text()
-    assert "r.owner" not in tpl, "the archive template renders an owner"
-    assert "never shown" in tpl or "never named" in tpl
+    site is willing to attribute, at any age.
+
+    Was asserted against templates/backlog-at-launch.html. That page went in the
+    2026-08-26 pivot and the held-back rows kept shipping as JSON, so the test
+    was reading a file nobody rendered while the artefact it was about went
+    unchecked. Asserted on the PUBLISHED bytes now, which is the stronger claim
+    and the one that survives the next page being deleted.
+    """
+    import json as _json
+    hb = built_site / "data" / "held-back.json"
+    assert hb.exists(), "no held-back.json; this assertion has nothing to check"
+    payload = _json.loads(hb.read_text())
+    rows = payload.get("rows") if isinstance(payload, dict) else payload
+    assert rows, "held-back.json carries no rows, so this test proves nothing"
+    for field in ("owner", "owner_tier", "owner_method", "predicted_owner"):
+        named = [r for r in rows if r.get(field) is not None]
+        assert not named, f"{len(named)} held-back row(s) carry {field}"
 
 
-def test_the_zero_state_is_outside_the_total_guard():
-    """The whole body including every disclosure sat inside `{% if summary.total %}`,
-    so a zero-row page collapsed to a header, one paragraph and one yellow line.
-    With an epoch set that IS the launch page for the whole buffer window."""
+def test_the_zero_state_is_rendered_server_side_and_explains_itself():
+    """With an epoch set, a zero-row page IS the launch page for the whole buffer
+    window, and it has to say why it is empty.
+
+    Two failures, one after the other. First the whole body including every
+    disclosure sat inside `{% if summary.total %}`, so a zero-row page collapsed
+    to a header and one yellow line. Then the pivot moved the front page to
+    list.html and dropped the zero state entirely, leaving only the JS
+    "your filter matched nothing" state, which is a different thing and does not
+    render at all when there is nothing to filter. This test read
+    templates/index.html across both and passed.
+
+    Server-side, deliberately: with zero rows the JS has nothing to have an
+    opinion about, and a reader with JS off must still get the explanation.
+    """
     import pathlib
-    src = (pathlib.Path(__file__).parent.parent / "templates" / "index.html").read_text()
+    src = (pathlib.Path(__file__).parent.parent / "templates" / "list.html").read_text()
+    assert "{% if not summary.total %}" in src, (
+        "the front page has no zero state; with an epoch set this is launch day")
     zero = src.index("{% if not summary.total %}")
-    guard_end = src.rindex("{% endif %}", 0, zero)
-    assert guard_end < zero, "the zero state is nested inside the total guard"
     block = src[zero:src.index("{% endif %}", zero)]
-    assert "empty-state" in block, "the zero state is still styled as a warning"
+    assert "empty-state" in block, "the zero state is not styled as an empty state"
+    assert "caveat warn" not in block, "the zero state is styled as a warning"
     assert "not a fault" in block
+    # It must be OUTSIDE the row island, which only the JS reads. A zero state
+    # emitted into <script id="rows"> is not rendered at all.
+    assert zero < src.index('<script id="rows"'), (
+        "the zero state is emitted after the row island, so it is inside the JS")
 
 
 def test_the_no_longer_listed_dump_is_capped():
     """An unbounded comma-joined ID paragraph ran to 7,000 characters at 150 rows
-    and ~500 IDs at live scale, which defeats the caveat directly above it."""
+    and ~500 IDs at live scale, which defeats the caveat directly above it.
+
+    Moved to status.html on 2026-08-26 with the rest of the per-run movement.
+    `site._changes` had been computed into the render context and rendered by
+    nothing since the pivot deleted /changes, so this test and four others in
+    this file were guarding an output no reader could reach.
+    """
     import pathlib
-    src = (pathlib.Path(__file__).parent.parent / "templates" / "changes.html").read_text()
+    src = (pathlib.Path(__file__).parent.parent / "templates" / "status.html").read_text()
     assert "no_longer_listed[:50]" in src
     assert "Showing 50 of" in src

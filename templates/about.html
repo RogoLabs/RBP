@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}About this count{% endblock %}
+{% block og_title %}Reserved, public, and unpublished{% endblock %}
+
+{# The nav's "About". Same copy as the pre-launch holding page, wrapped in the
+   site chrome so it is not a dead end: before 2026-08-26 this route served the
+   standalone file, so clicking About from any page landed the reader on a page
+   with no nav, no footer and a different colour palette. #}
+{% block content %}
+<div class="page-header card-prose">
+  <h1>Reserved, public, and unpublished.</h1>
+  <p class="text-muted">
+    What this site counts, why the CVE Program's own term is the right one for it,
+    and what is being asked for.
+  </p>
+</div>
+
+<div class="card card-prose">
+  <div class="card-body about-copy">
+{% include "_about-copy.html" %}
+  </div>
+</div>
+{% endblock %}

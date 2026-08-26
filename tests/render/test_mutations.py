@@ -34,9 +34,7 @@ from rbp import breakpoints
 
 from _measure import (LIST_PAGE, asset_versions, card_mode_disagreements,
                       rows_not_stacked, rows_refusing_to_wrap, rows_squeezed,
-                      row_overflow,
-                      document_overflow, file_hash, measure, nested_overflow,
-                      rbp_tables_in_card_mode)
+                      document_overflow, file_hash, measure)
 from test_focus import _invisible, _traverse
 
 BOUNDARY = breakpoints.card_layout_boundary()

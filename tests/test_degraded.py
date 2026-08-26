@@ -398,7 +398,7 @@ def test_a_magnitude_drop_marks_the_run_degraded_in_the_cli():
     # search over source, which passes on code that never runs.
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=[], dropped=0,
-        reports_unreadable=False, shrunk=["osv: 11,000 -> 400 ids (96% fewer)"])
+        shrunk=["osv: 11,000 -> 400 ids (96% fewer)"])
     assert on is True and any("fewer ids" in r for r in reasons), (
         "a magnitude drop does not reach degraded, so no banner renders")
 
@@ -410,7 +410,7 @@ def test_a_configured_cap_alone_does_not_degrade_the_run():
     from rbp import cli
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ubuntu: hit the 200-page cap"],
-        dropped=0, reports_unreadable=False, shrunk=[])
+        dropped=0, shrunk=[])
     assert on is False and reasons == []
 
 
@@ -418,10 +418,10 @@ def test_every_other_signal_still_degrades_the_run():
     """Excluding caps must not quietly exclude anything else."""
     from rbp import cli
     for kw in ({"failures": ["debian: 500"]}, {"truncated": ["ghsa: reset"]},
-               {"dropped": 12}, {"reports_unreadable": True},
+               {"dropped": 12},
                {"shrunk": ["osv: fewer"]}):
         args = {"failures": [], "truncated": [], "capped": [], "dropped": 0,
-                "reports_unreadable": False, "shrunk": [], **kw}
+                "shrunk": [], **kw}
         on, reasons = cli.degraded_state(**args)
         assert on is True and reasons, kw
 
@@ -666,7 +666,7 @@ def test_a_cap_is_a_standing_limit_and_not_a_degraded_run():
     which is furniture rather than a warning."""
     on, _reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ghsa: hit the 40-page cap"],
-        dropped=0, reports_unreadable=False, shrunk=[])
+        dropped=0, shrunk=[])
     assert on is False
 
 
@@ -718,7 +718,7 @@ def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
     assert capped and not truncated and not failures
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
                                      capped=capped, dropped=0,
-                                     reports_unreadable=False, shrunk=[])
+                                     shrunk=[])
     assert on is False, (
         f"a standing WAF block is being reported as a degraded run: {reasons}")
 
@@ -732,7 +732,7 @@ def test_a_provider_that_stops_working_is_caught_by_the_shrink_guard():
         {"csaf": {"rows": 400, "status": feeds.CAPPED}})
     assert shrunk, "a 87% collapse in csaf rows was not reported"
     on, _reasons = cli.degraded_state(failures=[], truncated=[], capped=[],
-                                      dropped=0, reports_unreadable=False,
+                                      dropped=0,
                                       shrunk=shrunk)
     assert on is True
 

@@ -23,7 +23,14 @@ import pytest
 
 ROOT = pathlib.Path(__file__).parent.parent
 TEMPLATES = ROOT / "templates"
-PLACEHOLDER = ROOT / "placeholder.html"
+# The holding-page copy. It was a standalone placeholder.html at the repo root,
+# copied byte-for-byte to `/` pre-launch and to /about-this-count.html in both
+# postures. Since 2026-08-26 the words live in one partial and two shells wrap
+# them: templates/about.html for the site page and templates/holding.html for the
+# pre-launch front door. Asserting against the partial keeps these tests pointed
+# at the words rather than at one of the two pages that carry them; the tests that
+# care about the RENDERED page use `built` instead, and say so.
+PLACEHOLDER = TEMPLATES / "_about-copy.html"
 
 
 def _live_pages(built):
@@ -65,7 +72,7 @@ def built(built_site):
 def test_no_template_says_the_table_was_public_for_about_a_year():
     """index.html said "after about a year public" while policy.html, one click
     away, labelled that figure a correction: "closer to four months than a year"."""
-    for tpl in list(TEMPLATES.glob("*.html")) + [PLACEHOLDER]:
+    for tpl in TEMPLATES.glob("*.html"):
         body = re.sub(r"\{#.*?#\}", "", tpl.read_text(), flags=re.S)
         assert "about a year" not in body, (
             f"{tpl.name} still claims the RBP table was public for about a year; "
@@ -76,7 +83,7 @@ def test_no_page_claims_to_fill_the_gap_left_by_the_archived_series():
     """index.html said the Metrics page reports "nothing on the overlap between
     them, which is the gap this site fills" while policy.html said "The two are not
     comparable and this site does not replace it". /policy is canonical."""
-    for tpl in list(TEMPLATES.glob("*.html")) + [PLACEHOLDER]:
+    for tpl in TEMPLATES.glob("*.html"):
         body = tpl.read_text()
         assert "gap this site fills" not in body, tpl.name
         assert "this site fills" not in body, tpl.name
@@ -241,7 +248,7 @@ def test_no_built_page_states_an_interval_as_a_completed_fact(built):
 # --------------------------------------------------------------------------
 
 def test_the_holding_page_survives_launch_at_a_permanent_route(built):
-    """placeholder.html was copied over index.html ONLY in the not-launched
+    """The holding page was copied over index.html ONLY in the not-launched
     branch, so flipping RBP_LAUNCHED would have deleted it and with it the
     paragraphs doing the site's framing work.
 
@@ -314,34 +321,47 @@ def test_the_about_route_exists_in_both_postures(tmp_path, monkeypatch):
 # the lead screen (items 19 and 20)
 # --------------------------------------------------------------------------
 
-def test_the_lead_never_claims_corroboration_it_cannot_show(built):
-    """The version-skew trap, and the third instance today of absence defaulting
-    to the stronger reading.
+def test_no_published_figure_falls_back_with_a_bare_or(built):
+    """The version-skew trap: absence defaulting to the STRONGER reading.
 
-    The first draft read `corroborated or total`, so a snapshot written before that
-    key existed rendered "506 CVE IDs are referenced in two or more independent
-    public advisories" when only ~172 were. On the lead sentence."""
-    import re as _re
-    from jinja2 import Environment, FileSystemLoader, select_autoescape
-    env = Environment(loader=FileSystemLoader(str(TEMPLATES)),
-                      autoescape=select_autoescape(["html"]),
-                      trim_blocks=True, lstrip_blocks=True)
-    src = (TEMPLATES / "index.html").read_text()
-    # The guard must test the VALUE, not truthiness, and must not use `or`.
-    lead = src[src.index("lead-count"):src.index("</p>", src.index("lead-unit"))]
-    assert "is not none" in lead, (
-        "the lead sentence does not guard on the value existing")
-    assert "corroborated') or " not in lead, (
-        "`or` in the lead figure silently upgrades a missing key to the total")
+    `corroborated or total` rendered "506 CVE IDs are referenced in two or more
+    independent public advisories" against a snapshot written before that key
+    existed, when only ~172 were. `or` is wrong for a numeric figure twice over:
+    a missing key falls through, and so does a legitimate zero.
+
+    The lead sentence it was written for went with the dashboard on 2026-08-26.
+    The og:description in base.html now carries the same two figures, to more
+    readers than the old lead ever did, so the rule moved with them and is
+    asserted over every live template rather than one block of one page.
+    """
+    figures = ("corroborated", "cnas_effective", "pct_effective", "total_cnas")
+    for tpl in sorted(TEMPLATES.glob("*.html")):
+        body = tpl.read_text()
+        for fig in figures:
+            for m in re.finditer(rf"{fig}'?\)?\s+or\s+", body):
+                raise AssertionError(
+                    f"{tpl.name}: `{m.group(0).strip()}` silently upgrades a "
+                    "missing or zero figure to the fallback. Use "
+                    "`x if x is not none else y`.")
 
 
-def test_the_bound_strip_guards_on_values_not_on_the_parent_dict(built):
+def test_the_og_description_guards_on_values_not_on_the_parent_dict(built):
     """`summary.coverage` existing does not mean cnas_effective does, and Jinja
     renders a missing key as empty, so the unguarded version produced "Feeds reach
-    of 434 CNAs (%)": a sentence with holes where the numbers go."""
-    src = (TEMPLATES / "index.html").read_text()
-    strip = src[src.index("bound-strip"):src.index("</ul>")]
-    assert "cnas_effective') is not none" in strip
+    of 434 CNAs (%)": a sentence with holes where the numbers go.
+
+    Repointed from the deleted dashboard's bound-strip to base.html's
+    og:description, which is where both figures live now and is the one string
+    link previews quote verbatim.
+    """
+    src = (TEMPLATES / "base.html").read_text()
+    og = re.search(r'<meta property="og:description" content="([^"]*)"', src)
+    assert og, "base.html has no og:description"
+    body = og.group(1)
+    assert "corroborated') is not none" in body, (
+        "the corroborated figure is not guarded on the value existing")
+    assert "pct_effective') is not none" in body, (
+        "the coverage figure is not guarded on the value existing")
 
 
 def test_no_page_leads_with_a_single_cna_share(built):
@@ -377,10 +397,24 @@ def test_the_framing_sentence_is_on_the_lead_screen(built):
     assert "block" in front and "feed" in front
 
 
+# Live pages that carry no row-level claim, so the delegation caveat below does
+# not apply to them. Kept SHORT and justified one by one, the same way
+# contrast._NOT_BODY_TEXT is: every name here is a hole in the coverage, and the
+# default for a NEW page is to be covered and have to be argued out.
+_NO_ROW_LEVEL_CLAIM = {
+    # Build health. Reports whether the pipeline ran, which feeds answered and how
+    # many rows came out; it lists no row and names no party, so a caveat about how
+    # to read an individual row has nothing to attach to. Added 2026-08-26.
+    "status.html",
+}
+
+
 def test_the_delegation_caveat_reaches_every_page_that_names_a_cna(built):
     """A row may be an ID delegated TO a CNA rather than withheld BY it, and nothing
     observable distinguishes them."""
-    for page in _live_pages(built):
+    pages = [p for p in _live_pages(built) if p not in _NO_ROW_LEVEL_CLAIM]
+    assert pages, "every live page opted out; the caveat is being checked nowhere"
+    for page in pages:
         assert "CNA-LR" in _text(built / page), page
 
 
@@ -415,13 +449,65 @@ def test_every_page_has_its_own_og_url_and_canonical(built):
         assert f'rel="canonical" href="https://rbptracker.org/{page}"' in raw, page
 
 
-def test_the_holding_page_unfurls_as_more_than_a_bare_link():
-    """It is the only page anyone can reach pre-launch."""
-    body = PLACEHOLDER.read_text()
+def test_the_about_page_wears_the_site_chrome(built_site, built_site_launched):
+    """It is in the nav, so it has to look like a page of this site.
+
+    /about-this-count served a byte-for-byte copy of a standalone
+    placeholder.html: no header, no nav, no footer, no theme toggle, and its own
+    teal palette against the site's blue. A reader clicking "About" from any page
+    landed somewhere that looked like a different website with no way back except
+    the browser's Back button. In BOTH postures, so launching would not have fixed
+    it.
+
+    The words are shared with the pre-launch front door and the two shells differ,
+    which is the whole design, so this asserts on the shell rather than the copy.
+    """
+    for out in (built_site, built_site_launched):
+        body = (out / "about-this-count.html").read_text()
+        for part in ('class="header"', "nav-menu", 'class="footer"',
+                     'id="themeToggle"', "static/css/rbp.css"):
+            assert part in body, f"{out.name}/about-this-count.html has no {part}"
+        assert body.count("<h1") == 1
+        # And it can be left again, which is the failure a reader actually hits.
+        assert 'href="method.html"' in body and 'href="policy.html"' in body
+
+
+def test_the_about_page_and_the_front_door_share_one_copy(built_site):
+    """Two shells, one set of words. They were one FILE, which is why the About
+    page had no chrome; if they become two sets of words instead, the site starts
+    saying different things at two routes about the thing it is most careful
+    about, and the drift is invisible because nobody reads both.
+    """
+    partial = PLACEHOLDER.read_text()
+    # A sentence from each of the three passages the project names as load-bearing:
+    # the glossary provenance, the 4.5.1.7 quotation, and the narrow ask.
+    for phrase in ("The term is the CVE Program's own",
+                   "The Secretariat MAY publicly identify",
+                   "should not be listed, ask"):
+        assert phrase in partial, f"the shared copy lost {phrase!r}"
+        for page in ("index.html", "about-this-count.html"):
+            assert phrase in _text(built_site / page), f"{page} lost {phrase!r}"
+
+
+def test_the_holding_page_unfurls_as_more_than_a_bare_link(built_site):
+    """It is the only page anyone can reach pre-launch.
+
+    Asserted on the BUILT page rather than the source, since 2026-08-26. The
+    holding page used to be a standalone file copied into place, so reading the
+    file and reading the page were the same thing. It is rendered now, from
+    templates/holding.html, and a shell that lost its meta block would leave the
+    words intact and the unfurl bare, which is the half a reader in someone
+    else's Slack channel actually sees.
+    """
+    body = (built_site / "index.html").read_text()
     for tag in ('name="description"', 'property="og:title"',
                 'property="og:description"', 'rel="canonical"'):
         assert tag in body, tag
-    assert "og:description" in body and "not yet published" in body
+    assert "not yet published" in body
+    # And it is still the standalone shell: no nav, so no link into the dashboard.
+    assert "nav-menu" not in body, (
+        "the pre-launch front door is rendering the site nav, which links into "
+        "the dashboard and effectively launches it")
 
 
 # --------------------------------------------------------------------------
@@ -442,6 +528,67 @@ _RBP = _pl.Path(__file__).parent.parent / "rbp"
 
 def _all_templates():
     return {p.name: p.read_text() for p in _TPL.glob("*.html")}
+
+
+# Phrases that describe the AUTOMATED withhold channel, deleted on 2026-08-26.
+#
+# Each one is a promise the remaining channel cannot keep. "Withheld on the next
+# build" over a mailto: link says a mailbox is a pipeline; "requests are public"
+# says an email is an issue; the per-author caps and the reviewed-entry label
+# describe a reader that no longer exists; and "withheld count" points at a figure
+# that is no longer published.
+_DELETED_CHANNEL = (
+    "open a withhold request",
+    "withheld on the next build",
+    "no human in the loop",
+    "requests are public",
+    "per author",
+    "reviewed entry",
+    "withheld count",
+    "closing an issue revokes",
+)
+
+
+@pytest.mark.parametrize("phrase", _DELETED_CHANNEL)
+def test_no_surface_promises_the_withhold_channel_that_was_removed(built, phrase):
+    """It went stale in THREE places independently and stayed that way.
+
+    The channel was removed on 2026-08-26: rbp/suppress.py, the issue reader, the
+    HMAC list, the per-author caps, the issue template and the published withheld
+    count. Six copy surfaces described it and three were missed, each in a
+    different file, each still promising it a week later:
+
+      - /method's "Reporting a row" card, in full, with two metric cards that
+        could only ever read zero and a 25-row ceiling;
+      - base.html's footer, on every page of the site;
+      - the holding-page copy, now templates/_about-copy.html, which is both the
+        pre-launch front door and /about-this-count and therefore the page a CNA
+        landing here is most likely to read.
+
+    Asserted over every built page AND the holding page, phrase by phrase, because
+    the failure was not one edit that got missed: it was one deletion and six
+    surfaces, and nothing connected them.
+
+    THE REMAINING CHANNEL IS AN EMAIL ADDRESS read by a person. That is a smaller
+    promise and this site has to make exactly it.
+    """
+    pages = [built / p for p in _live_pages(built)]
+    pages.append(PLACEHOLDER)
+    for page in pages:
+        assert phrase not in _text(page).lower(), (
+            f"{page.name} still describes the deleted automated withhold channel "
+            f"({phrase!r}). The channel is an email address read by a person.")
+
+
+def test_the_channel_that_does_exist_is_described_everywhere_it_is_offered():
+    """The other half. Removing the false promise must not remove the ask: a CNA
+    who wants a row gone has to be told how, on the holding page and on /method,
+    which are the two pages they arrive on."""
+    for path in (PLACEHOLDER, TEMPLATES / "method.html"):
+        body = path.read_text().lower()
+        assert "rbp@rogolabs.net" in body, f"{path.name} offers no route at all"
+        assert "a person reads it" in body or "person reads it" in body, (
+            f"{path.name} does not say a human handles it")
 
 
 def test_the_site_does_not_call_the_count_the_programs_own_metric():

@@ -20,6 +20,8 @@ made vacuous at once.
 from __future__ import annotations
 
 import pathlib
+
+import conftest
 import re
 
 import pytest
@@ -182,3 +184,28 @@ def test_the_fixture_carries_the_fields_the_templates_gate_on():
     assert _sitefixture.RESOLVED, "no closures, so two .rbp tables on /changes vanish"
     assert s["coverage"]["pct_top_effective"] >= 80.0, (
         "the fixture no longer clears the gate, so the launched build is demoted")
+
+
+def test_every_posture_lever_is_listed_here():
+    """The list is hand-written and the failure mode is silent.
+
+    A new lever that nobody adds here is a variable the suite inherits from the
+    operator's shell, and the symptom is a test that passes on CI and fails on one
+    machine, or worse the reverse. `RBP_WITHHOLD` was added on 2026-08-26 and would
+    have silently dropped rows from every fixture build on any machine that had it
+    set.
+
+    Derived from the source, so adding a lever without listing it fails here rather
+    than at whatever downstream assertion happens to notice first.
+    """
+    import pathlib as _p
+    import re as _re
+    root = _p.Path(__file__).parent.parent
+    found = set()
+    for src in (root / "rbp").glob("*.py"):
+        found |= set(_re.findall(r'environ(?:\.get)?[(\[]\s*"(RBP_[A-Z_]+)"',
+                                 src.read_text()))
+    missing = found - set(conftest.POSTURE_VARS)
+    assert not missing, (
+        f"{sorted(missing)} change what the site publishes and are not cleared "
+        "for the suite, so the tests inherit them from whoever is running them")

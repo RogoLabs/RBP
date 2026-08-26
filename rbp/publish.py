@@ -25,6 +25,7 @@ import argparse
 import glob
 import json
 import os
+import re
 import shutil
 import sys
 
@@ -47,16 +48,67 @@ ALLOWED_SNAPSHOT = {"backlog.json", "backlog.csv", "cnas.json", "summary.json",
 # tension, and the resolution is that the archive is rebuilt rather than appended.
 
 
-def _suppressed(data_dir):
-    """Ids this run withheld, as recorded by the pipeline. Empty on any problem.
+# A runner-local JSON array of ids. Never published, and never seeded from the
+# data branch: see WHERE IT COMES FROM below.
+SUPPRESSED_FILE = ".suppressed.json"
 
-    Read from a runner-local file rather than re-queried, so staging never depends
-    on a live API call: a transient GitHub error must not stop state advancing.
+# The production source. A repository variable, the same lever RBP_LAUNCHED,
+# RBP_EPOCH and RBP_PAUSE already use.
+SUPPRESS_ENV = "RBP_WITHHOLD"
+
+_ID_SPLIT = re.compile(r"[\s,;]+")
+
+
+def suppressed_ids(data_dir):
+    """Ids withheld from publication, from the repository variable and the file.
+
+    THE ONE IMPLEMENTATION. `site.withheld_ids` was a second copy of this
+    function, reading the same file, in the module that builds the pages, while
+    this one is read by the module that stages the data branch. Two readers of one
+    file that must agree, and nothing making them agree.
+
+    WHERE IT COMES FROM. `RBP_WITHHOLD`, a repository variable holding a
+    comma-separated list of CVE IDs. A person sets it; the next build drops those
+    rows from every page and every artefact, and `check` refuses to stage them.
+    /method promises exactly that: "a person reads it, applied by hand, takes
+    effect on the next build". This is the hand.
+
+    NOT THE DATA BRANCH, and the reason is worth keeping. The obvious durable home
+    for a hand-maintained list is the branch that already carries the other
+    hand-maintained state, and it is the wrong one: that branch is public, so
+    committing the ids there publishes the exact list the lever exists to remove.
+    "Counts, never identifiers" is the rule, and a git history of removals is
+    identifiers. A repository variable is not public and needs no allowlist entry.
+
+    Both sources are UNIONED rather than ranked. A precedence chain drops one
+    source silently when the other is set, and for a withhold the only safe
+    direction to fail is more withheld rather than fewer. The file stays because a
+    local build and the tests need a way in that does not involve the environment.
+
+    THIS WAS UNREACHABLE FOR FOUR DAYS. `cli.py` stopped writing the file with the
+    channel that produced it on 2026-08-26, nothing replaced the writer, and
+    `data/` is gitignored and recreated empty on every runner. So the lever the
+    site promised in writing read an absent file on every run, while both readers,
+    both guards and every test around them passed.
+
+    Normalised on read: stripped and upper-cased, so a hand-typed lower-case id or
+    one with stray whitespace still withholds.
+
+    Empty on any problem, and that is the safe direction here: an unreadable
+    source means nothing is withheld from the SITE, while `check` still refuses to
+    stage a suppressed row, so the failure cannot reach the data branch.
     """
+    ids = set()
+    for tok in _ID_SPLIT.split(os.environ.get(SUPPRESS_ENV) or ""):
+        if tok.strip():
+            ids.add(tok.strip().upper())
     try:
-        return set(json.load(open(os.path.join(data_dir, ".suppressed.json"))))
-    except Exception:  # noqa: BLE001
-        return set()
+        raw = json.load(open(os.path.join(data_dir, SUPPRESSED_FILE)))
+    except Exception:
+        raw = []
+    if isinstance(raw, list):
+        ids |= {str(i).strip().upper() for i in raw if str(i).strip()}
+    return ids
 
 
 def _scrub(path, ids):
@@ -73,13 +125,13 @@ def _scrub(path, ids):
     if path.endswith(".json"):
         try:
             rows = json.load(open(path))
-        except Exception:  # noqa: BLE001
+        except Exception:
             return 0
         if isinstance(rows, list):
             keep = [r for r in rows
                     if not (isinstance(r, dict) and r.get("cve_id") in ids)]
             if len(keep) != len(rows):
-                json.dump(keep, open(path, "w"), indent=1)
+                _schema.write_json(path, keep)
                 return len(rows) - len(keep)
         elif isinstance(rows, dict):
             # resolutions.json shape: {"open": {cve_id: {...}}, "resolved": [...]}
@@ -101,18 +153,18 @@ def _scrub(path, ids):
                     del preds[cid]
                     n += 1
             if n:
-                json.dump(rows, open(path, "w"), indent=1)
+                _schema.write_json(path, rows)
             return n
         return 0
     # CSV: drop any line containing a withheld id. Crude and correct, because the
     # id is the first column and appears nowhere else in a row.
     try:
         lines = open(path).read().splitlines(keepends=True)
-    except Exception:  # noqa: BLE001
+    except Exception:
         return 0
     keep = [ln for ln in lines if not any(i in ln for i in ids)]
     if len(keep) != len(lines):
-        open(path, "w").writelines(keep)
+        _schema.write_text(path, "".join(keep))
         return len(lines) - len(keep)
     return 0
 
@@ -135,8 +187,15 @@ def _scrub(path, ids):
 #
 # Same shape as every other miss in this class: a list of field names, written
 # by someone reasoning about one subsystem, applied to files written by another.
-_LEDGER_NAME_FIELDS = ("owner", "predicted", "predicted_owner",
-                       "actual", "assigner", "published_assigner")
+#
+# ONE DEFINITION, in schema.py since 2026-08-26. This one had six of the twelve
+# names and the scrubber below then unioned in six more by hand while the guard
+# unioned in three, so the scrubber removed strictly more than the guard refused
+# on a pair whose docstring said "the guard must refuse exactly what the scrubber
+# removes or the two drift". They had drifted, and nothing said so.
+from . import schema as _schema
+
+_LEDGER_NAME_FIELDS = _schema.LEDGER_NAME_FIELDS
 
 
 def denamed_ledger(obj):
@@ -162,10 +221,7 @@ def denamed_ledger(obj):
     becomes a public-CVE-List lookup at grade time. That is a v2 change; this is
     the one that stops the leak tonight.
     """
-    drop = set(_LEDGER_NAME_FIELDS) | {"owner_tier", "owner_method",
-                                       "owner_contested", "product_map_owner",
-                                       "product_map_confidence",
-                                       "product_map_method"}
+    drop = set(_LEDGER_NAME_FIELDS)
     if isinstance(obj, dict):
         return {k: denamed_ledger(v) for k, v in obj.items() if k not in drop}
     if isinstance(obj, list):
@@ -189,8 +245,10 @@ def _named_paths(obj, path="", out=None):
     refuse exactly what the scrubber removes or the two drift.
     """
     out = [] if out is None else out
-    fields = set(_LEDGER_NAME_FIELDS) | {"owner_tier", "owner_method",
-                                         "product_map_owner"}
+    # THE SAME SET the scrubber removes, by construction rather than by two
+    # hand-maintained unions that had already diverged by three fields.
+    # tests/test_no_attribution pins them equal.
+    fields = set(_LEDGER_NAME_FIELDS)
     if isinstance(obj, dict):
         for k, v in obj.items():
             here = f"{path}.{k}" if path else k
@@ -221,7 +279,7 @@ def stage(snap_root, state_dir, data_dir):
     dest_root = os.path.join(state_dir, "snapshots")
     os.makedirs(dest_root, exist_ok=True)
     copied = 0
-    withheld = _suppressed(data_dir)
+    withheld = suppressed_ids(data_dir)
     for d in sorted(glob.glob(os.path.join(snap_root, "*"))):
         if not os.path.isdir(d):
             continue
@@ -252,7 +310,7 @@ def stage(snap_root, state_dir, data_dir):
                 continue
             clean = denamed_ledger(body)
             if clean != body:
-                json.dump(clean, open(fp, "w"), indent=1)
+                _schema.write_json(fp, clean)
                 renamed += 1
     if renamed:
         print(f"de-named {renamed} staged file(s); v1 publishes no attribution")
@@ -292,14 +350,14 @@ def prune_ledger(state_dir, snap_root):
         published = {r["cve_id"] for r in json.load(
             open(os.path.join(snaps[-1], "backlog.json")))}
         led = json.load(open(path))
-    except Exception:  # noqa: BLE001
+    except Exception:
         return 0
     before = len(led.get("predictions") or {})
     led["predictions"] = {k: v for k, v in (led.get("predictions") or {}).items()
                           if k in published}
     dropped = before - len(led["predictions"])
     if dropped:
-        json.dump(led, open(path, "w"), indent=1)
+        _schema.write_json(path, led)
     return dropped
 
 
@@ -386,7 +444,7 @@ def _roster_names():
     try:
         from . import roster as _roster
         names = set(_roster.load()["names"])
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         print(f"  WARNING: value guard disabled, roster unreadable ({e})")
         return frozenset()
     # No exclusions here. Structured formats match on whole-value equality, which
@@ -598,7 +656,7 @@ def check(state_dir):
     for f in sorted(glob.glob(os.path.join(state_dir, "snapshots", "*", "*.json"))):
         try:
             rows = json.load(open(f))
-        except Exception:  # noqa: BLE001
+        except Exception:
             problems.append(f"unreadable JSON about to be published: {f}")
             continue
         if not isinstance(rows, list):
@@ -620,7 +678,7 @@ def check(state_dir):
         try:
             rows = json.load(open(bl))
             covered = set((json.load(open(sm)).get("coverage") or {}).get("covered") or [])
-        except Exception:  # noqa: BLE001
+        except Exception:
             continue
         if not covered:
             continue
@@ -642,7 +700,7 @@ def check(state_dir):
             published = {r["cve_id"] for r in json.load(
                 open(os.path.join(snaps[-1], "backlog.json")))}
             preds = set((json.load(open(led_path)).get("predictions") or {}))
-        except Exception:  # noqa: BLE001
+        except Exception:
             preds, published = set(), set()
         stray = sorted(preds - published)
         if stray:

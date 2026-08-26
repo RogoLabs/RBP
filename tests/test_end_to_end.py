@@ -563,7 +563,12 @@ def test_the_payload_reports_a_degraded_run_as_degraded(built, tmp_path, monkeyp
     Every fixture in this file produces a CLEAN run, so False == False passed and
     the assertion below proved nothing about the branch that matters. The served
     rbp.json said `degraded: false, degraded_reasons: []` while the page rendered
-    "This run is incomplete" on the same build, and no test could see it."""
+    "This run is incomplete" on the same build, and no test could see it.
+
+    The page asserted on is /status since 2026-08-26. The banner was removed from
+    base.html and the run's state is reported there; the payload half of this
+    test is unchanged and is the half that matters most, because rbp.json is what
+    a consumer reusing the count actually reads."""
     import importlib
     from rbp import site as site_mod
 
@@ -581,14 +586,21 @@ def test_the_payload_reports_a_degraded_run_as_degraded(built, tmp_path, monkeyp
     env = json.loads((out / "data" / "rbp.json").read_text())
     assert env["degraded"] is True, "the payload denies a degradation the run declared"
     assert env["degraded_reasons"] == ["1 feed(s) failed"]
-    assert "This run is incomplete" in (out / "overview.html").read_text()
+    assert "This run is incomplete" in (out / "status.html").read_text()
+    # And NOT on the list page, which is the whole point of /status existing.
+    assert "This run is incomplete" not in (out / "overview.html").read_text()
 
 
-def test_the_banner_and_the_payload_agree_about_degradation(built):
+def test_the_page_and_the_payload_agree_about_degradation(built):
     """The served rbp.json said `degraded: false, degraded_reasons: []` while
     base.html rendered "This run is incomplete" on every page of the same build.
     A machine-readable copy that contradicts the page is worse than either being
     wrong alone: a consumer and a reader draw opposite conclusions from one run.
+
+    The page is /status now rather than every page. The invariant is unchanged and
+    is the reason the banner could be removed at all: whatever the site says about
+    a run in HTML and whatever it says in JSON have to be the same claim, and with
+    only one HTML surface saying it there is only one place for them to diverge.
     """
     for out in built["sites"]:
         summary = json.loads((out / "data" / "summary.json").read_text())
@@ -598,11 +610,13 @@ def test_the_banner_and_the_payload_agree_about_degradation(built):
             f"{summary.get('degraded')}")
         assert env.get("degraded_reasons") == (summary.get("degraded_reasons") or [])
 
-        rendered = "This run is incomplete" in (out / "overview.html").read_text() \
-            if (out / "overview.html").exists() else \
-            "This run is incomplete" in (out / "index.html").read_text()
+        rendered = "This run is incomplete" in (out / "status.html").read_text()
         assert rendered == bool(summary.get("degraded")), (
-            f"{out.name}: the banner and the flag disagree")
+            f"{out.name}: /status and the flag disagree")
+        # The list page says nothing either way, on a clean run or a degraded one.
+        front = "index.html" if (out / "overview.html").exists() is False else "overview.html"
+        assert "This run is incomplete" not in (out / front).read_text(), (
+            f"{out.name}: the degraded banner is back on {front}")
 
 
 def test_a_configured_cap_is_a_limitation_and_not_a_degraded_run(built):
@@ -635,7 +649,10 @@ def test_an_absent_run_ledger_reads_as_unknown_not_as_zero(built):
     rendering for "no data yet"."""
     from rbp import site as site_mod
     assert site_mod.cadence(str(built["data"])) is None
-    page = (built["sites"][0] / "method.html").read_text()
+    # /status, not /method: the cadence card moved there on 2026-08-26 with the
+    # rest of the per-run health. Asserted on the built page rather than the
+    # template, so moving it again without moving this fails loudly.
+    page = (built["sites"][0] / "status.html").read_text()
     assert "Not yet evidenced" in page
     assert "0 of 28" not in page
 

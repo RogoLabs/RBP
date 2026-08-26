@@ -49,7 +49,9 @@ env:
   MIN_AGE_DAYS: ${{ inputs.min_age_days || vars.RBP_MIN_AGE_DAYS || '' }}
   # Pre-launch by default: / serves the holding page and the dashboard sits at
   # /overview.html, noindexed. Set the repository variable RBP_LAUNCHED to 1 to
-  # make / the dashboard. The gate is 50% CNA coverage (PLAN.md).
+  # make / the dashboard. The gate itself is site.GATE_TOP_N_PCT, deliberately not
+  # restated here: this comment said "50% CNA coverage" for the four days after the
+  # gate was re-derived onto top-50-by-volume at 80%.
   # A rehearsal override, and it is DRY-RUN ONLY, enforced by a step that fails the
   # job if the two are combined wrongly. Condition 9 asks for the launch state to be
   # rehearsed against real data, and rehearsing it by setting the repository variable
@@ -65,6 +67,20 @@ env:
   # the count retroactively. Held-back rows stay in the raw data and their count
   # is shown on /method.
   RBP_EPOCH: ${{ (inputs.dry_run == true && inputs.rehearse_epoch != '') && inputs.rehearse_epoch || (vars.RBP_EPOCH || '') }}
+  # THE WITHHOLD LEVER, and it was unreachable in production for four days.
+  #
+  # /method promises that emailing a CVE ID gets the row removed by a person on the
+  # next build. rbp/publish.py reads this list: the site drops those rows before
+  # rendering and `publish check` refuses to stage them. Nothing supplied it. The
+  # automated writer went with the issue-reading channel on 2026-08-26, nothing
+  # replaced it, and `data/` is gitignored and recreated empty on every runner, so
+  # the lever read an absent file on every run while every test around it passed.
+  #
+  # A repository variable rather than a file on the `data` branch, deliberately.
+  # That branch is public, so committing the ids there would publish the exact list
+  # the lever exists to remove; "counts, never identifiers" is the rule and a git
+  # history of removals is identifiers. Comma-separated CVE IDs.
+  RBP_WITHHOLD: ${{ vars.RBP_WITHHOLD || '' }}
   # Incident switch. Set the repository variable RBP_PAUSE to 1 and the pipeline
   # still runs and still reports, but nothing is published and no state advances.
   # There was previously no lever at all: no `if:` on any job, no dry run and no
@@ -256,13 +272,14 @@ jobs:
           echo "running: rbp.cli run ${ARGS[*]}"
           python -m rbp.cli run "${ARGS[@]}"
 
+      # No `if [ -f rbp/site.py ]` fallback. It predated the site builder and could
+      # not fire after checkout, so its only effect was to make a missing builder
+      # publish a holding page over a live dashboard instead of failing. A build
+      # step that silently degrades is the failure mode the launch gate, the
+      # degraded banner and the run ledger all exist to prevent.
       - name: Build site
         run: |
-          if [ -f rbp/site.py ]; then
-            python -m rbp.cli build --out site
-          else
-            mkdir -p site && cp placeholder.html site/index.html
-          fi
+          python -m rbp.cli build --out site
           cp CNAME site/CNAME
 
       # Upload BEFORE persisting state. A failure in the persist step must
@@ -360,6 +377,10 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           TEST_RESULT: ${{ needs.test.result }}
           BUILD_RESULT: ${{ needs.build.result }}
+          # `deploy` was added to this job's triggers and not to its BODY, so a
+          # deploy-only failure filed an issue reporting that test and build had
+          # both succeeded and saying nothing about the step that actually broke.
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
           EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
@@ -367,6 +388,7 @@ jobs:
 
           - test: \`$TEST_RESULT\`
           - build: \`$BUILD_RESULT\`
+          - deploy: \`$DEPLOY_RESULT\`
           - trigger: \`$EVENT\`
           - run: $RUN_URL
 

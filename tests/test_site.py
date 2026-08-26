@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import importlib
 import json
-import os
 
 import pytest
 
@@ -141,12 +140,62 @@ def test_method_states_all_three_coverage_figures_and_the_gate(built):
     assert "It no longer gates anything." in text
 
 
+def test_every_internal_link_resolves_in_both_postures(built_site, built_site_launched):
+    """A link to a page the build no longer writes is a 404 wherever it renders.
+
+    THIS DUPLICATES tests/test_end_to_end deliberately, and the duplication is the
+    point. That copy runs against the end-to-end fixture, whose summary carries
+    `epoch: None`, so every block behind `{% if summary.epoch %}` is invisible to
+    it. /method carried a dead link to /data inside exactly such a block from the
+    2026-08-26 pivot onward: correct test, correct assertion, and a fixture that
+    could not reach the markup. It would have appeared on the site the morning an
+    epoch was set, which is launch day.
+
+    This copy uses the shared fixture, which DOES set an epoch, and runs in both
+    postures because the nav differs between them.
+    """
+    import re
+    for out in (built_site, built_site_launched):
+        pages = list(out.glob("*.html"))
+        assert pages
+        missing = []
+        for p in pages:
+            for href in re.findall(r'href="([^"#?:]+\.html)"', p.read_text()):
+                if not (p.parent / href).resolve().exists():
+                    missing.append(f"{out.name}/{p.name} -> {href}")
+        assert not missing, f"dead internal links: {missing}"
+
+
+def test_the_link_check_sees_the_epoch_gated_markup(built_site):
+    """The guard on the guard above.
+
+    An epoch-gated block is only checked if the fixture sets an epoch, and the
+    fixture setting one is a fact about tests/_sitefixture.py that nothing else
+    asserts. Without this, someone clearing EPOCH there would silently restore the
+    blind spot and every test in this file would still pass.
+    """
+    body = (built_site / "method.html").read_text()
+    assert "Counting starts" in body, (
+        "the fixture build renders no epoch block, so the link check above cannot "
+        "see epoch-gated markup and the defect it exists for is invisible again")
+
+
 def test_prelaunch_holding_page_does_not_link_into_the_dashboard(built):
-    """Linking to it would effectively launch it."""
+    """Linking to it would effectively launch it.
+
+    DERIVED from what the build wrote, not typed. The typed list named cves.html
+    and cnas.html, which have not existed since the pivot, so two of its four
+    entries were assertions about nothing; and it omitted policy.html, which is a
+    real dashboard page, so the holding page could have linked straight into the
+    site and this would have passed. status.html would have been the third miss.
+    """
     out = built(False)
     index = (out / "index.html").read_text()
-    for page in ("overview.html", "cves.html", "cnas.html", "method.html"):
-        assert f'href="{page}"' not in index
+    dashboard = {name for _tpl, name in site.pages_for(False)}
+    assert dashboard, "the build declares no dashboard pages"
+    for page in sorted(dashboard):
+        assert f'href="{page}"' not in index, (
+            f"the pre-launch holding page links to {page}, which is the dashboard")
 
 
 def test_prelaunch_dashboard_pages_are_noindex(built):
@@ -406,7 +455,7 @@ def test_production_precision_is_withheld_below_the_floor(tmp_path):
     assert low["grader"]["precision"] is None
     assert low["grader"]["below_floor"] is True
 
-    ok = _minimal(tmp_path / "ok", graded=site.GRADER_MIN_N)
+    ok = _minimal(tmp_path / "ok", graded=site.MIN_GRADED)
     assert ok["grader"]["precision"] == 1.0
     assert ok["grader"]["below_floor"] is False
 
@@ -552,6 +601,32 @@ def test_gate_fails_closed_when_the_run_predates_the_gate_figure():
     del s["coverage"]["top_covered_effective"]
     g = site._gate_status(s)
     assert g["cleared"] is False and "cannot be evaluated" in g["reason"]
+
+
+def test_the_gate_verdict_and_its_margin_can_never_disagree():
+    """`cleared` was computed from a percentage rounded to one decimal while
+    `margin` was computed in whole CNAs, so the two were different questions with
+    the same name. Any figure in [79.95%, 80.0%) rounds up to exactly the
+    threshold and clears while the margin is still negative, publishing
+    `cleared: true` beside `margin: -1`.
+
+    At top_n = 50 the granularity is 2% and it cannot fire, which is why nobody
+    saw it. `top_n` is a parameter read from the summary, and a gate that is only
+    correct at one value of its own input is correct by accident. Swept over the
+    band where the two forms can differ, at sizes the site could plausibly use.
+    """
+    for top_n in (50, 100, 500, 2000, 4000):
+        lo = int(top_n * (site.GATE_TOP_N_PCT - 1) / 100)
+        hi = int(top_n * (site.GATE_TOP_N_PCT + 1) / 100) + 1
+        for top_eff in range(max(0, lo), min(top_n, hi) + 1):
+            g = site._gate_status({"coverage": {
+                "top_n": top_n, "top_covered_effective": top_eff,
+                "min_sightings": 3, "total_cnas": 539, "cnas_effective": 100}})
+            assert g["cleared"] == (g["margin"] >= 0), (
+                f"top {top_eff}/{top_n}: cleared={g['cleared']} but "
+                f"margin={g['margin']}")
+            # And the reason string agrees with both.
+            assert ("clearing" in g["reason"]) == g["cleared"]
 
 
 def test_gate_threshold_is_reachable():

@@ -1,0 +1,47 @@
+# Lint configuration. There was none, and it showed.
+#
+# This repository carried 52 `# noqa` directives and no tool that reads them: no
+# pyproject.toml, no setup.cfg, no .flake8, and no lint step in either workflow.
+# They were comments shaped like suppressions, and one of them
+# (`# noqa: BLE001: one branch failure shouldn't drop the feed`) was malformed in a
+# way no linter would have accepted, which is how you can tell none ever ran.
+#
+# THE RULE SET IS DELIBERATELY NARROW. This project's code is unusual on purpose:
+# the comments are long because the reasoning is the artefact, and a style linter
+# would spend its whole life objecting to that. So the selection below is only
+# rules that find DEFECTS, and every one of them found a real one when it was first
+# run against this tree:
+#
+#   F401  unused imports          13, across nine test modules
+#   F811  redefinition            1, `json` imported twice in test_no_attribution
+#   F841  unused local            3, one of which was a test deriving the keys it
+#         was supposed to compare and then comparing a hand-typed list instead
+#   F601  repeated dict key       1, `"gate"` twice in the site render context
+#   B007  unused loop variable    1
+#   E741  ambiguous name          1, `l` in a list comprehension
+#   E9    syntax and IO errors
+#
+# NOT selected, and each for a reason rather than by omission:
+#
+#   E501  line length. The comments carry the reasoning and wrapping them to 79
+#         would break the argument across lines to no benefit. Long CODE lines are
+#         worth avoiding and are caught in review.
+#   SIM115 open-without-context-manager. Every artefact write goes through
+#         schema.write_json / schema.write_text now, and the remaining bare
+#         `open()` calls are reads whose handle the caller drops immediately. The
+#         rule cannot tell the two apart, and the writes were the risk.
+#   B905  zip(strict=). Fifteen call sites, all over sequences built together two
+#         lines earlier. Adding strict= to each would be noise; adding it where
+#         the lengths can genuinely differ is a review question, not a lint one.
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["F", "E9", "E741", "B007", "B002", "B018"]
+
+[tool.ruff.lint.per-file-ignores]
+# tests/conftest.py and tests/_sitefixture.py are imported by path, and the render
+# suite imports from _measure the same way, so the usual "unused import" reading
+# does not apply to their re-exports.
+"tests/render/test_mutations.py" = ["F401"]

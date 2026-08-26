@@ -76,9 +76,10 @@ VETO_CONFIDENCE = 0.85
 # The sighting floor. Owned by rbp.coverage, because it decides what
 # `cnas_effective` means and that is the launch gate; inference borrows it so the
 # threshold to NAME a CNA and the threshold to COUNT one can never drift apart.
-from .coverage import MIN_SIGHTINGS  # noqa: E402,F401
+from .coverage import MIN_SIGHTINGS
 # The precision floor lives with the code that publishes it.
-from .site import MIN_GRADED, summarise_state  # noqa: E402,F401
+from .site import MIN_GRADED, summarise_state
+from . import schema
 
 # Minimum graded verdicts before a precision figure is published at all, globally
 # or per stratum. At n=1 the site rendered "100.00%" in a headline tile, which is a
@@ -354,7 +355,7 @@ class Grader:
                 loaded = json.load(open(path))
                 if isinstance(loaded, dict):
                     self.state.update(loaded)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
 
     def record(self, cve_id, predicted_owner, tier, k, today, run_length=None):
@@ -473,7 +474,7 @@ class Grader:
 
     def save(self):
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
-        json.dump(self.state, open(self.path, "w"), indent=1)
+        schema.write_json(self.path, self.state)
 
 
 def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K,

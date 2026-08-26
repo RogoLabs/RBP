@@ -34,9 +34,14 @@ POSTURE_VARS = (
     "RBP_EPOCH",        # zeroes the count from a date
     "RBP_PAUSE",        # incident switch
     "RBP_MIN_AGE_DAYS",  # the reportable buffer
-    "RBP_SUPPRESS_KEY",  # keys the committed suppression list
-    "RBP_ADVISORY_TOKEN",  # withdrawn, kept here so a stale value cannot resurface
-    "GITHUB_TOKEN",     # the suppression lever's issue read
+    "RBP_WITHHOLD",     # the withhold lever: ids dropped from every artefact
+    # Withdrawn levers, kept here so a stale value in an operator's shell cannot
+    # resurface as behaviour. RBP_SUPPRESS_KEY keyed the HMAC suppression list and
+    # RBP_ADVISORY_TOKEN authenticated the issue reader; both went with the
+    # automated withhold channel on 2026-08-26.
+    "RBP_SUPPRESS_KEY",
+    "RBP_ADVISORY_TOKEN",
+    "GITHUB_TOKEN",     # the corpus fetch, and the live oracle tests
 )
 
 
@@ -57,7 +62,7 @@ def _hermetic_environment():
     for mod in ("rbp.clock", "rbp.site"):
         try:
             importlib.reload(importlib.import_module(mod))
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
     yield
     for k, v in saved.items():

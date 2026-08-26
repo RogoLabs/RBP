@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+{% block title %}Pipeline status{% endblock %}
+{% block og_title %}rbptracker.org pipeline status{% endblock %}
+{# The legitimacy claim leads, on every page, before anything page-specific.
+   tests/test_copy pins it: this is the one string search engines and link
+   previews quote verbatim, and a status page unfurled into someone else's
+   channel still has to say what the site measures before it says how the build
+   went. #}
+{% block description %}Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This page reports whether the last run of this site's pipeline was complete and which feeds it read.{% endblock %}
+
+{# THE STATUS PAGE.
+
+   The degraded-run banner used to render above the count on every page. It was
+   correct and it was in the wrong place: the run's own health is machinery, and
+   the front page is now one list with a command bar. A reader who came to see
+   which CVE IDs are reserved and public was met by a paragraph about feed
+   truncation.
+
+   So the DETAIL lives here and the front page keeps one line. What moved:
+
+     - the full degraded explanation, from base.html
+     - "Does this site actually run every six hours?", from method.html
+     - the per-feed failure and truncation blocks, from method.html
+     - the standing page-cap limitations, from method.html
+
+   What did NOT move: the coverage table and the launch gate. Those are claims
+   about method, true of every run, and they stay on /method. This page is about
+   ONE run.
+
+   The staleness banner in base.html also stays on every page. It is not this:
+   it fires when the pipeline has stopped, computed in the browser precisely
+   because a stopped pipeline cannot recompute anything server-side. A page that
+   is silently frozen has to say so where the reader is, not one click away. #}
+
+{% block content %}
+<div class="page-header">
+  <h1>Pipeline status</h1>
+  <p class="text-muted">
+    Whether the most recent run was complete, what it read, and how often this site
+    has actually published. Every count on the rest of the site comes from the run
+    described here.
+  </p>
+</div>
+
+{# ---- 1. this run ---- #}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">The last run</h2>
+  </div>
+  <div class="card-body">
+    {% if summary.degraded %}
+    <div class="caveat warn">
+      <p><strong>This run is incomplete.</strong>
+        {{ summary.degraded_reasons | join('; ') }}.
+        Every count on this site is a lower floor than usual and is
+        <strong>not comparable</strong> to the previous run.</p>
+      <p class="mb-0">
+        A run is marked incomplete when a feed failed outright, stopped for a
+        reason that is not a configured cap, returned far fewer IDs than last
+        time, or when the CVE Services reservation endpoint dropped rows. A
+        configured page cap
+        is <em>not</em> a degradation: it fires every run by design and is listed
+        under standing limitations below.
+      </p>
+    </div>
+    {% else %}
+    <p>
+      <strong>The last run was complete.</strong> No feed failed, none stopped
+      unexpectedly, and none returned far fewer IDs than the run before it. The
+      counts on this site are still a floor, because only configured feeds are
+      read, but they are comparable to the previous run.
+    </p>
+    {% endif %}
+    <table class="table table-sm small">
+      <tbody>
+        <tr>
+          <th scope="row">Snapshot</th>
+          <td class="mono">{{ snapshot_date }}</td>
+        </tr>
+        <tr>
+          <th scope="row">Built</th>
+          <td class="mono">{{ generated }}{% if age_hours is not none %}
+            <span class="text-muted">({{ age_hours }}h ago)</span>{% endif %}</td>
+        </tr>
+        <tr>
+          <th scope="row">Code</th>
+          <td class="mono">{{ summary.get('source_commit', 'unknown') }}{% if summary.get('source_dirty') %}
+            <span class="text-muted">(uncommitted changes)</span>{% endif %}</td>
+        </tr>
+        <tr>
+          <th scope="row">Rows published</th>
+          <td class="num">{{ summary.total | commafy }}</td>
+        </tr>
+      </tbody>
+    </table>
+    {% if summary.feeds and summary.feeds.get('shrunk') %}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>Silent shrink detected.</strong> These feeds returned far fewer
+        IDs than the previous run without failing or truncating, which is the one
+        failure a status field cannot show:
+      </p>
+      <ul class="mb-0">
+        {% for line in summary.feeds.shrunk %}<li class="mono small">{{ line }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{# ---- 2. cadence, moved from /method ---- #}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Does this site actually run every six hours?</h2>
+  </div>
+  <div class="card-body">
+    {% if cadence %}
+    <p>
+      <strong>{{ cadence.delivered }} of {{ cadence.expected }} scheduled runs
+      published in the last {{ cadence.days }} days</strong>
+      ({{ cadence.pct }}%){% if cadence.last %}, most recently
+      <span class="mono">{{ cadence.last }}</span>{% endif %}.
+    </p>
+    <p class="mb-0">
+      Counted from a ledger appended by the step that actually publishes, so a run
+      that built and failed to deploy is not counted as delivered. This exists
+      because the six-hourly claim had no evidence behind it and was false at
+      least twice: two scheduled ticks on 2026-08-21 produced nothing, with no
+      pushes in the window, and nothing on the site could have told you.
+    </p>
+    {% else %}
+    <p class="mb-0">
+      <strong>Not yet evidenced.</strong> The run ledger starts empty and is
+      appended by each successful publish, so this fills in over the first week.
+      It reads as unknown rather than as zero, because a fresh repository and a
+      stopped pipeline must not look the same.
+    </p>
+    {% endif %}
+  </div>
+</div>
+
+{# ---- 3. movement against the previous run ----
+
+   RE-HOMED 2026-08-26, and it was orphaned before that. `site._changes` was
+   computed on every run, put in the render context, and rendered by nothing: the
+   /changes page had been deleted in the pivot and the computation stayed. Five
+   tests in tests/test_epoch and the withhold-leak test in tests/test_end_to_end
+   were guarding an output no reader could reach.
+
+   It belongs here. "What moved since the previous run" is a fact about a run, and
+   the three buckets are never merged: a set difference over two backlogs is not a
+   publication event, and calling it one asserts a fact about a CNA that this site
+   has not checked. #}
+{% if changes and changes.have_previous %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">What moved since the previous run</h2>
+  </div>
+  <div class="card-body">
+    {% if not changes.comparable %}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>These two snapshots are not comparable.</strong>
+        {{ changes.incomparable_reason | capitalize }}. A difference computed across that
+        change would measure the change in method, not a change in CNA behaviour, so no
+        movement is shown. It resumes once two consecutive runs share the same feed set,
+        buffer and epoch.
+      </p>
+    </div>
+    {% else %}
+    <table class="table table-sm small">
+      <thead>
+        <tr><th scope="col">Bucket</th><th scope="col" class="num">Rows</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>New</td><td class="num">{{ changes.new | length | commafy }}</td></tr>
+        <tr><td>Published, verified in the CVE List</td>
+            <td class="num">{{ changes.published | length | commafy }}</td></tr>
+        <tr><td>Rejected under rule 4.5.3.5</td>
+            <td class="num">{{ changes.rejected | length | commafy }}</td></tr>
+        <tr><td>No longer listed, cause unverified</td>
+            <td class="num">{{ changes.no_longer_listed | length | commafy }}</td></tr>
+        <tr><td>Still open</td><td class="num">{{ changes.still_open | commafy }}</td></tr>
+      </tbody>
+    </table>
+    <div class="caveat">
+      <p>
+        <strong>Only the first of those is good news.</strong> A row is counted as published
+        only where the CVE List confirms a published record, taken from the resolution ledger
+        rather than from the difference between two lists.
+      </p>
+      <p>
+        <strong>Rejected is not resolved.</strong> Rule 4.5.3.5 requires CNAs to reject unused
+        or unpublished IDs, so rejection is lawful and is the likely end state for the oldest
+        rows here. For anyone consuming the CVE List it is worse than an open RBP: the ID stays
+        cited in advisories and no record is ever coming.
+      </p>
+      <p class="mb-0">
+        <strong>No longer listed means we do not know.</strong> A row leaves this list for
+        reasons that have nothing to do with a CNA: a transient API error, a feed that failed
+        or was truncated, a change to the feed set, a raised buffer, or a revised advisory
+        date. None of those are a publication and none are counted as one.
+      </p>
+    </div>
+    {% if changes.no_longer_listed %}
+    {# CAPPED. An unbounded comma-joined ID paragraph ran to 7,000 characters at
+       150 rows, and ~500 at live scale, which defeats the caveat directly above
+       it: a reader who has to scroll past a wall of identifiers has stopped
+       reading the sentence that says the cause is unverified. #}
+    <p class="mono small">{{ changes.no_longer_listed[:50] | join(', ') }}</p>
+    {% if changes.no_longer_listed | length > 50 %}
+    <p class="small text-muted mb-0">
+      Showing 50 of <strong>{{ changes.no_longer_listed | length | commafy }}</strong>.
+      The full list is in <a href="data/rbp.json">rbp.json</a> by difference against
+      the previous snapshot; it is deliberately not rendered, because a wall of
+      identifiers reads as a finding and this bucket is explicitly not one.
+    </p>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endif %}
+
+{# ---- 4. per-feed health ---- #}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Feeds read on this run</h2>
+  </div>
+  <div class="card-body">
+    <p class="small text-muted">
+      Every configured feed and what it returned. A feed that fails is reported
+      here rather than simply yielding fewer rows, because counts are a floor and
+      a silent shrink would read as improvement.
+    </p>
+    {% set detail = (summary.feeds or {}).get('detail') or {} %}
+    {% if detail %}
+    <table class="table table-sm small">
+      <thead>
+        <tr>
+          <th scope="col">Feed</th>
+          <th scope="col">State</th>
+          <th scope="col" class="num">IDs</th>
+          <th scope="col">Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for name, h in detail | dictsort %}
+        <tr>
+          <td class="mono">{{ name }}</td>
+          <td>
+            {% if h.status == 'ok' %}<span class="chip chip-ok">ok</span>
+            {% elif h.status == 'capped' %}<span class="chip chip-unmeasured">capped</span>
+            {% elif h.status == 'truncated' %}<span class="chip chip-late">truncated</span>
+            {% else %}<span class="chip chip-must">failed</span>{% endif %}
+          </td>
+          <td class="num">{% if h.rows is not none %}{{ h.rows | commafy }}{% else %}&mdash;{% endif %}</td>
+          <td class="text-muted">{{ h.detail or '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    {# The pre-first-run and legacy-snapshot state. A snapshot written before
+       per-feed health existed has a `requested` list and no detail, and an empty
+       table there would read as "no feeds", which is the opposite of true. #}
+    <p class="mono small">{{ (summary.feeds or {}).get('requested', []) | join(', ') }}</p>
+    <p class="small text-muted mb-0">
+      This snapshot records no per-feed detail, so only the requested list is
+      shown. Per-feed health is recorded from 2026-08-24 onward.
+    </p>
+    {% endif %}
+    {% if summary.feeds and summary.feeds.get('failures') %}
+    <div class="caveat warn">
+      <p class="mb-0"><strong>{{ summary.feeds.failures | length }} of
+        {{ summary.feeds.attempts }} feed fetches failed.</strong></p>
+      <ul class="mb-0">{% for f in summary.feeds.failures %}<li class="mono small">{{ f }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{# ---- 5. standing limitations, moved from /method ---- #}
+{% if summary.get('limitations') %}
+<div class="card">
+  <div class="card-header">
+    <h2 class="card-title">Standing limitations</h2>
+  </div>
+  <div class="card-body">
+    <p>
+      These fire on <strong>every run, by design</strong>. They are not a fault and not a
+      bad day; they are the permanent shape of what the feeds can see, and they are listed
+      apart from the degraded state above because a warning that is always on is not a
+      warning. Recording them as truncation made every single run read as incomplete.
+    </p>
+    <ul class="mb-2">
+      {% for lim in summary.limitations %}<li class="mono small">{{ lim }}</li>{% endfor %}
+    </ul>
+    <p class="mb-0">
+      The consequence worth stating plainly: a paginated advisory API read to a fixed cap
+      is observed over a <strong>much shorter window</strong> than a distribution tracker
+      read in full, so counts from the two are not directly comparable, and a CNA whose
+      advisories arrive mainly through a capped feed will be under-represented here
+      relative to one carried by a tracker.
+    </p>
+  </div>
+</div>
+{% endif %}
+
+<p class="small text-muted">
+  How the count itself is built, what it excludes and how far the feeds reach is
+  on <a href="method.html">the method page</a>. The machine-readable version of
+  everything here is in <a href="data/rbp.json">rbp.json</a>, under
+  <span class="mono">degraded</span>, <span class="mono">degraded_reasons</span>
+  and <span class="mono">feeds</span>.
+</p>
+{% endblock %}

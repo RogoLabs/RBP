@@ -248,19 +248,15 @@ blockquote {
 }
 blockquote p:last-child { margin-bottom: 0; }
 
-/* Degradation banner. Distinct from the staleness banner because the two say
-   different things: stale means "this is old", degraded means "this is
-   incomplete", and a run can be fresh and incomplete at the same time, which is
-   in fact the normal state (ubuntu truncates on every run). Blue rather than
-   amber, so a reader can tell them apart at a glance without reading. */
-.degraded-banner {
-  background: rgba(13, 110, 253, 0.12);
-  border: 1px solid rgba(13, 110, 253, 0.55);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-sm) var(--spacing-md);
-  margin-bottom: var(--spacing-md);
-  font-size: 0.9rem;
-}
+/* `.degraded-banner` stood here. The banner it styled was removed from base.html
+   on 2026-08-26 and the run's state is reported on /status instead, so the rule
+   styled nothing. Deleted rather than left: dead CSS is what let a hand-typed
+   test list look complete while omitting a chip that WAS rendering, and it is
+   what let a translucent stripe fail AA in dark theme for as long as it did.
+
+   The staleness banner is a different thing and keeps its rule below. Stale means
+   "this is old", degraded meant "this is incomplete", and a run can be fresh and
+   incomplete at the same time. */
 
 /* ---- dark-mode gaps inherited from the cve.icu sheet -------------------- */
 /* .metric-card fills with linear-gradient(--viz-color-1, --viz-color-2), and
@@ -399,6 +395,29 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
   /* Same corrections for dark. --color-text-muted is #6b7280 there, which is
      3.67 on the card surface and is what .histo-labels reads at. */
   --color-text-muted: #9aa3b2;
+  /* --color-text-secondary HAS TO BE RE-ASSERTED HERE, and it was missing.
+     
+     The :root block above overrides it to #5a6168, an AA-safe value solved
+     against the LIGHT surfaces. style.css sets the dark value to #9ca3b4 in its
+     own [data-theme="dark"] block. Those two selectors have EQUAL specificity
+     (0,1,0), so source order decides, and rbp.css loads second: the light
+     correction won in dark theme and --color-text-secondary resolved to #5a6168
+     against a near-black ground.
+     
+     Measured in the browser at 2.54:1 against a bar of 4.5, on `.text-muted`,
+     which style.css sets from this token with `!important` in dark. That is the
+     footer of every page, the card sub-copy on /method, /policy and /status, and
+     the "how far the feeds reach" prose.
+     
+     The comment on the :root block argues that overriding the TOKEN "fixes the
+     whole class at once and cannot be missed by omission", against repointing
+     rules one at a time. That argument is right and this is its one failure
+     mode: overriding a token at :root silently un-overrides the other theme
+     unless you re-assert it, and nothing about the light theme looks wrong.
+     
+     #9ca3b4 is style.css's own dark value, which the harness had believed was
+     winning all along. 6.32 worst-case across the four dark surfaces. */
+  --color-text-secondary: #9ca3b4;
   /* .theme-toggle:hover reads --color-primary over --color-bg-hover. */
   --color-primary: #6ba5f8;
   --color-accent: #6ba5f8;
@@ -696,7 +715,11 @@ body.locked{overflow:hidden}
   border-bottom:1px solid var(--color-border)}
 .cmd-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
   max-width:1080px;margin:0 auto;padding:12px 20px}
-.cmd-count{display:flex;align-items:baseline;gap:9px;flex:0 0 auto}
+/* h1.cmd-count, not div: the count IS the front page's heading. Margin and
+   font-size are reset because a bare h1 would otherwise inherit the document
+   scale and push the sticky bar taller than the rows it sits above. */
+.cmd-count{display:flex;align-items:baseline;gap:9px;flex:0 0 auto;
+  margin:0;font-size:1rem;font-weight:400}
 .cmd-count b{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;
   font-variant-numeric:tabular-nums;line-height:1}
 .cmd-count b.dim{opacity:.45}
@@ -784,3 +807,24 @@ a.chip:hover,a.chip:focus-visible{background:var(--rbp-link);color:var(--color-b
 /* A feed with no per-ID page is still a place the ID is showing up. Shown, and
    visibly not a link, rather than dropped. */
 span.chip.nolink{border-style:dashed;border-color:var(--color-border);color:var(--rbp-text-muted)}
+
+/* The list hedge. Sits between the command bar and the first row so it travels
+   with a copy or a print of the list, which is what the old <caption> did. Quiet
+   but not muted to the point of being skipped: it is the qualifier that makes the
+   count safe to quote. */
+.listhedge{margin:18px 0 -6px;font-size:.85rem;
+  color:var(--rbp-text-secondary);line-height:1.45;}
+.listhedge strong{color:var(--color-text-primary);}
+
+/* A card that holds nothing but prose.
+   
+   `.card-body > p` is capped at 68ch for readability, which is right, and on
+   /method and /policy the cards also hold tables, metric grids, headings and
+   lists that use the rest of the width. /about holds fourteen uniform paragraphs
+   and nothing else, so the same rule left a 1200px card with 686px of text in it
+   and half the card empty: the measure was correct and the container was not.
+   
+   Applied by name rather than by a `:has(p:only-child)`-style rule, so adding a
+   table to a page does not silently change its width. /policy is deliberately NOT
+   given this: its lists and blockquotes already fill the space. */
+.card-prose { max-width: 78ch; }

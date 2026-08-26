@@ -1,37 +1,27 @@
-<!doctype html>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex, nofollow">
-<title>RBP Tracker</title>
-<!-- The only page anyone can reach pre-launch, and it unfurled as a bare link.
-     Unfurlers do not read robots.txt, so a paste into Slack or Teams renders
-     whatever is here. Deliberately carries no count: the launch gate is on
-     promotion, and an unfurl in someone else's channel is promotion. -->
-<meta name="description" content="Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced in a public advisory, and still unpublished. This tracker is being built.">
-<meta property="og:title" content="Reserved, public, and unpublished">
-<meta property="og:description" content="Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This tracker is being built and is not yet published.">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://rbptracker.org/">
-<link rel="canonical" href="https://rbptracker.org/">
-<style>
-:root{--bg:#f5f7f9;--fg:#0f151b;--mut:#4e5966;--acc:#0b6b72;--rule:#d8dee5}
-@media(prefers-color-scheme:dark){:root{--bg:#0b0f13;--fg:#e4eaf1;--mut:#95a2b1;--acc:#48acb3;--rule:#26313c}}
-*{box-sizing:border-box}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:var(--bg);color:var(--fg);
-padding:32px;font:16px/1.6 ui-sans-serif,-apple-system,"Segoe UI",Roboto,sans-serif}
-main{max-width:56ch}
-h1{font-size:clamp(26px,5vw,40px);line-height:1.1;letter-spacing:-.025em;margin:0 0 20px;text-wrap:balance}
-h1 span{color:var(--acc)}
-p{color:var(--mut);margin:0 0 14px}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.88em;
-background:color-mix(in srgb,var(--fg) 8%,transparent);padding:.15em .4em;border-radius:3px}
-blockquote{margin:0 0 14px;padding:0 0 0 14px;border-left:2px solid var(--rule);color:var(--mut)}
-footer{margin-top:26px;padding-top:16px;border-top:1px solid var(--rule);
-font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;letter-spacing:.05em;color:var(--mut)}
-a{color:var(--acc)}
-</style>
-<main>
-  <h1>Reserved, public, and <span>unpublished</span>.</h1>
+{# THE HOLDING-PAGE COPY, and it is the most carefully argued prose on the site.
+
+   ONE SOURCE, TWO SHELLS. This was a standalone placeholder.html at the repo
+   root, copied byte-for-byte to two routes: `/` before launch, where it is the
+   only page anyone can reach, and `/about-this-count.html` in both postures,
+   where it is a normal page linked from the nav as "About".
+
+   Being one FILE served both, which is why /about-this-count had no header, no
+   nav, no footer, no theme toggle and its own teal palette. A reader clicking
+   "About" landed on something that looked like a different site with no way back
+   except the browser's Back button.
+
+   The reason it was standalone is real and it survives: pre-launch the front door
+   MUST NOT link into the dashboard, because linking to it effectively launches
+   it, and base.html's nav does exactly that. tests/test_site.py asserts it.
+
+   So the copy lives here and the two shells wrap it:
+
+     templates/about.html    extends base.html, full site chrome  -> /about-this-count.html
+     templates/holding.html  standalone, no nav, no links in      -> /index.html, pre-launch
+
+   Edit the words HERE. Editing either shell edits one of the two pages.
+#}
+
 
   <p>A <em>Reserved but Public</em> CVE ID is one a CNA has reserved and that appears in a
   public advisory, while the CVE Record itself is still unpublished. Anyone pulling the
@@ -82,17 +72,23 @@ a{color:var(--acc)}
   <p>RBP Policy v2.0.0 names &ldquo;Program metrics and audits&rdquo; as one of the
   Program's own channels for identifying RBPs. If the Program publishes a figure of its own it will be measured with internal access, and this one is not a substitute for it. </p>
 
+  <!-- The third copy of the withhold ask, and the third to go stale. This one said
+       requests were "public on purpose, so anyone can check that the withheld count
+       matches them", over a mailto: link, after both the public channel and the
+       published count were removed on 2026-08-26. The holding page is the page a CNA
+       most likely lands on, so it was the worst place for it. -->
   <p><strong>If a CVE ID this site will list should not be listed, ask.</strong>
-  <a href="mailto:rbp@rogolabs.net">Open a withhold request</a> giving the CVE ID and
+  Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> giving the CVE ID and
   nothing else. No reason, no detail, no confirmation that a vulnerability exists: a
   request with no reason does not distinguish an embargo from a wrong owner from an
-  organisation that would rather not appear. It is withheld on the next build, which runs
-  every six hours. Requests are public on purpose, so anyone can check that the withheld
-  count matches them and the lever cannot be used to quietly shrink the total. If you
-  would rather not post publicly,
-  <a href="https://github.com/RogoLabs/RBP/security/advisories/new">report privately</a> or email
-  <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a>, handled by a person within
-  five business days.</p>
+  organisation that would rather not appear, and asking for one would make the request
+  itself a disclosure. A person reads it and applies the removal by hand, so it takes
+  effect on the next build after that. No proof of affiliation is required.</p>
 
-  <footer>rbptracker.org, soon &middot; <a href="https://github.com/RogoLabs/RBP">RogoLabs/RBP</a></footer>
-</main>
+  <p>Stated plainly, because it is a real cost: there is no automated route and no
+  published count of withheld rows, so a removal leaves no audit trail here. That was a
+  deliberate trade for a channel with nothing to fail silently, and if this site ever
+  names a party again the count comes back with it. To report a vulnerability in this
+  site's own code instead, use
+  <a href="https://github.com/RogoLabs/RBP/security/advisories/new">a private security
+  advisory</a>.</p>

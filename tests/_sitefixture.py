@@ -223,11 +223,13 @@ def build(root, launched):
 
 # What the fixture must actually produce. Each entry was a real way to leave a
 # downstream assertion vacuous while the suite stayed green.
-# The page set as of 2026-08-26. Eight pages became three: the list is the front
-# door, and cves / changes / data / backlog-at-launch were removed with their
-# content folded into the slide-over panel. about-this-count is the holding page,
-# written in both postures.
-REQUIRED_PAGES = ("about-this-count.html", "method.html", "policy.html")
+# The page set as of 2026-08-26. Eight pages became four: the list is the front
+# door, cves / changes / data / backlog-at-launch were removed with their content
+# folded into the slide-over panel, and /status was added to carry the per-run
+# health that used to be a banner above the count on every page.
+# about-this-count is the holding page, written in both postures.
+REQUIRED_PAGES = ("about-this-count.html", "method.html", "policy.html",
+                  "status.html")
 # The list page renders its rows from an embedded JSON island rather than
 # server-side <table> markup, so "did the table render" is now "did the row data
 # reach the page". Checked in assert_renders below.

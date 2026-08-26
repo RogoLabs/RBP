@@ -45,6 +45,8 @@ import time
 import urllib.error
 import urllib.request
 
+from . import schema
+
 CVE_ID_API = "https://cveawg.mitre.org/api/cve-id/"
 UA = {"User-Agent": "rbptracker.org (+https://github.com/RogoLabs/RBP)"}
 CVE_RE = re.compile(r"^CVE-\d{4}-\d{4,}$")
@@ -198,7 +200,7 @@ def _get(cid, attempts=3):
                 time.sleep(_backoff(i, e.headers.get("Retry-After")))
                 continue
             return {"state": f"HTTP{e.code}", "assigner": ""}
-        except Exception:  # noqa: BLE001
+        except Exception:
             if i < attempts - 1:
                 time.sleep(_backoff(i))
                 continue
@@ -246,7 +248,7 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
         try:
             cache = {k: v for k, v in json.load(open(cache_path)).items()
                      if isinstance(v, dict) and v.get("state") in _IMMUTABLE}
-        except Exception:  # noqa: BLE001
+        except Exception:
             cache = {}
 
     unknown, malformed = [], 0
@@ -270,7 +272,7 @@ def classify(refs, corpus_df, attributor, cache_path, workers=DEFAULT_WORKERS,
     live = len(unknown) - reused
     if live:
         print(f"  resolved in {time.time() - t0:.1f}s ({live / max(time.time() - t0, .01):.0f} req/s)")
-    json.dump(cache, open(cache_path, "w"))
+    schema.write_json(cache_path, cache)
 
     backlog = []
     tally = {"PUBLISHED": 0, "REJECTED": 0, _NOT_FOUND: 0, "RESERVED": 0, "ERROR": 0}
