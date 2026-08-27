@@ -21,7 +21,26 @@ import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
-UA = {"User-Agent": "rbp-cves/1.0 (CVE quality research)"}
+# The parenthesised URL is not decoration and it is not a disguise.
+#
+# Cisco's edge (AkamaiGHost) answered 403 to this client on every run. The
+# reflex is to send a browser string; that is the one thing that does NOT work.
+# Measured against www.cisco.com/.well-known/csaf/provider-metadata.json, five
+# runs each, the 403 cached at the edge:
+#
+#   rbp-cves/1.0 (CVE quality research)   403   what we used to send
+#   Mozilla/5.0 ... Chrome/128 Safari     403   the browser string
+#   foobar/1.0, rbp, rbptracker/1.0       403   any bare product token
+#   rbp-cves/1.0 (see rbptracker.org)     403   a domain with no scheme
+#   rbp-cves/1.0 (+https://rbptracker.org) 200  this
+#
+# The rule is self-identification: a scheme-qualified URL, an email address or a
+# crawler keyword in the comment field. That is the ordinary robots convention,
+# so the fix is to say who we are and how to reach us, which is MORE honest than
+# the string it replaces, not less. We do not claim to be curl and we do not
+# claim to be a browser. Disclosed on /method, because a reader deserves to know
+# which doors we had to knock on differently.
+UA = {"User-Agent": "rbp-cves/1.0 (+https://rbptracker.org)"}
 MAX_BYTES = 100_000_000     # cap on a single _get body (Debian tracker ~30MB is the largest)
 
 # Bulk archives are streamed to disk, not held in memory, so they get their own
@@ -1078,10 +1097,71 @@ CSAF_AGGREGATORS = (
     "https://wid.cert-bund.de/.well-known/csaf-aggregator/aggregator.json",       # BSI CERT-Bund
 )
 
+# Provider metadata we can still act on when the canonical host refuses us.
+#
+# www.cisa.gov answers 403 to the GitHub Actions runners and 200 to a developer
+# laptop, with the SAME User-Agent, from the same code. That is the hosting edge
+# filtering cloud egress, not anything we send, so no header change reaches it
+# and the Cisco fix above does nothing here. Two 403s on one health line, two
+# unrelated causes.
+#
+# These feed URLs are not invented and they are not a third-party mirror. They
+# are the ROLIE feeds CISA's own provider-metadata.json designates, read from
+# the canonical document on 2026-08-26, served from CISA's own GitHub
+# organisation, which the runners do reach. The canonical URL is still fetched
+# first on EVERY run, so the day CISA stops blocking the runners this pinned
+# copy stops being consulted, without a commit.
+#
+# Pinning is asserted config in a codebase that prefers derived, so the fallback
+# announces itself in the health detail every time it fires. Silent is the only
+# unacceptable option; asserted-and-named is a trade we can defend.
+CSAF_METADATA_FALLBACK = {
+    "https://www.cisa.gov/sites/default/files/csaf/provider-metadata.json": {
+        "canonical_url": "https://www.cisa.gov/sites/default/files/csaf/provider-metadata.json",
+        "publisher": {"category": "coordinator", "name": "CISA",
+                      "namespace": "https://www.cisa.gov/"},
+        "role": "csaf_trusted_provider",
+        "distributions": [{"rolie": {"feeds": [
+            {"summary": "TLP:WHITE CISA OT Advisories", "tlp_label": "WHITE",
+             "url": "https://raw.githubusercontent.com/cisagov/CSAF/develop/"
+                    "csaf_files/OT/white/cisa-csaf-ot-feed-tlp-white.json"},
+            {"summary": "TLP:WHITE CISA IT Advisories", "tlp_label": "WHITE",
+             "url": "https://raw.githubusercontent.com/cisagov/CSAF/develop/"
+                    "csaf_files/IT/white/cisa-csaf-it-feed-tlp-white.json"},
+        ]}}],
+    },
+}
+
 # Cap on directory distributions consulted per provider. Some providers list one
 # directory per advisory rather than one root (Huawei lists 117), and without a
 # cap a single provider dominates the run.
 CSAF_MAX_DIRS = 12
+
+
+_CSAF_YEAR_SEG = re.compile(r"^(19|20)\d{2}$")
+
+
+def _csaf_path_year_in_scope(path, years):
+    """False only when the advisory's own path names a year older than the window.
+
+    `changes.csv` timestamps are LAST-MODIFIED, not published, and directory
+    listings file an advisory under the year it was published. Cisco's most
+    recently touched advisory sits in its **2021** directory: a routine revision
+    to a five-year-old advisory, carrying five-year-old CVE ids.
+
+    Sorting on the timestamp alone therefore spends the whole per-provider cap on
+    revisions of old advisories. Measured against the live providers, same cap of
+    120: Cisco yields 73 in-scope CVEs on timestamp order and **194** once the
+    path year is honoured, Red Hat 242 and **261**. The cap is the scarce
+    resource here, and this decides what it is spent on.
+
+    A path carrying no year segment is kept. This narrows a selection that is
+    already too broad; it never invents a reason to drop something.
+    """
+    segs = [s for s in path.split("/") if _CSAF_YEAR_SEG.match(s)]
+    # Same rule as the timestamp filter above it: older than the window is out,
+    # anything else stays, so the two cannot disagree about the same advisory.
+    return not segs or any(int(s) >= min(years) for s in segs)
 
 
 def _csaf_directory_entries(directory_url, years, cap):
@@ -1093,9 +1173,22 @@ def _csaf_directory_entries(directory_url, years, cap):
     nothing. Red Hat, Huawei and Schneider Electric are all directory-only, which
     is why Red Hat, one of the largest publishers, contributed zero.
 
-    `changes.csv` is preferred: it is newest-first with timestamps, so a recency
-    cap is meaningful. `index.txt` is the fallback, and carries no dates, so it
-    is filtered on the year in the file path instead.
+    `changes.csv` is preferred: it carries timestamps, so a recency cap is
+    meaningful. `index.txt` is the fallback, and carries no dates, so it is
+    filtered on the year in the file path instead.
+
+    DO NOT reintroduce an early `break` here. This loop used to stop at the
+    first out-of-window row, on the assumption that changes.csv is newest-first.
+    SUSE's is not: its first row is dated 2024-08-21, so the loop exited on line
+    ONE of 41,038 and the provider returned nothing. 14,486 in-scope advisories
+    were dropped, and the health line reported it as "no advisories in scope",
+    which is the silent shrink this adapter exists to prevent, dressed up as a
+    fact about SUSE. The file is not reliably sorted in either direction either:
+    SUSE's LAST row is dated 2014. So every row is read, filtered, and sorted.
+
+    The break also saved nothing. `_get_text` has already downloaded the whole
+    listing by the time the first line is parsed, so stopping early spared some
+    string splitting and no bytes at all.
     """
     base = directory_url.rstrip("/")
     try:
@@ -1108,14 +1201,15 @@ def _csaf_directory_entries(directory_url, years, cap):
             path, ts = parts
             year = _date_year(ts)
             if year is not None and year < min(years):
-                # changes.csv is newest-first, so the first out-of-window entry
-                # means everything after it is older too.
-                break
+                continue
+            if not _csaf_path_year_in_scope(path, years):
+                continue
             out.append((ts, f"{base}/{path.lstrip('/')}"))
-            if len(out) >= cap:
-                break
         if out:
-            return out
+            # Newest first, then cap, so the cap keeps the most recent advisories
+            # whatever order the provider wrote the file in.
+            out.sort(reverse=True)
+            return out[:cap]
     except Exception:
         pass
     try:
@@ -1190,7 +1284,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     # 120 directories were cut to 12 all reported identically to a clean read.
     # That is the silent-shrink signature on the one adapter that fans out to
     # more than a dozen third parties.
-    unreachable, empty, capped_dirs = [], [], []
+    unreachable, empty, capped_dirs, fell_back = [], [], [], []
     all_providers = _expand_csaf_providers(providers, aggregators, max_providers)
     print(f"  [csaf] {len(all_providers)} providers (incl. aggregator-discovered)", file=sys.stderr)
     for meta_url in all_providers:
@@ -1198,9 +1292,17 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         try:
             meta, _, _ = _get(meta_url, timeout=40)
         except Exception as e:
-            print(f"  [csaf] {meta_url}: metadata skip ({e})", file=sys.stderr)
-            unreachable.append(f"{host} ({str(e)[:40]})")
-            continue
+            meta = CSAF_METADATA_FALLBACK.get(meta_url)
+            if meta is None:
+                print(f"  [csaf] {meta_url}: metadata skip ({e})", file=sys.stderr)
+                unreachable.append(f"{host} ({str(e)[:40]})")
+                continue
+            # Reached, just not by the front door. The provider is NOT recorded
+            # as unreachable, because we are about to read every advisory it
+            # publishes; recording it as lost would be as wrong as staying quiet.
+            print(f"  [csaf] {meta_url}: metadata unreachable ({e}); "
+                  f"using pinned feeds", file=sys.stderr)
+            fell_back.append(host)
         feed_urls = []
         for dist in (meta or {}).get("distributions", []):
             for f in (dist.get("rolie", {}) or {}).get("feeds", []):
@@ -1210,13 +1312,12 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # Directory distributions, the half of the spec this adapter used to skip.
         available = _csaf_directory_count(meta)
         chosen = _csaf_directories(meta, max_dirs=CSAF_MAX_DIRS)
-        if available > len(chosen):
-            # Huawei publishes 121 distributions, one directory per advisory, so
-            # the cap selects an arbitrary handful and the rest are never read.
-            # Reported rather than merely capped: an arbitrary 12 of 121 is a
-            # feed that has quietly shrunk to a tenth of itself, and the site
-            # cannot tell the difference between that and a quiet vendor.
-            capped_dirs.append(f"{host} {len(chosen)}/{available} directories")
+        # The cap is NOT reported here. Huawei publishes 121 directories and
+        # every one of them answers 204 No Content, so "capped 12/121" asserted a
+        # loss of 109 directories' worth of advisories that do not exist. A
+        # standing warning naming a loss nobody can find is the furniture problem
+        # again. The claim is deferred to after the fetch, where we know whether
+        # the directories we DID read had anything in them.
         for durl in chosen:
             entries.extend(_csaf_directory_entries(durl, years, cap_per_provider))
         for furl in feed_urls:
@@ -1263,23 +1364,31 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                                  "product": "", "description": (v.get("title") or doc.get("title") or "")[:400]})
             return rows
 
-        n0 = len(out)
+        n0, read = len(out), 0
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
             for rows in ex.map(_fetch, entries):
+                read += len(rows)
                 for r in rows:
                     if r["cve_id"] not in seen:
                         seen.add(r["cve_id"])
                         out.append(r)
         gained = len(out) - n0
-        print(f"  [csaf] {host}: +{gained}", file=sys.stderr)
-        if gained == 0:
-            # A provider contributing nothing is not an error and is not
-            # nothing. FEEDS.md recorded that SUSE, Huawei and www.sick.com each
-            # returned zero advisories in scope and that "the provider list has
-            # never been validated against what it actually yields". This is that
-            # validation, on every run, rather than once in a document.
+        print(f"  [csaf] {host}: +{gained} new ({read} in scope)", file=sys.stderr)
+        # `read`, not `gained`. A provider contributing nothing is not an error
+        # and is not nothing, but `gained` measures against a `seen` set shared
+        # across every provider in the run, so a provider whose advisories an
+        # EARLIER provider already contributed scored zero and was published as
+        # "no advisories in scope". www.sick.com is sick.com after a 301, the
+        # same host reached twice, and the second pass was reported as a vendor
+        # with nothing to say. Corroboration is not emptiness.
+        if read == 0:
             empty.append(host)
-    _record_csaf_health(all_providers, unreachable, empty, capped_dirs, len(out))
+        elif available > len(chosen):
+            # Now it means something: this provider had readable advisories AND
+            # we consulted only some of its directories.
+            capped_dirs.append(f"{host} {len(chosen)}/{available} directories")
+    _record_csaf_health(all_providers, unreachable, empty, capped_dirs, fell_back,
+                        len(out))
     return out
 
 
@@ -1295,7 +1404,7 @@ def _csaf_directory_count(meta):
                 if d.get("directory_url")})
 
 
-def _record_csaf_health(providers, unreachable, empty, capped_dirs, rows):
+def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back, rows):
     """One health record for the fan-out adapter, derived from its providers.
 
     Ordered worst-first, because a single status has to mean the worst thing that
@@ -1307,6 +1416,13 @@ def _record_csaf_health(providers, unreachable, empty, capped_dirs, rows):
     bits = [f"{n - len(unreachable)}/{n} providers read", f"{rows} ids"]
     if unreachable:
         bits.append(f"unreachable: {', '.join(sorted(unreachable)[:6])}")
+    if fell_back:
+        # Named on every run it fires, and deliberately NOT a degradation: the
+        # advisories were all read, by a route the provider itself publishes.
+        # Calling a complete read a degradation is how a banner becomes noise;
+        # saying nothing is how a pinned URL rots unnoticed. So: say it, plainly,
+        # and let the status reflect the data, which is whole.
+        bits.append(f"read via pinned feeds: {', '.join(sorted(fell_back)[:6])}")
     if capped_dirs:
         bits.append(f"capped: {', '.join(sorted(capped_dirs)[:6])}")
     if empty:
@@ -1513,7 +1629,22 @@ def gather(sources, years):
         # place: a state recorded by an adapter and discarded by the caller. The
         # fix is the membership test, and the test that catches it is a mutation
         # test, because every assertion about ghsa's row count passes either way.
-        if FEED_HEALTH.get(s, {}).get("status") in (TRUNCATED, FAILED, CAPPED):
+        #
+        # AND THE SAME BUG SURVIVED IN THE `ok` HALF OF IT, found 2026-08-26 by
+        # reading the published artefact of a green run instead of the log.
+        # Testing the STATUS keeps an adapter's account of itself only when that
+        # account is bad news. `feed_csaf` records OK with a detail naming which
+        # of its 17 providers were read, which had nothing to say, and which were
+        # reached by a route other than the one in the config; every word of that
+        # was overwritten with "2732 ids" on any run where nothing went wrong.
+        #
+        # So CISA being read through pinned feeds rather than www.cisa.gov, the
+        # one fact on that line a reader most needs and the one the site promised
+        # to disclose, appeared in the build log and reached no page. A
+        # disclosure that only survives when a run is ALSO degraded is not a
+        # disclosure. Test for a detail, not for bad news.
+        h = FEED_HEALTH.get(s) or {}
+        if h.get("status") in (TRUNCATED, FAILED, CAPPED) or h.get("detail"):
             FEED_HEALTH[s]["rows"] = len(rows)
         else:
             record_feed(s, OK, f"{len(rows)} ids", rows=len(rows))

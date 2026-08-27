@@ -427,6 +427,23 @@ def test_the_hostile_question_is_answered_on_the_site(built):
     assert "most visible holder" in m
 
 
+def test_the_site_says_how_it_identifies_itself_when_it_fetches(built):
+    """Two vendors refused this client until it started naming itself, and one of
+    them is read by a route its own metadata designates rather than the URL in the
+    config. A reader cannot audit a fetch they were never told about, so both
+    facts are on the page rather than in a commit message.
+
+    The stronger half of this is asserted in test_feedlab: the User-Agent names
+    us and impersonates nobody. This is the half a reader can see."""
+    m = _text(built / "method.html")
+    assert "rbp-cves/1.0 (+https://rbptracker.org)" in m, (
+        "the identifier this site fetches with is not disclosed anywhere on it")
+    assert "claims to be a web browser" in m, (
+        "the page does not say that no request pretends to be a browser")
+    assert "Cisco" in m and "CISA" in m, (
+        "the two publishers that needed a different route are not named")
+
+
 def test_link_previews_do_not_carry_the_count_before_launch(built):
     """Unfurlers do not read robots.txt, so a noindex page pasted into Slack still
     renders og:description. The gate is on promotion, and an unfurl in someone
