@@ -371,6 +371,25 @@
       is the single largest reason this site understates the problem.
     </p>
     {% endif %}
+    <p class="small text-muted">
+      <strong>How this site identifies itself when it fetches.</strong> Every request
+      carries <span class="mono">rbp-cves/1.0 (+https://rbptracker.org)</span>, which
+      names the client and gives any publisher a route to complain or to block it. No
+      request sent by this pipeline claims to be a web browser, and none claims to be
+      another tool. If a publisher ever refuses a client that identifies itself
+      honestly, the advisories it holds go unread and are counted as unread.
+    </p>
+    <p class="small text-muted">
+      <strong>Two publishers needed a different knock, and neither needed a disguise.</strong>
+      Cisco's edge refuses a client whose identifier carries no contact route, and
+      refuses a browser string just as firmly; it accepts the identifier above. CISA's
+      edge serves its metadata to an ordinary desktop and refuses the cloud machines
+      this site is built on, so its advisories are read instead from the feeds CISA's
+      own metadata points at, published in CISA's own GitHub organisation. When that
+      second route is used, the <a href="status.html">status page</a> says so on the
+      CSAF row for that run, because a route that quietly changed is a route nobody
+      can check.
+    </p>
     <p class="small text-muted mb-0">
       <strong>Counts are a lower bound.</strong> Only configured feeds are read, so an
       RBP in an ecosystem not listed above is invisible here. That is the main reason

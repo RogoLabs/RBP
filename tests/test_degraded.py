@@ -710,7 +710,7 @@ def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
     feeds.reset_health()
     feeds._record_csaf_health(providers=["a", "b", "c"],
                               unreachable=["www.cisco.com (403)"],
-                              empty=[], capped_dirs=[], rows=3190)
+                              empty=[], capped_dirs=[], fell_back=[], rows=3190)
     h = feeds.FEED_HEALTH["csaf"]
     assert h["status"] == feeds.CAPPED, h
     assert "www.cisco.com" in h["detail"], "the loss is not named"
@@ -737,20 +737,55 @@ def test_a_provider_that_stops_working_is_caught_by_the_shrink_guard():
     assert on is True
 
 
+def _csaf_fixture(monkeypatch, n_dirs, advisories_per_dir):
+    """A provider offering `n_dirs` directories, each yielding `advisories_per_dir`
+    readable advisories carrying one in-scope CVE."""
+    meta = {"distributions": [
+        {"directory_url": f"https://v.example/csaf/adv{n}/en"} for n in range(n_dirs)]}
+    doc = {"document": {"publisher": {"name": "V Corp"}, "tracking": {"id": "V-1"}},
+           "vulnerabilities": [{"cve": "CVE-2026-0001", "title": "t"}]}
+
+    def fake_get(url, timeout=None, retries=3, headers=None):
+        return (meta if url.endswith("pm.json") else doc), 200, {}
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    monkeypatch.setattr(
+        feeds, "_csaf_directory_entries",
+        lambda durl, years, cap: [(f"2026-01-0{i + 1}T00:00:00Z", f"{durl}/a{i}.json")
+                                  for i in range(advisories_per_dir)])
+
+
 def test_csaf_reports_a_provider_whose_directories_were_capped(monkeypatch):
     """Huawei publishes 121 distributions, one directory per advisory, against a
     cap of 12. The cap is deliberate; selecting an arbitrary tenth of a top-50
     CNA's output and reporting it as a clean read is not."""
-    meta = {"distributions": [
-        {"directory_url": f"https://v.example/csaf/adv{n}/en"} for n in range(40)]}
-    monkeypatch.setattr(feeds, "_get",
-                        lambda url, timeout=None, retries=3, headers=None: (meta, 200, {}))
-    monkeypatch.setattr(feeds, "_csaf_directory_entries",
-                        lambda durl, years, cap: [])
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=40, advisories_per_dir=1)
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
     h = feeds.FEED_HEALTH.get("csaf")
     assert h and h["status"] == feeds.CAPPED, h
     assert f"{feeds.CSAF_MAX_DIRS}/40 directories" in h["detail"]
+
+
+def test_a_cap_over_empty_directories_is_not_published_as_a_loss(monkeypatch):
+    """The other half, and the reason the claim moved after the fetch.
+
+    Huawei's 121 directories ALL answer 204 No Content. "capped 12/121" asserted
+    that 109 directories of advisories went unread, so a reader chasing the gap
+    would find nothing there, because there is nothing there. A standing warning
+    naming a loss nobody can find is the furniture failure again, and it costs
+    the reader the same trust as a missed one.
+
+    Nothing readable in the directories we did consult is reported as exactly
+    that, and it is not dressed up as a cap."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=40, advisories_per_dir=0)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert "capped" not in h["detail"], (
+        f"a cap over directories that hold nothing is not a loss: {h['detail']}")
+    assert "no advisories in scope: v.example" in h["detail"]
+    assert h["status"] == feeds.OK, h
 
 
 def test_csaf_names_providers_that_yielded_nothing(monkeypatch):
@@ -768,6 +803,95 @@ def test_csaf_names_providers_that_yielded_nothing(monkeypatch):
     assert h["status"] == feeds.OK, (
         "a provider with nothing to say is not an incomplete read; overstating "
         "that is how a banner becomes furniture")
+
+
+def test_a_provider_whose_advisories_another_provider_already_gave_us_is_not_empty(
+        monkeypatch):
+    """`empty` used to be computed from rows GAINED, measured against a `seen`
+    set shared across every provider in the run.
+
+    So a provider whose advisories an earlier provider had already contributed
+    scored zero and was published as "no advisories in scope". www.sick.com is
+    sick.com after a 301, the same host reached twice, and the second pass was
+    reported to readers as a vendor with nothing to say. Corroboration is the
+    thing this site is built to measure; counting it as silence is backwards."""
+    feeds.reset_health()
+    meta = {"distributions": [{"directory_url": "https://v.example/csaf"}]}
+    doc = {"document": {"publisher": {"name": "V Corp"}, "tracking": {"id": "V-1"}},
+           "vulnerabilities": [{"cve": "CVE-2026-0001", "title": "t"}]}
+
+    def fake_get(url, timeout=None, retries=3, headers=None):
+        return (meta if url.endswith("pm.json") else doc), 200, {}
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    monkeypatch.setattr(feeds, "_csaf_directory_entries",
+                        lambda durl, years, cap: [("2026-01-01T00:00:00Z",
+                                                   f"{durl}/a.json")])
+    # Two hosts publishing the SAME advisory. The second gains nothing new.
+    feeds.feed_csaf({2026}, aggregators=(),
+                    providers=("https://first.example/pm.json",
+                               "https://second.example/pm.json"))
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert "no advisories in scope" not in h["detail"], (
+        f"a corroborating provider was reported as empty: {h['detail']}")
+    assert h["status"] == feeds.OK, h
+
+
+# --------------------------------------------------------------------------
+# a provider we can only reach by the side door (found 2026-08-26)
+# --------------------------------------------------------------------------
+
+def test_cisa_is_read_through_its_pinned_feeds_when_the_canonical_host_403s(
+        monkeypatch):
+    """www.cisa.gov answers 403 to the GitHub Actions runners and 200 to a
+    developer laptop, same User-Agent, same code. No header change reaches it.
+
+    Its metadata designates ROLIE feeds in CISA's own GitHub organisation, which
+    the runners DO reach, so the advisories are all still readable. Recording
+    CISA as unreachable while holding every one of its advisories would be a
+    false claim in the more embarrassing direction."""
+    feeds.reset_health()
+    cisa = "https://www.cisa.gov/sites/default/files/csaf/provider-metadata.json"
+    assert cisa in feeds.CSAF_METADATA_FALLBACK
+    rolie = {"feed": {"entry": [{"updated": "2026-08-25T00:00:00Z",
+                                 "link": [{"rel": "self",
+                                           "href": "https://raw.githubusercontent.invalid/a.json"}]}]}}
+    doc = {"document": {"publisher": {"name": "CISA"}, "tracking": {"id": "ICSA-26-1"}},
+           "vulnerabilities": [{"cve": "CVE-2026-0001", "title": "t"}]}
+
+    def fake_get(url, timeout=None, retries=3, headers=None):
+        if url == cisa:
+            raise OSError("HTTP Error 403: Forbidden")
+        return (rolie if url.endswith("tlp-white.json") else doc), 200, {}
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    rows = feeds.feed_csaf({2026}, providers=(cisa,), aggregators=())
+    assert [r["cve_id"] for r in rows] == ["CVE-2026-0001"], rows
+
+    h = feeds.FEED_HEALTH["csaf"]
+    assert "unreachable" not in h["detail"], (
+        f"a provider we read in full was reported as lost: {h['detail']}")
+    assert "read via pinned feeds: www.cisa.gov" in h["detail"], (
+        "pinned config that does not announce itself is how a stale URL rots "
+        "unnoticed")
+    assert h["status"] == feeds.OK, (
+        "the advisories were all read; a complete read is not a degraded one")
+
+
+def test_a_provider_with_no_pinned_fallback_is_still_reported_unreachable(
+        monkeypatch):
+    """The fallback must not become a blanket excuse for a 403."""
+    feeds.reset_health()
+
+    def fake_get(url, timeout=None, retries=3, headers=None):
+        raise OSError("HTTP Error 403: Forbidden")
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    feeds.feed_csaf({2026}, providers=("https://nofallback.example/pm.json",),
+                    aggregators=())
+    h = feeds.FEED_HEALTH["csaf"]
+    assert "unreachable" in h["detail"] and "nofallback.example" in h["detail"]
+    assert h["status"] == feeds.FAILED, h
 
 
 def test_the_directory_count_is_taken_before_the_cap_and_the_language_filter():

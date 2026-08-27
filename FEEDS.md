@@ -403,10 +403,41 @@ The 12 from CSAF are `ABB`, `CERTVDE`, `CyberDanube`, `PTC`, `Rockwell`, `SICK_A
 this document and it requires no new code.
 
 Note what the run also exposed, none of which was visible from the config: **Cisco returns
-403** to a non-browser agent, and **SUSE, Huawei and `www.sick.com` each returned zero
-advisories in scope**. Four of the 17 discovered providers contribute nothing, and one is
-a duplicate host of a provider that works. The provider list has never been validated
-against what it actually yields, and `feedlab` scorecards are how that stops being true.
+403**, and **SUSE, Huawei and `www.sick.com` each returned zero advisories in scope**.
+Four of the 17 discovered providers contribute nothing, and one is a duplicate host of a
+provider that works. The provider list has never been validated against what it actually
+yields, and `feedlab` scorecards are how that stops being true.
+
+> **CORRECTION 2026-08-26. Three of those four zeroes were our bugs, not quiet vendors.**
+> This is the paragraph that shows why "validated against what it actually yields" had to
+> mean reading the providers, not reading the log.
+>
+> - **SUSE was never empty.** `_csaf_directory_entries` stopped at the first
+>   out-of-window row of `changes.csv`, assuming the file is newest-first. SUSE's is
+>   ascending: its first row is dated 2024-08-21, so the loop exited on line **one of
+>   41,038** and 14,486 in-scope advisories were dropped. The health line then published
+>   that as a fact about SUSE. Its last row is dated 2014, so neither end of that file
+>   can be trusted; every row is now read, filtered and sorted.
+> - **`www.sick.com` was never empty.** It is `sick.com` after a 301, the same provider
+>   reached twice. `empty` was computed from rows *gained* against a `seen` set shared
+>   across providers, so the second pass scored zero and was published as a vendor with
+>   nothing to say. Corroboration is what this site measures; counting it as silence is
+>   backwards.
+> - **Huawei is genuinely unreadable**, and the "capped 12/121 directories" warning was
+>   still wrong. All 121 directories answer `204 No Content`, so the cap cost nothing and
+>   the warning sent readers looking for 109 directories of advisories that do not exist.
+>   The cap is now claimed only where the provider had readable advisories.
+>
+> Only `www.innomic.com` was what the log said it was: one advisory, no in-scope CVE.
+>
+> **And the cap was being spent on the wrong advisories.** `changes.csv` timestamps are
+> LAST-MODIFIED, not published. Cisco's most recently touched advisory sits in its **2021**
+> directory, a routine revision carrying five-year-old CVE ids, so ordering on the
+> timestamp spent the 120-advisory budget on revisions. Honouring the year in the
+> advisory's own path, which is how the `index.txt` fallback already selects, at the same
+> cap: Cisco **73 to 194** in-scope CVEs, Red Hat **242 to 261**. Checked at set level
+> rather than by count, because a bigger number is not the same as a superset: the
+> timestamp ordering found **zero** CVEs the path ordering misses, on either provider.
 
 **The gate must be measured on the profile the cron actually runs**, which is condition 1
 of the launch checklist, so the fix was never "measure `deep` and run `weekly`". Prefer a
@@ -515,8 +546,33 @@ that runs `.well-known/csaf/provider-metadata.json` against every roster CNA's k
 domain, keeps what answers, and turns each hit into a config line rather than a parser.
 The existing `feed_csaf` already handles ROLIE and directory distributions, so a
 discovered provider costs one tuple entry. The 403 on Dell is the shape of the problem:
-some vendors serve CSAF behind a WAF that refuses a non-browser agent, and this plan does
-not authorise working around that.
+some vendors serve CSAF behind a WAF, and this plan does not authorise pretending to be a
+browser to get past one.
+
+> **CORRECTION 2026-08-26.** The sentence above used to read "a WAF that refuses a
+> non-browser agent". That diagnosis was backwards, and it was never measured. Against
+> `www.cisco.com`, five runs per string, the 403 cached at the edge:
+>
+> | User-Agent | |
+> |---|---|
+> | `rbp-cves/1.0 (CVE quality research)` | 403 |
+> | `Mozilla/5.0 ... Chrome/128 Safari/537.36` | **403** |
+> | `foobar/1.0`, `rbp`, `rbptracker/1.0` | 403 |
+> | `rbp-cves/1.0 (see rbptracker.org)` | 403 |
+> | `rbp-cves/1.0 (+https://rbptracker.org)` | **200** |
+>
+> A browser string is the one thing that does not work. What the edge wants is an
+> ordinary crawler self-identification: a scheme-qualified URL, an email address, or a
+> crawler keyword. So the fix was to say who we are and where to complain, which is more
+> honest than the string it replaced, and no part of this plan had to be relaxed to do
+> it. `test_the_user_agent_identifies_us_and_impersonates_nobody` holds the line for the
+> next vendor 403.
+>
+> The same run found that `www.cisa.gov` 403s **the GitHub Actions runners only**,
+> serving 200 to a desktop with the identical request, so it is cloud egress filtering
+> and no header reaches it. Its advisories are read from the ROLIE feeds CISA's own
+> metadata designates in CISA's own GitHub organisation, announced per run on the
+> status page.
 
 > ### RUN 2026-08-24 against the ten top-50 CNAs the gate cannot see. It buys nothing.
 >

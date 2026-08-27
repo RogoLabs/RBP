@@ -405,7 +405,31 @@ def test_the_probe_sends_the_projects_own_user_agent():
     src = inspect.getsource(feedlab.probe_csaf)
     assert "feeds._get(" in src
     assert "User-Agent" not in src and "Mozilla" not in src
-    assert feeds.UA == {"User-Agent": "rbp-cves/1.0 (CVE quality research)"}
+    assert feeds.UA == {"User-Agent": "rbp-cves/1.0 (+https://rbptracker.org)"}
+
+
+def test_the_user_agent_identifies_us_and_impersonates_nobody():
+    """The UA changed on 2026-08-26 and the reason matters more than the string.
+
+    Cisco's edge answered 403 to `rbp-cves/1.0 (CVE quality research)`. The
+    reflex fix is a browser string, and it is the one thing that does NOT work:
+    a full Chrome UA is refused as well. What the edge wants is an ordinary
+    crawler self-identification, a scheme-qualified contact URL, so the fix was
+    to say who we are and where to complain rather than to pretend to be
+    something else.
+
+    This test exists so the next 403, from any vendor, cannot be answered by
+    quietly pasting in a browser string. If a provider ever demands one, that is
+    a decision to take deliberately and disclose, not a one-word edit here."""
+    from rbp import feeds
+    ua = feeds.UA["User-Agent"]
+    assert ua.startswith("rbp-cves/"), "we identify as ourselves, not as a tool"
+    for impersonation in ("Mozilla", "AppleWebKit", "Chrome", "Safari", "Gecko",
+                          "Edg/", "curl/", "Wget/"):
+        assert impersonation not in ua, (
+            f"the User-Agent claims to be {impersonation}, which it is not")
+    assert "https://" in ua, (
+        "a bot with no contact route in its UA is one a vendor can only block")
 
 
 # --------------------------------------------------------------------------
