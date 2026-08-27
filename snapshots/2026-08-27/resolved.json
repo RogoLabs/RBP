@@ -1,0 +1,29 @@
+[
+ {
+  "cve_id": "CVE-2026-55182",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-08-18",
+  "published": "2026-08-26",
+  "days_to_publish": 8,
+  "closed_on": "2026-08-27"
+ },
+ {
+  "cve_id": "CVE-2026-45694",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-08-12",
+  "published": "2026-08-26",
+  "days_to_publish": 14,
+  "closed_on": "2026-08-27"
+ },
+ {
+  "cve_id": "CVE-2026-64632",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-08-04",
+  "published": "2026-08-26",
+  "days_to_publish": 22,
+  "closed_on": "2026-08-27"
+ }
+]
