@@ -453,7 +453,9 @@ UBUNTU_RETRY_BUDGET_S = 120
 
 def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
     out, offset, limit, capped = [], 0, 20, False  # Ubuntu API caps limit at 20
-    retried_pages, retry_spent = 0, 0.0
+    # ATTEMPTS AND RECOVERIES ARE DIFFERENT NUMBERS, and conflating them made the
+    # health line claim the opposite of what happened. See the note below.
+    retry_attempts, recovered_pages, retry_spent = 0, 0, 0.0
     # WHY the loop ended, not just that it ended. Three different exits used to
     # look identical from outside: the natural end of the data, an error response
     # laundered into an empty page, and the year heuristic firing early. Only the
@@ -474,6 +476,8 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
         for attempt in range(UBUNTU_PAGE_RETRIES + 1):
             try:
                 data, code, _ = _get(url, timeout=60)
+                if attempt:
+                    recovered_pages += 1   # it only got here BY retrying
                 last_err = None
                 break
             except Exception as e:
@@ -491,7 +495,7 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
                       f"retrying in {wait}s", file=sys.stderr)
                 time.sleep(wait)
                 retry_spent += wait
-                retried_pages += 1
+                retry_attempts += 1
         if last_err is not None:
             print(f"  [ubuntu] stopped at offset {offset}: {last_err}", file=sys.stderr)
             ended = f"error at offset {offset}: {str(last_err)[:80]}"
@@ -530,7 +534,19 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
     # fix for the truncation looks identical on /status to the truncation never
     # having happened, and the next person cannot tell a healthy endpoint from one
     # being carried by retries.
-    note = (f"; recovered {retried_pages} page(s) on retry" if retried_pages else "")
+    #
+    # RECOVERED IS NOT ATTEMPTED, and the first version of this counted attempts
+    # and called them recoveries. The 2026-08-27 rehearsal caught it: Ubuntu 503'd
+    # twice and then 504'd, the page was never read, and the health line said
+    # "error at offset 20 ... recovered 2 page(s) on retry" -- a claim of success
+    # on the same line as the failure. That is the exact defect the docstring at
+    # the top of this function is about, reintroduced by the fix for it.
+    if recovered_pages:
+        note = f"; recovered {recovered_pages} page(s) on retry"
+    elif retry_attempts:
+        note = f"; {retry_attempts} retry attempt(s) did not recover it"
+    else:
+        note = ""
     if capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
         record_feed("ubuntu", CAPPED,
@@ -538,7 +554,7 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
     elif ended != "exhausted":
         print(f"  [ubuntu] {ended}", file=sys.stderr)
         record_feed("ubuntu", TRUNCATED, ended + note)
-    elif retried_pages:
+    elif recovered_pages:
         record_feed("ubuntu", True, f"{len(out)} ids{note}")
     return out
 

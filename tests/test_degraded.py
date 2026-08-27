@@ -512,8 +512,10 @@ def test_ubuntu_retries_a_failed_page_before_truncating(monkeypatch):
     # so: otherwise the fix looks identical on /status to the fault never having
     # happened, and nobody can tell a healthy endpoint from one being propped up.
     assert h.get("status") != feeds.TRUNCATED, h
-    assert "retry" in (h.get("detail") or "").lower(), (
-        f"a feed that only completed because it waited did not report it: {h}")
+    detail = (h.get("detail") or "")
+    assert "recovered 1 page(s) on retry" in detail, (
+        f"a feed that only completed because it waited did not report it: {h}. "
+        "The count is pages RECOVERED, not retries attempted.")
 
 
 def test_ubuntu_still_truncates_when_a_page_fails_every_attempt(monkeypatch):
@@ -542,6 +544,25 @@ def test_ubuntu_still_truncates_when_a_page_fails_every_attempt(monkeypatch):
     assert "503" in (h.get("detail") or "")
     assert calls["n"] >= 1 + feeds.UBUNTU_PAGE_RETRIES, (
         f"the page was not retried the configured number of times: {calls['n']}")
+
+    # AND IT MUST NOT CLAIM A RECOVERY IT DID NOT MAKE.
+    #
+    # The first version of this counted retries ATTEMPTED and reported them as
+    # pages recovered, so the 2026-08-27 rehearsal produced the line
+    # "error at offset 20: HTTP Error 504 ...; recovered 2 page(s) on retry":
+    # a claim of success on the same line as the failure that caused it. Nothing
+    # was recovered; Ubuntu 503'd twice and then 504'd.
+    #
+    # That is the defect this function's own docstring exists to warn about -- the
+    # health signal improving while the data got worse -- reintroduced by the fix
+    # for it, and only visible against a server that really was down.
+    detail = (h.get("detail") or "")
+    assert "recovered" not in detail, (
+        f"a feed that failed every attempt reports a recovery: {detail!r}")
+    assert "did not recover" in detail, (
+        f"the retry ran and the detail does not say it failed to help: {detail!r}. "
+        "A reader has to be able to tell a retry that was never needed from one "
+        "that was not enough.")
 
 
 def test_the_ubuntu_retry_budget_is_bounded(monkeypatch):
