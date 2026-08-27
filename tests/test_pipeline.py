@@ -117,7 +117,7 @@ def test_report_writes_a_snapshot_the_site_can_read(backlog, corpus, tmp_path):
     bl, fresh = backlog
     apply_to_backlog(bl, corpus, str(tmp_path / "precision.json"), today="2026-08-20")
     snaps = tmp_path / "snapshots"
-    sdir, md, kpi = report.build(bl, fresh, str(snaps), "2026-08-20", {2026},
+    sdir, md = report.build(bl, fresh, str(snaps), "2026-08-20", {2026},
                                  ["debian", "alas", "ghsa"], min_age=14)
 
     rows = list(csv.DictReader(open(pathlib.Path(sdir) / "backlog.csv")))
@@ -140,7 +140,7 @@ def test_csv_never_names_a_cna_the_report_withholds(backlog, corpus, tmp_path):
     CSV column was a real defect in the previous engine."""
     bl, fresh = backlog
     apply_to_backlog(bl, corpus, str(tmp_path / "precision.json"), today="2026-08-20")
-    sdir, md, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
+    sdir, md = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
                                ["debian"], min_age=14)
     shared = json.load(open(pathlib.Path(sdir) / "backlog.json"))
     assert shared, "fixture produced no rows, so this asserts nothing"
@@ -169,7 +169,7 @@ def test_published_rows_never_carry_the_ungated_product_map(backlog, corpus, tmp
     overwrote only four keys. /method promises that map can never create a name."""
     bl, fresh = backlog
     apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
-    sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
+    sdir, _md = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
                               ["debian"], min_age=14)
     # Every PUBLISHED artefact, scoped to the allowlist rather than a
     # one-element tuple. The tuple was iterated over a directory that had just
@@ -235,7 +235,7 @@ def test_held_back_rows_are_gated_like_every_other_artefact(backlog, corpus, tmp
     apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
     # min_age above every row's age, so both land in the buffer and are held
     # back. That is the population this file exists to describe.
-    sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
+    sdir, _md = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
                               ["debian"], min_age=9999,
                               rows=[])
     held = json.load(open(pathlib.Path(sdir) / "held_back.json"))
@@ -269,7 +269,7 @@ def test_no_snapshot_artefact_leaks_an_ungated_owner(backlog, corpus, tmp_path):
     two leaks were both in files the narrow test did not look at."""
     bl, fresh = backlog
     apply_to_backlog(bl, corpus, str(tmp_path / "p.json"), today="2026-08-20")
-    sdir, _, _ = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
+    sdir, _md = report.build(bl, fresh, str(tmp_path / "s"), "2026-08-20", {2026},
                               ["debian"], min_age=14)
     # EVERY json file in the snapshot, not an allowlist. The allowlist was the
     # bug in the two previous versions of this test: it named the files known to
@@ -309,8 +309,8 @@ def test_report_build_applies_no_filter_when_given_rows():
            "refs": "", "description": "a flaw", "days_public": 7}
     with tempfile.TemporaryDirectory() as d:
         # min_age far above the row's age: if build filtered, this would be empty.
-        sdir, _, _ = rpt.build([row], 0, d, "2026-08-20", {2026}, ["debian"],
-                               min_age=999, rows=[row])
+        sdir, _md = rpt.build([row], 0, d, "2026-08-20", {2026}, ["debian"],
+                              min_age=999, rows=[row])
         published = json.load(open(pathlib.Path(sdir) / "backlog.json"))
         assert len(published) == 1, "build filtered rows it was told to publish"
 
@@ -385,28 +385,44 @@ def test_a_csaf_row_links_to_the_advisory_not_to_a_blank_cve_page():
     assert fallback == "https://www.cve.org/CVERecord?id=CVE-2026-1"
 
 
-def test_two_csaf_providers_count_as_two_independent_origins():
-    """Every provider collapsed to the single token "csaf", so Siemens and
-    Schneider independently carrying one row scored indep_sources 1. The headline
-    counts only rows with two or more independent origins, so CSAF corroboration
-    was discarded at exactly the moment it started mattering."""
-    from rbp.report import _indep
-    refs = ("csaf:Siemens ProductCERT\tSSA-1\thttps://a.invalid/1;"
-            "csaf:Schneider Electric\tSEVD-2\thttps://b.invalid/2")
-    assert _indep("csaf", refs) == 2
+def test_no_independent_origin_count_is_computed_or_published():
+    """The >=2-independent-origins count was REMOVED on 2026-08-27, and this is
+    the guard that it stays removed.
 
-    # One provider is still one origin.
-    assert _indep("csaf", "csaf:Siemens ProductCERT\tSSA-1\thttps://a.invalid/1") == 1
+    It existed to produce a more defensible subset than the total, and the site
+    ended up publishing both: the h1 rendered `summary.total` and og:description
+    rendered `summary.corroborated`, so one unfurl carried 1,709 and 201. Jerry's
+    call was to drop the calculation rather than repoint the meta tag.
 
-    # And the pre-existing collapses are untouched: OSV re-publishes GHSA.
-    assert _indep("osv,ghsa") == 1
-    assert _indep("csaf,debian", refs) == 3
+    Asserted against the MODULE rather than against an artefact, because the
+    failure mode is someone reintroducing `_indep` for a new reason and the
+    second headline arriving with it. `_ORIGIN`, the mirror-collapsing map that
+    fed it, went at the same time and for the same reason.
+    """
+    from rbp import report as rpt
+    for gone in ("_indep", "_ORIGIN"):
+        assert not hasattr(rpt, gone), (
+            f"rbp.report.{gone} is back. It exists only to produce a second "
+            "headline; see the comment block above _clean_description.")
 
 
-def test_the_origin_map_covers_every_adapter():
-    """An unmapped source falls through to itself, which silently counts a mirror
-    as an independent origin. The map was written when csaf was one feed."""
-    from rbp import feeds
-    from rbp.report import _ORIGIN
-    missing = sorted(set(feeds.ADAPTERS) - set(_ORIGIN))
-    assert not missing, f"adapters absent from _ORIGIN: {missing}"
+def test_every_adapter_is_classified_as_advisory_or_tracker():
+    """REPOINTED 2026-08-27, from `report._ORIGIN` to `clock._ORIGIN_KIND`.
+
+    The original guarded the mirror-collapsing map, which went with the
+    independent-origin count. The concern it was really about survives on a map
+    that is still live and still consulted on every row: which feeds are
+    advisories and which are trackers, which is what decides whether
+    `past_expectation` may be true.
+
+    `clock.origin_kind` fail-safes an unmapped feed to "tracker", deliberately,
+    so a new adapter cannot silently start a 72-hour clock. That makes absence
+    SAFE but WRONG: a genuine advisory feed left out of the map reads
+    `past_expectation: false` on every one of its rows, understating the count
+    with nothing anywhere reporting it. The fail-safe is why this is a test
+    rather than an assertion in the pipeline."""
+    from rbp import clock, feeds
+    missing = sorted(set(feeds.ADAPTERS) - set(clock._ORIGIN_KIND))
+    assert not missing, (
+        f"adapters absent from clock._ORIGIN_KIND: {missing}. Each reads as a "
+        "tracker, so no row from it can ever be past_expectation. Classify it.")

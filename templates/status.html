@@ -72,6 +72,7 @@
     </p>
     {% endif %}
     <table class="table table-sm small">
+      <caption class="sr-only">Facts about the run that produced the counts on this site: the snapshot date, when it was built, the code it was built from, and how many rows it published.</caption>
       <tbody>
         <tr>
           <th scope="row">Snapshot</th>
@@ -169,6 +170,7 @@
     </div>
     {% else %}
     <table class="table table-sm small">
+      <caption class="sr-only">What moved between this run and the previous one, split into buckets that are deliberately never merged.</caption>
       <thead>
         <tr><th scope="col">Bucket</th><th scope="col" class="num">Rows</th></tr>
       </thead>
@@ -236,6 +238,7 @@
     {% set detail = (summary.feeds or {}).get('detail') or {} %}
     {% if detail %}
     <table class="table table-sm small">
+      <caption class="sr-only">Every configured advisory feed, the state it ended in, how many CVE IDs it returned, and any note about why it stopped.</caption>
       <thead>
         <tr>
           <th scope="col">Feed</th>
@@ -249,12 +252,12 @@
         <tr>
           <td class="mono">{{ name }}</td>
           <td>
-            {% if h.status == 'ok' %}<span class="chip chip-ok">ok</span>
-            {% elif h.status == 'capped' %}<span class="chip chip-unmeasured">capped</span>
-            {% elif h.status == 'truncated' %}<span class="chip chip-late">truncated</span>
-            {% else %}<span class="chip chip-must">failed</span>{% endif %}
+            {% if h.status == 'ok' %}<span class="chip chip-ok">OK</span>
+            {% elif h.status == 'capped' %}<span class="chip chip-unmeasured">Capped</span>
+            {% elif h.status == 'truncated' %}<span class="chip chip-late">Truncated</span>
+            {% else %}<span class="chip chip-must">Failed</span>{% endif %}
           </td>
-          <td class="num">{% if h.rows is not none %}{{ h.rows | commafy }}{% else %}&mdash;{% endif %}</td>
+          <td class="num">{% if h.rows is not none %}{{ h.rows | commafy }}{% else %}not recorded{% endif %}</td>
           <td class="text-muted">{{ h.detail or '' }}</td>
         </tr>
         {% endfor %}

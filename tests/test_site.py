@@ -154,15 +154,9 @@ def test_every_internal_link_resolves_in_both_postures(built_site, built_site_la
     This copy uses the shared fixture, which DOES set an epoch, and runs in both
     postures because the nav differs between them.
     """
-    import re
+    from tests.test_end_to_end import _dead_internal_links
     for out in (built_site, built_site_launched):
-        pages = list(out.glob("*.html"))
-        assert pages
-        missing = []
-        for p in pages:
-            for href in re.findall(r'href="([^"#?:]+\.html)"', p.read_text()):
-                if not (p.parent / href).resolve().exists():
-                    missing.append(f"{out.name}/{p.name} -> {href}")
+        missing = _dead_internal_links(out)
         assert not missing, f"dead internal links: {missing}"
 
 
@@ -397,12 +391,393 @@ def test_rule_strength_never_ships_without_its_certainty(built):
             assert "rule_certainty" in body, f"{name} shows strength without certainty"
 
 
-def test_independent_sources_is_exported(built):
-    """314 of 553 rows showed feed_count >= 2 with indep_sources == 1, all of them
-    GHSA plus its own OSV mirror, on a site whose method page explains in prose
-    that an OSV row is not evidence GitHub disclosed anything."""
+def test_every_table_has_an_accessible_name(built):
+    """A screen reader announces a table by its <caption>, and five tables had
+    none.
+
+    The card heading above each one says what it is to a sighted reader, and that
+    heading is not in scope for someone moving table to table with a screen
+    reader's table list. The captions are `.sr-only` for exactly that reason: they
+    add nothing visually and are the only name the table has otherwise.
+    """
+    import re
+    for launched in (False, True):
+        out = built(launched)
+        for page in sorted(out.glob("*.html")):
+            html = re.sub(r"<script\b.*?</script>", "", page.read_text(), flags=re.S)
+            for i, m in enumerate(re.finditer(r"<table([^>]*)>(.*?)</table>",
+                                              html, re.S)):
+                attrs, inner = m.group(1), m.group(2)
+                named = ("<caption" in inner or "aria-label" in attrs
+                         or "aria-labelledby" in attrs)
+                first_th = re.search(r"<th[^>]*>(.*?)</th>", inner, re.S)
+                hint = re.sub(r"<[^>]+>", "", first_th.group(1)).strip() if first_th else "?"
+                assert named, (
+                    f"{page.name} table {i} (first column {hint!r}) has no caption "
+                    "and no aria-label, so a screen reader announces it as 'table' "
+                    "and nothing else")
+
+
+def test_the_list_page_says_something_useful_without_scripts(built):
+    """With scripts off the front page was a command bar and a blank space.
+
+    The rows are drawn from the JSON island by the script at the foot of the
+    template, so `#list` is empty in the served markup: zero CVE IDs appear in the
+    HTML. The server-rendered empty state above it fires only when the SNAPSHOT has
+    no rows, which is a different condition entirely, so nothing on the page
+    explained the blank.
+
+    That reaches reader modes, text browsers, archivers and any crawler that does
+    not execute scripts. Asserted with the links resolving, because a noscript
+    block pointing at files that are not published is worse than none.
+    """
+    import re
+    for launched in (False, True):
+        out = built(launched)
+        listing = out / ("index.html" if launched else "overview.html")
+        body = listing.read_text()
+
+        # The premise: if rows ever start appearing in the markup, this test is
+        # about a problem that no longer exists and should be revisited.
+        markup = re.sub(r"<script\b.*?</script>", "", body, flags=re.S)
+        assert not re.search(r"CVE-\d{4}-\d+", markup), (
+            "CVE IDs now appear in the served markup, so the no-script case has "
+            "changed and this test needs rethinking rather than passing")
+
+        m = re.search(r"<noscript>(.*?)</noscript>", body, re.S)
+        assert m, f"{listing.name} has no <noscript>, so a reader without scripts "
+        block = m.group(1)
+        assert "rbp.csv" in block and "rbp.json" in block, (
+            "the noscript block does not point at the published data, which is the "
+            "only thing it can usefully offer")
+        for href in re.findall(r'href="([^"]+)"', block):
+            target = (listing.parent / href.lstrip("/")).resolve()
+            assert target.exists(), (
+                f"the noscript block links {href}, which the build does not write")
+
+
+def test_the_site_makes_no_third_party_request(built):
+    """The audience is CNAs and security teams, a meaningful share of them behind
+    proxies that block third-party hosts.
+
+    Inter was loaded through a render-blocking <link> to fonts.googleapis.com,
+    with two preconnect hints, on every page. So the site's typography depended on
+    a request some readers were never going to complete, and every page of a site
+    whose whole subject is transparency made a call to a third party.
+
+    Asserted over EVERY external URL in the built markup rather than over the two
+    font hosts by name, with an allowlist of the places this site deliberately
+    points a reader. The failure mode is a new embed, an analytics snippet or a CDN
+    script arriving later, and naming the old offender would not catch any of them.
+
+    Only sub-resource URLs matter: an <a href> to cve.org is a citation the reader
+    chooses to follow, while a <link>, <script>, <img> or @import is a request the
+    page makes on their behalf whether they like it or not.
+    """
+    import re
+    from urllib.parse import urlparse
+
+    # The site's own host is not a third party. og:url and rel=canonical are
+    # absolute by necessity.
+    ALLOWED_HOSTS = {"rbptracker.org"}
+
+    # <link> only fetches for SOME rel values. rel=canonical and rel=alternate
+    # declare a relationship and request nothing, so matching every <link href>
+    # flagged the canonical on every page.
+    FETCHING_REL = re.compile(
+        r'rel="[^"]*\b(?:stylesheet|preload|prefetch|preconnect|dns-prefetch'
+        r'|icon|apple-touch-icon|manifest|modulepreload)\b', re.I)
+
+    for launched in (False, True):
+        out = built(launched)
+        for page in sorted(out.glob("*.html")):
+            body = page.read_text()
+            subresources = []
+            for tag in re.findall(r'<link\b[^>]*>', body, re.I):
+                if not FETCHING_REL.search(tag):
+                    continue
+                m = re.search(r'href="([^"]+)"', tag, re.I)
+                if m:
+                    subresources.append(m.group(1))
+            # href on <a> is a citation the reader chooses to follow; src on these
+            # is a request the page makes whether they like it or not.
+            subresources += re.findall(
+                r'<(?:script|img|iframe|source|video|audio|embed)\b[^>]*'
+                r'src="([^"]+)"', body, re.I)
+            subresources += re.findall(r'@import\s+(?:url\()?["\']([^"\']+)',
+                                       body, re.I)
+            for url in subresources:
+                host = urlparse(url).netloc
+                if not host:
+                    continue                       # relative: our own origin
+                assert host in ALLOWED_HOSTS, (
+                    f"{page.name} fetches {url} from {host}. This site makes no "
+                    "third-party requests: a reader behind a proxy that blocks it "
+                    "gets a degraded page, and a transparency site should not be "
+                    "calling anyone on their behalf.")
+
+        # And the stylesheets, which are where an @import would hide.
+        for css in (out / "static" / "css").glob("*.css"):
+            text = css.read_text()
+            assert "@import" not in text, f"{css.name} carries an @import"
+            for m in re.finditer(r'url\(\s*["\']?(https?://[^)"\']+)', text):
+                assert urlparse(m.group(1)).netloc in ALLOWED_HOSTS, (
+                    f"{css.name} fetches {m.group(1)}")
+
+
+def test_the_self_hosted_font_is_declared_preloaded_and_present(built):
+    """Three things that fail independently, which is why they are one test.
+
+    The @font-face now lives inside rbp.css, so a browser cannot discover the font
+    until it has fetched and parsed that stylesheet: one round trip later than the
+    <link> it replaced. The preload hands it to the preloader immediately, and
+    `crossorigin` is required even same-origin, because fonts are always fetched in
+    CORS mode and a preload without it is fetched twice.
+
+    The file being PRESENT is the third: a preload and an @font-face pointing at a
+    404 is slower than no webfont at all, and looks identical in the markup.
+    """
+    for launched in (False, True):
+        out = built(launched)
+        font = out / "static" / "fonts" / "inter-latin.woff2"
+        assert font.is_file(), "the self-hosted font was not published"
+        assert font.stat().st_size > 10_000, (
+            f"the font file is {font.stat().st_size} bytes, which is not a font")
+
+        css = (out / "static" / "css" / "rbp.css").read_text()
+        assert "@font-face" in css, "no @font-face declares the self-hosted font"
+        assert "inter-latin.woff2" in css, "the @font-face points somewhere else"
+        assert "font-display" in css, (
+            "no font-display, so text is invisible while the font loads")
+        assert "unicode-range" in css, (
+            "no unicode-range, so the subset claims coverage it does not have")
+
+        for page in sorted(out.glob("*.html")):
+            body = page.read_text()
+            if "rbp.css" not in body:
+                continue          # the holding page carries its own styles
+            assert 'rel="preload"' in body and "inter-latin.woff2" in body, (
+                f"{page.name} does not preload the font, so the request waits for "
+                "rbp.css to be parsed first")
+            m = __import__("re").search(
+                r'<link[^>]*rel="preload"[^>]*inter-latin\.woff2[^>]*>', body)
+            assert m and "crossorigin" in m.group(0), (
+                f"{page.name} preloads the font without crossorigin, so it is "
+                "fetched twice")
+
+
+def test_every_built_page_is_structurally_sound(built):
+    """One <main>, no duplicate id, balanced <div>. On every page, both postures.
+
+    THREE DEFECTS IN ONE CHECK, because all three shipped together on the front
+    page and all three are invisible to a browser:
+
+      - `list.html` opened `<main id="main">` inside base.html's
+        `<main id="main" class="container">`. A <main> may not descend from another
+        <main>, the id was duplicated so the skip link's target was ambiguous, and
+        a screen reader was offered two main landmarks. style.css also gives `main`
+        a min-height and padding, so the page paid both twice.
+      - `_panel.html` emitted an unmatched `</div>`. The panel opens no <div> at
+        all, so it closed the <aside> in the parse tree; the built page ran 14
+        `<div>` against 15 `</div>`.
+
+    Browsers discard a stray close tag and tolerate nested landmarks silently, so
+    none of this looked wrong. It survived from the 2026-08-26 pivot to 2026-08-27
+    with a green suite over it, and the announcement is exactly when someone runs a
+    validator across the page and posts the output.
+
+    Scripts are stripped before counting: the row template builds markup by string
+    concatenation, so `<div class=...>` appears inside a JS literal without ever
+    being a tag in this document.
+    """
+    import re
+    from collections import Counter
+
+    for launched in (False, True):
+        out = built(launched)
+        pages = sorted(out.glob("*.html"))
+        assert pages, "nothing built"
+        for page in pages:
+            raw = page.read_text()
+            markup = re.sub(r"<script\b.*?</script>", "", raw, flags=re.S)
+            where = f"{'launched' if launched else 'prelaunch'}/{page.name}"
+
+            mains = len(re.findall(r"<main[\s>]", markup))
+            assert mains == 1, f"{where}: {mains} <main> elements, expected exactly 1"
+
+            ids = Counter(re.findall(r'\sid="([^"]+)"', markup))
+            dupes = {i: n for i, n in ids.items() if n > 1}
+            assert not dupes, f"{where}: duplicate id(s) {dupes}"
+
+            for tag in ("div", "main", "aside", "section", "table", "ul"):
+                o = len(re.findall(rf"<{tag}[\s>]", markup))
+                c = len(re.findall(rf"</{tag}>", markup))
+                assert o == c, (
+                    f"{where}: {o} <{tag}> against {c} </{tag}>. A stray close tag "
+                    "is discarded silently by every browser and caught by every "
+                    "validator.")
+
+
+def test_every_page_declares_icons_and_they_are_all_written(built):
+    """There were no icons at all until 2026-08-27.
+
+    Every tab showed a generic placeholder and /favicon.ico returned 404 on the
+    first visit from every browser, because a browser requests that path on its own
+    whether or not a page links it.
+
+    Asserted as DECLARED-AND-PRESENT together, in both postures, because the two
+    halves fail independently and either half alone is useless: a <link> to a file
+    the build does not write is a 404 with extra steps, and a file nothing declares
+    is only found by the browser's blind guess at /favicon.ico.
+    """
+    for launched in (False, True):
+        out = built(launched)
+        # favicon.ico is at the ROOT, not under static/, because the browser
+        # decides that path rather than we do.
+        assert (out / "favicon.ico").is_file(), "no /favicon.ico at the site root"
+        for rel in ("static/img/favicon.svg", "static/img/apple-touch-icon.png"):
+            assert (out / rel).is_file(), f"{rel} was not written"
+
+        for page in out.glob("*.html"):
+            body = page.read_text()
+            assert 'rel="icon" type="image/svg+xml"' in body, page.name
+            assert 'href="' in body and "favicon.ico" in body, page.name
+            assert 'rel="apple-touch-icon"' in body, page.name
+
+
+def test_the_social_card_is_declared_absolutely_and_cache_busted(built):
+    """No og:image and no twitter card existed before 2026-08-27, so every paste
+    into Slack, Teams, X or LinkedIn rendered as plain text.
+
+    Three properties, each of which was got wrong in a draft of this change:
+
+      - ABSOLUTE url. Unfurlers fetch og:image outside the page's context and most
+        of them drop a relative path silently.
+      - A CACHE-BUSTING hash. Slack, Teams and X cache an og:image against its URL
+        and do not revalidate, so a replaced card at a fixed path would never reach
+        a channel that had already unfurled the link.
+      - `summary_large_image`, which is what makes a 1200x630 card render as a
+        banner rather than a thumbnail.
+    """
+    import re
     out = built(True)
-    assert "indep_sources" in (out / "data" / "rbp.csv").read_text().splitlines()[0]
+    card = out / "static" / "img" / "og-card.png"
+    assert card.is_file(), "the card was not written"
+
+    for page in out.glob("*.html"):
+        body = page.read_text()
+        m = re.search(r'<meta property="og:image" content="([^"]*)"', body)
+        assert m, f"{page.name} declares no og:image"
+        url = m.group(1)
+        assert url.startswith("https://rbptracker.org/"), (
+            f"{page.name}: og:image is not absolute ({url}); most unfurlers drop "
+            "a relative path")
+        assert re.search(r"\?v=[0-9a-f]{6,}$", url), (
+            f"{page.name}: og:image carries no content hash ({url}), so a replaced "
+            "card never reaches a channel that already unfurled the link")
+        assert 'name="twitter:card" content="summary_large_image"' in body, page.name
+        assert '<meta property="og:image:alt"' in body, (
+            f"{page.name}: the card has no alt text, which Slack and Mastodon read "
+            "aloud")
+
+
+def test_the_404_page_is_written_and_uses_root_absolute_links(built):
+    """GitHub Pages serves /404.html for ANY unmatched path, at any depth.
+
+    So a request for /foo/bar/baz renders this file with the browser resolving
+    relative URLs against /foo/bar/. Every relative link would point into a
+    directory that does not exist -- including both stylesheets, so the page would
+    arrive unstyled as well as unnavigable. This is the property that makes the
+    page work rather than merely exist, and it is invisible when you test it by
+    opening /404.html directly, which is the only way anyone ever looks at it.
+
+    Also noindex: a soft-404 that gets indexed competes with the real pages for
+    this site's own search terms, which is worse than the host's error page.
+    """
+    import re
+    for launched in (False, True):
+        out = built(launched)
+        page = out / "404.html"
+        assert page.is_file(), "no 404.html was written"
+        body = page.read_text()
+
+        assert 'name="robots" content="noindex' in body, (
+            "404.html is indexable; a soft-404 in the index is worse than the "
+            "host's own error page")
+
+        markup = re.sub(r"<script\b.*?</script>", "", body, flags=re.S)
+        relative = []
+        for href in re.findall(r'(?:href|src)="([^"]+)"', markup):
+            if href.startswith(("http://", "https://", "mailto:", "#", "data:",
+                                "/")):
+                continue
+            relative.append(href)
+        assert not relative, (
+            f"404.html carries relative links {relative}. GitHub Pages serves it "
+            "for a path at any depth, so these resolve against a directory that "
+            "does not exist.")
+
+
+def test_a_retired_field_is_stripped_from_an_old_snapshot_on_read(built, tmp_path):
+    """The asymmetry that would have shipped it anyway.
+
+    Removing the fields from the pipeline only cleans snapshots written AFTER the
+    removal. The site rebuilds every prior snapshot and the whole dated archive on
+    every run, and `rbp.csv` is projected through `schema.COLUMNS` while
+    `rbp.json` rows and the archive entries are republished from disk verbatim.
+    So the CSV went clean for free and the JSON kept publishing `indep_sources`
+    at schema v3 -- one artefact projected, one not, which is precisely the
+    scrubber/guard drift `publish._named_paths` already has a docstring about.
+
+    Asserted by feeding the read path a row that HAS the retired fields, because
+    a fixture built from the current pipeline cannot produce one and the whole
+    defect is about old data.
+    """
+    from rbp import schema as _schema
+    assert _schema.RETIRED_ROW_FIELDS, "nothing is retired; this test is vacuous"
+
+    row = {"cve_id": "CVE-2026-9", "state": "RESERVED", "sources": "debian",
+           "refs": "", "days_public": 30}
+    for k in _schema.RETIRED_ROW_FIELDS:
+        row[k] = 1
+
+    cleaned = site._normalise_legacy([dict(row)], source="test-fixture")
+    assert cleaned, "the read path dropped the row entirely"
+    for k in _schema.RETIRED_ROW_FIELDS:
+        assert k not in cleaned[0], (
+            f"{k} survived the read path, so every pre-v3 snapshot and every "
+            "dated archive entry would republish it")
+    # And the row is otherwise untouched: this drops fields, it does not filter.
+    assert cleaned[0]["cve_id"] == "CVE-2026-9"
+    assert cleaned[0]["sources"] == "debian"
+
+
+def test_no_published_artefact_carries_an_independent_origin_field(built):
+    """INVERTED 2026-08-27. This used to assert `indep_sources` WAS exported.
+
+    The field, `single_origin` beside it, and `summary.corroborated` were removed
+    because they were a second headline: the h1 published the total while
+    og:description published the corroborated subset, so one unfurl carried both
+    numbers. Dropping the calculation was Jerry's call over repointing the tag.
+
+    Asserted over the CSV header AND the JSON envelope, because the two are
+    written by different code paths and the CSV header alone would not have
+    caught `counts.corroborated` surviving in rbp.json. `sources` and `refs` must
+    still be there: nothing about independence is hidden, it is just no longer
+    this site's published opinion.
+    """
+    out = built(True)
+    header = (out / "data" / "rbp.csv").read_text().splitlines()[0]
+    for gone in ("indep_sources", "single_origin"):
+        assert gone not in header, f"{gone} is back in rbp.csv"
+    for stays in ("sources", "refs"):
+        assert stays in header, f"{stays} must still ship; independence stays derivable"
+
+    payload = json.loads((out / "data" / "rbp.json").read_text())
+    counts = payload.get("counts") or {}
+    for gone in ("corroborated", "single_origin"):
+        assert gone not in counts, f"counts.{gone} is back in rbp.json"
+    assert counts.get("total") is not None, "the one count must still be published"
 
 
 # --------------------------------------------------------------------------

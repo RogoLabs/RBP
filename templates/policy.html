@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 {% block title %}The policy{% endblock %}
+{# See the note in method.html: without this the page unfurled as the generic
+   "RBP Tracker". This one is quoted in argument more than any other page on the
+   site, so its preview has to say which document it is about. #}
+{% block og_title %}RBP Policy v2.0.0, and what changed{% endblock %}
+{% block description %}Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This page carries the policy text, the CNA Operational Rules it leans on, and what v2.0.0 changed from v1.0.{% endblock %}
 
 {% block content %}
 <div class="page-header">

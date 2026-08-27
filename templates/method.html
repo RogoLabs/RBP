@@ -1,5 +1,11 @@
 {% extends "base.html" %}
 {% block title %}Method{% endblock %}
+{# Without this the page unfurled as the generic "RBP Tracker" while its own
+   <title> read "Method". /method and /policy are the two pages most likely to be
+   linked in a launch thread, and both previewed under a name that described
+   neither. #}
+{% block og_title %}How the Reserved but Public count is built{% endblock %}
+{% block description %}Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This page is the method: what counts, what is excluded, how far the advisory feeds reach, and what the count cannot show.{% endblock %}
 
 {% block content %}
 <div class="page-header">
@@ -223,11 +229,11 @@
       </div>
       <div class="metric-card">
         <div class="metric-value">{{ summary.inference.run_coverage | pct }}</div>
-        <div class="metric-label">Rows named this run</div>
+        <div class="metric-label">Rows Named This Run</div>
       </div>
       <div class="metric-card">
         <div class="metric-value">{{ grader.outstanding | commafy }}</div>
-        <div class="metric-label">Awaiting a verdict</div>
+        <div class="metric-label">Awaiting a Verdict</div>
       </div>
     </div>
     <p class="mt-3">
@@ -241,7 +247,7 @@
       A second signal, a product-to-CNA map built from the corpus, is used only to
       corroborate. Tested on its own it reached 85% precision, below this project's
       floor, so it can promote a named row to
-      <span class="chip chip-corrob">corroborated</span> but never create a name.
+      <span class="chip chip-corrob">Corroborated</span> but never create a name.
     </p>
     {% if grader.misses %}
     <p class="mb-2"><strong>Misses.</strong> Predictions that turned out wrong, shown because
@@ -249,6 +255,7 @@
     <div class="tablewrap" tabindex="0" role="region"
      aria-label="Method figures, scrollable">
       <table class="rbp" style="min-width:0">
+        <caption class="sr-only">Predictions the owner reconstruction got wrong, with what it predicted, what the record turned out to be, and when it was graded.</caption>
         <thead><tr><th scope="col">CVE ID</th><th scope="col">Predicted</th><th scope="col">Actual</th><th scope="col">Graded</th></tr></thead>
         <tbody>
           {% for m in grader.misses %}
@@ -304,6 +311,7 @@
       {% endif %}
     </p>
     <table class="table table-sm small">
+      <caption class="sr-only">How far the advisory feeds reach into the CNA landscape: three different readings of coverage, with what each one means and which one the launch gate uses.</caption>
       <thead>
         <tr><th scope="col">Figure</th><th scope="col" class="num">CNAs</th><th scope="col">What it means</th></tr>
       </thead>
@@ -410,6 +418,7 @@
     </p>
     {% set loo = summary.inference.leave_one_out %}
     <table class="table table-sm small">
+      <caption class="sr-only">Three accuracy figures for the owner reconstruction, each with its sample size, its precision, and the composition of the sample it rests on.</caption>
       <thead>
         <tr><th scope="col">Figure</th><th scope="col" class="num">n</th>
             <th scope="col" class="num">Precision</th><th scope="col">Composition</th></tr>
@@ -535,111 +544,48 @@
   </div>
 </div>
 
-<div class="card">
-  <div class="card-header">
-    <h2 class="card-title">Asking for a row to be removed</h2>
-  </div>
-  <div class="card-body">
-    {# REWRITTEN 2026-08-26, when this section was found still describing a channel
-       deleted a week earlier.
+{# "ASKING FOR A ROW TO BE REMOVED" WAS HERE, removed 2026-08-27.
 
-       What it described: a monitored GitHub-issue reader, an HMAC-keyed suppression
-       list, a per-run ceiling of 25, a cap of 5 per author, a `confirmed` label that
-       bypassed the caps, and two metric cards counting withheld rows. All of that
-       went with rbp/suppress.py. The page went on promising it, including "withheld
-       on the next build, with no human in the loop" printed over a mailto: link, and
-       two metric cards that could only ever read zero. A correction channel described
-       in more detail than it exists is worse than none, because the people who read
-       this section are the ones who would have to use it. #}
-    <p>
-      <strong>Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> giving the
-      CVE ID and nothing else.</strong> No reason, no detail, and no confirmation that
-      a vulnerability exists. A request carrying no reason does not distinguish an
-      embargo from a wrong owner from a CNA that would rather not be listed, and that
-      is deliberate: nothing you send should say more than the identifier.
-    </p>
-    <p>
-      <strong>A person reads it.</strong> There is no automatic route and no queue.
-      The removal is a human decision, applied by hand, and it takes effect on the
-      next build. No proof of affiliation is required: nobody should have to prove who
-      they are before asking that a row about them not be listed.
-    </p>
-    <div class="caveat">
-      <p class="mb-0">
-        <strong>What this costs, stated rather than left to be discovered.</strong>
-        An earlier version of this site had an automated channel: a monitored issue
-        reader, per-author caps, and a published count of rows withheld. It was
-        removed on 26 August 2026, on the reasoning that every row here is a CVE ID
-        already referenced in a public advisory and held for the reportable buffer
-        before it appears, and that this version names no CNA at all, so there was
-        nothing to withhold that was not already public. The cost is real anyway:
-        there is now <strong>no published count of withheld rows</strong>, so a
-        removal leaves no audit trail on this site. If this site ever names a party
-        again, the automated channel and the count come back with it, and that is not
-        optional.
-      </p>
-    </div>
-    <p class="small text-muted mb-0">
-      Ownership disputes are worth raising with the reserving CNA's Root or with the
-      Secretariat through the
-      <a href="https://cveform.mitre.org/">CVE Program request form</a>, since they hold
-      the authoritative <span class="mono">owning_cna</span> this site does not publish.
-      To report a vulnerability in this site's own code, use
-      <a href="https://github.com/RogoLabs/RBP/security/advisories/new">a private security
-      advisory</a> instead.
-    </p>
-  </div>
-</div>
+   A full card: email the CVE ID and nothing else, a person reads it, no proof of
+   affiliation required, and a stated cost about there being no published count of
+   withheld rows. All of it described a promise this site no longer makes.
 
-{% if launch %}
-<div class="card">
-  <div class="card-header">
-    <h2 class="card-title">What has to be true before this is promoted</h2>
-  </div>
-  <div class="card-body">
-    <p>
-      {# COUNTED, not typed. The review asked for nine conditions; condition 4 was
-         retired on 2026-08-26 with the channel it described, and the numbering was
-         deliberately not closed up because the numbers are how the review's items
-         are cited. The prose still said "nine" while the table rendered eight rows
-         and the roll-up said "8 of 8". #}
-      Coverage is one of {{ launch.total }} conditions, not the only one. An adversarial
-      review of this project found that several of its own findings had assumed the
-      coverage gate was the whole test, so the full list is published here rather than
-      kept internally. <strong>{{ launch.met }} of {{ launch.total }} are met.</strong>
-      Promotion means announcing this site and its numbers; it does not describe
-      deployment, which happens continuously and is what you are reading now.
-    </p>
-    <table class="table table-sm small">
-      <thead>
-        <tr><th scope="col">#</th><th scope="col">Condition</th><th scope="col">State</th></tr>
-      </thead>
-      <tbody>
-        {% for c in launch.conditions %}
-        <tr>
-          <td class="num">{{ c.n }}</td>
-          <td>
-            <strong>{{ c.title }}</strong><br>
-            <span class="text-muted">{{ c.detail }}</span>
-            {% if c.blocks %}<br><span class="text-muted"><em>Blocked: {{ c.blocks }}</em></span>{% endif %}
-          </td>
-          <td>
-            {% if c.status == 'met' %}<span class="chip chip-ok">met</span>
-            {% else %}<span class="chip chip-unmeasured">not yet</span>{% endif %}
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    <p class="small text-muted mb-0">
-      This list is advisory to a human and does not stop a build. {{ launch.total }}
-      conditions each able to halt a publication that runs four times a day would
-      freeze the site over paperwork, which is the failure this project has already
-      made once in a smaller way. The numbering skips 4: that condition was retired
-      with the channel it asked about rather than marked met, because a checklist you
-      can satisfy by deleting the thing it asks about is not a checklist.
-    </p>
-  </div>
-</div>
-{% endif %}
+   The reasoning, which is the project's own from 2026-08-26 when the automated
+   channel went: a row is listed only after the CVE Services reservation endpoint
+   confirms the ID is reserved and unpublished, so there is no correction to make;
+   and every row is a CVE ID already referenced in a public advisory, held for the
+   reportable buffer, on a site that names no CNA, so there is nothing to withhold
+   that is not already public.
+
+   THE COST, stated here because this is the page that stated the last one. The
+   case this answered was the EMBARGO rather than the error: a row that is
+   entirely accurate and whose listing still cuts across a live multi-party
+   disclosure. Verification does not address that case, because the row being
+   correct is its premise. That case now has no route on this site.
+
+   `RBP_WITHHOLD` is untouched. It still drops rows from every artefact, it is
+   still tested, and `publish.check` still refuses to stage them. The capability is
+   kept and no longer advertised, which is a deliberate distinction: see NEXT.md.
+
+   Jerry's call, 2026-08-27. #}
+
+{# THE LAUNCH CHECKLIST WAS HERE, and it was removed on 2026-08-27.
+
+   "What has to be true before this is promoted", reading 8 of 8 met, on a site
+   that has been promoted since 2026-08-26. A launched site publishing its own
+   launch checklist reads as either out of date or not actually launched, and both
+   readings cost more than the section was worth.
+
+   The eight conditions are not lost: they are the design record and they live in
+   PLAN.md, which is where a design record belongs. What made them worth publishing
+   was the argument that the coverage gate was not the whole test, and an
+   adversarial review had assumed it was; that argument is served now by /method
+   carrying the coverage table, the gate, and its own limits in full.
+
+   `launch_mod.status()` still runs and `launch` is still in the render context.
+   Nothing about the gate changed, and `publish.gate` still fails a build red and
+   demotes the front page if coverage drops below GATE_TOP_N_PCT. Only the section
+   that told a reader about a decision already taken is gone.
+
+   Jerry's call, 2026-08-27, over retitling it in the past tense. #}
 {% endblock %}

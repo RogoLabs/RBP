@@ -179,7 +179,7 @@ def _scrub(path, ids):
 # `actual` and `published_assigner` were MISSING, and the value guard is what
 # found them: `denamed_ledger` was written to stop the ledgers naming CNAs on a
 # public branch, and it left `precision.json:graded[].actual` and
-# `resolutions.json:resolved[].published_assigner` untouched — 46 named closures
+# `resolutions.json:resolved[].published_assigner` untouched: 46 named closures
 # and the entire graded history. Both are AUTHORITATIVE assigners read from the
 # published record rather than inferred, so they are a stronger claim than
 # anything the site puts on a page, and the de-namer skipped them because it was

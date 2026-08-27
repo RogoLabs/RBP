@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}Page not found{% endblock %}
+{% block og_title %}Page not found{% endblock %}
+{# The legitimacy claim leads here too, for the same reason status.html gives:
+   this page is noindexed, but nothing stops a broken link being pasted into
+   someone else's channel, and an unfurl still has to say what the site measures
+   before it says the address was wrong. tests/test_copy.py pins it. #}
+{% block description %}Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This address does not exist on rbptracker.org; the list is on the front page.{% endblock %}
+
+{# GITHUB PAGES SERVES /404.html FOR ANY UNMATCHED PATH, which is the only reason
+   this route works on a static host. Until 2026-08-27 the file did not exist, so
+   every mistyped, truncated or stale link landed on GitHub's own error page:
+   "Page not found - GitHub Pages", GitHub's branding, GitHub's documentation
+   links, and no route back to this site.
+
+   It matters more after an announcement than before one. Announcements produce
+   truncated links, links with trailing punctuation, and links to pages that moved
+   in the pivot: /cves.html, /changes.html, /data.html and /backlog-at-launch.html
+   were all real URLs on this site within the last fortnight, and /overview.html
+   was the dashboard until launch. Anyone holding one of those gets this page.
+
+   NOINDEX regardless of posture. A soft-404 that search engines index is worse
+   than the GitHub page it replaces, because it competes with the real pages for
+   the site's own terms. `{% block robots %}` exists in base.html for this. #}
+{% block robots %}<meta name="robots" content="noindex, follow">{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>That page is not here.</h1>
+  <p class="text-muted">
+    The address you followed does not exist on this site. Nothing has gone wrong
+    with the data: the list is where it always is, and the snapshot it was
+    built from is dated in the footer.
+  </p>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <p><strong>The five pages on this site:</strong></p>
+    <ul>
+      <li><a href="{{ p }}{{ home }}">The list</a>. The CVE IDs that are reserved,
+        publicly referenced and still unpublished, with a filter over them.</li>
+      <li><a href="{{ p }}method.html">Method</a>. How the count is built, what it
+        excludes, and how far the advisory feeds reach.</li>
+      <li><a href="{{ p }}policy.html">Policy</a>. RBP Policy v2.0.0 and what
+        changed in it.</li>
+      <li><a href="{{ p }}status.html">Status</a>. Whether the last run was
+        complete, which feeds answered, and how often this site publishes.</li>
+      {% if launched %}
+      <li><a href="{{ p }}about-this-count.html">About</a>. What this counts and
+        why the CVE Program's own term is the right one for it.</li>
+      {% endif %}
+    </ul>
+    {# The pages that USED to exist, named. A reader who followed one of these got
+       an unexplained 404 and had no way to know whether the page moved or the
+       site broke. Listing them is cheaper than a redirect and more honest than
+       silence: the content did not move to a new URL, it moved into the panel on
+       the front page. #}
+    <p class="small text-muted mb-0">
+      If you followed a link to <span class="mono">/cves</span>,
+      <span class="mono">/changes</span>, <span class="mono">/data</span> or
+      <span class="mono">/backlog-at-launch</span>, those pages were removed on
+      26 August 2026 and what they carried is on the front page now: the rows
+      themselves, and the argument behind them under
+      <em>What is this?</em>{% if launched %} <span class="mono">/overview.html</span>
+      was the dashboard before launch and is the front page now.{% endif %}
+      The machine-readable data is at
+      <a href="{{ p }}data/rbp.json" class="mono">data/rbp.json</a> and
+      <a href="{{ p }}data/rbp.csv" class="mono">data/rbp.csv</a>.
+    </p>
+  </div>
+</div>
+{% endblock %}

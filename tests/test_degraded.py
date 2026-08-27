@@ -464,6 +464,102 @@ def test_ubuntu_does_not_launder_a_404_into_the_end_of_data(monkeypatch):
     assert "404" in (h.get("detail") or "")
 
 
+def test_ubuntu_retries_a_failed_page_before_truncating(monkeypatch):
+    """Three consecutive scheduled runs truncated on Ubuntu's API, at offsets 0,
+    1280 and 3000, on 503s and a connection reset. `_get` already retried three
+    times at 1.5s, 3s and 4.5s, so more of the same was not the answer: 200 back
+    to back requests to one host hits load shedding, and shedding needs a longer
+    wait than four and a half seconds.
+
+    So the retry is at the PAGINATION level, on top of `_get`'s, and this asserts
+    the loop RESUMES rather than that a request eventually succeeds: the defect
+    was that one bad page abandoned the whole sweep and threw away every page
+    after it.
+
+    Waits are monkeypatched to zero. A test that actually slept 25 seconds to
+    prove a retry happened would be removed by the first person in a hurry.
+    """
+    sleeps = []
+    monkeypatch.setattr(feeds.time, "sleep", lambda s: sleeps.append(s))
+
+    pages = [
+        {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
+        {"cves": [{"id": "CVE-2026-2", "published": "2026-08-01T00:00:00Z"}]},
+        {"cves": []},
+    ]
+    state = {"n": 0, "failed": False}
+
+    def fake_get(url, timeout=None):
+        # Fail the SECOND page once, then serve it. The first page is already in
+        # `out`, so a version that abandons the sweep keeps one row and truncates.
+        if state["n"] == 1 and not state["failed"]:
+            state["failed"] = True
+            raise OSError("HTTP Error 503: Service Unavailable")
+        page = pages[state["n"]] if state["n"] < len(pages) else {"cves": []}
+        state["n"] += 1
+        return page, 200, {}
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    out = feeds.feed_ubuntu({2026})
+
+    assert sleeps, "no wait between attempts; the retry is not backing off"
+    ids = sorted(r["cve_id"] for r in out)
+    assert ids == ["CVE-2026-1", "CVE-2026-2"], (
+        f"the sweep did not resume after the failed page; got {ids}")
+
+    h = feeds.health_detail().get("ubuntu") or {}
+    # It completed, so it is NOT truncated. But a feed carried by retries must say
+    # so: otherwise the fix looks identical on /status to the fault never having
+    # happened, and nobody can tell a healthy endpoint from one being propped up.
+    assert h.get("status") != feeds.TRUNCATED, h
+    assert "retry" in (h.get("detail") or "").lower(), (
+        f"a feed that only completed because it waited did not report it: {h}")
+
+
+def test_ubuntu_still_truncates_when_a_page_fails_every_attempt(monkeypatch):
+    """The other half, and the one that keeps the retry honest. Retrying must not
+    turn a genuinely broken endpoint into a silent partial feed: that would be the
+    silent-shrink failure this project has already had twice, reintroduced by the
+    fix for a loud one."""
+    monkeypatch.setattr(feeds.time, "sleep", lambda s: None)
+
+    calls = {"n": 0}
+
+    def always_503(url, timeout=None):
+        calls["n"] += 1
+        if calls["n"] == 1:
+            return {"cves": [{"id": "CVE-2026-1",
+                              "published": "2026-08-01T00:00:00Z"}]}, 200, {}
+        raise OSError("HTTP Error 503: Service Unavailable")
+
+    monkeypatch.setattr(feeds, "_get", always_503)
+    out = feeds.feed_ubuntu({2026})
+
+    assert len(out) == 1, "the rows read before the failure were discarded"
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") == feeds.TRUNCATED, (
+        f"a page that failed every attempt was not reported as truncation: {h}")
+    assert "503" in (h.get("detail") or "")
+    assert calls["n"] >= 1 + feeds.UBUNTU_PAGE_RETRIES, (
+        f"the page was not retried the configured number of times: {calls['n']}")
+
+
+def test_the_ubuntu_retry_budget_is_bounded(monkeypatch):
+    """Ubuntu is already 486s of a 784s gather. A run that retried every page
+    would overrun the six-hour cadence while producing a WORSE feed than one that
+    gives up and says so, so the retrying is bounded and the reason is recorded as
+    the budget rather than as the page simply failing."""
+    monkeypatch.setattr(feeds.time, "sleep", lambda s: None)
+    monkeypatch.setattr(feeds, "_get",
+                        lambda url, timeout=None: (_ for _ in ()).throw(
+                            OSError("HTTP Error 503: Service Unavailable")))
+    feeds.feed_ubuntu({2026}, retry_budget_s=0)
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") == feeds.TRUNCATED, h
+    assert "budget" in (h.get("detail") or "").lower(), (
+        f"the budget cut the retries short and the reason does not say so: {h}")
+
+
 def test_a_genuine_end_of_data_is_still_recorded_as_healthy(monkeypatch):
     """The guard must not turn every normal run into a degraded one, which is the
     class-2-as-class-1 mistake this project has already made twice."""
@@ -586,14 +682,15 @@ def test_samsung_is_an_advisory_origin_not_a_tracker():
     assert clock.origin_kind("samsung") == "advisory"
 
 
-def test_samsung_corroborates_google_rather_than_mirroring_it():
-    """Most Samsung CVEs are Google's, applied from the Android bulletin, and
-    OSV carries those too. They must count as TWO independent origins: Samsung
-    shipping a fix is a separate public event from Google shipping one, unlike
-    OSV re-publishing GHSA, which is one event twice."""
-    from rbp.report import _indep
-    assert _indep("samsung,osv") == 2
-    assert _indep("osv,ghsa") == 1, "the mirror collapse must still hold"
+# The independent-origin assertion that used to sit here went with `report._indep`
+# on 2026-08-27. It read: samsung + osv must count as TWO origins, because Samsung
+# shipping a fix is a separate public event from Google shipping one, unlike OSV
+# re-publishing GHSA. Nothing collapses mirrors any more, so there is no count for
+# it to be an assertion about, and the concern it protected is now carried by the
+# line above: samsung must be classified as an `advisory` rather than a tracker,
+# which is what still changes a published field.
+# tests/test_pipeline.py::test_no_independent_origin_count_is_computed_or_published
+# pins the removal itself.
 
 
 def test_every_adapter_that_the_gate_depends_on_is_in_the_cron_profile():

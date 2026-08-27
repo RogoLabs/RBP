@@ -99,7 +99,14 @@ def source_dirty():
 # v2, 2026-08-23: the owner columns were removed. A consumer pinned to v1 and
 # indexing by position must fail loudly rather than silently read `sources` where
 # it expected `owner`, which is the entire reason this constant exists.
-SCHEMA_VERSION = 2
+# v3, 2026-08-27: `indep_sources` and `single_origin` removed from the row schema,
+# and `counts.corroborated` / `counts.single_origin` from the envelope. They were a
+# second headline: the <h1> published `total` while og:description published
+# `corroborated`, so one unfurl carried both. Nothing is lost that cannot be
+# recomputed, because `sources` and `refs` still ship in full on every row; what is
+# gone is this site publishing its own answer. Positional readers of rbp.csv must
+# fail loudly rather than read `refs` where they expected `indep_sources`.
+SCHEMA_VERSION = 3
 
 # --------------------------------------------------------------------------
 # Writing an artefact. One implementation.
@@ -181,6 +188,21 @@ def write_text(path, text):
 # "block-k3-vetoed-by-product-map"); they are in here anyway, because they are an
 # assertion that this site formed a view about who owns the row, and on a row
 # published as unattributed that is a statement it has chosen not to make.
+# Fields a PREVIOUS schema published on a row and this one does not.
+#
+# Stripped on read, in the same pass and for the same reason as ROW_NAME_FIELDS:
+# `rbp.csv` is projected through COLUMNS so a retired field leaves it for free,
+# but `rbp.json` rows and every dated archive entry are re-published from the
+# snapshot on disk verbatim. Every snapshot written before 2026-08-27 carries
+# these, and the site rebuilds all of them on every run, so without this the
+# artefacts would keep publishing a field the schema says does not exist at v3.
+#
+# That asymmetry is exactly how the last scrubber/guard drift happened: two
+# artefacts, one projection, and the one that was not projected kept shipping.
+#
+# Retired v3, 2026-08-27: the independent-origin count. See SCHEMA_VERSION.
+RETIRED_ROW_FIELDS = ("indep_sources", "single_origin")
+
 ROW_NAME_FIELDS = ("owner", "owner_tier", "owner_method", "owner_contested",
                    "predicted_owner", "product_map_owner",
                    "product_map_confidence", "product_map_method",
@@ -238,7 +260,7 @@ COLUMNS = [
     # WHICH CLOCK, and how long it has run. See clock._ORIGIN_KIND.
     "clock_origin", "advisory_date", "advisory_days_public",
     # provenance
-    "sources", "feed_count", "indep_sources", "single_origin", "refs",
+    "sources", "feed_count", "refs",
     "advisory_url", "source_urls",
     # what it is
     "vendor", "package", "ecosystem", "description",
@@ -322,15 +344,6 @@ FIELDS = {
                     "fallback, because it renders nothing for a RESERVED ID and a "
                     "link that disproves itself is worse than no link."),
     "feed_count": ("integer", "never absent", "Number of feeds, including mirrors."),
-    "indep_sources": ("integer", "never absent",
-                      "Number of INDEPENDENT origins, collapsing feeds that share "
-                      "one (OSV re-publishes GHSA; ALAS is a RHEL rebuild). This "
-                      "is the field to filter on for a defensible subset."),
-    "single_origin": ("boolean", "never absent",
-                      "true when indep_sources is 1, so the row rests on one "
-                      "independent origin. Two thirds of rows are single-origin, "
-                      "which is why the site's headline is the corroborated subset "
-                      "rather than the total."),
     "refs": ("string", '""',
              "Semicolon-joined per-feed references. Truncated at 250 characters."),
     "advisory_url": ("string", "never absent",
@@ -372,8 +385,6 @@ def envelope(rows, summary, *, launched, snapshot_date, kind="backlog"):
         "epoch": summary.get("epoch"),
         "counts": {
             "total": summary.get("total"),
-            "corroborated": summary.get("corroborated"),
-            "single_origin": summary.get("single_origin"),
             "undated_excluded": summary.get("undated_excluded"),
             "epoch_excluded": summary.get("epoch_excluded"),
             "unmeasurable_rule": summary.get("unmeasurable_rows"),

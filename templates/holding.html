@@ -13,6 +13,35 @@
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rbptracker.org/">
 <link rel="canonical" href="https://rbptracker.org/">
+<!-- ICONS AND THE CARD, on the holding page too.
+
+     This template is standalone rather than extending base.html, deliberately:
+     pre-launch the front door must not link into the dashboard, because linking
+     to it effectively launches it. That reasoning covers NAV, not assets, and
+     being standalone meant this page inherited none of the head base.html has.
+
+     It matters more than it looks. This is the page `/` serves pre-launch, and it
+     is also the page the coverage gate demotes to if a fortnight of quiet at two
+     top-50 CNAs un-clears it, so a launched site can become this page without a
+     commit. Serving the front door with no favicon is not a state to discover
+     then. tests/test_site.py sweeps every built page in both postures.
+
+     The card carries no count, which is exactly what this posture requires: the
+     gate is on promotion and an unfurl in someone else's channel is promotion. -->
+<link rel="icon" type="image/svg+xml" href="static/img/favicon.svg">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="static/img/apple-touch-icon.png">
+{% if asset_v.get('og-card.png') %}
+<meta property="og:image" content="https://rbptracker.org/static/img/og-card.png?v={{ asset_v['og-card.png'] }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RBP Tracker: CVE IDs that are reserved, referenced in a public advisory, and still unpublished.">
+<meta name="twitter:card" content="summary_large_image">
+{% else %}
+<meta name="twitter:card" content="summary">
+{% endif %}
+<meta property="og:site_name" content="RBP Tracker">
 <style>
 :root{--bg:#f5f7f9;--fg:#0f151b;--mut:#4e5966;--acc:#0b6b72;--rule:#d8dee5}
 @media(prefers-color-scheme:dark){:root{--bg:#0b0f13;--fg:#e4eaf1;--mut:#95a2b1;--acc:#48acb3;--rule:#26313c}}

@@ -175,16 +175,37 @@ def test_a_degraded_run_puts_nothing_on_the_list_page(
 
 
 def test_the_list_page_still_says_the_count_is_a_floor(degraded_build):
-    """The other half, and the reason removing the banner is defensible.
+    """The other half, and the reason removing the degraded banner is defensible.
 
-    The hedge above the rows is unconditional: it says the count is a floor on
-    every run, degraded or not, and it travels with a copy of the list. Removing
-    the banner is only safe while that is true, so this fails if the hedge is
-    ever made conditional on the run being clean, or dropped.
+    REWRITTEN 2026-08-27, and weakened, deliberately and with the cost recorded.
+
+    It used to assert the hedge above the rows: unconditional, ahead of the first
+    CVE, and travelling with a copy of the list. That hedge was removed on Jerry's
+    call, so this can no longer make the strong claim, and pretending otherwise by
+    deleting the test would leave NEXT.md's argument for dropping the banner
+    resting on something that no longer exists.
+
+    What is still true and is asserted here: the floor claim is in the page's
+    HTML, unconditional, on a degraded run. It is in the panel, which is a hidden
+    dialog rather than prose above the rows, so it does NOT travel with a
+    selection or a paste.
+
+    The gap that leaves is real and is named in NEXT.md: on a degraded run a
+    reader who copies the rows carries neither the floor claim nor a note that the
+    count is lower than usual. /status, `degraded` in rbp.json and the staleness
+    banner are the three disclosures that remain.
     """
     body = (degraded_build / "index.html").read_text()
-    assert "A floor, not a total" in body
-    assert "listhedge" in body
+    assert "floor" in body.lower(), (
+        "the list page no longer says the count is a floor ANYWHERE, which is the "
+        "claim NEXT.md's case for removing the degraded banner rests on")
+    # Unconditional: it must not have become something that only renders on a
+    # clean run, which would make it useless on precisely the runs it is for.
+    assert "every number here is a floor" in body.lower() or \
+           "counts are a floor" in body.lower() or \
+           "a floor, never a census" in body.lower(), (
+        "the floor claim is present but not in a form this test recognises; "
+        "check it is still unconditional rather than gated on a clean run")
     # And the machine-readable copy is unambiguous, which is what a consumer
     # reusing the count actually reads.
     payload = json.loads((degraded_build / "data" / "rbp.json").read_text())
@@ -240,7 +261,11 @@ def test_every_feed_appears_in_the_per_feed_table_with_its_state(degraded_build)
     for feed, state in (("osv", "ok"), ("ghsa", "capped"),
                         ("ubuntu", "failed"), ("debian", "truncated")):
         assert feed in table, f"{feed} is missing from the per-feed table"
-        assert f">{state}<" in table, f"no feed renders the {state} state"
+        # Case-insensitive since 2026-08-27: the status chips went to title case
+        # and this broke on ">ok<" becoming ">OK<". What matters is that the state
+        # is rendered, not how it is capitalised.
+        assert re.search(rf">\s*{state}\s*<", table, re.I), (
+            f"no feed renders the {state} state")
 
 
 def test_a_silent_shrink_is_named_not_just_counted(degraded_build):

@@ -457,11 +457,16 @@ are waiting for them. Two were verified directly in the code:
   `https://www.cve.org/CVERecord?id=<id>`, which renders **nothing** for a RESERVED ID.
   The site would publish an ICS row whose only evidence link is a blank page. `feeds.py`
   already captures the publisher and tracking id, so the branch is available, not absent.
-- **Every CSAF provider collapses to one origin.** `_ORIGIN` (report.py:130) has no `csaf`
-  key, so `_indep` maps every provider to the single token `csaf`. Siemens and Schneider
-  independently carrying the same row yields `indep_sources: 1`, and the headline counts
-  only rows with two or more independent origins. CSAF's corroboration is discarded at
-  exactly the moment it starts mattering. Key the origin on the provider, not the adapter.
+- ~~**Every CSAF provider collapses to one origin.**~~ `_ORIGIN` had no `csaf` key, so
+  `_indep` mapped every provider to the single token `csaf`. Siemens and Schneider
+  independently carrying the same row yielded `indep_sources: 1`, and the headline counted
+  only rows with two or more independent origins, so CSAF's corroboration was discarded at
+  exactly the moment it started mattering. It was fixed by keying the origin on the
+  provider. **Closed a second time on 2026-08-27, by deletion:** the independent-origin
+  count is gone, along with `_indep`, `_ORIGIN`, `indep_sources`, `single_origin` and
+  `summary.corroborated`. It was a second headline, and the site publishes one. The finding
+  is kept because it is the clearest example in this file of a feed-admissibility question
+  that turned out to be a question about the headline instead.
 - **Bulk-reporter naming and per-adapter instrumentation** (panel items 7 and 14) land
   first for the same reason.
 

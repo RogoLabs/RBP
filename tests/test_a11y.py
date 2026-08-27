@@ -228,40 +228,43 @@ def test_no_template_has_a_malformed_table_tag():
                 f"{tpl.name}: {opens} <{tag}> vs {closes} </{tag}>")
 
 
-def test_the_hedge_travels_with_the_rows(built_site, built_site_launched):
-    """So the qualifier travels with the list into a copy, a print or a screen
-    reader rather than living somewhere a reader has to go and find.
+def test_the_front_page_makes_its_two_qualifications_somewhere_reachable(built_site,
+                                                                           built_site_launched):
+    """INVERTED 2026-08-27. This asserted the hedge was BEFORE the rows.
 
-    This was a <table><caption>. The pivot replaced the table with <details> rows
-    on 2026-08-26 and the caption went with it: the same words are in the
-    slide-over panel, but a panel is a hidden dialog, so a reader who selects the
-    list and pastes it into a ticket carries the rows and none of the
-    qualification. The test kept reading templates/cves.html and kept passing.
+    The hedge said "A floor, not a total. Only configured feeds are read... It
+    does not say which CNA reserved any of these IDs" and sat above the first row
+    deliberately: it had been a <caption> on the old table, so the qualifier
+    travelled with a copy, a print or a screen-reader pass of the list. Jerry
+    removed it on 2026-08-27.
 
-    Asserted on the BUILT page, in document order, because "the words exist
-    somewhere in the file" is exactly the claim that was true while the words were
-    unreachable.
+    So the strong claim is gone and this asserts the weaker one that is still
+    true: both qualifications are in the page's HTML, and neither is behind a
+    conditional. They are in the panel, which is a hidden dialog.
+
+    THE COST IS NAMED HERE rather than left in a commit message, because this test
+    is where someone will look: a reader who selects the rows and pastes them into
+    a ticket now carries the rows and neither qualification. That was the whole
+    reason for the old position, and it was given up knowingly.
+
+    What this still catches is the two claims disappearing altogether, which would
+    leave the site publishing a bare count of a state it declines to qualify.
     """
     for out, name in ((built_site, "overview.html"),
                       (built_site_launched, "index.html")):
         body = (out / name).read_text()
+        low = body.lower()
+        assert "floor" in low, (
+            f"{name} does not say anywhere that the count is a floor")
+        assert "does not say which cna" in low or "names no cna" in low or \
+               "no cna is named" in low, (
+            f"{name} does not say anywhere that it names no CNA")
+        # Not behind the JS: it has to be in the served HTML, or a reader without
+        # scripts and every non-rendering crawler sees an unqualified count.
         island = body.index('<script id="rows"')
-        head = body[:island]
-        # Both halves of the hedge, before the rows, outside the dialog.
-        panel = head.index('<aside class="panel"') if '<aside class="panel"' in head else len(head)
-        before_rows = head[:panel]
-        assert "floor" in before_rows.lower(), (
-            "the front page does not say the count is a floor before the rows")
-        assert "does not say which cna" in before_rows.lower(), (
-            "the front page does not say it names nobody before the rows")
-        # And it is actually rendered. `hidden` on the hedge leaves every string
-        # assertion above true while removing the thing they are about, which is
-        # the same shape as the caption that was still in a template nobody
-        # rendered. Caught by mutation, not by inspection.
-        hedge = re.search(r'<p class="listhedge"([^>]*)>', before_rows)
-        assert hedge, "the hedge is not a .listhedge element before the rows"
-        assert "hidden" not in hedge.group(1), "the hedge is rendered hidden"
-
+        assert "floor" in body[:island].lower(), (
+            f"{name} states the floor claim only after the row data, or only from "
+            "script; it must be in the served markup")
 
 def test_the_front_page_has_exactly_one_h1():
     """document.querySelectorAll('h1') was empty on the page that will be ranked
@@ -342,10 +345,17 @@ def test_every_value_in_a_row_is_labelled_next_to_itself():
     """
     src = (TEMPLATES / "list.html").read_text()
     # Rendered in rowHtml(), so they are on every row rather than in a header.
-    assert '"days public"' in src or ">days public<" in src, "the age number has no unit"
-    assert "showing up in" in src, "the source chips have no label"
+    #
+    # CASE-INSENSITIVE since 2026-08-27, when the UI chrome went to title case and
+    # this broke on ">days public<" becoming ">Days Public<". The concern is that
+    # the number carries a UNIT, not how the unit is capitalised, and a guard that
+    # fails on a styling change is a guard people learn to edit without reading.
+    assert re.search(r'>\s*days public\s*<', src, re.I), (
+        "the age number has no unit next to it")
+    assert re.search(r'>\s*showing up in\s*<', src, re.I), (
+        "the source chips have no label")
     # And the detail panel names what its dates are.
-    assert "Where it surfaced, and when" in src
+    assert re.search(r'where it surfaced, and when', src, re.I)
 
 
 def test_print_preserves_the_certainty_vocabulary():
