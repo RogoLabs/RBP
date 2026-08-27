@@ -1,87 +1,5 @@
 [
  {
-  "cve_id": "CVE-2026-19953",
-  "state": "RESERVED",
-  "public_date": "2026-08-26",
-  "sources": "alas,debian",
-  "feed_count": 2,
-  "dates": {
-   "alas": "2026-08-26"
-  },
-  "refs": "alas:CVE-2026-19953;debian:liburi-perl",
-  "description": "URI::_idna::nameprep only lowercased the label and skipped the Unicode normalization that RFC 3490/3491 require.",
-  "state_verified_this_run": true,
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
-  "package": "liburi-perl",
-  "ecosystem": "",
-  "vendor": "Amazon Linux",
-  "advisory_url": "https://security-tracker.debian.org/tracker/CVE-2026-19953",
-  "source_urls": {
-   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-19953.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-19953"
-  },
-  "veto_evaluated": false,
-  "single_origin": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-19542",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "alas,debian,redhat",
-  "feed_count": 3,
-  "dates": {
-   "alas": "2026-08-26",
-   "redhat": "2026-08-25"
-  },
-  "refs": "alas:CVE-2026-19542;debian:glibc;redhat:CVE-2026-19542",
-  "description": "Out-of-bounds stack array access in tdelete",
-  "state_verified_this_run": true,
-  "days_public": 2,
-  "clock_known": true,
-  "hours_public": 48,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 2,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
-  "package": "glibc",
-  "ecosystem": "",
-  "vendor": "Red Hat",
-  "advisory_url": "https://access.redhat.com/security/cve/CVE-2026-19542",
-  "source_urls": {
-   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-19542.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-19542",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-19542"
-  },
-  "veto_evaluated": false,
-  "single_origin": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
   "cve_id": "CVE-2026-77117",
   "state": "RESERVED",
   "public_date": "2026-08-25",
@@ -107,7 +25,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "glibc",
   "ecosystem": "",
   "vendor": "Red Hat",
@@ -118,48 +35,6 @@
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-77117"
   },
   "veto_evaluated": false,
-  "single_origin": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-63676",
-  "state": "RESERVED",
-  "public_date": "2026-08-26",
-  "sources": "alas,alpine,debian",
-  "feed_count": 3,
-  "dates": {
-   "alas": "2026-08-26"
-  },
-  "refs": "alas:CVE-2026-63676;alpine:perl-yaml;debian:libyaml-perl",
-  "description": "Backtracking leads to exponential load time in libyaml library.",
-  "state_verified_this_run": true,
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "indep_sources": 3,
-  "package": "perl-yaml",
-  "ecosystem": "",
-  "vendor": "Amazon Linux",
-  "advisory_url": "https://security-tracker.debian.org/tracker/CVE-2026-63676",
-  "source_urls": {
-   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63676.html",
-   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-63676",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63676"
-  },
-  "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -190,7 +65,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "glibc",
   "ecosystem": "",
   "vendor": "Red Hat",
@@ -201,7 +75,123 @@
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-19499"
   },
   "veto_evaluated": false,
-  "single_origin": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-19542",
+  "state": "RESERVED",
+  "public_date": "2026-08-25",
+  "sources": "alas,debian,redhat",
+  "feed_count": 3,
+  "dates": {
+   "alas": "2026-08-26",
+   "redhat": "2026-08-25"
+  },
+  "refs": "alas:CVE-2026-19542;debian:glibc;redhat:CVE-2026-19542",
+  "description": "Out-of-bounds stack array access in tdelete",
+  "state_verified_this_run": true,
+  "days_public": 2,
+  "clock_known": true,
+  "hours_public": 48,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-25",
+  "advisory_days_public": 2,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "glibc",
+  "ecosystem": "",
+  "vendor": "Red Hat",
+  "advisory_url": "https://access.redhat.com/security/cve/CVE-2026-19542",
+  "source_urls": {
+   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-19542.html",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-19542",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-19542"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-19953",
+  "state": "RESERVED",
+  "public_date": "2026-08-26",
+  "sources": "alas,debian",
+  "feed_count": 2,
+  "dates": {
+   "alas": "2026-08-26"
+  },
+  "refs": "alas:CVE-2026-19953;debian:liburi-perl",
+  "description": "URI::_idna::nameprep only lowercased the label and skipped the Unicode normalization that RFC 3490/3491 require.",
+  "state_verified_this_run": true,
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-26",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "liburi-perl",
+  "ecosystem": "",
+  "vendor": "Amazon Linux",
+  "advisory_url": "https://security-tracker.debian.org/tracker/CVE-2026-19953",
+  "source_urls": {
+   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-19953.html",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-19953"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-63676",
+  "state": "RESERVED",
+  "public_date": "2026-08-26",
+  "sources": "alas,alpine,debian",
+  "feed_count": 3,
+  "dates": {
+   "alas": "2026-08-26"
+  },
+  "refs": "alas:CVE-2026-63676;alpine:perl-yaml;debian:libyaml-perl",
+  "description": "Backtracking leads to exponential load time in libyaml library.",
+  "state_verified_this_run": true,
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-26",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "perl-yaml",
+  "ecosystem": "",
+  "vendor": "Amazon Linux",
+  "advisory_url": "https://security-tracker.debian.org/tracker/CVE-2026-63676",
+  "source_urls": {
+   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63676.html",
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-63676",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63676"
+  },
+  "veto_evaluated": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -229,7 +219,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "epiphany-browser",
   "ecosystem": "",
   "vendor": "Debian",
@@ -238,7 +227,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-77682"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -266,7 +254,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -275,7 +262,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-45092"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -303,7 +289,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -312,7 +297,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-45093"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -340,7 +324,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -349,7 +332,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-45094"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -377,7 +359,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -386,7 +367,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-45095"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -414,7 +394,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -423,7 +402,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-45096"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -451,7 +429,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -460,7 +437,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-45098"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -488,7 +464,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -497,7 +472,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-49861"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -525,7 +499,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -534,7 +507,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-49862"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -562,7 +534,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -571,7 +542,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-49863"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -599,7 +569,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -608,7 +577,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53588"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -636,7 +604,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -645,7 +612,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53589"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -673,7 +639,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -682,7 +647,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53590"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -710,7 +674,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "fastdds",
   "ecosystem": "",
   "vendor": "Debian",
@@ -719,7 +682,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-55063"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -747,7 +709,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "gpac",
   "ecosystem": "",
   "vendor": "Debian",
@@ -756,7 +717,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2025-55662"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -784,7 +744,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "libass",
   "ecosystem": "",
   "vendor": "Debian",
@@ -793,7 +752,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61626"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -821,7 +779,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "libass",
   "ecosystem": "",
   "vendor": "Debian",
@@ -830,7 +787,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61627"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -858,7 +814,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "librabbitmq",
   "ecosystem": "",
   "vendor": "Debian",
@@ -867,7 +822,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-44235"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -895,7 +849,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "librabbitmq",
   "ecosystem": "",
   "vendor": "Debian",
@@ -904,7 +857,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-44236"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -932,7 +884,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "mina",
   "ecosystem": "",
   "vendor": "Debian",
@@ -941,7 +892,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-47321"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -969,7 +919,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "netatalk",
   "ecosystem": "",
   "vendor": "Debian",
@@ -979,7 +928,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-62318"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1007,7 +955,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "netatalk",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1017,7 +964,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-62319"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1045,7 +991,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "netatalk",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1055,7 +1000,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-62320"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1083,7 +1027,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "netatalk",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1093,7 +1036,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-62321"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1121,7 +1063,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "ntfs-3g",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1131,7 +1072,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-42616"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1159,7 +1099,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "ntfs-3g",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1169,7 +1108,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-42617"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1197,7 +1135,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "ntfs-3g",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1207,7 +1144,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-42618"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1235,7 +1171,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "ntfs-3g",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1245,7 +1180,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-46569"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1273,7 +1207,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "ntfs-3g",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1283,7 +1216,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-46570"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1311,7 +1243,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "ntfs-3g",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1321,7 +1252,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-46571"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1349,7 +1279,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "ntfs-3g",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1359,7 +1288,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-46572"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1387,7 +1315,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "nut",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1396,7 +1323,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-54161"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1424,7 +1350,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "opam",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1434,7 +1359,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-57825"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1462,7 +1386,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "openslide",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1471,7 +1394,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-48977"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1499,7 +1421,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "openslide",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1508,7 +1429,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-54604"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1536,7 +1456,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "python-protego",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1545,7 +1464,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-55520"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1573,7 +1491,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "rust-sequoia-openpgp",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1582,7 +1499,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-42783"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1610,7 +1526,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "rust-sequoia-openpgp",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1619,7 +1534,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-42784"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1647,7 +1561,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "strongswan",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1657,7 +1570,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-35328"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1685,7 +1597,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "strongswan",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1695,7 +1606,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-35329"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1723,7 +1633,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "strongswan",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1733,7 +1642,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-35330"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1761,7 +1669,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "strongswan",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1771,7 +1678,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-35331"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1799,7 +1705,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "strongswan",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1809,7 +1714,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-35332"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1837,7 +1741,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "strongswan",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1847,7 +1750,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-35333"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1875,7 +1777,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "strongswan",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1885,7 +1786,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-35334"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1913,7 +1813,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "znuny",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1922,7 +1821,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2025-26843"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1950,7 +1848,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "znuny",
   "ecosystem": "",
   "vendor": "Debian",
@@ -1959,7 +1856,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2025-59490"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -1990,7 +1886,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "devcode-it/openstamanager",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -2000,7 +1895,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-44701"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2030,7 +1924,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2039,7 +1932,6 @@
    "ghsa-repos": "https://github.com/1Panel-dev/CordysCRM/security/advisories/GHSA-x6p7-vhgp-6r3q"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2069,7 +1961,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2078,7 +1969,6 @@
    "ghsa-repos": "https://github.com/1Panel-dev/CordysCRM/security/advisories/GHSA-93p7-j9r5-jc7q"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2108,7 +1998,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2117,7 +2006,6 @@
    "ghsa-repos": "https://github.com/1Panel-dev/CordysCRM/security/advisories/GHSA-fg6q-pfj7-fghw"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2147,7 +2035,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2156,7 +2043,6 @@
    "ghsa-repos": "https://github.com/1Panel-dev/CordysCRM/security/advisories/GHSA-hxp2-5w5p-2grq"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2186,7 +2072,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2195,7 +2080,6 @@
    "ghsa-repos": "https://github.com/BerriAI/litellm/security/advisories/GHSA-hx8v-g79f-8w5f"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2225,7 +2109,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2234,7 +2117,6 @@
    "ghsa-repos": "https://github.com/CloudburstMC/Network/security/advisories/GHSA-f43c-g459-93vr"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2265,7 +2147,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "mcp-contextforge-gateway",
   "ecosystem": "PyPI",
   "vendor": "",
@@ -2275,7 +2156,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-53710"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2306,7 +2186,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2316,7 +2195,6 @@
    "ghsa-repos": "https://github.com/OpenCTI-Platform/opencti/security/advisories/GHSA-7g3x-wc2m-9h9x"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2346,7 +2224,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2355,7 +2232,6 @@
    "ghsa-repos": "https://github.com/alam00000/bentopdf/security/advisories/GHSA-cx8x-7rrr-r9x8"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2385,7 +2261,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2394,7 +2269,6 @@
    "ghsa-repos": "https://github.com/alam00000/bentopdf/security/advisories/GHSA-5xjf-rr5x-pcfj"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2424,7 +2298,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2433,7 +2306,6 @@
    "ghsa-repos": "https://github.com/composer/composer/security/advisories/GHSA-96h3-5x6v-m776"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2463,7 +2335,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2472,7 +2343,6 @@
    "ghsa-repos": "https://github.com/dartiss/code-embed/security/advisories/GHSA-qrwc-v5hh-f395"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2502,7 +2372,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2511,7 +2380,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-jjmm-fw8p-crpw"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2541,7 +2409,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2550,7 +2417,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-23xh-2qxr-3xv8"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2580,7 +2446,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2589,7 +2454,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-r6j2-mrm5-72mg"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2619,7 +2483,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2628,7 +2491,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-87ph-jqwm-pg6r"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2658,7 +2520,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2667,7 +2528,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-jp5f-qr64-c9vw"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2697,7 +2557,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2706,7 +2565,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-q8wp-gf7q-m8cv"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2736,7 +2594,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2745,7 +2602,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-pv9h-4fxf-7vrg"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2775,7 +2631,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2784,7 +2639,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-5vff-j9p4-38j3"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2814,7 +2668,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2823,7 +2676,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-2w8w-rfw7-8gg4"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2853,7 +2705,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2862,7 +2713,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-m745-gh6x-349x"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2892,7 +2742,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2901,7 +2750,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-3vhp-c83q-jqc2"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2931,7 +2779,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2940,7 +2787,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-qgf6-qvhw-4hvh"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -2970,7 +2816,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -2979,7 +2824,6 @@
    "ghsa-repos": "https://github.com/envoyproxy/envoy/security/advisories/GHSA-77x5-xqjg-hprq"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3009,7 +2853,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3018,7 +2861,6 @@
    "ghsa-repos": "https://github.com/fedify-dev/fedify/security/advisories/GHSA-fx98-wc5v-jrg5"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3048,7 +2890,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3057,7 +2898,6 @@
    "ghsa-repos": "https://github.com/fedify-dev/fedify/security/advisories/GHSA-cxc3-7q96-6cpx"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3087,7 +2927,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3096,7 +2935,6 @@
    "ghsa-repos": "https://github.com/go-gitea/gitea/security/advisories/GHSA-9574-292w-9wmw"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3126,7 +2964,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3135,7 +2972,6 @@
    "ghsa-repos": "https://github.com/grokability/snipe-it/security/advisories/GHSA-396x-xmvh-p563"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3165,7 +3001,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3174,7 +3009,6 @@
    "ghsa-repos": "https://github.com/grokability/snipe-it/security/advisories/GHSA-hxcx-9h4f-42xx"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3204,7 +3038,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3213,7 +3046,43 @@
    "ghsa-repos": "https://github.com/grokability/snipe-it/security/advisories/GHSA-p9h3-gvpq-5539"
   },
   "veto_evaluated": false,
-  "single_origin": true,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-69182",
+  "state": "RESERVED",
+  "public_date": "2026-08-27",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-08-27"
+  },
+  "refs": "ghsa-repos:gunet/openeclass\tGHSA-chpp-rhg9-4h48",
+  "description": "gunet/openeclass repository advisory GHSA-chpp-rhg9-4h48",
+  "state_verified_this_run": true,
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "vendor": "",
+  "advisory_url": "https://github.com/gunet/openeclass/security/advisories/GHSA-chpp-rhg9-4h48",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/gunet/openeclass/security/advisories/GHSA-chpp-rhg9-4h48"
+  },
+  "veto_evaluated": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3243,7 +3112,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3252,46 +3120,6 @@
    "ghsa-repos": "https://github.com/notepad-plus-plus/notepad-plus-plus/security/advisories/GHSA-w5xq-frjg-w4cw"
   },
   "veto_evaluated": false,
-  "single_origin": true,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-78002",
-  "state": "RESERVED",
-  "public_date": "2026-08-26",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-26"
-  },
-  "refs": "ghsa-repos:rsyslog/rsyslog\tGHSA-g72f-gc6v-f2w3",
-  "description": "rsyslog/rsyslog repository advisory GHSA-g72f-gc6v-f2w3",
-  "state_verified_this_run": true,
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
-  "package": "",
-  "ecosystem": "",
-  "vendor": "",
-  "advisory_url": "https://github.com/rsyslog/rsyslog/security/advisories/GHSA-g72f-gc6v-f2w3",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/rsyslog/rsyslog/security/advisories/GHSA-g72f-gc6v-f2w3"
-  },
-  "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3321,7 +3149,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3330,7 +3157,6 @@
    "ghsa-repos": "https://github.com/suitenumerique/docs/security/advisories/GHSA-p8v2-wjj3-3j9w"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3360,7 +3186,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3369,7 +3194,6 @@
    "ghsa-repos": "https://github.com/vllm-project/vllm/security/advisories/GHSA-hcwq-8wjf-3gcr"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3399,7 +3223,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3408,7 +3231,6 @@
    "ghsa-repos": "https://github.com/yhirose/cpp-httplib/security/advisories/GHSA-w7p7-f35j-mw7q"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3438,7 +3260,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -3447,7 +3268,6 @@
    "ghsa-repos": "https://github.com/yhirose/cpp-httplib/security/advisories/GHSA-2r2h-jc8w-w66c"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3477,7 +3297,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "CVE-2026-78360",
   "ecosystem": "",
   "vendor": "Red Hat",
@@ -3486,7 +3305,6 @@
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-78360"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3516,7 +3334,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "CVE-2026-66786",
   "ecosystem": "",
   "vendor": "Red Hat",
@@ -3525,7 +3342,6 @@
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-66786"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -3553,7 +3369,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "xen",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3562,7 +3377,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-42491"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3590,7 +3404,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3599,7 +3412,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-44481"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3627,7 +3439,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3636,7 +3447,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39952"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3664,7 +3474,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3673,7 +3482,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-22802"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3701,7 +3509,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3710,7 +3517,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-40078"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3738,7 +3544,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3747,7 +3552,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39949"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3775,7 +3579,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3784,7 +3587,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-40081"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3812,7 +3614,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3821,7 +3622,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39898"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3849,7 +3649,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3858,7 +3657,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-41884"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3886,7 +3684,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3895,7 +3692,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39896"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3923,7 +3719,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3932,7 +3727,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39950"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3960,7 +3754,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -3969,7 +3762,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39939"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -3997,7 +3789,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -4006,7 +3797,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39947"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -4034,7 +3824,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "cacti",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -4043,7 +3832,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-39895"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -4071,7 +3859,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "dotnet10-runtime",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -4080,7 +3867,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-56158"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -4108,7 +3894,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "gst-plugins-good",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -4117,7 +3902,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-46472"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -4145,7 +3929,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "ocaml",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -4154,7 +3937,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-41083"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -4182,7 +3964,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "py3-openssl",
   "ecosystem": "",
   "vendor": "Alpine",
@@ -4191,7 +3972,6 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-40475"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
@@ -4222,7 +4002,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/address_suggestion",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4232,7 +4011,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81167"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4263,7 +4041,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/blazy",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4273,7 +4050,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81165"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4304,7 +4080,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/captcha_protected_page",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4314,7 +4089,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81168"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4345,7 +4119,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/commerce_cybersource",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4355,7 +4128,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81159"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4386,7 +4158,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/content_moderation_notifications",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4396,7 +4167,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81161"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4427,7 +4197,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/datafield",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4437,7 +4206,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81269"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4468,7 +4236,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/digital_signage_framework",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4478,7 +4245,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81166"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4509,7 +4275,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/dxpr_builder",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4519,7 +4284,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81162"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4550,7 +4314,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/entity",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4560,7 +4323,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81158"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4591,7 +4353,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/entity_pdf",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4601,7 +4362,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81164"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4632,7 +4392,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/ldap_auth",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4642,7 +4401,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81205"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4673,7 +4431,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/monster_menus",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4683,7 +4440,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81201"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4714,7 +4470,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 2,
   "package": "drupal/slick",
   "ecosystem": "Packagist",
   "vendor": "",
@@ -4724,7 +4479,6 @@
    "osv": "https://osv.dev/list?q=CVE-2026-81160"
   },
   "veto_evaluated": false,
-  "single_origin": false,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4754,7 +4508,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -4763,7 +4516,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4793,7 +4545,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -4802,7 +4553,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4832,7 +4582,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -4841,7 +4590,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4871,7 +4619,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -4880,7 +4627,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4910,7 +4656,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -4919,7 +4664,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4949,7 +4693,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -4958,7 +4701,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -4988,7 +4730,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -4997,7 +4738,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5027,7 +4767,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5036,7 +4775,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5066,7 +4804,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5075,7 +4812,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5105,7 +4841,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5114,7 +4849,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5144,7 +4878,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5153,7 +4886,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-06.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5183,7 +4915,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5192,7 +4923,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-05.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5222,7 +4952,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5231,7 +4960,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-05.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5261,7 +4989,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5270,7 +4997,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-05.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5300,7 +5026,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5309,85 +5034,6 @@
    "csaf": "https://raw.githubusercontent.com/cisagov/CSAF/develop/csaf_files/OT/white/2026/icsa-26-237-04.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-80212",
-  "state": "RESERVED",
-  "public_date": "2026-08-26",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-08-26"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3053\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3053.json",
-  "description": "CVE-2026-80212",
-  "state_verified_this_run": true,
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
-  "package": "",
-  "ecosystem": "",
-  "vendor": "",
-  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3053.json",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3053.json"
-  },
-  "veto_evaluated": false,
-  "single_origin": true,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-80213",
-  "state": "RESERVED",
-  "public_date": "2026-08-26",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-08-26"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3053\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3053.json",
-  "description": "CVE-2026-80213",
-  "state_verified_this_run": true,
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
-  "package": "",
-  "ecosystem": "",
-  "vendor": "",
-  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3053.json",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3053.json"
-  },
-  "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5417,7 +5063,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5426,7 +5071,6 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3051.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5456,7 +5100,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5465,7 +5108,6 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5495,7 +5137,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5504,7 +5145,6 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5534,7 +5174,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5543,7 +5182,6 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3043.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
@@ -5573,7 +5211,6 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "indep_sources": 1,
   "package": "",
   "ecosystem": "",
   "vendor": "",
@@ -5582,7 +5219,6 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3027.json"
   },
   "veto_evaluated": false,
-  "single_origin": true,
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
