@@ -184,3 +184,210 @@ def test_the_sweep_is_not_empty_and_brackets_the_boundary(site_dir):
     assert len(WIDTHS) >= 10, f"the width sweep collapsed to {WIDTHS}"
     assert {BOUNDARY - 1, BOUNDARY, BOUNDARY + 1} <= set(WIDTHS)
     assert page_paths(site_dir), "the build produced no pages to measure"
+
+
+def test_an_inline_control_does_not_inflate_its_line(page, server):
+    """A global mobile touch-target rule reached an INLINE button and stretched the
+    sentence it sits in.
+
+    style.css gives every `button` `min-height:44px` below 768px, which is correct
+    for everything it was written for -- those are all flex or block items. The
+    hedge's "Why" is the one button on the site that sits inline at the end of a
+    paragraph, and a 44px inline-block inside a 19.7px line box makes that line box
+    44px: the hedge rendered with a visibly wider gap above its last line than
+    between any of the others, on the front page, at every width under 768px.
+
+    Measured as LINE BOX HEIGHTS via a Range over the paragraph, because
+    getBoundingClientRect on the <p> returns one box and says nothing, and because
+    the defect is a gap between lines rather than anything about the button that a
+    rule-level check would notice.
+
+    The tolerance is 6px: an underlined inline-block is legitimately a couple of
+    pixels taller than the text around it, and this is a test about a 24px
+    discrepancy, not about pixel-perfect leading.
+    """
+    pg = page
+    pg.set_viewport_size({"width": 375, "height": 812})
+    _load(pg, server, "index.html")
+
+    heights = pg.evaluate("""() => {
+      const p = document.querySelector('.viewnote');
+      if (!p) { return null; }
+      const r = document.createRange();
+      r.selectNodeContents(p);
+      return [...r.getClientRects()].map(x => x.height);
+    }""")
+    assert heights, (
+        "no .viewnote on the list page, so this test is vacuous. It renders only "
+        "when the default view is hiding rows; if the fixture stopped spanning the "
+        "90-day boundary this check would silently measure nothing.")
+    assert len(heights) > 1, (
+        "the hedge rendered as a single box, so a per-line comparison sees nothing")
+
+    spread = max(heights) - min(heights)
+    assert spread <= 6, (
+        f"the hedge's line boxes range {min(heights):.0f}..{max(heights):.0f}px. An "
+        "inline control is stretching the line it sits in, which shows as an "
+        "uneven gap in the middle of a sentence.")
+
+
+def test_a_prose_card_is_centred_rather_than_left_aligned(page, server):
+    """`.card-prose` caps the measure at 78ch, which was the right fix for the
+    half-empty card it replaced. With no auto margin it left /about-this-count as
+    the only page whose cards stopped two thirds of the way across: the border
+    ended at 869px inside a 1,199px container with 330px of void beside it, while
+    the nav and footer spanned the full width. It read as a broken layout rather
+    than as a chosen measure.
+
+    Asserted as a SYMMETRY property rather than against a pixel value, so it
+    survives a change to the measure or to the container.
+    """
+    pg = page
+    pg.set_viewport_size({"width": 1440, "height": 900})
+    _load(pg, server, "about-this-count.html")
+
+    box = pg.evaluate("""() => {
+      const c = document.querySelector('.container');
+      const card = document.querySelector('.card.card-prose');
+      if (!c || !card) { return null; }
+      const cr = c.getBoundingClientRect(), kr = card.getBoundingClientRect();
+      return {left: kr.left - cr.left, right: cr.right - kr.right,
+              cardW: kr.width, containerW: cr.width};
+    }""")
+    assert box, "no .card.card-prose on the About page, so this test is vacuous"
+    assert box["cardW"] < box["containerW"] - 40, (
+        "the prose card is not narrower than its container, so the measure cap is "
+        "not applying and this test proves nothing")
+    assert abs(box["left"] - box["right"]) <= 2, (
+        f"the prose card sits {box['left']:.0f}px from the left and "
+        f"{box['right']:.0f}px from the right of its container. A capped measure "
+        "with no auto margin reads as a broken layout.")
+
+
+def test_the_skip_link_is_completely_off_screen_until_focused(page, server):
+    """It was parked at `top: -40px` and computes to 41.6px tall, so 1.6px of it
+    sat in the top-left corner of every page: a small blue bar, visible in every
+    screenshot taken during the 2026-08-27 review.
+
+    Asserted at both ends. Off-screen means fully off-screen, and focused means
+    fully on: a skip link that cannot be seen when focused is worse than none,
+    because a keyboard user is told it exists by the focus ring and nothing else.
+    """
+    pg = page
+    _load(pg, server, "index.html")
+
+    resting = pg.evaluate("""() => {
+      const r = document.querySelector('.skip-link').getBoundingClientRect();
+      return {top: r.top, bottom: r.bottom, h: r.height};
+    }""")
+    assert resting["h"] > 0, "the skip link has no height, so it cannot be focused"
+    assert resting["bottom"] <= 0.5, (
+        f"{resting['bottom']:.1f}px of the skip link is on screen when it is not "
+        "focused. The off-screen offset must derive from its own height rather "
+        "than be a guessed constant.")
+
+    # THE MOVE IS TRANSITIONED, so it cannot be read in the same task as the
+    # focus() that starts it.
+    #
+    # The first version did exactly that and was flaky: locally Chrome resolved
+    # the layout to the focused position immediately and the test passed, and in
+    # CI the same code returned the resting position (-41.6) and it failed. Which
+    # value a synchronous getBoundingClientRect() sees depends on whether the
+    # style engine has started the transition yet, which is timing, not behaviour.
+    #
+    # Polled rather than slept: it returns as soon as the link has arrived instead
+    # of always costing a guessed interval, and if it never arrives the timeout
+    # says so rather than an assertion reporting a half-finished animation.
+    #
+    # This is the second time in one sitting: tests/render/test_focus.py's
+    # disclosure-chevron check was caught the same way, reading a rotation in the
+    # task that started it. Any assertion about a transitioned property has to
+    # wait for it.
+    pg.evaluate("() => document.querySelector('.skip-link').focus()")
+    pg.wait_for_function(
+        "() => document.querySelector('.skip-link').getBoundingClientRect().top"
+        " >= -0.5",
+        timeout=3000)
+
+    focused = pg.evaluate("""() => {
+      const r = document.querySelector('.skip-link').getBoundingClientRect();
+      return {top: r.top, bottom: r.bottom, h: r.height};
+    }""")
+    assert focused["bottom"] > 0 and focused["h"] > 0, (
+        f"the skip link arrived on screen but has no visible box: {focused}")
+    assert pg.evaluate(
+        "() => document.activeElement === document.querySelector('.skip-link')"), (
+        "the skip link moved but is not the focused element, so something else "
+        "moved it and this test is measuring the wrong thing")
+
+
+def test_the_mobile_menu_can_be_closed(page, server):
+    """It could be opened and not closed.
+
+    The toggle flipped a class and set aria-expanded, and that was all: no Escape,
+    no click outside, no focus management. On a 375x812 viewport the menu is 470px
+    of an 812px screen, so a reader who opened it by accident had to find the same
+    small button again with two thirds of the page covered.
+
+    All four exits are asserted because they fail independently, and aria-expanded
+    is checked alongside the class every time: a control that reports the wrong
+    state to a screen reader is worse than one that reports none.
+    """
+    pg = page
+    pg.set_viewport_size({"width": 375, "height": 812})
+    _load(pg, server, "index.html")
+
+    def state():
+        return pg.evaluate("""() => ({
+          open: document.querySelector('.nav-menu').classList.contains('active'),
+          aria: document.querySelector('.nav-toggle').getAttribute('aria-expanded'),
+        })""")
+
+    def open_menu():
+        pg.click(".nav-toggle")
+        st = state()
+        assert st["open"] and st["aria"] == "true", f"the menu did not open: {st}"
+
+    open_menu()
+    pg.keyboard.press("Escape")
+    st = state()
+    assert not st["open"] and st["aria"] == "false", f"Escape did not close it: {st}"
+    assert pg.evaluate(
+        "() => document.activeElement === document.querySelector('.nav-toggle')"), (
+        "Escape closed the menu and left focus on document.body, so the next Tab "
+        "restarts at the top of the page")
+
+    open_menu()
+    # A real pointer click at a point BELOW the open menu. The menu is ~470px of
+    # an 812px viewport starting under the header, so clicking an element by
+    # selector lands on the menu itself and Playwright waits forever for it.
+    menu_bottom = pg.evaluate(
+        "() => document.querySelector('.nav-menu').getBoundingClientRect().bottom")
+    pg.mouse.click(180, menu_bottom + 80)
+    st = state()
+    assert not st["open"] and st["aria"] == "false", (
+        f"a click outside the menu did not close it: {st}")
+
+    open_menu()
+    # The navigation is suppressed, not the click. A real click here would leave
+    # the page and destroy the execution context before the state can be read;
+    # what is under test is that the handler runs, not that the browser navigates.
+    closed_on_link = pg.evaluate("""() => {
+      const a = document.querySelector('.nav-menu a');
+      const stop = (e) => e.preventDefault();
+      document.addEventListener('click', stop, true);
+      a.dispatchEvent(new MouseEvent('click', {bubbles: true, cancelable: true}));
+      document.removeEventListener('click', stop, true);
+      return !document.querySelector('.nav-menu').classList.contains('active');
+    }""")
+    assert closed_on_link, (
+        "following a link left the menu open, so it is open over the next page "
+        "and open again over the previous one after a Back")
+
+    # Crossing the breakpoint with it open left `active` on a menu that is a
+    # horizontal bar again.
+    open_menu()
+    pg.set_viewport_size({"width": 1280, "height": 900})
+    pg.wait_for_timeout(150)
+    assert not state()["open"], (
+        "the menu stayed 'active' after the viewport crossed the breakpoint")

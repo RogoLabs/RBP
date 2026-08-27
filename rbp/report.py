@@ -172,29 +172,6 @@ def validate_min_age(days):
             "operating horizon. Refusing to publish names inside either window.")
     return days
 
-# Feeds that trace to a common origin: collapsed when counting *independent*
-# corroboration (OSV re-publishes GHSA; ALAS is a RHEL rebuild).
-_ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redhat",
-           "ubuntu": "ubuntu", "debian": "debian", "alpine": "alpine", "csaf": "csaf",
-           "msrc": "microsoft", "mozilla": "mozilla", "arch": "arch",
-           # Samsung is its own origin. Most of its CVEs are Google's, applied
-           # from the Android bulletin, and OSV carries those too, but Samsung
-           # shipping a fix is a separate public event from Google shipping one,
-           # so the two corroborate rather than mirror.
-           "samsung": "samsung",
-           # ghsa-repos reads the SAME advisory as ghsa from a different
-           # endpoint, so it collapses to the same origin. Omitting it would
-           # have scored one disclosure as two independent sources on every row
-           # an advisory carries an ecosystem, which is the exact mirror
-           # double-count osv -> github exists to prevent.
-           #
-           # The refinement this deliberately does not make: a repo advisory is
-           # published by the REPO OWNER, not by GitHub, so expanding it per
-           # owner the way csaf expands per provider would let it corroborate
-           # independently. That needs a repo-owner-to-CNA mapping that does not
-           # exist here, and the conservative direction is fewer independent
-           # sources, because the headline counts only rows with two or more.
-           "ghsa-repos": "github"}
 # A CNA may be NAMED as owner only when its own feed corroborates it (or it is the
 # authoritative RESERVED assigner), never on a bare product-map guess.
 # The owner-feed mapping lives in clock.OWNER_FEEDS and nowhere else. A dead
@@ -205,28 +182,30 @@ _ORIGIN = {"osv": "github", "ghsa": "github", "redhat": "redhat", "alas": "redha
 # pins the exclusion and tests/test_pipeline.py now pins the single definition.
 
 
-def _indep(sources_str, refs_str=""):
-    """Count INDEPENDENT origins, expanding csaf to one origin per provider.
-
-    Every CSAF provider used to collapse to the single token "csaf", so Siemens
-    and Schneider independently carrying the same row scored indep_sources 1 and
-    the headline, which counts only rows with two or more, discarded exactly the
-    corroboration CSAF exists to add. The mapping was written when csaf was one
-    hand-configured feed; it is now an aggregator expanding to 17 providers.
-    """
-    origins = {_ORIGIN.get(s, s) for s in sources_str.split(",") if s}
-    if "csaf" in origins:
-        providers = {r.split(":", 1)[1].split("\t")[0]
-                     for r in (refs_str or "").split(";")
-                     if r.startswith("csaf:") and ":" in r}
-        providers = {p for p in providers if p}
-        if providers:
-            origins.discard("csaf")
-            origins |= {f"csaf:{p}" for p in providers}
-    return len(origins)
-
-
-
+# THE INDEPENDENT-ORIGIN COUNT IS GONE, deliberately, on 2026-08-27.
+#
+# `_indep` counted origins with feeds that share a source collapsed (OSV
+# re-publishes GHSA, ALAS is a RHEL rebuild) and expanded csaf to one origin per
+# provider. It fed three things and nothing else: `indep_sources` on every
+# published row, `single_origin` beside it, and `summary.corroborated`, the count
+# of rows with two or more.
+#
+# It was removed because it produced a SECOND headline. The site's `<h1>` is
+# `summary.total`; `og:description` published `summary.corroborated`, so the same
+# unfurl carried 1,709 and 201 on adjacent lines, and `schema.py` documented the
+# smaller figure as "the site's headline". A count of a state does not need a
+# more-defensible rival sitting one field away: it needs one number and the hedge
+# that already sits above the rows.
+#
+# Nothing is hidden by this. `sources` and `refs` are still published in full on
+# every row, so a reader who wants to collapse mirrors and count origins can, and
+# /method still explains in prose why an OSV row is not evidence GitHub disclosed
+# anything. What is gone is this site asserting the answer.
+#
+# `_ORIGIN`, the map of which feeds trace to a common origin, went with it. It had
+# exactly one reader, `_indep`, and a map maintained for a count nobody computes is
+# the dead weight this project has already been bitten by. `clock._ORIGIN_KIND` is a
+# different map, for which CLOCK a feed drives, and is untouched.
 
 
 def _clean_description(text, package):
@@ -334,17 +313,15 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     within_buffer = [r for r in backlog if isinstance(r["days_public"], int) and r["days_public"] < min_age]
     undated = [r for r in backlog if not isinstance(r["days_public"], int)]
 
-    for r in backlog:
-        r["indep_sources"] = _indep(r["sources"], r.get("refs") or "")
     # Every row is RESERVED now, the reservation endpoint confirms the state
     # directly, so there is no inferred `DNE` bucket to separate out.
     hard = [r for r in reportable if r["state"] == "RESERVED"]
     soft = []
 
-    # Single rule-anchored threshold: reportable = provably public >= min_age, a
-    # conservative buffer past the 72h expectation. No separate tiers. Core = reportable
-    # RESERVED rows corroborated by >=2 INDEPENDENT origins (OSV<-GHSA, ALAS<-RHEL collapsed).
-    kpi_core = [r for r in hard if r["indep_sources"] >= 2]
+    # ONE THRESHOLD, and now one population. Reportable = provably public >=
+    # min_age, a conservative buffer past the 72h expectation. There is no
+    # `kpi_core` subset any more: the >=2-independent-origins cut was the second
+    # headline described at the top of this module.
 
     # snapshot dir
     sdir = os.path.join(snap_root, today)
@@ -382,13 +359,9 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
         # false on every row as though it had been measured; this says whether it
         # was evaluated at all.
         out["veto_evaluated"] = bool(pm)
-        # The aggregate headline requires two independent origins. A named-CNA
-        # claim required only that inference succeeded, so the more consequential
-        # claim was held to the weaker standard. Published per row rather than
-        # withheld, because requiring two origins to name would drop naming from
-        # 276 rows to 74, and the asymmetry stated is better than the coverage
-        # lost silently.
-        out["single_origin"] = (r.get("indep_sources") or 0) < 2
+        # `indep_sources` and `single_origin` used to be emitted here. Both went
+        # with the independent-origin count on 2026-08-27; `sources` and `refs`
+        # still carry everything either was derived from.
         out.update(over)
         return out
 
@@ -523,7 +496,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
                 src_contrib[s] += 1
     src_contrib = {s: src_contrib.get(s, 0) for s in sources}
 
-    md = _markdown(today, years, sources, reportable, hard, soft, kpi_core,
+    md = _markdown(today, years, sources, reportable, hard, soft,
                    fresh_resolved, scoreboard, prev, new_ids, resolved_ids, still_ids,
                    min_age, len(within_buffer), len(undated), min_conf, below_gate, nameable,
                    src_contrib)
@@ -531,10 +504,10 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
         from . import coverage
         md += "\n" + coverage.markdown(cov)
     schema.write_text(os.path.join(sdir, "report.md"), md)
-    return sdir, md, kpi_core
+    return sdir, md
 
 
-def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolved,
+def _markdown(today, years, sources, backlog, hard, soft, fresh_resolved,
               scoreboard, prev, new_ids, resolved_ids, still_ids,
               min_age=DEFAULT_MIN_AGE_DAYS, n_buffer=0, n_undated=0, min_conf=0.7, below_gate=0, nameable=None,
               src_contrib=None):
@@ -546,8 +519,6 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
             return f"{name} ({tag})"
         return "unattributed"
 
-    n_indep = sum(1 for r in hard if r["indep_sources"] >= 2)
-    n_single = len(hard) - n_indep
     L = []
     L.append(f"# RBP weekly report: {today}\n")
     L.append("> **Internal / pre-preview. Do not forward.** Contains unpublished CVE IDs; named "
@@ -568,16 +539,14 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
              f"reportable RBP; e.g. prompt vendors self-heal before the {min_age}d buffer.)*\n")
 
     L.append("## Headline\n")
-    L.append(f"> **{n_indep} CVE IDs: corroborated by ≥2 independent sources and publicly "
-             f"referenced for ≥{min_age} days: have no published record in the CVE List v5** "
-             f"({len(hard)} including single-source references). The IDs are real and referenced "
-             f"downstream; the authoritative record has not landed.\n")
+    L.append(f"> **{len(hard)} CVE IDs are reserved, publicly referenced for ≥{min_age} days, and "
+             "have no published record in the CVE List v5.** The IDs are real and referenced "
+             "downstream; the authoritative record has not landed.\n")
     L.append(f"The ≥{min_age}-day threshold is a deliberately conservative buffer, well past the 72h "
              "publish rule, so normal latency and short coordinated-disclosure windows are excluded "
-             f"(it is measured from first downstream reference, a floor on, not equal to, the "
-             "rule's CNA-awareness clock). Of the wider {0}, {1} rest largely on a single GitHub "
-             "advisory mirrored into OSV; all {0} are absent from the List regardless of source "
-             "count.\n".format(len(hard), n_single))
+             "(it is measured from first downstream reference, a floor on, not equal to, the "
+             "rule's CNA-awareness clock). Every row is absent from the List regardless of how "
+             "many feeds carry it, which is why this figure is not split by source count.\n")
     if prev and new_ids is not None:
         L.append(f"Week-over-week (vs {os.path.basename(prev)}): +{len(new_ids)} new / "
                  f"−{len(resolved_ids)} resolved. Resolved = the record finally published, the "
@@ -590,7 +559,6 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
     L.append("| Class | Count |")
     L.append("|---|---:|")
     L.append(f"| RBP (`RESERVED`: confirmed reserved, publicly referenced) | {total_hard} |")
-    L.append(f"|: **and** ≥2 independent sources (headline core) | **{len(kpi_core)}** |")
     L.append("")
     L.append("**Held back / context** (not reported against any CNA):\n")
     L.append("| | Count |")
@@ -612,7 +580,7 @@ def _markdown(today, years, sources, backlog, hard, soft, kpi_core, fresh_resolv
              "compliance finding. `unattributed` = no confident, feed-corroborated owner.*\n")
     L.append("| CVE | package | days public | feeds | owner | summary (verbatim title) |")
     L.append("|---|---|---:|---|---|---|")
-    shown = sorted(kpi_core, key=lambda r: -r["days_public"])
+    shown = sorted(hard, key=lambda r: -r["days_public"])
     for r in shown[:40]:
         L.append(f"| {r['cve_id']} | {r.get('package') or '-'} | {r['days_public']} | "
                  f"{r['sources']} | {owner_str(r)} | {_summary(r)} |")

@@ -87,7 +87,16 @@ def test_the_build_actually_writes_security_txt(built_site, built_site_launched)
         body = f.read_text()
         assert "Contact:" in body, "security.txt names no contact"
         assert "Expires:" in body, "security.txt has no Expires, required by RFC 9116"
-        assert "rbp@rogolabs.net" in body
+        # The mailto was asserted here until 2026-08-27. The removal channel is
+        # retired, so the only Contact is the private-advisory URL, which still
+        # satisfies RFC 9116's requirement of at least one.
+        assert "rbp@rogolabs.net" not in body, (
+            "security.txt offers the removal address again")
+        assert "security/advisories/new" in body, (
+            "security.txt has no reachable contact at all")
+        assert "does not operate a removal channel" in body, (
+            "security.txt does not say what its contact is NOT for, which is the "
+            "one thing someone reading it needs to know")
 
 
 # --------------------------------------------------------------------------

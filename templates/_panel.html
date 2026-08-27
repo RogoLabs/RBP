@@ -153,34 +153,69 @@
       outside observer can see it. That is precisely why this site measures
       <em>days public</em> and never calls a single row overdue.
     </p>
-  </div>
+  {# There was an unmatched </div> here. The panel opens no <div> at all, so it
+     closed the <aside> in the parse tree and left the built page at 14 <div>
+     against 15 </div>. Browsers discard a stray close tag silently, which is why
+     it survived the move of this copy from index.html on 2026-08-26 and every
+     build since. #}
 
   <h2>How this is measured</h2>
-  <p>Ten public advisory feeds are read every six hours and everything they
+  {# COUNTED, not typed, and the same correction /method already had.
+
+     This read "Ten public advisory feeds" while thirteen were configured, on the
+     panel that answers "What is this?" on the front page, with /method one click
+     away listing all thirteen from `summary.feeds.requested`. The site
+     understated its own coverage on its most-read explainer for as long as the
+     typed number sat here.
+
+     Guarded on the value: a snapshot written before per-feed health existed
+     carries no `requested` list, and Jinja renders a missing key as empty, so the
+     unguarded version would have produced "public advisory feeds are read".
+
+     The 72 below was typed too, next to a `expectation_hours` that is already in
+     this context and already used by /method for the same sentence. Two copies of
+     a constant in one paragraph is how the multiple got wrong before. #}
+  {% set feed_n = ((summary.feeds or {}).get('requested') or []) | length %}
+  <p>{% if feed_n %}<strong>{{ feed_n }}</strong> public advisory feeds{% else %}Public
+     advisory feeds{% endif %} are read every six hours and everything they
      reference is checked against the CVE List. Nothing appears here until it has
      been publicly referenced for at least
      <strong>{{ summary.get('min_age_days', 7) }} days</strong>, which is
-     {{ ((summary.get('min_age_days', 7) * 24) / 72) | round(1) }}x the 72-hour
-     expectation, so ordinary latency and short coordinated-disclosure windows are
-     excluded.</p>
+     {{ ((summary.get('min_age_days', 7) * 24 / expectation_hours) | round(1)) }}x
+     the {{ expectation_hours }}-hour expectation, so ordinary latency and short
+     coordinated-disclosure windows are excluded.</p>
   <p>The feeds reach a minority of CNAs, so <strong>every number here is a
      floor</strong>, never a census. <a href="method.html">The method in full</a>,
      and <a href="policy.html">the policy quotations</a>.</p>
 
-  <h2>If a row should not be listed</h2>
-  <p>Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> giving the CVE
-     ID and nothing else. No reason, no detail, no confirmation that a
-     vulnerability exists: a request naming only an identifier does not
-     distinguish an embargo from a wrong row, and asking for a reason would make
-     the request itself a disclosure. Read by a person.</p>
+  {# "If a row should not be listed" was here and was removed on 2026-08-27.
 
-  <h2>The data</h2>
+     It described emailing a CVE ID and a person applying the removal by hand. The
+     promise is retired: a row appears only once the CVE Services reservation
+     endpoint confirms the ID is reserved and unpublished, and every row is an ID
+     already referenced in a public advisory and held for the reportable buffer,
+     so there is nothing here to correct and nothing to withhold that is not
+     already public.
+
+     The cost, stated: the one case this did answer was an embargo rather than an
+     error, where a row is entirely accurate and its listing still cuts across a
+     live coordinated disclosure. That case now has no route on this site. #}
+
+  <h2>The data</h2>  <h2>The data</h2>
   <p>Everything on this page is in
      <a href="data/rbp.json" class="mono">rbp.json</a> and
      <a href="data/rbp.csv" class="mono">rbp.csv</a>, with a dated archive at
      <a href="data/archive.json" class="mono">archive.json</a> so a figure cited
      today stays resolvable. Schema and field meanings are in
-     <a href="data/schema.json" class="mono">schema.json</a>.</p>
+     <a href="data/rbp.csv.meta.json" class="mono">rbp.csv.meta.json</a>.</p>
+  {# THE FILENAME WAS WRONG, not the promise: this said `data/schema.json`, which
+     nothing has ever written, so the one link on the front page pointing at the
+     field definitions served GitHub's 404. The schema IS published, by
+     site._write_data, under the name the CSV it documents already has.
+
+     The link checker could not see it. Both copies matched `href="...html"` only,
+     so every data/*.json link on the site was unchecked; they check every
+     internal href now, which is what surfaced this. #}
   {# The archive promise, moved here on 2026-08-26 from /data. It was the only
      human-readable statement of it on the site and it was about to be deleted
      with that page, leaving `stable_not_immutable: true` in archive.json as the

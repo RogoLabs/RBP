@@ -16,7 +16,6 @@
    132 rules removed, 92 kept.
 */
 
-
 /* Root Variables - Design System Colors */
 :root {
     /* Base Colors */
@@ -438,56 +437,10 @@ main {
 }
 
 /* Responsive grid for smaller screens */
-@media (max-width: 992px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
-    }
-}
 
-@media (max-width: 576px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-}
 
 /* Additional responsive adjustments for card content */
-@media (max-width: 768px) {
-    .stat-card {
-        padding: 1.5rem 1.25rem;
-    }
-    
-    .stat-number {
-        font-size: 2rem;
-    }
-    
-    .stat-icon {
-        width: 48px;
-        height: 48px;
-        font-size: 1.25rem;
-        margin-bottom: 1rem;
-    }
-}
 
-@media (max-width: 480px) {
-    .stat-card {
-        padding: 1.25rem 1rem;
-    }
-    
-    .stat-number {
-        font-size: 1.75rem;
-    }
-}
-
-/* Legacy stat-value, stat-label, stat-detail classes */
-.stat-value {
-    font-size: 2.5rem;
-    font-weight: 700;
-    line-height: 1;
-    color: var(--color-text-primary);
-    margin-bottom: 0.5rem;
-}
 
 table {
     width: 100%;
@@ -620,26 +573,6 @@ tbody tr:hover {
 
 /* Responsive adjustments for visualizations */
 @media (max-width: 768px) {
-    .insight-card {
-        flex-direction: column;
-        text-align: center;
-        padding: var(--spacing-sm);
-    }
-    
-    .insight-icon {
-        margin-right: 0;
-        margin-bottom: var(--spacing-xs);
-        font-size: 1.5rem;
-    }
-    
-    .export-buttons {
-        justify-content: center;
-    }
-    
-    .export-buttons .btn {
-        flex: 1;
-        min-width: 120px;
-    }
     
     .metric-grid {
         grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -652,30 +585,6 @@ tbody tr:hover {
     
     .metric-value {
         font-size: 1.5rem;
-    }
-    
-    .chart-container {
-        height: 300px;
-        padding: var(--spacing-sm);
-    }
-    
-    .viz-card {
-        padding: var(--spacing-md);
-    }
-    
-    .chart-legend {
-        flex-direction: column;
-        align-items: center;
-        gap: var(--spacing-sm);
-    }
-    
-    .data-table {
-        font-size: 0.8rem;
-    }
-    
-    .data-table th,
-    .data-table td {
-        padding: var(--spacing-xs) var(--spacing-sm);
     }
 }
 
@@ -706,47 +615,6 @@ tbody tr:hover {
         display: flex;
     }
     
-    /* Mobile dropdown styling */
-    .nav-dropdown {
-        position: static;
-    }
-    
-    .nav-dropdown .dropdown-menu {
-        position: static;
-        opacity: 1;
-        visibility: visible;
-        transform: none;
-        box-shadow: none;
-        border: none;
-        background: transparent;
-        padding: 0;
-        margin: 0;
-        padding-left: var(--spacing-md);
-        border-left: 2px solid var(--color-border);
-        margin-left: var(--spacing-sm);
-        margin-top: var(--spacing-xs);
-    }
-    
-    .nav-dropdown .dropdown-menu a {
-        padding: var(--spacing-xs) var(--spacing-sm);
-        font-size: 0.9rem;
-    }
-    
-    .nav-dropdown > a::after {
-        content: ' ▾';
-        font-size: 0.7rem;
-        opacity: 0.6;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: var(--spacing-md);
-    }
-    
-    .stat-number {
-        font-size: 2rem;
-    }
-    
     h1 {
         font-size: 2rem;
     }
@@ -762,20 +630,9 @@ tbody tr:hover {
     .nav-container {
         padding: 0 var(--spacing-md);
     }
-    
-    .chart-container {
-        height: 300px;
-    }
 }
 
 @media (max-width: 480px) {
-    .stats-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .stat-number {
-        font-size: 1.75rem;
-    }
     
     .card {
         padding: var(--spacing-md);
@@ -785,29 +642,12 @@ tbody tr:hover {
         padding: var(--spacing-sm);
     }
     
-    .chart-container {
-        height: 250px;
-        padding: var(--spacing-xs);
-    }
-    
     .metric-grid {
         grid-template-columns: 1fr;
     }
     
     .metric-value {
         font-size: 1.25rem;
-    }
-    
-    .viz-title {
-        font-size: 1.1rem;
-    }
-    
-    .chart-legend {
-        gap: var(--spacing-xs);
-    }
-    
-    .legend-item {
-        font-size: 0.75rem;
     }
 }
 
@@ -828,36 +668,6 @@ tbody tr:hover {
         padding: 0.75rem 1rem;
     }
     
-    /* Better button group layouts */
-    .quick-select-buttons {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 0.5rem;
-        width: 100%;
-    }
-    
-    .quick-select-buttons .quick-select-btn {
-        width: 100%;
-        min-width: unset;
-    }
-    
-    /* Mobile-optimized year grid */
-    .year-grid {
-        grid-template-columns: repeat(4, 1fr);
-        gap: 0.5rem;
-    }
-    
-    .year-label {
-        font-size: 0.875rem;
-        padding: 0.5rem 0.25rem;
-    }
-    
-    /* Improved table handling on mobile */
-    .table-container {
-        -webkit-overflow-scrolling: touch;
-        position: relative;
-    }
-    
     table {
         min-width: 600px;
         font-size: 0.8rem;
@@ -866,28 +676,6 @@ tbody tr:hover {
     th, td {
         white-space: nowrap;
         padding: 0.5rem;
-    }
-    
-    /* Sticky first column for data tables */
-    .data-table th:first-child,
-    .data-table td:first-child {
-        position: sticky;
-        left: 0;
-        background-color: var(--color-bg-content);
-        z-index: 10;
-        box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Better card layouts */
-    .row {
-        margin-left: 0;
-        margin-right: 0;
-    }
-    
-    .row > [class*='col-'] {
-        padding-left: 0;
-        padding-right: 0;
-        margin-bottom: 1rem;
     }
     
     /* Mobile-friendly navigation */
@@ -929,17 +717,6 @@ tbody tr:hover {
         text-align: left;
     }
     
-    /* Improved chart responsiveness */
-    .chart-container,
-    .homepage-chart-container {
-        height: 250px !important;
-        min-height: 250px;
-    }
-    
-    .homepage-preview-container {
-        height: 200px !important;
-    }
-    
     /* Better card spacing */
     .card {
         margin-bottom: 1rem;
@@ -949,30 +726,6 @@ tbody tr:hover {
     .card-header,
     .card-body {
         padding: 1rem;
-    }
-    
-    /* Improved stats cards for mobile */
-    .stats-grid {
-        gap: 0.75rem;
-        margin-bottom: 1rem;
-    }
-    
-    .stat-card {
-        padding: 1.25rem 1rem;
-    }
-    
-    .stat-number {
-        font-size: 1.75rem;
-        margin-bottom: 0.25rem;
-    }
-    
-    .stat-label {
-        font-size: 0.8rem;
-    }
-    
-    .stat-sublabel,
-    .stat-detail {
-        font-size: 0.7rem;
     }
     
     /* Page header mobile optimization */
@@ -1015,72 +768,6 @@ tbody tr:hover {
     .footer > div > div > div {
         text-align: center !important;
     }
-    
-    /* Export and control buttons */
-    .export-buttons {
-        flex-direction: column;
-        width: 100%;
-    }
-    
-    .export-buttons .btn {
-        width: 100%;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Insight cards mobile layout */
-    .insight-card {
-        flex-direction: column;
-        text-align: center;
-        padding: 1rem;
-    }
-    
-    .insight-icon {
-        margin-right: 0;
-        margin-bottom: 0.5rem;
-    }
-    
-    /* Better viz card headers */
-    .viz-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-    
-    /* Improved homepage sections */
-    .homepage-chart-section,
-    .homepage-preview-section {
-        padding: 0;
-    }
-    
-    .homepage-chart-card {
-        margin-bottom: 1rem;
-        border-radius: 0.5rem;
-    }
-    
-    .homepage-chart-header,
-    .homepage-chart-body {
-        padding: 1rem;
-    }
-    
-    .homepage-chart-title {
-        font-size: 1.1rem;
-    }
-    
-    .homepage-chart-subtitle {
-        font-size: 0.8rem;
-    }
-    
-    /* Mobile table scroll indicator */
-    .table-container::after {
-        content: '← Scroll to view more →';
-        display: block;
-        text-align: center;
-        padding: 0.5rem;
-        background: var(--color-bg-secondary);
-        color: var(--color-text-secondary);
-        font-size: 0.75rem;
-        border-top: 1px solid var(--color-border);
-    }
 }
 
 /* Extra small devices (320px - 480px) */
@@ -1094,46 +781,12 @@ tbody tr:hover {
         padding: 0 0.75rem;
     }
     
-    /* Single column year grid */
-    .year-grid {
-        grid-template-columns: repeat(3, 1fr);
-    }
-    
-    /* Smaller headings */
-    h1, .display-4 {
-        font-size: 1.5rem !important;
-    }
-    
     h2 {
         font-size: 1.25rem;
     }
     
     h3 {
         font-size: 1.1rem;
-    }
-    
-    /* Ultra-compact stats */
-    .stat-number {
-        font-size: 1.5rem;
-    }
-    
-    .stat-label {
-        font-size: 0.75rem;
-    }
-    
-    /* Smaller charts */
-    .chart-container,
-    .homepage-chart-container {
-        height: 200px !important;
-    }
-    
-    .homepage-preview-container {
-        height: 180px !important;
-    }
-    
-    /* Stack button groups vertically */
-    .quick-select-buttons {
-        grid-template-columns: 1fr;
     }
     
     /* Compact cards */
@@ -1164,14 +817,6 @@ tbody tr:hover {
 
 /* Landscape mobile devices */
 @media (max-width: 900px) and (orientation: landscape) {
-    .chart-container,
-    .homepage-chart-container {
-        height: 200px !important;
-    }
-    
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
     
     .page-header {
         padding: 0.75rem 1rem;
@@ -1184,29 +829,14 @@ tbody tr:hover {
 
 /* Tablet devices (768px - 1024px) */
 @media (min-width: 769px) and (max-width: 1024px) {
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .year-grid {
-        grid-template-columns: repeat(6, 1fr);
-    }
     
     .container {
         padding: 0 1.5rem;
-    }
-    
-    .chart-container {
-        height: 350px;
     }
 }
 
 /* Mobile viewport height fix for iOS */
 @supports (-webkit-touch-callout: none) {
-    .chart-container,
-    .homepage-chart-container {
-        min-height: -webkit-fill-available;
-    }
 }
 
 /* Improved touch scrolling for all mobile devices */
@@ -1272,25 +902,34 @@ tbody tr:hover {
     opacity: 1;
 }
 
-@media (hover: none) {
-    .chart-export-controls {
-        opacity: 1;
-    }
-}
 
 /* Skip to content link (accessibility) */
+/* THE OFF-SCREEN POSITION HAS TO BE DERIVED, not guessed at -40px.
+   
+   The link computes to 41.6px tall (0.5rem padding either side of a 1rem line),
+   so `top: -40px` left 1.6px of it on screen: a small blue bar in the top-left
+   corner of every page on the site, visible in every screenshot taken during the
+   2026-08-27 review.
+   
+   `translateY(-100%)` moves it by its OWN height whatever that turns out to be,
+   so a padding or font-size change cannot uncover it again. `top: 0` stays as the
+   anchor so the focused state needs no second offset. */
 .skip-link {
     position: absolute;
-    top: -40px;
+    top: 0;
     left: 0;
     background: var(--color-primary);
     color: white;
     padding: 0.5rem 1rem;
     z-index: 10000;
-    transition: top 0.2s;
+    transform: translateY(-100%);
+    transition: transform 0.2s;
 }
 .skip-link:focus {
-    top: 0;
+    transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+    .skip-link { transition: none; }
 }
 
 /* Print styles */
@@ -1391,13 +1030,6 @@ tbody tr:hover {
         max-width: 100% !important;
         width: 100% !important;
         padding: 0 !important;
-    }
-
-    .chart-container,
-    .chart-wrapper,
-    canvas {
-        width: 100% !important;
-        max-width: 100% !important;
     }
 
     /* 6. Ensure tables print with borders and don't break across pages */

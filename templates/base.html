@@ -1,4 +1,17 @@
-<!DOCTYPE html>
+{# THE RELATIVE PREFIX, defined once and BEFORE <head>.
+
+   It used to be set after <body>, so the stylesheet links in <head> each carried
+   their own inline copy of the same conditional. Anything added to <head> that
+   used `p` would have silently rendered an empty prefix, which is correct on
+   every page except a nested one and therefore the kind of bug that appears the
+   day a nested page comes back.
+
+   THE 404 PAGE IS ROOT-ABSOLUTE, and it has to be. GitHub Pages serves /404.html
+   for an unmatched path at ANY depth, so a request for /foo/bar/baz renders this
+   template with the browser resolving relative URLs against /foo/bar/. Every
+   relative link would point at a directory that does not exist -- including both
+   stylesheets, so the page would arrive unstyled as well as unnavigable. #}
+{% set p = '../' if page == 'cna' else ('/' if page == '404' else '') %}<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -12,16 +25,48 @@
    states the legitimacy claim (RBP is the Program's own defined state) before the
    count, which is the order review item 11 asks for on every front door. #}
 <meta name="description" content="{% block description %}Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. This is a count of that state, not a count of violations.{% endblock %}">
-{% if launched %}
+{# Overridable, for the 404 page. A soft-404 that gets indexed is worse than the
+   host's own error page, because it then competes with the real pages for this
+   site's own search terms. #}
+{% block robots %}{% if launched %}
 <meta name="robots" content="index, follow">
 {% else %}
 <meta name="robots" content="noindex, nofollow">
-{% endif %}
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/style.css?v={{ asset_v['style.css'] }}">
-<link rel="stylesheet" href="{{ '../' if page == 'cna' else '' }}static/css/rbp.css?v={{ asset_v['rbp.css'] }}">
+{% endif %}{% endblock %}
+{# NO GOOGLE FONTS. Inter is served from static/fonts and declared in rbp.css;
+   see static/fonts/README.md. Two preconnect hints and a render-blocking
+   stylesheet <link> to fonts.googleapis.com were here until 2026-08-27.
+
+   `preload` on the font itself, because the @font-face now sits inside rbp.css:
+   a browser does not discover the font until it has fetched and parsed that
+   stylesheet, which puts the request one round trip later than the <link> it
+   replaced. This hands it to the preloader immediately.
+
+   `crossorigin` is required even for a same-origin font: fonts are always fetched
+   in CORS mode, and a preload without it is fetched twice. #}
+<link rel="preload" href="{{ p }}static/fonts/inter-latin.woff2" as="font"
+      type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{{ p }}static/css/style.css?v={{ asset_v['style.css'] }}">
+<link rel="stylesheet" href="{{ p }}static/css/rbp.css?v={{ asset_v['rbp.css'] }}">
+{# ICONS. There were none at all until 2026-08-27, so every tab showed a generic
+   placeholder, every bookmark was unidentifiable, and /favicon.ico returned 404
+   on the first visit from every browser.
+
+   THREE declarations because they answer three different requests:
+     - the SVG is preferred by every browser that supports it and is the only one
+       that stays sharp on a 4x display;
+     - favicon.ico sits at the SITE ROOT because browsers request /favicon.ico
+       whether or not a page links one. A <link> does not suppress that request,
+       so without the file the 404 happens anyway;
+     - apple-touch-icon is what iOS uses for Add to Home Screen, which otherwise
+       gets a screenshot of the page.
+
+   Authored by tools/make_brand_assets.py and COMMITTED, not generated at build
+   time. That script's docstring says why: it needs Pillow, and the publish path
+   runs four times a day on pandas, pyarrow and Jinja2. #}
+<link rel="icon" type="image/svg+xml" href="{{ p }}static/img/favicon.svg">
+<link rel="icon" href="{{ p }}favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="{{ p }}static/img/apple-touch-icon.png">
 {# Link previews. Unfurlers do not read robots.txt, so a noindex page pasted into
    Slack or Teams still renders whatever is here. This block was one hard-coded
    root og:url on all seven pages, and an og:description that published the raw
@@ -29,7 +74,24 @@
    unguarded, while the count was still built on 27.9% CNA coverage. #}
 <meta property="og:title" content="{% block og_title %}RBP Tracker{% endblock %}">
 {% if launched %}
-<meta property="og:description" content="{{ summary.get('corroborated') if summary.get('corroborated') is not none else summary.total }} CVE IDs are in the state the CVE Program calls Reserved but Public: reserved, referenced publicly, still unpublished. A count of a state, not of violations, and a floor: feeds reach {{ summary.coverage.pct_effective if summary.coverage and summary.coverage.get('pct_effective') is not none else 'a minority of' }}% of CNAs.">
+{# ONE COUNT ON THE PAGE, ONE IN THE UNFURL, AND THEY MUST BE THE SAME NUMBER.
+
+   This published `summary.corroborated` while og:title and the h1 published
+   `summary.total`, so the same preview carried "1,709 reserved CVE IDs are
+   public and unpublished" and "201 CVE IDs are in the state..." on adjacent
+   lines, differing by 8.5x. It was right when it was written, because the front
+   page also led with the corroborated subset; the 2026-08-26 pivot moved the h1
+   to the total and left this behind.
+
+   `corroborated` no longer exists. The >=2-independent-origins figure was
+   removed from the pipeline on 2026-08-27 rather than repointed here, because a
+   count of a state does not need a more-defensible rival number one field away:
+   it needs one number and the hedge that already sits above the rows. See the
+   comment at the top of rbp/report.py.
+
+   tests/test_copy.py asserts that this string and the h1 carry the same count
+   expression, so the two cannot drift apart again. #}
+<meta property="og:description" content="{{ summary.total | commafy }} CVE IDs are in the state the CVE Program calls Reserved but Public: reserved, referenced publicly, still unpublished. A count of a state, not of violations, and a floor: feeds reach {{ summary.coverage.pct_effective if summary.coverage and summary.coverage.get('pct_effective') is not none else 'a minority of' }}% of CNAs.">
 {% else %}
 {# Pre-launch a paste must not carry the count at all. The gate is on promotion,
    and an unfurl in someone else's channel is promotion by any reading. #}
@@ -37,6 +99,45 @@
 {% endif %}
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://rbptracker.org/{{ page_file }}">
+{# THE CARD. Until 2026-08-27 there was no og:image and no twitter card at all, so
+   every paste into Slack, Teams, X, LinkedIn or iMessage rendered as plain text.
+   On a site whose whole purpose is to be cited, the unfurl is the product.
+
+   ABSOLUTE URL, not relative. Unfurlers fetch og:image out of the page's context
+   and a relative path is simply dropped by most of them.
+
+   A PNG, not the SVG the icons use: none of the major unfurlers render an SVG
+   og:image.
+
+   IT CARRIES NO COUNT, deliberately, and the review item that asked for this
+   suggested it should. Two reasons it does not. The number would have to be baked
+   into a committed image, so it would go stale the moment the count moved and the
+   card would contradict og:title exactly the way og:description used to; and
+   generating it per-run means Pillow on a publish path that runs four times a day
+   against pandas, pyarrow and Jinja2. The live count still travels, in og:title
+   and og:description, both of which every unfurler renders as text beside the
+   image.
+
+   The `v=` hash matters more here than on the stylesheets. Slack, Teams and X
+   cache an og:image against its URL and do not revalidate, so replacing the file
+   at a fixed path would leave every already-unfurled link showing the old card
+   forever. #}
+{% if asset_v.get('og-card.png') %}
+<meta property="og:image" content="https://rbptracker.org/static/img/og-card.png?v={{ asset_v['og-card.png'] }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+{# The alt text is read aloud by screen readers in Slack and Mastodon, so it
+   describes what the card says rather than describing a picture of bars. #}
+<meta property="og:image:alt" content="RBP Tracker: CVE IDs that are reserved, referenced in a public advisory, and still unpublished.">
+<meta name="twitter:card" content="summary_large_image">
+{% else %}
+{# No card on disk. Falling back to a text unfurl is correct; declaring an
+   og:image that 404s makes some unfurlers render a broken-image frame instead of
+   the text they would otherwise have shown. #}
+<meta name="twitter:card" content="summary">
+{% endif %}
+<meta property="og:site_name" content="RBP Tracker">
 <link rel="canonical" href="https://rbptracker.org/{{ page_file }}">
 </head>
 <body>
@@ -49,7 +150,6 @@
 </script>
 <a href="#main" class="skip-link">Skip to main content</a>
 
-{% set p = '../' if page == 'cna' else '' %}
 <header class="header">
   <div class="nav-container">
     <a href="{{ p }}{{ home }}" class="logo">RBP&nbsp;Tracker</a>
@@ -189,20 +289,27 @@
         </p>
       </div>
       <div style="flex:1;min-width:15rem">
-        {# The footer's own copy of the withhold ask, and it went stale separately
-           from /method's. Both described the automated issue channel deleted on
-           2026-08-26: this one printed "open a withhold request" and "withheld on
-           the next build" over a mailto: link, which is a promise no mailbox can
-           keep, and then offered a private security advisory as the alternative
-           to "posting publicly" when the primary route was already private email.
-           On every page of the site. #}
-        <p class="mb-1"><strong>Ask for a row to be removed</strong></p>
+        {# THE REMOVAL ASK IS GONE from the footer, 2026-08-27, with the promise
+           itself. It offered "email the CVE ID and a person applies the removal by
+           hand", on every page of the site.
+
+           Jerry's call, and the reasoning is the site's own: every row here is a
+           CVE ID already referenced in a public advisory, held for the reportable
+           buffer, on a site that names no CNA. There is nothing to withhold that
+           is not already public, and a row is listed only once the reservation
+           endpoint confirms it is unpublished, so there is no correction to make
+           either.
+
+           What remains is a route for a vulnerability in this site's own CODE,
+           which is a different thing and is not a removal request.
+
+           `RBP_WITHHOLD` still exists, still works and is still tested. The
+           capability is kept and simply not advertised: see NEXT.md. #}
+        <p class="mb-1"><strong>This site's own code</strong></p>
         <p class="text-muted small mb-0">
-          Email <a href="mailto:rbp@rogolabs.net">rbp@rogolabs.net</a> with the CVE ID
-          and nothing else: no reason, no detail. A person reads it and applies the
-          removal by hand, so it takes effect on the next build after that.
-          <a href="{{ p }}method.html">What this costs</a>.<br>
-          To report a vulnerability in this site's own code instead, use
+          Source, method and issues are on
+          <a href="https://github.com/RogoLabs/RBP">GitHub</a>. To report a
+          vulnerability in this site's own code, use
           <a href="https://github.com/RogoLabs/RBP/security/advisories/new">a private
           security advisory</a>.
         </p>
@@ -228,7 +335,7 @@
            could. #}
         {% if summary.get('source_commit') %}<br>
         <span class="mono">{{ summary.source_commit }}</span>{% if summary.get('source_dirty') %}
-        <span class="chip chip-none">uncommitted changes</span>{% endif %}
+        <span class="chip chip-none">Uncommitted Changes</span>{% endif %}
         &middot; built {{ summary.get('generated_at', '')[:16] | replace('T', ' ') }}Z
         {% endif %}
       </small>
@@ -251,12 +358,56 @@
       else { document.documentElement.setAttribute('data-theme', 'dark'); localStorage.setItem('rbp-theme', 'dark'); }
       sync();
     });
+    // THE MOBILE MENU CAN BE CLOSED, and it could only be opened.
+    //
+    // The toggle flipped a class and set aria-expanded, and that was all: no
+    // Escape, no click outside, and no focus management. On a 375x812 viewport the
+    // menu is 470px of an 812px screen, so a reader who opened it by accident had
+    // to find the same small button again with two thirds of the page covered.
+    //
+    // `setNav` rather than a toggle in three places, because three call sites
+    // flipping a class independently is how aria-expanded and the class drift
+    // apart, and a control that reports the wrong state to a screen reader is
+    // worse than one that reports none.
     var nt = document.querySelector('.nav-toggle');
     var menu = document.querySelector('.nav-menu');
-    if (nt && menu) nt.addEventListener('click', function () {
-      var open = menu.classList.toggle('active');
+    function setNav(open) {
+      if (!nt || !menu) return;
+      menu.classList.toggle('active', open);
       nt.setAttribute('aria-expanded', open ? 'true' : 'false');
-    });
+    }
+    function navOpen() { return !!menu && menu.classList.contains('active'); }
+    if (nt && menu) {
+      nt.addEventListener('click', function (e) {
+        e.stopPropagation();          // or the document handler closes it again
+        setNav(!navOpen());
+      });
+      // Escape closes it and returns focus to the control that opened it, so the
+      // reader does not land on document.body and have to Tab from the top.
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && navOpen()) { setNav(false); nt.focus(); }
+      });
+      // A click anywhere outside. Checked with contains() rather than by
+      // comparing targets, so a click on a link INSIDE the menu still navigates.
+      document.addEventListener('click', function (e) {
+        if (navOpen() && !menu.contains(e.target) && e.target !== nt) {
+          setNav(false);
+        }
+      });
+      // Following a link leaves the menu open behind the new page on a
+      // same-document navigation, and open over the wrong page after a Back.
+      menu.addEventListener('click', function (e) {
+        if (e.target.closest('a')) { setNav(false); }
+      });
+      // Crossing the breakpoint with it open leaves `active` set on a menu that
+      // is a horizontal bar again, which on some widths hid the nav entirely.
+      if (window.matchMedia) {
+        var wide = window.matchMedia('(min-width: 769px)');
+        var onWide = function (m) { if (m.matches) { setNav(false); } };
+        if (wide.addEventListener) { wide.addEventListener('change', onWide); }
+        else if (wide.addListener) { wide.addListener(onWide); }
+      }
+    }
   })();
 </script>
 {% block scripts %}{% endblock %}

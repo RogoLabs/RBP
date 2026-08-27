@@ -28,15 +28,40 @@
              placeholder="Filter by CVE ID, package or advisory text"
              aria-label="Filter rows by CVE ID, package or advisory text">
     </div>
-    <label class="cmd-lab" for="src">seen in
-      <select id="src" aria-label="Filter by source"><option value="">any source</option></select>
+    <label class="cmd-lab" for="src">Seen In
+      <select id="src" aria-label="Filter by source"><option value="">Any Source</option></select>
     </label>
-    <label class="cmd-lab" for="minage">public
-      <select id="minage" aria-label="Filter by how long the ID has been public">
-        <option value="">any age</option>
-        <option value="90">90+ days</option>
-        <option value="180">180+ days</option>
-        <option value="365">365+ days</option>
+    {# BOTH DIRECTIONS. "90+ days" answers "what has been sitting the longest";
+       "under 90 days" answers "what has appeared lately", and until 2026-08-27
+       only the first question could be asked here.
+
+       The thresholds are not invented: 30 / 90 / 180 are the boundaries of
+       `summary.age_buckets`, which the site already publishes, so a reader who
+       reads a bucket count can reproduce it as a filtered view rather than
+       having to trust it. 365+ stays because "public for over a year" is the
+       claim people quote.
+
+       The direction is in the option text, not only the optgroup label: a
+       collapsed select shows the option alone, and "90 days" without a direction
+       is ambiguous where "under 90 days" is not. #}
+    <label class="cmd-lab" for="age">Public
+      <select id="age" aria-label="Filter by how long the ID has been public">
+        {# "any" rather than "", because the front page now DEFAULTS to a filtered
+           view and "show me everything" therefore has to be a state a URL can
+           carry. With an empty value, clearing the filter produced a URL with no
+           parameters, which is exactly the URL the default applies to, so a
+           reload silently put the filter back on. #}
+        <option value="any">Any Age</option>
+        <optgroup label="At Least">
+          <option value="90+">90+ Days</option>
+          <option value="180+">180+ Days</option>
+          <option value="365+">365+ Days</option>
+        </optgroup>
+        <optgroup label="Under">
+          <option value="30-">Under 30 Days</option>
+          <option value="90-">Under 90 Days</option>
+          <option value="180-">Under 180 Days</option>
+        </optgroup>
       </select>
     </label>
     <button type="button" class="linkbtn" id="panel-open"
@@ -44,7 +69,19 @@
   </div>
 </div>
 
-<main id="main">
+{# NO <main> HERE, and there was one.
+
+   base.html already opens `<main id="main" class="container">` around this
+   block, so the front page shipped TWO <main> elements, nested, both carrying
+   id="main". Three separate defects in one tag: a <main> may not descend from
+   another <main>; the id was duplicated, so `#main` was ambiguous and the skip
+   link's target was whichever the parser reached first; and a screen reader was
+   offered two main landmarks on a page that has one. style.css also gives `main`
+   a min-height and vertical padding, so the front page was paying both twice.
+
+   The children sit directly in base.html's <main> instead. Nothing else needed
+   the wrapper: no CSS selector targeted it, and tests/render/test_focus.py asks
+   `closest('main')`, which resolves to the outer one either way. #}
   <p class="sr-only" id="listnote" role="status" aria-live="polite"></p>
   {# THE LAUNCH-DAY ZERO STATE, and it is not the same thing as the JS empty
      state below.
@@ -83,28 +120,60 @@
     {% endif %}
   </div>
   {% endif %}
-  {# THE HEDGE, and it has to be HERE rather than in the panel.
+  {# THE HEDGE IS GONE, removed 2026-08-27 on Jerry's call.
 
-     It was a <caption> on the old table, so the qualifier travelled with the data
-     into a copy, a print or a screen reader rather than living in a caveat block
-     somewhere below it. The pivot replaced the table with <details> rows and the
-     caption went with it; the same words are in the slide-over, but a slide-over
-     is a hidden dialog, so a reader who selects the list and pastes it into a
-     ticket carries the rows and none of the qualification.
+     It read "A floor, not a total. Only configured feeds are read, so rows exist
+     that this site cannot see. It does not say which CNA reserved any of these
+     IDs." and sat directly above the first row, where it had been deliberately
+     placed: it was a <caption> on the old table, so the qualifier travelled with
+     a copy, a print or a screen-reader pass of the list.
 
-     Two sentences, not a paragraph. The pivot removed ~650 words from in front of
-     the first CVE and this must not start putting them back: everything beyond
-     "this is a floor" and "we do not name anyone" is one click away in the panel. #}
-  <p class="listhedge">
-    <strong>A floor, not a total.</strong> Only configured feeds are read, so rows
-    exist that this site cannot see. It does not say which CNA reserved any of
-    these IDs.
-    <button type="button" class="linkbtn" id="hedge-more"
-            aria-expanded="false" aria-controls="panel">Why</button>
-  </p>
+     THE COST, and it is real. A reader who selects the rows and pastes them into
+     a ticket now carries the rows and none of the qualification. Both claims are
+     still made, in the panel one click away, on /method in full, and in
+     `data/rbp.json`, but none of those travels with a copy the way this did.
+
+     NEXT.md's decision to drop the degraded banner listed this hedge as one of
+     four standing disclosures and leaned on it. That entry is corrected rather
+     than left to be discovered, and the remaining three still hold: /status,
+     `degraded` in rbp.json, and the staleness banner.
+
+     tests/test_a11y.py asserted it was present AND before the rows, so removing
+     it is a deliberate act rather than a drift. That test now asserts the
+     absence, for the same reason. #}
+  {# Filled by render() when the age filter is hiding rows. Empty and invisible
+     otherwise, so a reader who has chosen their own view is not told about a
+     default they are not using. #}
+  <p class="viewnote" id="viewnote" hidden></p>
+  {# WITHOUT SCRIPTS THIS PAGE HAD NOTHING ON IT, and said nothing about that.
+
+     The rows are rendered from the JSON island below by the script at the foot of
+     this file, so `#list` is empty in the served markup: zero CVE IDs appear in
+     the HTML. With scripts off the page was a command bar and a blank space, and
+     the server-rendered empty state above only fires when the snapshot itself has
+     no rows, which is a different condition.
+
+     That reaches reader modes, text browsers, archivers and any crawler that does
+     not execute scripts. It does not reach link unfurlers, which read the meta
+     tags and never needed the rows.
+
+     The CSV and JSON are the answer rather than a server-rendered table: they are
+     already built, already linked from the panel, and carry every row rather than
+     the first hundred. What this cannot fix is that no individual CVE ID has a URL
+     on this site, which is a v2 conversation and is recorded in the review. #}
+  <noscript>
+    <div class="empty-state">
+      <strong>This list is drawn in the browser, and scripts are switched off.</strong><br>
+      Every row is in <a href="{{ p }}data/rbp.csv">rbp.csv</a> and
+      <a href="{{ p }}data/rbp.json">rbp.json</a>, which carry the full set rather
+      than the first hundred, with the field definitions in
+      <a href="{{ p }}data/rbp.csv.meta.json">rbp.csv.meta.json</a>.
+      <a href="{{ p }}method.html">The method</a> explains how the count is built and
+      what it excludes.
+    </div>
+  </noscript>
   <div class="rbplist" id="list"></div>
   <div class="more-wrap"><button type="button" class="morebtn" id="more" hidden></button></div>
-</main>
 
 {% include "_panel.html" %}
 <div class="scrim" id="scrim" hidden></div>
@@ -117,8 +186,8 @@
   var NAMES = {osv:"OSV", ghsa:"GitHub", redhat:"Red Hat", debian:"Debian",
                ubuntu:"Ubuntu", alpine:"Alpine", alas:"Amazon Linux",
                msrc:"Microsoft", mozilla:"Mozilla", arch:"Arch",
-               csaf:"CSAF advisory", samsung:"Samsung",
-               "ghsa-repos":"GitHub repo advisory"};
+               csaf:"CSAF Advisory", samsung:"Samsung",
+               "ghsa-repos":"GitHub Repo Advisory"};
   var MAXDAYS = ROWS.reduce(function (m, r) { return Math.max(m, r.days_public || 0); }, 1);
 
   // WINDOWED. The previous table put every row in the DOM at once and it was the
@@ -134,7 +203,43 @@
     });
   }
 
-  var els = {q: $("q"), src: $("src"), minage: $("minage")};
+  var els = {q: $("q"), src: $("src"), age: $("age")};
+
+  // THE FRONT PAGE OPENS ON THE LAST 90 DAYS, and it did not.
+  //
+  // Sorted oldest-first with no filter, the first ten rows were all Android:
+  // eight `platform/*` packages and two more with no package, every one from OSV
+  // alone, every one at 572 days. A site that refuses to name a CNA opened on ten
+  // near-identical rows that name one vendor's platform unmistakably, while
+  // /method argues at length that visibility is not behaviour.
+  //
+  // THE COST, STATED: the rows this hides are the oldest, which are the strongest
+  // evidence the site has. That is not a side effect, it is the mechanism -- the
+  // Android block is at the top BECAUSE it is oldest, so any filter that clears
+  // the first screen is a filter that hides the oldest rows. So the default is
+  // announced on the page, in one line above the list, with the full count and a
+  // control that turns it off; it is not a silent omission.
+  //
+  // Applied ONLY when the URL carries no parameters at all. A shared link always
+  // means exactly what it says, and the default never overrides a reader's choice.
+  var DEFAULT_AGE = "90-";
+
+  // "90+" -> at least 90 days. "30-" -> under 30 days. "" -> no bound.
+  //
+  // A bare "90" is read as "90+" so that ?minage=90 links, which is what this
+  // control emitted before 2026-08-27, keep resolving to the view they described.
+  // See readUrl for the parameter alias.
+  //
+  // The bounds are deliberately inclusive-min and exclusive-max, so "90+ days"
+  // and "under 90 days" partition the rows exactly: no row satisfies both and no
+  // row satisfies neither. A reader who checks that the two counts sum to the
+  // total should find that they do.
+  function ageBound(v) {
+    var m = /^([0-9]+)([+-])?$/.exec(v || "");
+    if (!m) { return null; }
+    var n = parseInt(m[1], 10);
+    return m[2] === "-" ? {max: n} : {min: n};
+  }
 
   var seen = {};
   ROWS.forEach(function (r) {
@@ -146,17 +251,39 @@
     els.src.appendChild(o);
   });
 
+  // EVERY LINK NAMES ITS ROW.
+  //
+  // The visible label is the feed ("OSV", "GitHub"), which is right on screen
+  // because the CVE ID is two lines above it. Out of that context it is useless:
+  // a screen reader's link list read "OSV" 44 times and "open advisory" more than
+  // that, each pointing somewhere different, with nothing to tell them apart.
+  //
+  // aria-label rather than visible text, because the row already shows the id and
+  // repeating it in the chip would be noise for a sighted reader. The label leads
+  // with the feed so the list still sorts and skims the way the visible one does.
+  function chipLabel(feed, cve) {
+    // Two of the display names already END in "Advisory" ("CSAF Advisory",
+    // "GitHub Repo Advisory"), so the naive concatenation announced "CSAF
+    // Advisory advisory for CVE-2026-1" to a screen reader. Pre-existing, and
+    // only visible once the names were title-cased and the doubling stopped
+    // reading as a lower-case noun.
+    var name = NAMES[feed] || feed;
+    var tail = /advisory$/i.test(name) ? " for " : " advisory for ";
+    return esc(name + tail + cve);
+  }
+
   function chips(r) {
     var urls = r.source_urls || {};
     var names = (r.sources || "").split(",").filter(Boolean);
     Object.keys(urls).forEach(function (k) {
       if (names.indexOf(k) === -1) { names.push(k); }
     });
-    if (!names.length) { return '<span class="chip nolink">not recorded</span>'; }
+    if (!names.length) { return '<span class="chip nolink">Not Recorded</span>'; }
     return names.sort().map(function (k) {
       var lab = esc(NAMES[k] || k);
       return urls[k]
-        ? '<a class="chip" href="' + esc(urls[k]) + '" rel="noopener">' + lab + "</a>"
+        ? '<a class="chip" href="' + esc(urls[k]) + '" rel="noopener" aria-label="' +
+          chipLabel(k, r.cve_id) + '">' + lab + "</a>"
         : '<span class="chip nolink">' + lab + "</span>";
     }).join("");
   }
@@ -164,12 +291,13 @@
   function detail(r) {
     var d = r.dates || {}, urls = r.source_urls || {};
     var items = Object.keys(d).sort().map(function (k) {
-      return "<dt>" + esc(NAMES[k] || k) + "</dt><dd>first seen " + esc(d[k]) +
-        (urls[k] ? ' &middot; <a href="' + esc(urls[k]) + '" rel="noopener">open advisory</a>' : "") +
+      return "<dt>" + esc(NAMES[k] || k) + "</dt><dd>First seen " + esc(d[k]) +
+        (urls[k] ? ' &middot; <a href="' + esc(urls[k]) + '" rel="noopener" aria-label="' +
+                   chipLabel(k, r.cve_id) + '">Open Advisory</a>' : "") +
         "</dd>";
     }).join("");
-    if (!items) { items = "<dt>&mdash;</dt><dd>no per-feed dates recorded</dd>"; }
-    return '<p class="seen">Where it surfaced, and when</p><dl class="dl">' + items + "</dl>";
+    if (!items) { items = "<dt>None</dt><dd>No per-feed dates recorded</dd>"; }
+    return '<p class="seen">Where It Surfaced, and When</p><dl class="dl">' + items + "</dl>";
   }
 
   function rowHtml(r) {
@@ -181,18 +309,22 @@
         (r.package ? '<span class="pkg mono">' + esc(r.package) + "</span>" : "") +
       "</span>" +
       (r.description ? '<span class="rdesc">' + esc(r.description) + "</span>" : "") +
-      '<span class="where"><span class="wlab">showing up in</span>' + chips(r) + "</span>" +
+      '<span class="where"><span class="wlab">Showing Up In</span>' + chips(r) + "</span>" +
       "</span>" +
       '<span class="agebox"><span class="agenum mono">' + esc(r.days_public) + "</span>" +
-      '<span class="agelab">days public</span></span>' +
+      '<span class="agelab">Days Public</span></span>' +
       "</summary><div class=\"detail\">" + detail(r) + "</div></details>";
   }
 
   function matches(r) {
     var q = els.q.value.trim().toLowerCase(),
         s = els.src.value,
-        a = parseInt(els.minage.value, 10) || 0;
-    if (a && (r.days_public || 0) < a) { return false; }
+        a = ageBound(els.age.value);
+    if (a) {
+      var d = r.days_public || 0;
+      if (a.min !== undefined && d < a.min) { return false; }
+      if (a.max !== undefined && d >= a.max) { return false; }
+    }
     if (s && (r.sources || "").split(",").indexOf(s) < 0) { return false; }
     if (q) {
       var hay = (r.cve_id + " " + (r.package || "") + " " + (r.description || "") +
@@ -210,14 +342,47 @@
     $("n").textContent = filtered.length.toLocaleString();
     $("n").classList.toggle("dim", filtered.length === 0);
 
+    // THE NOTICE, and its whole job is that the total stays on the page.
+    //
+    // The h1 is the count of what is SHOWN, which is the design and is right: it
+    // moves as the reader filters. But with a filter on by default, the first
+    // paint would otherwise show 1,605 on a page whose own link preview says
+    // 1,709, and the reader never asked for the difference. The number they
+    // arrived expecting has to be here, next to the control that explains it.
+    var note = $("viewnote"), hidden = ROWS.length - filtered.length;
+    if (els.age.value === DEFAULT_AGE && !els.q.value.trim() && !els.src.value
+        && hidden > 0) {
+      note.innerHTML = "Showing the last 90 days. <b>" +
+        hidden.toLocaleString() + "</b> older row" + (hidden === 1 ? "" : "s") +
+        " are not in this view, including the oldest. " +
+        '<button type="button" class="linkbtn" id="showall">Show All ' +
+        ROWS.length.toLocaleString() + "</button>";
+      note.hidden = false;
+      $("showall").addEventListener("click", function () {
+        // "any" rather than "": this has to survive a reload and a paste, and an
+        // empty value writes a URL with no parameters, which is the one the
+        // default applies to.
+        els.age.value = "any";
+        render(); writeUrl(true); $("n").focus ? null : null;
+      });
+    } else {
+      note.hidden = true; note.innerHTML = "";
+    }
+
     if (!filtered.length) {
       $("list").innerHTML =
         '<div class="empty"><b>Nothing matches ' + describeFilters() + ".</b>" +
         "<p>" + ROWS.length.toLocaleString() + " rows are being tracked. " +
         "Try a different term, or widen a filter.</p>" +
-        '<button type="button" class="morebtn" id="clear">Clear filters</button></div>';
+        '<button type="button" class="morebtn" id="clear">Clear Filters</button></div>';
       $("clear").addEventListener("click", function () {
-        els.q.value = ""; els.src.value = ""; els.minage.value = "";
+        // Derived from `els`, not a typed list: the typed version still cleared
+        // `minage` after that control was renamed, so "Clear filters" left the
+        // age filter set and the empty state on screen.
+        Object.keys(els).forEach(function (k) { els[k].value = ""; });
+        // `age` has no empty option any more, so clearing it to "" would leave
+        // the select showing nothing. "any" is the explicit everything state.
+        els.age.value = "any";
         render(); writeUrl(); els.q.focus();
       });
       $("more").hidden = true;
@@ -226,7 +391,7 @@
       var left = filtered.length - slice.length;
       $("more").hidden = left <= 0;
       $("more").textContent = left > 0
-        ? "Show " + Math.min(PAGE, left).toLocaleString() + " more of " + left.toLocaleString()
+        ? "Show " + Math.min(PAGE, left).toLocaleString() + " More of " + left.toLocaleString()
         : "";
     }
     // Announced, because a filter that changes the list without saying so is
@@ -239,7 +404,11 @@
     var bits = [];
     if (els.q.value.trim()) { bits.push("\u201c" + els.q.value.trim() + "\u201d"); }
     if (els.src.value) { bits.push("in " + (NAMES[els.src.value] || els.src.value)); }
-    if (els.minage.value) { bits.push("public " + els.minage.value + "+ days"); }
+    var a = ageBound(els.age.value);
+    if (a) {
+      bits.push(a.max !== undefined ? "public under " + a.max + " days"
+                                    : "public " + a.min + "+ days");
+    }
     return bits.join(" ") || "that filter";
   }
 
@@ -259,12 +428,25 @@
   }
   function readUrl() {
     var p = new URLSearchParams(location.search);
+    // No query at all means the reader arrived at the front door rather than at a
+    // view someone sent them, so the default applies. Any parameter at all, even
+    // one this control does not read, means they are looking at something chosen.
+    if (!location.search) { els.age.value = DEFAULT_AGE; }
     Object.keys(els).forEach(function (k) { if (p.get(k) !== null) { els[k].value = p.get(k); } });
+    // ?minage=90 was this control's parameter until 2026-08-27. Any link shared
+    // before then still points at a real view, so it is translated rather than
+    // ignored: "90" normalises to "90+" via ageBound, and setting the select to
+    // the canonical value means the next writeUrl migrates the URL.
+    var legacy = p.get("minage");
+    if (legacy !== null && p.get("age") === null) {
+      var b = ageBound(legacy);
+      if (b && b.min !== undefined) { els.age.value = b.min + "+"; }
+    }
   }
 
   els.q.addEventListener("input", function () { render(); writeUrl(false); });
   els.src.addEventListener("change", function () { render(); writeUrl(true); });
-  els.minage.addEventListener("change", function () { render(); writeUrl(true); });
+  els.age.addEventListener("change", function () { render(); writeUrl(true); });
   window.addEventListener("popstate", function () { readUrl(); render(); });
   $("more").addEventListener("click", function () {
     shown += PAGE; render(false);
@@ -279,14 +461,24 @@
     panel.classList.toggle("on", open); scrim.classList.toggle("on", open);
     opener.setAttribute("aria-expanded", open ? "true" : "false");
     document.body.classList.toggle("locked", open);
-    (open ? panel : opener).focus();
+    // THE PANEL OPENS AT THE TOP, and it did not.
+    //
+    // It is its own scroll container and kept its position across opens, so a
+    // reader who read it through, closed it, and pressed "What is this?" again
+    // landed 2,627px down a 3,528px panel, in the middle of a policy argument,
+    // under a button that had just asked them a question. Measured, not guessed.
+    //
+    // preventScroll matters as well as scrollTop. Focusing a tall element that is
+    // its own scrollport makes the browser scroll it to bring the focused thing
+    // into view, and here the focused thing IS the scrollport, so Chrome scrolls
+    // to the bottom. Setting scrollTop without this gets undone by the focus call
+    // on the next line.
+    if (open) { panel.scrollTop = 0; }
+    if (open) { panel.focus({preventScroll: true}); } else { opener.focus(); }
   }
   opener.addEventListener("click", function () { setPanel(true); });
-  // The hedge's own "Why" opens the same panel. Bound rather than duplicated, so
-  // there is one panel and one open path; setPanel returns focus to `opener`,
-  // which is the command-bar button, and that is the right place to land because
-  // it is the persistent control rather than a sentence the reader has scrolled past.
-  $("hedge-more").addEventListener("click", function () { setPanel(true); });
+  // The hedge's own "Why" opened this panel too and went with the hedge on
+  // 2026-08-27. The command bar's "What is this?" is the only opener now.
   $("panel-close").addEventListener("click", function () { setPanel(false); });
   scrim.addEventListener("click", function () { setPanel(false); });
 

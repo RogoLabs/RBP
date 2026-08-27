@@ -19,7 +19,7 @@ showing up." Five routes:
 | route | what it is |
 |---|---|
 | `/` | the rows, a command bar over them, and a slide-over carrying the argument |
-| `/method.html` | how the count is built, the coverage table, the launch checklist |
+| `/method.html` | how the count is built, the coverage table, the limits |
 | `/policy.html` | the policy text and what changed in v2.0.0 |
 | `/status.html` | whether the last run was complete, per-feed health, cadence, movement |
 | `/about-this-count.html` | the holding-page copy in the site chrome, written in both postures |
@@ -33,12 +33,16 @@ grader still run, so a v2 naming release starts from real graded n rather than
 from one.
 
 **The gate clears.** `GATE_TOP_N_PCT = 80.0` on top-50-CNAs-by-volume at the
-3-sighting floor. 41 of 50 on 2026-08-24. The re-derivation is in the constant's
-own comment in `rbp/site.py`.
+3-sighting floor. 42 of 50 on 2026-08-27, up from 41 on 08-24. The re-derivation is
+in the constant's own comment in `rbp/site.py`.
 
-**745 offline tests in about thirteen seconds, plus 32 browser tests.** The offline
+**809 offline tests in about fifteen seconds, plus 43 browser tests.** The offline
 suite gates the publication; the browser suite and the linter are on the commit
 path only and cannot stop a publish.
+
+**The front page opens on the last 90 days.** Not on everything, since 2026-08-27.
+The default is stated above the list with the full count and a control that clears
+it. See the decisions section below for why, and for what it does not fix.
 
 ---
 
@@ -143,6 +147,132 @@ run.
 
 ---
 
+## Decisions taken 2026-08-27, so they are not re-opened by accident
+
+Four of these were open questions in `docs/reviews/REVIEW-round6-pre-announce.md`.
+They are settled now, and each one is settled in a place a reader will find it
+rather than only here.
+
+**The corroborated count is gone, not repointed.** The `>=2 independent origins`
+figure produced a second headline: the `<h1>` rendered `summary.total` while
+`og:description` rendered `summary.corroborated`, so one link preview carried
+1,709 and 201 on adjacent lines. `report._indep`, `report._ORIGIN`,
+`indep_sources`, `single_origin` and `summary.corroborated` are all removed;
+`SCHEMA_VERSION` is 3. `sources` and `refs` still ship in full, so independence
+stays derivable by anyone who wants to compute it.
+
+**The launch-day epoch is retired, unused.** See PLAN.md. Setting it now would
+take a publicly indexed count to zero. The mechanism stays as insurance.
+
+**The front page opens on the last 90 days.** Sorted oldest-first with no filter,
+the first ten rows were all Android. The default is announced on the page with the
+full count and a control that turns it off, because the rows it hides are the
+oldest and therefore the strongest evidence the site has. **It only partly works,
+and the number is in the review**: distinct package groups in the first ten rows
+went from 2 to 4. The rows arrive in batches from one advisory, so any date sort
+clusters; the fix that attacks the cause is collapsing runs from one package, and
+it is not built.
+
+**`/method` no longer publishes the launch checklist.** A launched site publishing
+its own launch checklist reads as either out of date or not actually launched.
+`rbp/launch.py` and `tests/test_launch.py` are untouched and now have **no
+production caller**, which is a loose end left deliberately: the eight conditions
+are the design record, and deleting the module is a separate decision.
+
+**The hedge above the rows is gone, and NEXT.md's own argument is weaker for it.**
+"A floor, not a total..." sat ahead of the first CVE because it had been a
+`<caption>`, so the qualifier travelled with a copy, a print or a screen-reader
+pass. Jerry removed it. **The entry above about the degraded banner leaned on this
+hedge as one of four standing disclosures, and that leg is now gone**: the floor
+claim survives in the panel, which is a hidden dialog, on /method and in
+`rbp.json`, and none of those travels with a selection. So on a degraded run a
+reader who copies the rows carries neither the floor caveat nor a note that the
+count is lower than usual. Three disclosures remain, not four. If that gap ever
+looks too wide, the cheapest fix is a one-line floor note rather than the banner.
+
+**There is no removal channel and no email address on the site.** Retired from all
+five surfaces: the footer, the panel, the About copy, /method and
+`.well-known/security.txt`. The reasoning is the project's own from 2026-08-26: a
+row is listed only after the reservation endpoint confirms the ID is reserved and
+unpublished, so there is nothing to correct, and every row is an ID already
+referenced in a public advisory and held for the buffer, so there is nothing to
+withhold that is not already public.
+
+The cost, and it is the one accuracy does not reach: the case the channel answered
+was the **embargo**, not the error. A row can be entirely correct and its listing
+still cut across a live coordinated disclosure. That case now has no route here.
+
+`security.txt` stays valid on the GitHub private-advisory URL alone (RFC 9116
+needs one Contact) and now says explicitly that it is for a vulnerability in this
+site's own code and that the site operates no removal channel. **`RBP_WITHHOLD` is
+untouched**: it still drops rows from every artefact, `publish.check` still refuses
+to stage them, and it is still tested. The capability is kept and not advertised,
+which is a deliberate distinction. Item 3 below still asks for it to be rehearsed.
+
+**UI chrome is title case.** Control labels, options, optgroups, buttons, status
+chips and metric labels. Prose is not: placeholders, empty-state sentences, card
+headings and body copy stay sentence case, because title-casing a sentence reads
+as broken. Two guards asserted the old lower-case literals and are case-insensitive
+now, since what they are about is that a label exists rather than how it is cased.
+
+**The About/panel duplication STAYS, and this is the evidence.** Eight of the ten
+paragraphs on `/about-this-count` are byte-identical to the front-page panel, and
+every one of them is pinned to both surfaces by an existing test:
+`test_the_about_page_and_the_front_door_share_one_copy`,
+`test_the_front_page_quotes_the_clauses_that_cut_against_it`,
+`test_the_n_a_final_column_fact_is_on_both_front_doors` and
+`test_the_flow_versus_stock_distinction_is_on_the_holding_page`. The duplication
+is the mechanism by which the front page is not selective about the policy. Anyone
+trimming it is deleting that standard, not deleting a copy-paste.
+
+---
+
+## Pass 3, 2026-08-27: the polish items
+
+All six mediums and the reachable half of H5, each with a guard that fails
+without it, mutation-tested by putting the defect back.
+
+- **M2.** `.card-prose` is centred. It capped the measure at 78ch with no auto
+  margin, so /about-this-count was the only page whose cards stopped two thirds of
+  the way across, border ending mid-screen.
+- **M3.** The skip link is fully off screen. `top: -40px` against a computed
+  height of 41.6px left 1.6px of blue in the top-left corner of every page. The
+  offset derives from its own height now, so a padding change cannot uncover it.
+- **M4.** Six tables have `.sr-only` captions. The card heading above each one is
+  not in scope for someone moving table to table with a screen reader.
+- **M6.** The mobile menu closes: Escape (returning focus to the toggle), a click
+  outside, following a link, and crossing the breakpoint. It could only be opened.
+- **M7.** 71 rules deleted from `style.css`, 7,685 bytes, 23% of the file. Every
+  one referenced only classes that appear in no built page and no template:
+  `homepage-chart-*`, `stat-card`, `chart-export-*`, `dropdown-menu`,
+  `insight-card`, `quick-select-*`, `viz-*`, `year-grid`, `btn`, `row`. This is
+  the file whose duplicate unscoped rule caused the dark-theme AA failure.
+  `rbp/contrast.py` already worked *around* this dead CSS by filtering to
+  rendered classes; that workaround has less to do now.
+- **M8.** **Inter is self-hosted and the site makes no third-party request at
+  all.** One 48 KB variable woff2 under `static/fonts`, OFL text alongside it, one
+  `@font-face` at `font-weight: 100 900`, preloaded with `crossorigin` because the
+  face now lives inside `rbp.css` and would otherwise be discovered a round trip
+  late. Google served the *same* variable file for all five weights it declared,
+  so the four downloads were byte-identical; the site was also requesting a 300
+  weight nothing renders. `test_the_site_makes_no_third_party_request` asserts the
+  absence over every sub-resource rather than over the two font hosts by name, so
+  a future embed or analytics snippet fails it too.
+- **H5, half.** A `<noscript>` block on the list page pointing at `rbp.csv`,
+  `rbp.json` and the field definitions. The rows are drawn from the JSON island,
+  so zero CVE IDs appear in the served markup and the page was a command bar over
+  a blank space for reader modes, text browsers and non-rendering crawlers. Its
+  guard asserts the links resolve, and asserts the premise: if CVE IDs ever start
+  appearing in the markup it fails rather than passing about a problem that has
+  gone away.
+
+**H5's other half is not done and is a v2 conversation.** No individual CVE ID has
+a URL on this site, so a search for a specific reserved CVE will never reach it.
+That is the largest remaining gap in the design for a site whose purpose is to be
+cited.
+
+---
+
 ## The three things waiting for you
 
 ### 1. Decide whether the margin is acceptable
@@ -220,6 +350,15 @@ pull-request description as a reason merging was low-risk. **A launch is a
 settings change, deliberately, so that it is not a commit; the cost is that
 nothing in the repository changes when it happens and no test can see it.** If you
 flip a repository variable, this paragraph is part of the flip.
+
+**Ubuntu's feed now retries a failed page before truncating.** Three consecutive
+scheduled runs truncated on 503s and a connection reset, at offsets 0, 1280 and
+3000, each marking the run degraded. `_get` already retried three times at 1.5s,
+3s and 4.5s, so more of the same was not the answer: 200 back-to-back requests to
+one host hits load shedding. The retry is at the pagination level now, two extra
+attempts at 5s and 20s, bounded by a 120s budget for the whole feed. A feed that
+only completed because it waited says so in its status detail, so a healthy
+endpoint and one being carried by retries do not look identical on `/status`.
 
 **Merging to `main` publishes to that live site.** `deploy.yml` fires on
 `push: branches: [main]`, four scheduled runs a day plus every push. There is no

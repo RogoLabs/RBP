@@ -58,6 +58,8 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
    a public reference is an RBP.
 4. **Buffer.** A row is reportable only once it has been provably public for at
    least 7 days, which is 2.3x the 72-hour expectation. Configurable.
+   The list defaults to the last 90 days, with the full count and a control to
+   clear it stated above the rows.
 5. **Publish.** A static site plus JSON, CSV and a dated archive, on GitHub Pages,
    four times a day. Five pages: the list at `/`, `/method.html`,
    `/policy.html`, `/status.html` and `/about-this-count.html`. Before launch `/`
@@ -66,9 +68,11 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
 Whether the last run was complete, which feeds answered, how often the site has
 actually published and what moved since the previous run are all on
 **`/status.html`**, and nowhere else. The pages that carry the count carry no
-banner about the state of the build that produced it: the count's own hedge says
-it is a floor on every run, and `degraded` in `rbp.json` is the machine-readable
-answer.
+banner about the state of the build that produced it. `degraded` in `rbp.json` is
+the machine-readable answer, and the floor caveat is in the slide-over panel on
+the list page rather than in prose above the rows: that hedge was removed on
+2026-08-27, which is a real reduction in disclosure and is recorded in `NEXT.md`
+rather than left to be noticed.
 
 No server, no database, no runtime API calls. Every page is a file.
 
@@ -77,7 +81,8 @@ No server, no database, no runtime API calls. Every page is a file.
 | path | what it is |
 |---|---|
 | `rbp/` | the pipeline and the site builder |
-| `templates/`, `static/` | the rendered pages and their CSS. `_about-copy.html` is the holding-page prose, wrapped by `about.html` for the site route and `holding.html` for the pre-launch front door |
+| `templates/`, `static/` | the rendered pages, their CSS and the self-hosted font. `_about-copy.html` is the holding-page prose, wrapped by `about.html` for the site route and `holding.html` for the pre-launch front door. `static/fonts/` carries Inter and its licence: the site makes no third-party request |
+| `tools/` | authoring scripts run by hand, output committed. Not on the publish path |
 | `tests/` | the offline suite; `tests/render/` needs a browser |
 | `feedlab/` | per-feed scorecards, committed as evidence (see `FEEDS.md`) |
 | `.github/workflows/` | `ci.yml` on the commit path, `deploy.yml` on the publish path |
@@ -140,7 +145,7 @@ change a test result.
 | variable | effect |
 |---|---|
 | `RBP_LAUNCHED` | `1` makes `/` the dashboard. Unset, `/` is the holding page and the dashboard is `/overview.html`, noindexed. |
-| `RBP_EPOCH` | `YYYY-MM-DD`. Counts only IDs that went public on or after this date. |
+| `RBP_EPOCH` | `YYYY-MM-DD`. Counts only IDs that went public on or after this date. **Retired unused 2026-08-27**: the launch-day reset it existed for passed without being used, and setting it now would take a publicly indexed count to zero. The lever works and is kept as insurance. See `PLAN.md`. |
 | `RBP_PAUSE` | `1` runs the pipeline and publishes nothing. |
 | `RBP_MIN_AGE_DAYS` | the reportable buffer, in days. |
 | `RBP_WITHHOLD` | comma-separated CVE IDs to drop from every page and artefact. |
@@ -168,18 +173,29 @@ That boundary is enforced rather than intended:
 - `tests/test_no_attribution.py` asserts it as an import-graph property: importing
   `rbp.cli` must not load `rbp.inference` or `rbp.attribution`.
 
-## Asking for a row to be removed
+## There is no removal channel
 
-Email **rbp@rogolabs.net** with the CVE ID and nothing else. No reason, no detail,
-no confirmation that a vulnerability exists.
+Retired 2026-08-27. The site previously offered an email address and promised that
+a person would apply a removal by hand.
 
-A person reads it and applies the removal by hand, so it takes effect on the next
-build. No proof of affiliation is required. There is no automated route and no
-published count of withheld rows, so a removal leaves no audit trail on the site;
-that was a deliberate trade for a channel with nothing to fail silently.
+The reasoning is the same one that retired the automated channel a day earlier. A
+row appears only after the CVE Services reservation endpoint confirms the ID is
+reserved and unpublished, so there is nothing to correct; and every row is a CVE
+ID **already referenced in a public advisory**, held for the reportable buffer
+before it is listed, on a site that names no CNA, so there is nothing to withhold
+that is not already public.
+
+**The cost, stated because it is real.** The case the channel answered was the
+embargo rather than the error: a row that is entirely accurate and whose listing
+still cuts across a live multi-party disclosure. Verification does not reach that
+case, because the row being correct is its premise. That case has no route here.
+
+`RBP_WITHHOLD` still exists, still drops rows from every published artefact and is
+still tested. The capability is kept and simply not advertised.
 
 To report a vulnerability in this site's own code, open a [private security
-advisory](https://github.com/RogoLabs/RBP/security/advisories/new) instead.
+advisory](https://github.com/RogoLabs/RBP/security/advisories/new). That is the
+only contact this site offers, and `.well-known/security.txt` says so.
 
 ---
 

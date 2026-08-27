@@ -44,7 +44,6 @@ import shutil
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import clock
-from . import launch as launch_mod
 from . import schema as _schema
 
 # Pre-launch posture. The dashboard is built and reachable either way, because
@@ -383,6 +382,22 @@ def _normalise_legacy(rows, source="snapshot"):
         # every one of the 170 was in YESTERDAY's snapshot, read for the diff.
         print(f"  note: {source}: sanitised {descs} legacy description(s) on read "
               "(predates the description sanitiser)")
+    # Fields a previous schema published and this one does not. Dropped here for
+    # the same reason the names are: this is the one read path, so it is the only
+    # place that can promise an OLD snapshot is republished under the CURRENT
+    # contract. rbp.csv is projected through COLUMNS and would have dropped these
+    # on its own; rbp.json rows and the dated archive are not, and would not.
+    retired = 0
+    for r in rows:
+        if isinstance(r, dict) and any(k in r for k in _schema.RETIRED_ROW_FIELDS):
+            retired += 1
+            for k in _schema.RETIRED_ROW_FIELDS:
+                r.pop(k, None)
+    if retired:
+        print(f"  note: {source}: dropped retired field(s) "
+              f"{', '.join(_schema.RETIRED_ROW_FIELDS)} from {retired} row(s); "
+              f"schema v{_schema.SCHEMA_VERSION} does not publish them")
+
     # LAST, and unconditionally. Every read path into the site build goes through
     # here, including prior snapshots and the dated archive, so this is the one
     # place that can guarantee no name reaches a published artefact regardless of
@@ -877,7 +892,19 @@ def load(snap_root, data_dir):
         # the panel's ask was that the commitment be "checkable from outside".
         # Coverage is condition 1 of 9, so `gate` and `launch` answer different
         # questions and the templates must not present either as the other.
-        "launch": launch_mod.status(summary, gate),
+        # `launch` IS NOT IN THE CONTEXT ANY MORE, removed 2026-08-27 with the
+        # /method section that was its only reader.
+        #
+        # NEXT.md records the same shape as a defect once already: `site._changes`
+        # was computed on every run, put in the render context, and rendered by
+        # nothing, with five tests guarding an output no reader could reach. A
+        # structure computed for a template that no longer exists is exactly that,
+        # so it goes with the template rather than being left to be found.
+        #
+        # `rbp/launch.py` and tests/test_launch.py are UNTOUCHED and now have no
+        # production caller. That is a deliberate loose end rather than an
+        # oversight: the eight conditions are the design record, and deleting the
+        # module is a separate decision from unpublishing the section.
         # The published contract, rendered on /data rather than described there.
         # The rows the epoch removes. Read from the snapshot rather than recomputed,
         # so the page shows exactly what the pipeline held back. Never carries an
@@ -1095,6 +1122,15 @@ def _asset_versions():
             if name.endswith(".css"):
                 data = open(os.path.join(css, name), "rb").read()
                 out[name] = hashlib.sha256(data).hexdigest()[:10]
+    # The social card too, and for a harsher reason than the stylesheets. Slack,
+    # Teams and X cache an og:image against its URL for a long time and do not
+    # revalidate, so replacing the file at a fixed path leaves every previously
+    # unfurled link showing the old card indefinitely. The hash in the query is
+    # the only way to make a new card reach a channel that has already seen one.
+    card = os.path.join(STATIC, "img", "og-card.png")
+    if os.path.isfile(card):
+        out["og-card.png"] = hashlib.sha256(
+            open(card, "rb").read()).hexdigest()[:10]
     return out
 
 
@@ -1137,8 +1173,6 @@ def _env():
 # `rule_strength` never travels without `rule_certainty`. clock.py states the
 # rule that the qualifier must accompany the strength wherever it appears, and it
 # was in no template and no CSV, so a consumer could not reconstruct it at all.
-# `indep_sources` ships too: 314 of 553 rows showed feed_count >= 2 with
-# indep_sources == 1, all of them GHSA plus its own OSV mirror.
 # The published column contract lives in rbp/schema.py, once. This was a 25-field
 # list here and a 26-field list in a different order in report.build, under a
 # comment claiming the two CSVs were identical. Imported at the top of the module
@@ -1325,7 +1359,6 @@ def _write_data(out, ctx):
             "rows": len(snap_rows),
             "epoch": snap_sum.get("epoch"),
             "min_age_days": snap_sum.get("min_age_days"),
-            "corroborated": snap_sum.get("corroborated"),
         })
     archive_index = sorted(archive, key=lambda a: a["date"], reverse=True)
     _schema.write_json(
@@ -1407,6 +1440,15 @@ def build(out, snap_root, data_dir):
 
     if os.path.isdir(STATIC):
         shutil.copytree(STATIC, os.path.join(out, "static"), dirs_exist_ok=True)
+        # /favicon.ico AT THE ROOT, on top of the copy under static/.
+        #
+        # Browsers request /favicon.ico on their own, before and regardless of any
+        # <link rel="icon"> the page carries, so linking the SVG does not stop the
+        # request and without this file every first visit takes a 404. It is the
+        # one asset whose location is decided by the browser rather than by us.
+        _ico = os.path.join(STATIC, "favicon.ico")
+        if os.path.isfile(_ico):
+            shutil.copyfile(_ico, os.path.join(out, "favicon.ico"))
 
     launched = ctx["launched"]
     # The archive index is built by _write_data, which runs after the pages. /data
@@ -1438,15 +1480,27 @@ def build(out, snap_root, data_dir):
     os.makedirs(wk, exist_ok=True)
     _expires = (dt.datetime.now(dt.timezone.utc)
                 + dt.timedelta(days=365)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    # REWRITTEN 2026-08-27. This described a removal channel and led with a
+    # mailto:, and the removal promise is retired: a row is listed only once the
+    # reservation endpoint confirms the ID is reserved and unpublished, and every
+    # row is already referenced in a public advisory.
+    #
+    # The file stays and stays VALID. RFC 9116 requires at least one Contact, and
+    # the GitHub private-advisory URL is one; it is now the only one, and it is
+    # for vulnerabilities in this site's own code rather than for the data.
+    # Saying which, in the comment block, matters more here than anywhere else on
+    # the site: security.txt is the file someone reads when they have found
+    # something and are deciding whether this is the right door.
     _schema.write_text(
         os.path.join(wk, "security.txt"),
         "# rbptracker.org\n"
-        "# This site lists reserved CVE IDs that appear in public advisories.\n"
-        "# Every row here is a CVE ID already referenced in a public advisory.\n"
-        "# To ask that one be removed, email the address below giving the CVE ID\n"
-        "# and nothing else: no reason, no detail, no confirmation that a\n"
-        "# vulnerability exists. Read by a person, not a bot.\n"
-        "Contact: mailto:rbp@rogolabs.net\n"
+        "# This site lists CVE IDs that are in the Reserved state and are\n"
+        "# referenced in public advisories. Every row is an identifier that is\n"
+        "# already public, confirmed unpublished against the CVE Services\n"
+        "# reservation endpoint, and held for a buffer before it is listed.\n"
+        "#\n"
+        "# The contact below is for a vulnerability in THIS SITE'S OWN CODE.\n"
+        "# This site does not operate a removal channel for listed CVE IDs.\n"
         "Contact: https://github.com/RogoLabs/RBP/security/advisories/new\n"
         f"Expires: {_expires}\n"
         "Preferred-Languages: en\n"
@@ -1487,6 +1541,26 @@ def build(out, snap_root, data_dir):
         os.path.join(out, "about-this-count.html"),
         env.get_template("about.html").render(
             **ctx, page="about", page_file="about-this-count.html"))
+
+    # /404.html, IN BOTH POSTURES.
+    #
+    # GitHub Pages serves this file for any unmatched path, which is the only way
+    # to get a branded error page out of a static host. Without it every mistyped,
+    # truncated or stale link landed on GitHub's own "Page not found - GitHub
+    # Pages", with GitHub's branding and no route back here.
+    #
+    # Rendered rather than copied, so it carries the real nav, the real footer and
+    # the cache-busted stylesheet URLs. `page="404"` is read by base.html, which
+    # makes every link on the page root-absolute: this file answers for a path at
+    # ANY depth, so relative URLs would resolve against a directory that does not
+    # exist and the page would arrive unstyled and unnavigable.
+    #
+    # NOT in _PAGE_TEMPLATES: that list is what the nav and the link checker walk,
+    # and 404.html is neither a destination nor something any page should link to.
+    _schema.write_text(
+        os.path.join(out, "404.html"),
+        env.get_template("notfound.html").render(
+            **ctx, page="404", page_file="404.html"))
     if not launched:
         _schema.write_text(
             os.path.join(out, "index.html"),

@@ -429,8 +429,33 @@ def feed_alas(years):
     ]
 
 
-def feed_ubuntu(years, page_cap=200):
+# How hard to try a single page of Ubuntu's paginated sweep before giving up, and
+# how long the whole feed may spend retrying.
+#
+# `_get` ALREADY retries three times at 1.5s, 3s and 4.5s, and that is not what
+# was failing: three consecutive scheduled runs truncated anyway, at offsets 0,
+# 1280 and 3000, on 503s and a connection reset. The sweep is 200 requests to one
+# host back to back, so what it hits is load shedding rather than a dead endpoint,
+# and the answer to shedding is to wait longer than 4.5 seconds.
+#
+# These waits are at the PAGINATION level, on top of `_get`'s. A page that fails
+# every attempt at 5s and 20s is not a blip and the feed truncates honestly.
+#
+# The budget is the important number. Ubuntu is already 486s of a 784s gather, and
+# a run that retries every page would take longer than the six-hour cadence allows
+# while producing a worse feed than one that gives up and says so. When the budget
+# is spent the loop stops retrying and truncates, and the recorded reason says the
+# budget was hit rather than pretending the page simply failed.
+UBUNTU_PAGE_RETRIES = 2
+UBUNTU_RETRY_WAITS = (5, 20)
+UBUNTU_RETRY_BUDGET_S = 120
+
+
+def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
     out, offset, limit, capped = [], 0, 20, False  # Ubuntu API caps limit at 20
+    # ATTEMPTS AND RECOVERIES ARE DIFFERENT NUMBERS, and conflating them made the
+    # health line claim the opposite of what happened. See the note below.
+    retry_attempts, recovered_pages, retry_spent = 0, 0, 0.0
     # WHY the loop ended, not just that it ended. Three different exits used to
     # look identical from outside: the natural end of the data, an error response
     # laundered into an empty page, and the year heuristic firing early. Only the
@@ -441,14 +466,39 @@ def feed_ubuntu(years, page_cap=200):
     # improved while the data got worse.
     ended = "exhausted"
     while offset < page_cap * limit:
-        try:
-            data, code, _ = _get(f"https://ubuntu.com/security/cves.json?limit={limit}&offset={offset}", timeout=60)
-        # Broad on purpose: keep the partial results. A page that fails mid-sweep
-        # truncates the feed, which is recorded, rather than discarding every page
-        # already read.
-        except Exception as e:
-            print(f"  [ubuntu] stopped at offset {offset}: {e}", file=sys.stderr)
-            ended = f"error at offset {offset}: {str(e)[:80]}"
+        url = f"https://ubuntu.com/security/cves.json?limit={limit}&offset={offset}"
+        data = code = None
+        last_err = None
+        # Attempt 0 is the ordinary fetch; the rest are the pagination-level
+        # retries described above. Broad on purpose: keep the partial results. A
+        # page that fails every attempt truncates the feed, which is recorded,
+        # rather than discarding every page already read.
+        for attempt in range(UBUNTU_PAGE_RETRIES + 1):
+            try:
+                data, code, _ = _get(url, timeout=60)
+                if attempt:
+                    recovered_pages += 1   # it only got here BY retrying
+                last_err = None
+                break
+            except Exception as e:
+                last_err = e
+                if attempt == UBUNTU_PAGE_RETRIES:
+                    break
+                wait = UBUNTU_RETRY_WAITS[min(attempt, len(UBUNTU_RETRY_WAITS) - 1)]
+                if retry_spent + wait > retry_budget_s:
+                    print(f"  [ubuntu] retry budget spent at offset {offset}",
+                          file=sys.stderr)
+                    last_err = RuntimeError(
+                        f"{str(e)[:60]} (retry budget of {retry_budget_s}s spent)")
+                    break
+                print(f"  [ubuntu] {str(e)[:60]} at offset {offset}; "
+                      f"retrying in {wait}s", file=sys.stderr)
+                time.sleep(wait)
+                retry_spent += wait
+                retry_attempts += 1
+        if last_err is not None:
+            print(f"  [ubuntu] stopped at offset {offset}: {last_err}", file=sys.stderr)
+            ended = f"error at offset {offset}: {str(last_err)[:80]}"
             break
         rows = (data or {}).get("cves", []) if isinstance(data, dict) else []
         if not rows:
@@ -480,12 +530,32 @@ def feed_ubuntu(years, page_cap=200):
         offset += limit
     else:
         capped = True
+    # A feed that only completed because it waited has to say so. Otherwise the
+    # fix for the truncation looks identical on /status to the truncation never
+    # having happened, and the next person cannot tell a healthy endpoint from one
+    # being carried by retries.
+    #
+    # RECOVERED IS NOT ATTEMPTED, and the first version of this counted attempts
+    # and called them recoveries. The 2026-08-27 rehearsal caught it: Ubuntu 503'd
+    # twice and then 504'd, the page was never read, and the health line said
+    # "error at offset 20 ... recovered 2 page(s) on retry" -- a claim of success
+    # on the same line as the failure. That is the exact defect the docstring at
+    # the top of this function is about, reintroduced by the fix for it.
+    if recovered_pages:
+        note = f"; recovered {recovered_pages} page(s) on retry"
+    elif retry_attempts:
+        note = f"; {retry_attempts} retry attempt(s) did not recover it"
+    else:
+        note = ""
     if capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
-        record_feed("ubuntu", CAPPED, f"hit the {page_cap}-page cap; rows beyond it were not read")
+        record_feed("ubuntu", CAPPED,
+                    f"hit the {page_cap}-page cap; rows beyond it were not read{note}")
     elif ended != "exhausted":
         print(f"  [ubuntu] {ended}", file=sys.stderr)
-        record_feed("ubuntu", TRUNCATED, ended)
+        record_feed("ubuntu", TRUNCATED, ended + note)
+    elif recovered_pages:
+        record_feed("ubuntu", True, f"{len(out)} ids{note}")
     return out
 
 
@@ -1545,9 +1615,11 @@ def feed_samsung(years, url="https://security.samsungmobile.com/securityUpdate.s
 
     Most of the CVEs here are Google's, applied from the Android Security
     Bulletin, and those already arrive through OSV's Android ecosystem. That is
-    not a reason to skip them: a second independent origin is what moves a row
-    into the corroborated headline, and Samsung publishing a fix is a different
-    public event from Google publishing one.
+    not a reason to skip them: Samsung publishing a fix is a different public
+    event from Google publishing one, and the row's `sources` should say so.
+    (This used to read "a second independent origin is what moves a row into the
+    corroborated headline". There is no corroborated headline as of 2026-08-27;
+    the reason for reading the feed is unchanged.)
     """
     try:
         html = _get_text(url, timeout=60)

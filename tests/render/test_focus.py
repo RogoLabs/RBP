@@ -267,3 +267,344 @@ def test_the_page_behind_the_panel_is_not_scrollable_through_it(page, server):
         "() => getComputedStyle(document.body).overflow")
     assert overflow in ("hidden", "clip"), (
         f"the page behind the open dialog still scrolls (body overflow: {overflow})")
+
+
+def test_the_panel_opens_at_the_top_however_it_was_left(page, server):
+    """A reader who read the panel through, closed it, and pressed "What is this?"
+    again landed 2,627px down a 3,528px panel: the end of a policy argument, under
+    a button that had just asked them a question.
+
+    The panel is its own scroll container and kept its position across opens. Two
+    things fix it and BOTH are needed, which is why this asserts the outcome rather
+    than the implementation: `scrollTop = 0`, and `focus({preventScroll: true})`.
+    Focusing a tall element that is its own scrollport makes the browser scroll it
+    to reveal the focused thing, and here the focused thing IS the scrollport, so
+    without preventScroll the focus call undoes the reset on the very next line.
+
+    Three openings, because they fail differently: the first is trivially at zero,
+    the second is the one that regressed, and the third catches a page-scroll
+    interaction that a fresh-load test cannot see.
+    """
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}")
+
+    def open_and_read_top():
+        pg.click("#panel-open")
+        return pg.evaluate("() => document.getElementById('panel').scrollTop")
+
+    assert open_and_read_top() == 0, "the panel does not open at the top on a fresh load"
+
+    # Read it to the end, close, reopen. This is the case that shipped broken.
+    pg.evaluate("() => { const p = document.getElementById('panel');"
+                " p.scrollTop = p.scrollHeight; }")
+    scrolled = pg.evaluate("() => document.getElementById('panel').scrollTop")
+    assert scrolled > 0, (
+        "the fixture panel is too short to scroll, so this test cannot see the "
+        "defect it exists for")
+    pg.click("#panel-close")
+    assert open_and_read_top() == 0, (
+        "the panel reopened where it was left; a reader who read it through gets "
+        "the end of it when they ask the question again")
+
+    # And with the page itself scrolled, which is how focus() misbehaves.
+    pg.click("#panel-close")
+    pg.evaluate("() => window.scrollTo(0, 1200)")
+    assert open_and_read_top() == 0, (
+        "the panel is scrolled away from its top when opened from down the page")
+    assert pg.evaluate(
+        "() => document.getElementById('panel').querySelector('h2')"
+        ".getBoundingClientRect().top >= 0"), (
+        "the panel's first heading is above the viewport on open")
+
+
+def test_every_row_shows_that_it_opens(page, server):
+    """`list-style:none` plus a hidden ::-webkit-details-marker removed the native
+    disclosure triangle and nothing replaced it, so a row looked like a static card
+    and `cursor:pointer` was the only hint -- which needs a mouse already on the row.
+
+    Everything behind that interaction is the evidence: the per-feed first-seen
+    dates and the "open advisory" links. On the primary page of a site built to be
+    cited, the citations sat behind a control a reader had no way to know existed.
+
+    Measured as a rendered box rather than as the presence of a CSS rule, because
+    the affordance is a ::after drawn from two borders and a rule that computes to
+    zero size, transparent, or off-screen would satisfy any source-level check.
+    """
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}")
+
+    marker = pg.evaluate("""() => {
+      const s = document.querySelector('.rbprow > summary');
+      if (!s) { return null; }
+      const cs = getComputedStyle(s, '::after');
+      return {
+        w: parseFloat(cs.width) || 0,
+        h: parseFloat(cs.height) || 0,
+        display: cs.display,
+        borderRight: cs.borderRightWidth,
+        colour: cs.borderRightColor,
+        transform: cs.transform,
+      };
+    }""")
+    assert marker, "no row rendered, so there is nothing to check"
+    assert marker["display"] != "none", "the disclosure affordance is display:none"
+    assert marker["w"] >= 5 and marker["h"] >= 5, (
+        f"the disclosure affordance renders at {marker['w']}x{marker['h']}px, which "
+        "is not a control anyone can see")
+    assert parseable_px(marker["borderRight"]) >= 1, (
+        "the chevron is drawn from borders and has no border width")
+    assert "rgba(0, 0, 0, 0)" not in marker["colour"], (
+        f"the chevron is transparent ({marker['colour']})")
+
+    # And it has to CHANGE, or it reads as decoration rather than as state.
+    closed = marker["transform"]
+    pg.evaluate("() => { document.querySelector('.rbprow').open = true; }")
+    # The rotation is transitioned, so the computed value immediately after the
+    # attribute changes is still the OLD one. Polled rather than slept: a fixed
+    # wait is a guess about how long the transition takes, and the skip-link check
+    # in test_layout.py was flaky in CI for exactly this class of reason.
+    pg.wait_for_function(
+        "(prev) => getComputedStyle(document.querySelector('.rbprow > summary'),"
+        " '::after').transform !== prev",
+        arg=closed, timeout=3000)
+    opened = pg.evaluate("""() => getComputedStyle(
+        document.querySelector('.rbprow > summary'), '::after').transform""")
+    assert opened != closed, (
+        "the affordance looks identical open and closed, so it says a row is "
+        "expandable but never that it is expanded")
+
+
+def parseable_px(value):
+    try:
+        return float(str(value).replace("px", "").strip() or 0)
+    except ValueError:
+        return 0.0
+
+
+def test_the_open_dialog_is_modal_to_the_POINTER_not_only_to_TAB(page, server):
+    """The panel declares role="dialog" aria-modal="true", and for the pointer it
+    was not one.
+
+    `.scrim` was z-index 30 and `.panel` 31 against a `.header` at **1000**, so the
+    site header painted over both: undimmed, and its nav links and theme toggle
+    still hittable through the scrim. The keyboard trap in list.html was added for
+    exactly this concern and only ever covered Tab, so a page that announces the
+    rest of the document as hidden left it operable by mouse.
+
+    It also put the panel's own Close button underneath the theme toggle, which is
+    how this surfaced: a Playwright click on Close timed out reporting that
+    `#themeToggle` was intercepting.
+
+    Asserted with elementFromPoint rather than by reading z-index values, because
+    the numbers are only meaningful relative to every other stacking context on the
+    page and the question is simply whether a click lands in the dialog.
+    """
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}")
+    pg.click("#panel-open")
+
+    hits = pg.evaluate("""() => {
+      const at = (el) => {
+        const r = el.getBoundingClientRect();
+        const hit = document.elementFromPoint((r.left + r.right) / 2,
+                                             (r.top + r.bottom) / 2);
+        return hit ? (hit.closest('#panel, #scrim') ? 'modal' : hit.tagName +
+                      (hit.id ? '#' + hit.id : '')) : 'nothing';
+      };
+      const out = {};
+      const close = document.querySelector('.closebtn');
+      out.close = (() => {
+        const r = close.getBoundingClientRect();
+        const hit = document.elementFromPoint((r.left + r.right) / 2,
+                                              (r.top + r.bottom) / 2);
+        return hit === close ? 'close' : (hit ? hit.tagName + '#' + hit.id : 'nothing');
+      })();
+      for (const [k, sel] of [['toggle', '.theme-toggle'], ['logo', '.logo'],
+                              ['nav', '.nav-menu a']]) {
+        const el = document.querySelector(sel);
+        if (el) { out[k] = at(el); }
+      }
+      return out;
+    }""")
+
+    assert hits["close"] == "close", (
+        f"the dialog's own Close button is not the topmost element at its own "
+        f"coordinates; {hits['close']} is on top of it")
+    for part in ("toggle", "logo", "nav"):
+        assert hits.get(part, "modal") == "modal", (
+            f"the header's {part} is hittable through the open dialog "
+            f"({hits[part]}), so aria-modal=\"true\" is not true for a pointer")
+
+
+def test_the_close_button_stays_reachable_when_the_panel_is_scrolled(page, server):
+    """`.closebtn` was `position:absolute` inside a `position:fixed` panel that is
+    its own scroll container, so it was placed against the panel's padding box
+    including the scrolled-away part and rode off the top on the first scroll.
+
+    The panel is ~3,500px against a 900px viewport, so past the first screen the
+    only VISIBLE way out of a modal dialog was gone. Escape and the scrim still
+    worked, which is why it went unnoticed: the keyboard route was fine and the
+    one a mouse user can see was not.
+    """
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}")
+    pg.click("#panel-open")
+
+    scrolled = pg.evaluate("""() => {
+      const p = document.getElementById('panel');
+      p.scrollTop = p.scrollHeight;
+      return p.scrollTop;
+    }""")
+    assert scrolled > 0, (
+        "the fixture panel is too short to scroll, so this test cannot see the "
+        "defect it exists for")
+
+    box = pg.evaluate("""() => {
+      const r = document.querySelector('.closebtn').getBoundingClientRect();
+      return {top: r.top, bottom: r.bottom, h: window.innerHeight};
+    }""")
+    assert box["top"] >= 0 and box["bottom"] <= box["h"], (
+        f"Close sits at {box['top']:.0f}..{box['bottom']:.0f} in a "
+        f"{box['h']}px viewport after the panel is scrolled, so it is off screen")
+    # And it must still actually take the click.
+    pg.click("#panel-close")
+    assert pg.evaluate("() => document.getElementById('panel').hidden"), (
+        "Close was on screen but did not close the panel")
+
+
+def test_the_heading_keeps_its_unit_on_a_phone(page, server):
+    """`.cmd-count span{display:none}` below 640px took "reserved, public,
+    unpublished" out of the layout AND out of the accessibility tree, so the page's
+    only h1 was the bare string "1,691" -- no unit, no subject -- on the viewport
+    where most shared links are opened and for every screen reader on a phone.
+
+    Asserted on the h1's TEXT CONTENT AS RENDERED rather than on the CSS, because
+    the failure mode is a display rule three hundred lines away from the markup,
+    and because `display:none` and `visibility:hidden` and a zero-height clip all
+    look different in CSS and identical to a reader.
+    """
+    pg = page
+    pg.set_viewport_size({"width": 375, "height": 812})
+    pg.goto(f"{server}/{LIST_PAGE}", wait_until="load")
+
+    h1 = pg.evaluate("""() => {
+      const h = document.querySelector('h1');
+      return h ? {text: h.innerText.trim(), rect: h.getBoundingClientRect().height}
+               : null;
+    }""")
+    assert h1, "no h1 on the list page"
+    assert "reserved" in h1["text"].lower() and "unpublished" in h1["text"].lower(), (
+        f"at 375px the h1 reads {h1['text']!r}. A bare number is not a heading: it "
+        "names no unit and no subject.")
+    assert h1["rect"] > 0, "the h1 renders at zero height"
+
+
+def test_every_advisory_link_names_its_own_row(page, server):
+    """A screen reader's link list read "OSV" 44 times and "open advisory" more
+    than that, each pointing somewhere different.
+
+    The visible label is the feed, which is right on screen because the CVE ID is
+    two lines above it, and useless out of that context. Fixed with aria-label
+    rather than visible text, so a sighted reader is not shown the id twice.
+
+    Asserted on the COMPUTED accessible name -- what aria-label actually resolves
+    to -- and as a uniqueness property over the whole rendered list rather than as
+    the presence of an attribute on one element.
+    """
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}", wait_until="load")
+
+    links = pg.evaluate("""() => {
+      const rows = [...document.querySelectorAll('.rbprow')];
+      rows.forEach(r => { r.open = true; });
+      return [...document.querySelectorAll('.rbprow a[href]')].map(a => ({
+        name: a.getAttribute('aria-label') || a.textContent.trim(),
+        href: a.getAttribute('href'),
+      }));
+    }""")
+    assert links, "no links rendered in the list, so this test is vacuous"
+
+    # THE PROPERTY IS "same name implies same destination", not "every name is
+    # unique". A row renders each feed twice on purpose -- once as a chip in the
+    # summary and once as "open advisory" in the expanded detail -- and both go to
+    # the same advisory, so sharing a name is correct there. What WCAG 2.4.4 is
+    # about, and what shipped, is one name over several destinations: "OSV" 44
+    # times and "open advisory" more than that, each pointing somewhere different.
+    by_name = {}
+    for link in links:
+        by_name.setdefault(link["name"], set()).add(link["href"])
+    ambiguous = {n: sorted(h)[:3] for n, h in by_name.items() if len(h) > 1}
+    assert not ambiguous, (
+        f"{len(ambiguous)} link name(s) point at more than one destination, e.g. "
+        f"{list(ambiguous.items())[:2]}. Out of the row's visual context they are "
+        "indistinguishable to anyone navigating by links.")
+
+    for link in links:
+        assert "CVE-" in link["name"], (
+            f"the link name {link['name']!r} does not identify its row")
+
+
+def test_the_default_view_is_announced_and_reversible(page, server):
+    """The front page opens on the last 90 days rather than on everything.
+
+    Sorted oldest-first with no filter, the first ten rows were all Android: eight
+    `platform/*` packages and two more with no package, every one from OSV alone,
+    every one at 572 days. A site that refuses to name a CNA opened on ten
+    near-identical rows naming one vendor's platform.
+
+    THE COST is that the rows it hides are the OLDEST, which are the strongest
+    evidence the site has, and that is the mechanism rather than a side effect. So
+    this asserts the default is ANNOUNCED, not merely applied: the notice has to
+    carry the number hidden and the full total, and offer a control that clears it.
+    A default that quietly drops the oldest rows would be the site editing its own
+    evidence.
+
+    The total matters twice over. og:title renders `summary.total`, so a reader
+    arriving from a link preview saw a number the page would otherwise no longer
+    show anywhere.
+    """
+    pg = page
+
+    # 1. A bare URL gets the default, and says so.
+    pg.goto(f"{server}/{LIST_PAGE}", wait_until="load")
+    state = pg.evaluate("""() => {
+      const n = document.getElementById('viewnote');
+      return {age: document.getElementById('age').value,
+              shown: document.getElementById('n').textContent,
+              noticeHidden: n.hidden, notice: n.innerText,
+              total: JSON.parse(document.getElementById('rows').textContent).length};
+    }""")
+    assert state["age"] == "90-", (
+        f"the front page did not open on the default view (age={state['age']!r})")
+    assert not state["noticeHidden"], (
+        "the default view is applied and not announced, so rows are missing with "
+        "nothing on the page saying so")
+    assert "oldest" in state["notice"].lower(), (
+        f"the notice does not say the hidden rows are the oldest: {state['notice']!r}")
+    assert f"{state['total']:,}" in state["notice"], (
+        f"the notice does not carry the full total {state['total']:,}, which is the "
+        f"number og:title shows a reader before they arrive: {state['notice']!r}")
+
+    # 2. The control clears it, and the cleared state survives a reload.
+    pg.click("#showall")
+    after = pg.evaluate("""() => ({
+      url: location.search,
+      age: document.getElementById('age').value,
+      shown: document.getElementById('n').textContent,
+      noticeHidden: document.getElementById('viewnote').hidden,
+    })""")
+    assert after["age"] == "any", "Show all did not clear the age filter"
+    assert after["noticeHidden"], "the notice still shows after the filter was cleared"
+    assert after["url"], (
+        "Show all left the URL empty, which is the URL the default applies to, so "
+        "a reload would silently put the filter back on")
+
+    pg.goto(f"{server}/{LIST_PAGE}{after['url']}", wait_until="load")
+    assert pg.evaluate("() => document.getElementById('age').value") == "any", (
+        "the cleared view did not survive a reload of its own URL")
+
+    # 3. A shared link is NEVER overridden by the default.
+    pg.goto(f"{server}/{LIST_PAGE}?age=365%2B", wait_until="load")
+    assert pg.evaluate("() => document.getElementById('age').value") == "365+", (
+        "the default overrode a filter someone had shared, so a link did not mean "
+        "what it said")

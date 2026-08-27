@@ -69,7 +69,22 @@ def _row(n, public_date="2026-08-05", days=19):
         "public_date": public_date,
         "sources": _LONG_SOURCES if n % 3 == 0 else "osv,ghsa",
         "feed_count": 10 if n % 3 == 0 else 2,
-        "dates": {"osv": public_date},
+        # PER-FEED DATES AND URLS FOR EVERY SOURCE THE ROW CLAIMS, not just osv.
+        #
+        # This was `{"osv": public_date}` with no `source_urls` at all, and the
+        # consequence was invisible: `chips()` renders a source with no URL as a
+        # non-link <span>, so no row in any render test had ever produced a single
+        # <a> in the list. The front page's whole evidence layer -- the feed chips
+        # and the per-feed "open advisory" links -- was unrendered, which makes any
+        # assertion about those links vacuous rather than failing.
+        #
+        # Caught by test_every_advisory_link_names_its_own_row, which asserts it
+        # found links before it asserts anything about them.
+        "dates": {src: public_date
+                  for src in (_LONG_SOURCES if n % 3 == 0 else "osv,ghsa").split(",")},
+        "source_urls": {
+            src: f"https://example.invalid/{src}/CVE-2025-{30000 + n}"
+            for src in (_LONG_SOURCES if n % 3 == 0 else "osv,ghsa").split(",")},
         "refs": _LONG_REF,
         "description": _LONG_DESC if n % 2 == 0 else "Cross-Site Scripting (XSS)",
         "veto_evaluated": False,
@@ -89,6 +104,14 @@ def _row(n, public_date="2026-08-05", days=19):
         "rule_strength": "MUST" if n % 5 == 0 else "SHOULD",
         "rule_basis": "unattributed",
         "rule_certainty": "unmeasurable",
+        # DELIBERATELY STILL HERE, and no longer produced by the pipeline.
+        #
+        # `indep_sources` and `single_origin` were removed from the row schema at
+        # v3 on 2026-08-27. This fixture keeps writing them so that it simulates a
+        # PRE-v3 snapshot, which is what every snapshot on the data branch is: the
+        # site rebuilds all of them on every run, so the read-path strip in
+        # site._normalise_legacy is exercised end to end here rather than only
+        # against a hand-built row.
         "indep_sources": 2 if n % 4 == 0 else 1,
         "package": _LONG_PACKAGE if n % 2 == 0 else "codingms/additional-tca",
         "ecosystem": "Packagist",
@@ -100,7 +123,25 @@ def _row(n, public_date="2026-08-05", days=19):
     }
 
 
-ROWS = [_row(n) for n in range(60)]
+# THE AGES HAVE TO CROSS THE 90-DAY BOUNDARY, and they did not.
+#
+# `days_public` ran 19 to 78 across all 60 rows, so every one of them was under 90
+# days. The front page defaults to the last 90 days, which meant the default
+# filter hid NOTHING in any render test: the notice that announces the default
+# never rendered, and a test asserting the default is announced would have passed
+# against a page where the question never arose.
+#
+# Caught by test_the_default_view_is_announced_and_reversible, which asserts the
+# notice is visible rather than asserting something about it if it happens to be.
+#
+# Every tenth row is aged past a year. That is the shape of the real data, where
+# the oldest rows are a small, old cluster and the bulk is recent, and it is the
+# shape the default view exists to deal with.
+def _spread(n):
+    return 19 + (400 if n % 10 == 0 else 0)
+
+
+ROWS = [_row(n, days=_spread(n)) for n in range(60)]
 
 # Pre-epoch, so backlog-at-launch.html has something to render.
 HELD_BACK = [_row(500 + n, public_date="2025-03-19", days=519) for n in range(12)]

@@ -113,7 +113,7 @@ def built(tmp_path, corpus, monkeypatch):
         "without exercising the de-naming at all")
 
     snaps = tmp_path / "snapshots"
-    sdir, _md, _kpi = report.build(backlog, fresh, str(snaps), "2026-08-20",
+    sdir, _md = report.build(backlog, fresh, str(snaps), "2026-08-20",
                                    {2026}, ["debian", "alas", "ghsa"], min_age=14)
 
     # cli.run writes summary.json, cnas.json and resolved.json AFTER report.build
@@ -442,20 +442,61 @@ def test_the_staged_tree_contains_only_allowlisted_files(built):
                 assert fn in publish.ALLOWED_SNAPSHOT, os.path.join(rel, fn)
 
 
+def _dead_internal_links(out):
+    """Every internal href on every built page that does not resolve to a file.
+
+    WIDENED 2026-08-27, twice, and both widenings were forced by real defects.
+
+    It matched `href="...html"` only. That left every `data/*.json` and
+    `data/*.csv` link on the site unchecked, and the one dead link on the live
+    site was a `.json`: the front-page panel pointed at `data/schema.json`, which
+    nothing writes, so it served GitHub's 404 to anyone who clicked it. The
+    duplicated copy of this check in tests/test_site.py had the identical blind
+    spot, so duplicating the test bought nothing against this class of bug.
+
+    And a leading-slash href was resolved against the FILESYSTEM root, so
+    `/method.html` became `/method.html` on disk and every root-absolute link read
+    as dead. The 404 page has to use root-absolute links -- GitHub Pages serves it
+    for an unmatched path at any depth, so relative URLs resolve against a
+    directory that does not exist -- which is what surfaced this.
+    """
+    import re
+    from urllib.parse import unquote, urlparse
+
+    pages = list(out.glob("*.html"))
+    assert pages, f"no pages built in {out}"
+    missing = []
+    for page in pages:
+        # <script> is stripped first. The row template in list.html builds hrefs
+        # by string concatenation, so the markup contains the literal
+        # `href="' + esc(urls[k]) + '"`, which is a JS fragment and not a link.
+        # Those URLs come from the data at runtime and cannot be checked here;
+        # `advisory_url` being populated on every row is asserted in test_pipeline.
+        markup = re.sub(r"<script\b.*?</script>", "", page.read_text(), flags=re.S)
+        for href in re.findall(r'(?:href|src)="([^"]+)"', markup):
+            if href.startswith(("http://", "https://", "mailto:", "#", "data:",
+                                "javascript:")):
+                continue
+            path = unquote(urlparse(href).path)
+            if not path:
+                continue          # a bare "?query" or "#frag" stays on this page
+            if path.startswith("/"):
+                target = out / path.lstrip("/")      # root-absolute: site root
+            else:
+                target = page.parent / path          # relative: this page's dir
+            if target.is_dir():
+                target = target / "index.html"
+            if not target.exists():
+                missing.append(f"{out.name}/{page.name} -> {href}")
+    return sorted(set(missing))
+
+
 def test_every_internal_link_in_the_built_site_resolves(built):
     """A nav entry pointing at a page the build no longer writes is a 404 on
     every page of the site. /cnas was in the nav after the template was deleted,
     and only a rebuild in a clean directory surfaced it."""
-    import re
     out = built["site"]
-    pages = list(out.glob("*.html"))
-    assert pages
-    missing = []
-    for p in pages:
-        for href in re.findall(r'href="([^"#?:]+\.html)"', p.read_text()):
-            target = (p.parent / href).resolve()
-            if not target.exists():
-                missing.append(f"{p.name} -> {href}")
+    missing = _dead_internal_links(out)
     assert not missing, f"dead internal links: {missing}"
 
 

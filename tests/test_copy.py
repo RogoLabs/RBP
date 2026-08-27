@@ -334,7 +334,7 @@ def test_no_published_figure_falls_back_with_a_bare_or(built):
     readers than the old lead ever did, so the rule moved with them and is
     asserted over every live template rather than one block of one page.
     """
-    figures = ("corroborated", "cnas_effective", "pct_effective", "total_cnas")
+    figures = ("cnas_effective", "pct_effective", "total_cnas")
     for tpl in sorted(TEMPLATES.glob("*.html")):
         body = tpl.read_text()
         for fig in figures:
@@ -351,17 +351,86 @@ def test_the_og_description_guards_on_values_not_on_the_parent_dict(built):
     of 434 CNAs (%)": a sentence with holes where the numbers go.
 
     Repointed from the deleted dashboard's bound-strip to base.html's
-    og:description, which is where both figures live now and is the one string
-    link previews quote verbatim.
+    og:description, which is the one string link previews quote verbatim.
+
+    The corroborated half of this assertion is gone with the figure; the count's
+    own invariant is the test below.
     """
     src = (TEMPLATES / "base.html").read_text()
     og = re.search(r'<meta property="og:description" content="([^"]*)"', src)
     assert og, "base.html has no og:description"
     body = og.group(1)
-    assert "corroborated') is not none" in body, (
-        "the corroborated figure is not guarded on the value existing")
     assert "pct_effective') is not none" in body, (
         "the coverage figure is not guarded on the value existing")
+
+
+def test_the_unfurl_and_the_heading_carry_the_same_count(built):
+    """THE INVARIANT THAT BROKE, asserted so it cannot break the same way twice.
+
+    og:description published `summary.corroborated` while og:title and the h1
+    published `summary.total`. Both were deliberate when written: the front page
+    led with the corroborated subset, and the more defensible figure belonged in
+    the string that travels furthest. The 2026-08-26 pivot moved the h1 to the
+    total and left the unfurl behind, so for a day the live site's preview read
+    "1,709 reserved CVE IDs are public and unpublished" above "201 CVE IDs are in
+    the state the CVE Program calls Reserved but Public".
+
+    Nothing caught it because every guard on that string checked how the figure
+    was GUARDED, not WHICH figure it was.
+
+    Asserted on the templates rather than the built pages, because the pre-launch
+    posture renders a different og:description and the rule holds in both: a
+    reader must never be able to see two different counts of the same thing.
+    """
+    base = (TEMPLATES / "base.html").read_text()
+    lst = (TEMPLATES / "list.html").read_text()
+
+    og = re.search(r'<meta property="og:description" content="([^"]*)"', base)
+    assert og, "base.html has no og:description"
+
+    # The launched branch of og:description is the one that carries a count.
+    launched_og = og.group(1)
+    h1 = re.search(r'<h1 class="cmd-count">\s*<b[^>]*>(.*?)</b>', lst, re.S)
+    assert h1, "list.html has no h1 count"
+    og_title = re.search(r'{% block og_title %}(.*?){% endblock %}', lst, re.S)
+    assert og_title, "list.html has no og_title block"
+
+    def figure(expr):
+        """Which summary key the expression renders."""
+        keys = set(re.findall(r"summary\.(\w+)", expr))
+        keys |= set(re.findall(r"summary\.get\('(\w+)'\)", expr))
+        keys |= set(re.findall(r'summary\.get\("(\w+)"\)', expr))
+        return keys - {"get", "coverage"}
+
+    heading = figure(h1.group(1))
+    assert heading == {"total"}, f"the h1 renders {heading}, expected summary.total"
+
+    for name, expr in (("og:title", og_title.group(1)),
+                       ("og:description", launched_og)):
+        used = figure(expr)
+        count_keys = used - {"coverage", "pct_effective"}
+        assert count_keys == heading, (
+            f"{name} renders {sorted(count_keys)} while the h1 renders "
+            f"{sorted(heading)}. A preview and the page it previews must not "
+            "carry two different counts of the same thing.")
+
+    # And the figure that caused it must be absent from every template.
+    #
+    # Scoped to a `summary.` reference on purpose, twice over. Jinja comments are
+    # stripped first, because base.html carries a comment explaining why the
+    # figure went and a guard that forbids explaining itself is a bad guard. And
+    # the bare word is legitimate elsewhere: /method describes the attribution
+    # tier where the product map corroborates a block-inferred OWNER NAME, which
+    # is an entirely different mechanism that shares the word and is switched off
+    # by NAMING_ENABLED rather than removed.
+    figure_ref = re.compile(r"summary(?:\.corroborated|\.get\(['\"]corroborated)")
+    for tpl in sorted(TEMPLATES.glob("*.html")):
+        markup = re.sub(r"{#.*?#}", "", tpl.read_text(), flags=re.S)
+        hit = figure_ref.search(markup)
+        assert not hit, (
+            f"{tpl.name} renders `{hit.group(0)}`, a summary figure removed from "
+            "the pipeline on 2026-08-27. Jinja renders a missing key as empty, so "
+            "it would print a sentence with a hole where the count goes.")
 
 
 def test_no_page_leads_with_a_single_cna_share(built):
@@ -406,6 +475,13 @@ _NO_ROW_LEVEL_CLAIM = {
     # many rows came out; it lists no row and names no party, so a caveat about how
     # to read an individual row has nothing to attach to. Added 2026-08-26.
     "status.html",
+    # The 404 page. Added 2026-08-27, and argued out on exactly the same ground as
+    # status.html: it renders no row, quotes no count and names no party, so a
+    # caveat about how to read an individual row has nothing on the page to attach
+    # to. It does carry the legitimacy claim in its meta description, which is the
+    # one thing that travels off it, and
+    # test_the_meta_description_makes_no_absolute_claim covers that.
+    "404.html",
 }
 
 
@@ -498,9 +574,14 @@ def test_the_about_page_and_the_front_door_share_one_copy(built_site):
     partial = PLACEHOLDER.read_text()
     # A sentence from each of the three passages the project names as load-bearing:
     # the glossary provenance, the 4.5.1.7 quotation, and the narrow ask.
+    # "should not be listed, ask" was the third pinned phrase until 2026-08-27,
+    # when the removal ask was retired from every surface. The other two are the
+    # load-bearing ones the project names: the glossary provenance and the 4.5.1.7
+    # quotation. The third slot is the flow-versus-stock distinction, which is the
+    # other passage this project treats as not-to-be-summarised.
     for phrase in ("The term is the CVE Program's own",
                    "The Secretariat MAY publicly identify",
-                   "should not be listed, ask"):
+                   "will not be that series"):
         assert phrase in partial, f"the shared copy lost {phrase!r}"
         for page in ("index.html", "about-this-count.html"):
             assert phrase in _text(built_site / page), f"{page} lost {phrase!r}"
@@ -597,15 +678,46 @@ def test_no_surface_promises_the_withhold_channel_that_was_removed(built, phrase
             f"({phrase!r}). The channel is an email address read by a person.")
 
 
-def test_the_channel_that_does_exist_is_described_everywhere_it_is_offered():
-    """The other half. Removing the false promise must not remove the ask: a CNA
-    who wants a row gone has to be told how, on the holding page and on /method,
-    which are the two pages they arrive on."""
-    for path in (PLACEHOLDER, TEMPLATES / "method.html"):
-        body = path.read_text().lower()
-        assert "rbp@rogolabs.net" in body, f"{path.name} offers no route at all"
-        assert "a person reads it" in body or "person reads it" in body, (
-            f"{path.name} does not say a human handles it")
+def test_no_surface_offers_a_removal_channel():
+    """INVERTED 2026-08-27. This required the removal ask on the holding page and
+    on /method, on the reasoning that a CNA who wants a row gone has to be told
+    how.
+
+    Jerry retired the promise. The reasoning is the project's own, from when the
+    automated channel went on 2026-08-26: a row is listed only after the CVE
+    Services reservation endpoint confirms the ID is reserved and unpublished, so
+    there is nothing to correct; and every row is an ID already referenced in a
+    public advisory, held for the reportable buffer, on a site that names no CNA,
+    so there is nothing to withhold that is not already public.
+
+    Asserted as an ABSENCE across every template, because a promise that comes
+    back on one surface is worse than one that never left: it would be the fourth
+    time a withhold ask went stale on a page nobody re-read.
+
+    THE COST, recorded where the promise used to be: the case this answered was
+    the embargo rather than the error, where a row is accurate and its listing
+    still cuts across a live coordinated disclosure. Verification does not reach
+    that case. It now has no route on this site.
+
+    `RBP_WITHHOLD` is deliberately NOT asserted absent. The lever still exists,
+    still drops rows from every artefact and is still tested; it is simply not
+    advertised, which is the distinction Jerry drew.
+    """
+    for path in sorted(TEMPLATES.glob("*.html")) + [PLACEHOLDER]:
+        body = path.read_text()
+        assert "rbp@rogolabs.net" not in body, (
+            f"{path.name} carries the removal address again")
+        low = body.lower()
+        # The prose that made it a promise, not merely the address.
+        for phrase in ("applies the removal by hand", "should not be listed, ask",
+                       "asking for a row to be removed"):
+            # Comments are allowed to explain the removal; rendered markup is not.
+            markup = re.sub(r"{#.*?#}", "", body, flags=re.S)
+            markup = re.sub(r"<!--.*?-->", "", markup, flags=re.S).lower()
+            assert phrase not in markup, (
+                f"{path.name} renders {phrase!r}, which promises a channel this "
+                "site no longer operates")
+        assert low.count("mailto:") == 0, f"{path.name} still renders a mailto:"
 
 
 def test_the_site_does_not_call_the_count_the_programs_own_metric():

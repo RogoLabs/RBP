@@ -452,9 +452,9 @@ def cmd_run(args):
                 "publish a site that reads 0 with no explanation. Move the epoch "
                 "back or unset it.")
 
-    sdir, md, kpi = report.build(backlog, fresh, SNAPS, today, years, sources, cov,
-                                 min_age=args.min_age_days, min_conf=args.min_confidence,
-                                 rows=reportable)
+    sdir, md = report.build(backlog, fresh, SNAPS, today, years, sources, cov,
+                            min_age=args.min_age_days, min_conf=args.min_confidence,
+                            rows=reportable)
 
     # Clock artefacts the site reads directly. Written after report.build so the
     # per-CNA view reflects the same buffered, owner-gated rows the tables show.
@@ -493,13 +493,9 @@ def cmd_run(args):
     stats = clock.summary(reportable, cnas, today=today, undated_excluded=undated,
                           epoch_excluded=len(pre_epoch))
     stats["min_age_days"] = args.min_age_days
-    # The corroborated subset: rows referenced by two or more INDEPENDENT origins,
-    # collapsing feeds that share a source (OSV re-publishes GHSA, ALAS is a RHEL
-    # rebuild). Computed by report.build since the beginning, printed to the build
-    # log, and published nowhere, so the front page led with the least defensible
-    # figure while the more defensible one existed one variable away.
-    stats["corroborated"] = len(kpi)
-    stats["single_origin"] = stats["total"] - len(kpi)
+    # `corroborated` and `single_origin` used to be written here. Removed
+    # 2026-08-27: they were a second headline, and the site publishes one. See the
+    # comment at the top of rbp/report.py. `stats["total"]` is the count.
     stats["inference"] = {
         "k": validation["k"],
         "run_coverage": validation["run_coverage"],
@@ -567,7 +563,7 @@ def cmd_run(args):
     schema.write_json(os.path.join(sdir, "cnas.json"), cnas)
     schema.write_json(os.path.join(sdir, "summary.json"), stats)
     print("\n" + "=" * 64)
-    print(f"HEADLINE core (reportable, >=2 independent sources): {len(kpi)}")
+    print(f"HEADLINE (reportable, publicly referenced >= {args.min_age_days}d): {stats['total']}")
     if NAMING:
         from . import inference
         named = sum(v for k_, v in validation["named"].items()

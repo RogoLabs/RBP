@@ -383,8 +383,29 @@ instrument, and the closures prove the open rows are real.
   public either way: the gate is on what the front door presents, not on hiding anything.
   Flip with the `RBP_LAUNCHED` repository variable, so launching is a settings change
   rather than a commit.
-- **Launch-day reset (decided 2026-08-20).** On launch the count starts from zero rather
-  than carrying the backlog gathered while coverage was still changing. Implemented as
+- **Launch-day reset: RETIRED 2026-08-27, unused.** Decided 2026-08-20, never fired, and
+  the window for it has closed. The reasoning below is kept because the mechanism is still
+  in the code and still correct; what changed is that it no longer has a moment to be
+  used in.
+
+  The site launched on 2026-08-26 without an epoch being set, and has been indexable at
+  around 1,700 rows ever since. Setting `RBP_EPOCH` now would take a publicly indexed
+  count to **zero**: measured on the 2026-08-27 snapshot, no row has an advisory date on
+  or after today, and only 50 rows are on or after 2026-08-20. The reset existed to avoid
+  launching on a backlog gathered while coverage was still changing; launching on that
+  backlog is what happened, and zeroing a number the world has already seen is a larger
+  instability than the one the reset was designed to prevent.
+
+  **What stays.** `RBP_EPOCH` remains a working repository variable, `rbp/clock.py` still
+  keys on the advisory date, the held-back archive is still published on every run, and
+  the launch-day zero state is still rendered and still tested. That is deliberate
+  insurance rather than dead weight: if this project ever needs to restart a count, the
+  machinery is there and proven, and the reason it was not used is here rather than in
+  someone's memory.
+
+  Jerry's call, 2026-08-27. The original reasoning follows.
+
+  Implemented as
   `RBP_EPOCH`, a date set via repository variable, keyed on the **advisory date** and not
   on when this site first saw a row. That choice is load-bearing: keyed on first-seen, a
   newly added feed would inject hundreds of years-old RBPs into the headline count, which
