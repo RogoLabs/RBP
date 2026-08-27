@@ -878,6 +878,33 @@ def test_cisa_is_read_through_its_pinned_feeds_when_the_canonical_host_403s(
         "the advisories were all read; a complete read is not a degraded one")
 
 
+def test_a_healthy_adapters_own_account_of_itself_survives_gather(monkeypatch):
+    """FOUND BY READING THE PUBLISHED ARTEFACT OF A GREEN RUN, NOT THE LOG.
+
+    `gather` kept an adapter's health detail only when the STATUS was bad news,
+    and replaced it with "<n> ids" otherwise. `feed_csaf` records OK with a
+    detail naming which of its 17 providers were read, which had nothing to say,
+    and which were reached by a route other than the one in the config. On any
+    run where nothing went wrong, all of that was overwritten.
+
+    So the CISA pinned-feed disclosure reached the build log and no page. A
+    disclosure that survives only when the run is also degraded is not one."""
+    feeds.reset_health()
+    def fake_feed(years):
+        feeds.record_feed("csaf", feeds.OK,
+                          "17/17 providers read; read via pinned feeds: www.cisa.gov",
+                          rows=2)
+        return [{"cve_id": "CVE-2026-0001", "source": "csaf", "source_ref": "a\tb\tc",
+                 "public_date": "2026-01-01", "product": "", "description": ""}]
+
+    monkeypatch.setitem(feeds.ADAPTERS, "csaf", fake_feed)
+    feeds.gather(["csaf"], {2026})
+    h = feeds.FEED_HEALTH["csaf"]
+    assert "read via pinned feeds: www.cisa.gov" in h["detail"], (
+        f"the adapter's account of itself was discarded by gather: {h['detail']}")
+    assert h["rows"] == 1, "the row count still has to be the one gather counted"
+
+
 def test_a_provider_with_no_pinned_fallback_is_still_reported_unreachable(
         monkeypatch):
     """The fallback must not become a blanket excuse for a 403."""

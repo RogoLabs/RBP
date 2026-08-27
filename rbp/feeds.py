@@ -1629,7 +1629,22 @@ def gather(sources, years):
         # place: a state recorded by an adapter and discarded by the caller. The
         # fix is the membership test, and the test that catches it is a mutation
         # test, because every assertion about ghsa's row count passes either way.
-        if FEED_HEALTH.get(s, {}).get("status") in (TRUNCATED, FAILED, CAPPED):
+        #
+        # AND THE SAME BUG SURVIVED IN THE `ok` HALF OF IT, found 2026-08-26 by
+        # reading the published artefact of a green run instead of the log.
+        # Testing the STATUS keeps an adapter's account of itself only when that
+        # account is bad news. `feed_csaf` records OK with a detail naming which
+        # of its 17 providers were read, which had nothing to say, and which were
+        # reached by a route other than the one in the config; every word of that
+        # was overwritten with "2732 ids" on any run where nothing went wrong.
+        #
+        # So CISA being read through pinned feeds rather than www.cisa.gov, the
+        # one fact on that line a reader most needs and the one the site promised
+        # to disclose, appeared in the build log and reached no page. A
+        # disclosure that only survives when a run is ALSO degraded is not a
+        # disclosure. Test for a detail, not for bad news.
+        h = FEED_HEALTH.get(s) or {}
+        if h.get("status") in (TRUNCATED, FAILED, CAPPED) or h.get("detail"):
             FEED_HEALTH[s]["rows"] = len(rows)
         else:
             record_feed(s, OK, f"{len(rows)} ids", rows=len(rows))
