@@ -360,9 +360,13 @@ def test_every_row_shows_that_it_opens(page, server):
     closed = marker["transform"]
     pg.evaluate("() => { document.querySelector('.rbprow').open = true; }")
     # The rotation is transitioned, so the computed value immediately after the
-    # attribute changes is still the OLD one. Waited out rather than removed: the
-    # transition is part of what makes the affordance read as state.
-    pg.wait_for_timeout(300)
+    # attribute changes is still the OLD one. Polled rather than slept: a fixed
+    # wait is a guess about how long the transition takes, and the skip-link check
+    # in test_layout.py was flaky in CI for exactly this class of reason.
+    pg.wait_for_function(
+        "(prev) => getComputedStyle(document.querySelector('.rbprow > summary'),"
+        " '::after').transform !== prev",
+        arg=closed, timeout=3000)
     opened = pg.evaluate("""() => getComputedStyle(
         document.querySelector('.rbprow > summary'), '::after').transform""")
     assert opened != closed, (

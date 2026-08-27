@@ -286,14 +286,39 @@ def test_the_skip_link_is_completely_off_screen_until_focused(page, server):
         "focused. The off-screen offset must derive from its own height rather "
         "than be a guessed constant.")
 
+    # THE MOVE IS TRANSITIONED, so it cannot be read in the same task as the
+    # focus() that starts it.
+    #
+    # The first version did exactly that and was flaky: locally Chrome resolved
+    # the layout to the focused position immediately and the test passed, and in
+    # CI the same code returned the resting position (-41.6) and it failed. Which
+    # value a synchronous getBoundingClientRect() sees depends on whether the
+    # style engine has started the transition yet, which is timing, not behaviour.
+    #
+    # Polled rather than slept: it returns as soon as the link has arrived instead
+    # of always costing a guessed interval, and if it never arrives the timeout
+    # says so rather than an assertion reporting a half-finished animation.
+    #
+    # This is the second time in one sitting: tests/render/test_focus.py's
+    # disclosure-chevron check was caught the same way, reading a rotation in the
+    # task that started it. Any assertion about a transitioned property has to
+    # wait for it.
+    pg.evaluate("() => document.querySelector('.skip-link').focus()")
+    pg.wait_for_function(
+        "() => document.querySelector('.skip-link').getBoundingClientRect().top"
+        " >= -0.5",
+        timeout=3000)
+
     focused = pg.evaluate("""() => {
-      const el = document.querySelector('.skip-link');
-      el.focus();
-      const r = el.getBoundingClientRect();
-      return {top: r.top, bottom: r.bottom};
+      const r = document.querySelector('.skip-link').getBoundingClientRect();
+      return {top: r.top, bottom: r.bottom, h: r.height};
     }""")
-    assert focused["top"] >= -0.5 and focused["bottom"] > 0, (
-        f"the skip link is still off screen when focused (top {focused['top']:.1f})")
+    assert focused["bottom"] > 0 and focused["h"] > 0, (
+        f"the skip link arrived on screen but has no visible box: {focused}")
+    assert pg.evaluate(
+        "() => document.activeElement === document.querySelector('.skip-link')"), (
+        "the skip link moved but is not the focused element, so something else "
+        "moved it and this test is measuring the wrong thing")
 
 
 def test_the_mobile_menu_can_be_closed(page, server):
