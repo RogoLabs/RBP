@@ -288,6 +288,27 @@ each, at FEEDS.md's rate of 2 to 3 CNAs per working day including the scorecard.
 The nine that would buy headroom: WPScan, dell, TR-CERT, sap, huawei, twcert, HCL,
 qnap, juniper.
 
+> **UPDATED 2026-08-27 by round 7. They are not nine of a kind, and the two this
+> section recommends do not have the routes it assumed.**
+>
+> **Three of them are two sightings short, not a parser short.** `dell`,
+> `TR-CERT` and `sap` each have exactly ONE sighting against a floor of three, so
+> they are counted in `cnas_sighted` and not in `cnas_effective`. Two more
+> sightings apiece takes the gate from 42 of 50 to 45. Twelve further roster CNAs
+> are a single sighting short. `python -m rbp.feedlab near-floor` now reports it;
+> nothing did before, although the difference between the published
+> `top_missed_effective` and `top_missed` lists was exactly this set all along.
+>
+> **The TWCERT and TR-CERT 200s are HTML pages.** Re-probed 2026-08-27: TR-CERT
+> serves the same 7,091-byte document at `/`, `/bildirim` AND `/rss.xml`, and
+> TWCERT's English locale 302s while only a 30KB Chinese-locale CMS listing
+> answers. Neither has a machine-readable route. "Two CNAs for two days" is not
+> costed against what is actually there. See FEEDS.md section 4 for the table.
+>
+> The recommendation below therefore stands as a QUESTION, not an answer: buy
+> margin, yes, but from the near-floor three rather than from the two named here,
+> and re-cost before budgeting either.
+
 - **Launch at one CNA of margin.** A quiet fortnight at two of them un-clears the
   gate. The failure is loud and reversible: `publish.gate` makes it a red check
   and the site demotes to the pre-launch posture rather than breaking.
@@ -318,6 +339,19 @@ carry forward: the scorecard baseline fetched all 12 feeds in 784 seconds and
 `ubuntu` alone was 486 of them. One feed is most of the wall clock and `gather` is
 a serial loop.
 
+> **UPDATED 2026-08-27.** The third is now both more urgent and more delicate.
+> The rebuilt baseline fetched all THIRTEEN feeds in 1,576.8 seconds and `ubuntu`
+> alone was **1,070.6** of them: 68% of the wall clock, 355 MB, for 3,994 rows
+> over a 38-day reach. `debian` read 17,909 rows over the whole window in 1.5
+> seconds. More delicate because the health recording `gather` must preserve now
+> includes per-provider CSAF parts and per-feed date spans, both added in round 7.
+> Parallelising the recording and then changing its shape is two migrations; the
+> shape changed first, so this is next rather than alongside.
+>
+> Round 7 also added a guard that was not on this list: a feed frozen at a
+> constant row count is invisible to `compare_magnitudes` by construction, and is
+> now caught on the date of its newest advisory instead.
+
 ### 3. Rehearse the withhold lever end to end
 
 **New, and it replaces the retired condition 4.** The lever now reads
@@ -333,6 +367,55 @@ a different reason and nothing reported that either.
 
 Covered by tests, which is not the same claim. If it does not work, the failure is
 worth more than the fix.
+
+---
+
+## Round 7: the data sources, 2026-08-27
+
+`docs/reviews/REVIEW-round7-data-sources.md`. A review of where the rows actually
+come from, and of what expansion is genuinely cheap. Every blocker, high and
+medium item is closed; the suite went 852 to 898.
+
+**The finding to carry.** This is a GitHub advisories tracker with distro
+corroboration and no surface said so. Of 1,709 rows, `ghsa` and `ghsa-repos`
+touch 1,436 and **1,021 exist only because of them**. `ghsa-repos` alone is the
+sole source for 1,015, 59% of the headline, off a hand-curated 1,875-repo file
+that does not self-refresh. Meanwhile `mozilla` (607 ids/run) and `arch` (62)
+had put **zero** rows on the site since they merged, and `/status` showed all
+thirteen feeds with one number each: ids fetched.
+
+**What changed on the surfaces**
+
+- `/status` publishes **IDs read, Rows, and Only source** per feed. `arch` now
+  reads `62 / 0 / 0` on the live page, which is the whole finding in three cells.
+- A feed that has stopped returning recent advisories degrades the run, checked
+  on the date of its newest advisory. A frozen feed returns a perfect row count
+  for ever, so no count-based guard could ever see it.
+- Feeds that publish no dates at all (`alpine`, `arch`, `debian`) are named as
+  `freshness_unmeasurable`, because "cannot be checked" must not read as "fine".
+- CSAF records one health entry **per provider**, so a provider going dark is
+  caught. Seventeen shared one number, which is how SUSE's 14,486 advisories were
+  lost and published as a fact about SUSE.
+
+**What changed underneath**
+
+- `ghsa-repos` finally has a scorecard: `detecting`, 1,231 unpublished
+  references and 5,771 disclosure lead, the highest of any feed. It had been 69%
+  of the site for a day with no verdict at all.
+- The baseline was rebuilt over all thirteen feeds and every feed re-audited.
+- FEEDS.md section 2's corroborating rule is **enforced** rather than only
+  written, after measuring that it costs zero effective CNAs today.
+- Four small OSV ecosystems merged behind their own scorecard, for seven
+  currently-unpublished ids at 0.3 MB. And `feed_osv` turned out to be unable to
+  fetch any ecosystem whose name contains a space, which is five of the 46.
+- GitLab's advisory DB is **rejected on measurement**: 80% GHSA re-publications
+  and a 30-day publication lag written into its own CI config, so it cannot clear
+  admissibility test 2 at any effort.
+
+**Still open, deliberately**: whether the Ubuntu cap moves (it reads 38 days of a
+three-year window and is 68% of the run's wall clock), `gather`'s serial loop, and
+widening the repo list, which is a mining problem rather than a fix. Plus four
+D-list decisions in the review that are yours.
 
 ---
 

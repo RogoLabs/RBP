@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 136,
+  "effective_n": 140,
   "feeds": [
    "alas",
    "alpine",
@@ -8,13 +8,14 @@
    "csaf",
    "debian",
    "ghsa",
+   "ghsa-repos",
    "mozilla",
    "msrc",
    "osv",
    "redhat",
    "ubuntu"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
  "bytes": 117683,
  "cnas_effective_alone": 10,
@@ -26,11 +27,11 @@
  "disclosure": {
   "dated_n": 344,
   "lead_examples": [
-   "CVE-2025-22424",
-   "CVE-2026-0018",
-   "CVE-2025-48616",
+   "CVE-2026-0039",
+   "CVE-2026-0059",
+   "CVE-2025-22426",
    "CVE-2026-0056",
-   "CVE-2026-0048"
+   "CVE-2026-0045"
   ],
   "lead_max_days": 61,
   "lead_median_days": 6,
@@ -50,12 +51,12 @@
  "feed": "samsung",
  "health": {},
  "ids": 420,
- "ids_new": 216,
- "scored_at": "2026-08-24T14:41:50+00:00",
+ "ids_new": 217,
+ "scored_at": "2026-08-28T00:45:00+00:00",
  "stability": null,
  "verdict": "detecting",
  "verdict_reason": "1 marginal CNA(s) and 260 lead / 76 unpublished references",
- "wall_seconds": 1.4,
+ "wall_seconds": 1.5,
  "years": [
   2025,
   2026

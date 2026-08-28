@@ -1,15 +1,15 @@
 {
- "baseline_scored_at": "2026-08-24T14:38:17+00:00",
+ "baseline_scored_at": "2026-08-28T00:43:40+00:00",
  "feeds": {
   "alas": {
    "cnas_new_effective": 1,
    "cnas_new_effective_names": [
     "Tcpdump"
    ],
-   "lead_n": 393,
-   "unpublished_n": 75,
+   "lead_n": 394,
+   "unpublished_n": 78,
    "verdict": "detecting",
-   "wall_seconds": 0.9
+   "wall_seconds": 0.8
   },
   "alpine": {
    "cnas_new_effective": 1,
@@ -17,9 +17,9 @@
     "naver"
    ],
    "lead_n": 0,
-   "unpublished_n": 107,
+   "unpublished_n": 103,
    "verdict": "detecting",
-   "wall_seconds": 5.5
+   "wall_seconds": 5.7
   },
   "arch": {
    "cnas_new_effective": 0,
@@ -27,34 +27,38 @@
    "lead_n": 0,
    "unpublished_n": 0,
    "verdict": "unmeasurable",
-   "wall_seconds": 1.5
+   "wall_seconds": 3.0
   },
   "csaf": {
-   "cnas_new_effective": 11,
+   "cnas_new_effective": 13,
    "cnas_new_effective_names": [
     "ABB",
     "CERTVDE",
     "CyberDanube",
-    "Esri",
+    "Mitsubishi",
     "Rockwell",
     "SICK_AG",
+    "Ubiquiti",
+    "WPScan",
     "fortinet",
     "jci",
     "palo_alto",
     "schneider",
     "siemens"
    ],
-   "lead_n": 582,
-   "unpublished_n": 171,
+   "lead_n": 610,
+   "unpublished_n": 61,
    "verdict": "detecting",
-   "wall_seconds": 193.9
+   "wall_seconds": 163.2
   },
   "debian": {
-   "cnas_new_effective": 9,
+   "cnas_new_effective": 11,
    "cnas_new_effective_names": [
+    "ClickHouse",
     "CyberArk",
     "ENISA",
     "GandC",
+    "Gridware",
     "PRJBLK",
     "Patchstack",
     "Perforce",
@@ -63,19 +67,38 @@
     "tenable"
    ],
    "lead_n": 0,
-   "unpublished_n": 401,
+   "unpublished_n": 230,
    "verdict": "detecting",
-   "wall_seconds": 2.3
+   "wall_seconds": 1.5
   },
   "ghsa": {
-   "cnas_new_effective": 1,
+   "cnas_new_effective": 7,
    "cnas_new_effective_names": [
-    "LY-Corporation"
+    "Checkmarx",
+    "ClickHouse",
+    "LY-Corporation",
+    "SEC-VLab",
+    "Toreon",
+    "Zoom",
+    "naver"
    ],
-   "lead_n": 1364,
+   "lead_n": 3800,
    "unpublished_n": 371,
    "verdict": "detecting",
-   "wall_seconds": 49.1
+   "wall_seconds": 146.0
+  },
+  "ghsa-repos": {
+   "cnas_new_effective": 4,
+   "cnas_new_effective_names": [
+    "ClickHouse",
+    "Gridware",
+    "ThinkstAppliedResearch",
+    "zephyr"
+   ],
+   "lead_n": 5771,
+   "unpublished_n": 1231,
+   "verdict": "detecting",
+   "wall_seconds": 146.7
   },
   "mozilla": {
    "cnas_new_effective": 0,
@@ -83,7 +106,7 @@
    "lead_n": 34,
    "unpublished_n": 0,
    "verdict": "corroborating",
-   "wall_seconds": 6.0
+   "wall_seconds": 5.5
   },
   "msrc": {
    "cnas_new_effective": 2,
@@ -91,38 +114,30 @@
     "Patchstack",
     "Tcpdump"
    ],
-   "lead_n": 4677,
-   "unpublished_n": 3,
+   "lead_n": 4810,
+   "unpublished_n": 2,
    "verdict": "detecting",
-   "wall_seconds": 6.1
+   "wall_seconds": 5.5
   },
   "osv": {
-   "cnas_new_effective": 19,
+   "cnas_new_effective": 11,
    "cnas_new_effective_names": [
     "Arm",
     "BombadilSystems",
-    "ERIC",
-    "GoogleCloud",
+    "Checkmarx",
+    "ClickHouse",
     "Google_Devices",
-    "Jaspersoft",
-    "Joomla",
     "Kong",
     "LY-Corporation",
-    "Liferay",
-    "PRJBLK",
-    "Sonatype",
-    "Temporal",
-    "WSO2",
-    "Wordfence",
-    "naver",
-    "rami.io",
-    "rapid7",
-    "tenable"
+    "SEC-VLab",
+    "Toreon",
+    "Zoom",
+    "naver"
    ],
-   "lead_n": 4762,
-   "unpublished_n": 460,
+   "lead_n": 4846,
+   "unpublished_n": 430,
    "verdict": "detecting",
-   "wall_seconds": 18.1
+   "wall_seconds": 10.7
   },
   "redhat": {
    "cnas_new_effective": 3,
@@ -131,10 +146,10 @@
     "Yugabyte",
     "hp"
    ],
-   "lead_n": 1515,
-   "unpublished_n": 103,
+   "lead_n": 1527,
+   "unpublished_n": 67,
    "verdict": "detecting",
-   "wall_seconds": 12.8
+   "wall_seconds": 16.1
   },
   "samsung": {
    "cnas_new_effective": 1,
@@ -144,7 +159,7 @@
    "lead_n": 260,
    "unpublished_n": 76,
    "verdict": "detecting",
-   "wall_seconds": 1.4
+   "wall_seconds": 1.5
   },
   "ubuntu": {
    "cnas_new_effective": 3,
@@ -153,12 +168,12 @@
     "ENISA",
     "Jaspersoft"
    ],
-   "lead_n": 22,
-   "unpublished_n": 113,
+   "lead_n": 20,
+   "unpublished_n": 102,
    "verdict": "detecting",
-   "wall_seconds": 486.2
+   "wall_seconds": 1070.6
   }
  },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-08-24T14:41:50+00:00"
+ "scored_at": "2026-08-28T00:45:01+00:00"
 }

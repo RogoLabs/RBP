@@ -37,6 +37,36 @@ import json
 import re
 import pathlib
 
+# Every posture lever, defined HERE rather than in tests/conftest.py.
+#
+# `tests/conftest.py` and `tests/render/conftest.py` are both imported by pytest
+# under the top-level module name `conftest`, so whichever is collected first wins
+# `sys.modules`. `tests/test_sitefixture.py` did `import conftest` and read this
+# tuple off it, which resolved to the render conftest on a full-suite run and to
+# the right one when that file was run alone. The guard that exists to catch an
+# unlisted lever therefore failed with AttributeError on every full run and passed
+# in isolation, which is the shape that reads as "flaky" and gets rerun rather than
+# fixed. `_sitefixture` is a unique module name, so this cannot recur.
+# Every environment variable that changes what the site publishes or how it decides
+# to publish it. Cleared for the whole session so no test inherits an operator's
+# shell or a workflow's env block.
+POSTURE_VARS = (
+    "RBP_LAUNCHED",     # front door: holding page or dashboard
+    "RBP_REHEARSE",     # skips the coverage-gate demotion
+    "RBP_EPOCH",        # zeroes the count from a date
+    "RBP_PAUSE",        # incident switch
+    "RBP_MIN_AGE_DAYS",  # the reportable buffer
+    "RBP_WITHHOLD",     # the withhold lever: ids dropped from every artefact
+    # Withdrawn levers, kept here so a stale value in an operator's shell cannot
+    # resurface as behaviour. RBP_SUPPRESS_KEY keyed the HMAC suppression list and
+    # RBP_ADVISORY_TOKEN authenticated the issue reader; both went with the
+    # automated withhold channel on 2026-08-26.
+    "RBP_SUPPRESS_KEY",
+    "RBP_ADVISORY_TOKEN",
+    "GITHUB_TOKEN",     # the corpus fetch, and the live oracle tests
+)
+
+
 # Content chosen to be hostile to layout and long enough to be realistic, because
 # tests/render measures reflow against this same fixture and a table of short
 # words cannot tell whether `overflow-wrap: anywhere` is still there.
@@ -197,8 +227,67 @@ def summary(rows, date=SNAPSHOT_DATE):
                       "live": {"graded": 0, "correct": 0, "precision": None,
                                "below_floor": True, "outstanding": 1,
                                "by_tier": {}}},
-        "feeds": {"requested": ["osv", "ghsa"], "failures": [], "attempts": 3,
-                  "truncated": [], "detail": {}},
+        # PER-FEED DETAIL, NOT `{}`. It was empty, so `/status`'s feed table fell
+        # through to the legacy "this snapshot records no per-feed detail"
+        # branch and every assertion about that table was satisfied by a
+        # paragraph. This file's own docstring is about exactly that: "a fixture
+        # that renders half the pages, or renders tables with no rows in them,
+        # satisfies those assertions vacuously."
+        #
+        # Shaped to carry the four cases the table has to tell apart, because a
+        # fixture where every feed looks the same cannot fail on a column that
+        # renders the same value for all of them:
+        #   osv    healthy, and the only source for some rows
+        #   ghsa   healthy, and the only source for none of them
+        #   ubuntu capped, with the reach stated in days rather than pages
+        #   arch   thousands of ids and ZERO published rows, which is round 7's
+        #          B4 finding and the reason the Rows column exists
+        #   csaf   a fan-out with per-provider parts, one of them unreachable
+        "feeds": {"requested": ["osv", "ghsa", "ubuntu", "arch", "csaf"],
+                  "failures": [], "attempts": 5, "truncated": [],
+                  "detail": {
+                      "osv": {"status": "ok", "detail": "12,434 ids", "rows": 12434,
+                              "ok": True, "truncated": False, "capped": False,
+                              "newest": "2026-08-26", "oldest": "2024-01-03",
+                              "dated_rows": 12000,
+                              "rows_published": 40, "rows_only": 12},
+                      "ghsa": {"status": "ok", "detail": "10,832 ids", "rows": 10832,
+                               "ok": True, "truncated": False, "capped": False,
+                               "newest": "2026-08-26", "oldest": "2024-01-02",
+                               "dated_rows": 10832,
+                               "rows_published": 28, "rows_only": 0},
+                      "ubuntu": {"status": "capped", "rows": 3994,
+                                 "detail": ("hit the 200-page cap at 4,000 records "
+                                            "of 75,993 (5.3%); read back to "
+                                            "2026-07-20, a 37-day window; the "
+                                            "configured window opens 2024-01-01, "
+                                            "so most of it was not read"),
+                                 "ok": False, "truncated": True, "capped": True,
+                                 "newest": "2026-08-26", "oldest": "2026-07-20",
+                                 "dated_rows": 3994,
+                                 "rows_published": 3, "rows_only": 0},
+                      "arch": {"status": "ok", "detail": "62 ids", "rows": 62,
+                               "ok": True, "truncated": False, "capped": False,
+                               "newest": "", "oldest": "", "dated_rows": 0,
+                               "rows_published": 0, "rows_only": 0},
+                      "csaf": {"status": "capped", "rows": 2695,
+                               "detail": ("17/17 providers read; 2695 ids; "
+                                          "unreachable: www.cisco.com"),
+                               "ok": False, "truncated": True, "capped": True,
+                               "newest": "2026-08-25", "oldest": "2024-02-01",
+                               "dated_rows": 2695,
+                               "rows_published": 2, "rows_only": 2,
+                               "parts": {
+                                   "www.cisco.com": {"status": "capped", "rows": 0,
+                                                     "detail": "provider unreachable",
+                                                     "ok": False, "truncated": True,
+                                                     "capped": True},
+                                   "cert-portal.siemens.com": {
+                                       "status": "ok", "rows": 2695,
+                                       "detail": "2695 ids in scope, 2695 new",
+                                       "ok": True, "truncated": False,
+                                       "capped": False}}},
+                  }},
         "coverage": {"total_cnas": 539, "cnas_effective": 117,
                      "cnas_sighted": 152, "cnas_own_channel": 2,
                      "min_sightings": 3, "pct_cnas": 28.2, "pct_effective": 21.7,

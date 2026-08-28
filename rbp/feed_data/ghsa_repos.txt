@@ -21,6 +21,15 @@
 # changed costs quota. A cold start costs one request per repo and resumes from a
 # saved cursor across runs, so it amortises rather than failing.
 #
+# curated: 2026-08-26
+#
+# The line above is machine-readable and `_repo_list_age_days` reads it, so this
+# list's age reaches the per-feed health line on every run. Update it whenever the
+# list is widened. It is asserted config in a codebase that prefers derived, for
+# the reason that function's docstring gives: the derived alternative is a mining
+# job nobody has scheduled, and an unmeasured decay is how a decision becomes a
+# default.
+#
 # NOT SELF-REFRESHING. Discovering a repository that publishes its FIRST
 # advisory is a mining problem and it is not solved here: a new publisher is
 # invisible to this file until the list is widened. Widening it is a change to

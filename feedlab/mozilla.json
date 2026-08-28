@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 137,
+  "effective_n": 141,
   "feeds": [
    "alas",
    "alpine",
@@ -8,13 +8,14 @@
    "csaf",
    "debian",
    "ghsa",
+   "ghsa-repos",
    "msrc",
    "osv",
    "redhat",
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
  "bytes": 823134,
  "cnas_effective_alone": 1,
@@ -25,10 +26,10 @@
   "dated_n": 606,
   "lead_examples": [
    "CVE-2025-5986",
-   "CVE-2025-8041",
    "CVE-2025-8042",
    "CVE-2025-8364",
-   "CVE-2025-54145"
+   "CVE-2025-8041",
+   "CVE-2025-54143"
   ],
   "lead_max_days": 29,
   "lead_median_days": 6,
@@ -43,11 +44,11 @@
  "health": {},
  "ids": 607,
  "ids_new": 20,
- "scored_at": "2026-08-24T14:41:48+00:00",
+ "scored_at": "2026-08-28T00:44:58+00:00",
  "stability": null,
  "verdict": "corroborating",
  "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
- "wall_seconds": 6.0,
+ "wall_seconds": 5.5,
  "years": [
   2025,
   2026

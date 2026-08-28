@@ -235,15 +235,40 @@
       here rather than simply yielding fewer rows, because counts are a floor and
       a silent shrink would read as improvement.
     </p>
+    <p class="small text-muted">
+      <strong>IDs read</strong> is how many CVE IDs the feed returned.
+      <strong>Rows</strong> is how many of the IDs listed on this site that feed
+      referenced, and <strong>Only source</strong> is how many of those no other
+      feed referenced. The three are very different numbers, and a feed can
+      return tens of thousands of IDs while accounting for none of the list.
+    </p>
+    {% if summary.feeds and summary.feeds.get('stale') %}
+    {# Same markup as the silent-shrink block below, deliberately. These are the
+       two failures a status field cannot show, they are read the same way, and
+       giving them different chrome would suggest a difference in kind. #}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>A feed has stopped returning recent advisories.</strong> A feed
+        that has silently stopped keeps returning the same number of IDs every
+        run, so every count-based check stays green. Checked on the date of the
+        newest advisory instead:
+      </p>
+      <ul class="mb-0">
+        {% for line in summary.feeds.stale %}<li class="mono small">{{ line }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
     {% set detail = (summary.feeds or {}).get('detail') or {} %}
     {% if detail %}
     <table class="table table-sm small">
-      <caption class="sr-only">Every configured advisory feed, the state it ended in, how many CVE IDs it returned, and any note about why it stopped.</caption>
+      <caption class="sr-only">Every configured advisory feed, the state it ended in, how many CVE IDs it returned, how many rows on this site it accounts for, how many of those it is the only source for, and any note about why it stopped.</caption>
       <thead>
         <tr>
           <th scope="col">Feed</th>
           <th scope="col">State</th>
-          <th scope="col" class="num">IDs</th>
+          <th scope="col" class="num">IDs read</th>
+          <th scope="col" class="num">Rows</th>
+          <th scope="col" class="num">Only source</th>
           <th scope="col">Note</th>
         </tr>
       </thead>
@@ -258,11 +283,25 @@
             {% else %}<span class="chip chip-must">Failed</span>{% endif %}
           </td>
           <td class="num">{% if h.rows is not none %}{{ h.rows | commafy }}{% else %}not recorded{% endif %}</td>
+          {# `is not none`, not truthiness: a feed that accounts for zero rows is
+             the finding, and `{% if h.rows_published %}` would render it as the
+             same blank as a snapshot that never measured it. Those are opposite
+             claims. Snapshots written before 2026-08-27 carry neither key and
+             correctly show the dash. #}
+          <td class="num">{% if h.rows_published is not none %}{{ h.rows_published | commafy }}{% else %}&mdash;{% endif %}</td>
+          <td class="num">{% if h.rows_only is not none %}{{ h.rows_only | commafy }}{% else %}&mdash;{% endif %}</td>
           <td class="text-muted">{{ h.detail or '' }}</td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
+    {% if summary.feeds and summary.feeds.get('freshness_unmeasurable') %}
+    <p class="small text-muted">
+      These feeds publish no dates at all, so their freshness cannot be checked
+      by any threshold. That is not the same as checked and fine:
+      <span class="mono">{{ summary.feeds.freshness_unmeasurable | join('; ') }}</span>
+    </p>
+    {% endif %}
     {% else %}
     {# The pre-first-run and legacy-snapshot state. A snapshot written before
        per-feed health existed has a `requested` list and no detail, and an empty

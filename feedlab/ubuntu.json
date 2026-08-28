@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 134,
+  "effective_n": 138,
   "feeds": [
    "alas",
    "alpine",
@@ -8,63 +8,64 @@
    "csaf",
    "debian",
    "ghsa",
+   "ghsa-repos",
    "mozilla",
    "msrc",
    "osv",
    "redhat",
    "samsung"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
- "bytes": 549663829,
- "cnas_effective_alone": 45,
+ "bytes": 355075478,
+ "cnas_effective_alone": 46,
  "cnas_new_effective": 3,
  "cnas_new_effective_names": [
   "Checkmk",
   "ENISA",
   "Jaspersoft"
  ],
- "cnas_reached": 60,
+ "cnas_reached": 59,
  "disclosure": {
-  "dated_n": 3882,
+  "dated_n": 3892,
   "lead_examples": [
-   "CVE-2026-61898",
-   "CVE-2026-61897",
    "CVE-2026-53587",
    "CVE-2026-53586",
-   "CVE-2026-53585"
+   "CVE-2026-53585",
+   "CVE-2026-53584",
+   "CVE-2026-53583"
   ],
-  "lead_max_days": 30,
+  "lead_max_days": 20,
   "lead_median_days": 17,
-  "lead_n": 22,
-  "lead_pct": 0.57,
-  "mirror_n": 3860,
+  "lead_n": 20,
+  "lead_pct": 0.51,
+  "mirror_n": 3872,
   "undated_n": 0,
   "unpublished_examples": [
+   "CVE-2025-30156",
    "CVE-2026-12061",
    "CVE-2026-12072",
    "CVE-2026-12074",
-   "CVE-2026-12841",
-   "CVE-2026-12876"
+   "CVE-2026-12841"
   ],
-  "unpublished_n": 113
+  "unpublished_n": 102
  },
  "feed": "ubuntu",
  "health": {
   "capped": true,
-  "detail": "hit the 200-page cap; rows beyond it were not read",
+  "detail": "hit the 200-page cap at 4,000 records of 76,753 (5.2%); read back to 2026-07-25, a 33-day window; the configured window opens 2025-01-01, so most of it was not read; recovered 1 page(s) on retry",
   "ok": false,
   "rows": null,
   "status": "capped",
   "truncated": true
  },
- "ids": 3995,
- "ids_new": 90,
- "scored_at": "2026-08-24T14:41:50+00:00",
+ "ids": 3994,
+ "ids_new": 54,
+ "scored_at": "2026-08-28T00:45:01+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "3 marginal CNA(s) and 22 lead / 113 unpublished references",
- "wall_seconds": 486.2,
+ "verdict_reason": "3 marginal CNA(s) and 20 lead / 102 unpublished references",
+ "wall_seconds": 1070.6,
  "years": [
   2025,
   2026

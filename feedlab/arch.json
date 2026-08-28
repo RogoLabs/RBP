@@ -1,12 +1,13 @@
 {
  "baseline": {
-  "effective_n": 137,
+  "effective_n": 141,
   "feeds": [
    "alas",
    "alpine",
    "csaf",
    "debian",
    "ghsa",
+   "ghsa-repos",
    "mozilla",
    "msrc",
    "osv",
@@ -14,9 +15,9 @@
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
- "bytes": 898722,
+ "bytes": 899017,
  "cnas_effective_alone": 10,
  "cnas_new_effective": 0,
  "cnas_new_effective_names": [],
@@ -37,11 +38,11 @@
  "health": {},
  "ids": 62,
  "ids_new": 0,
- "scored_at": "2026-08-24T14:41:45+00:00",
+ "scored_at": "2026-08-28T00:44:55+00:00",
  "stability": null,
  "verdict": "unmeasurable",
  "verdict_reason": "every one of its 62 references is undated and none is currently unpublished, so admissibility test 2 could not be run. Not a mirror; not measured. It must not be excluded from the coverage numerator on this evidence",
- "wall_seconds": 1.5,
+ "wall_seconds": 3.0,
  "years": [
   2025,
   2026

@@ -1,0 +1,64 @@
+{
+ "baseline": {
+  "effective_n": 141,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "ghsa-repos",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-28T00:43:40+00:00"
+ },
+ "bytes": 346099,
+ "cnas_effective_alone": 3,
+ "cnas_new_effective": 0,
+ "cnas_new_effective_names": [],
+ "cnas_reached": 7,
+ "disclosure": {
+  "dated_n": 51,
+  "lead_examples": [
+   "CVE-2026-40470",
+   "CVE-2026-12537",
+   "CVE-2026-46420",
+   "CVE-2026-47122",
+   "CVE-2026-47121"
+  ],
+  "lead_max_days": 97,
+  "lead_median_days": 13,
+  "lead_n": 24,
+  "lead_pct": 47.06,
+  "mirror_n": 27,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2026-28970",
+   "CVE-2026-28975",
+   "CVE-2026-28980",
+   "CVE-2026-41083",
+   "CVE-2026-43671"
+  ],
+  "unpublished_n": 7
+ },
+ "feed": "osv-small",
+ "health": {},
+ "ids": 58,
+ "ids_new": 6,
+ "note": "The eight unmerged SMALL OSV ecosystems, scored as one candidate before any were added to feed_osv. Four were merged (GitHub Actions, SwiftURL, Hackage, opam); VSCode, CRAN, GSD and UVI returned 0 in-scope ids and were deliberately left out. The large six (195MB of distro rebuilds) were not scored and not merged; see the comment above feed_osv.",
+ "scored_at": "2026-08-28T00:54:38+00:00",
+ "stability": null,
+ "verdict": "corroborating",
+ "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
+ "wall_seconds": 1.3,
+ "years": [
+  2025,
+  2026
+ ]
+}

@@ -37,14 +37,23 @@ from . import (cvelist, feeds, classify, report, coverage,
 # csaf 3,401 ids in 135.8s for +12 (ABB, CERTVDE, CyberDanube, PTC, Rockwell,
 # SICK_AG, TPLink, fortinet, jci, palo_alto, schneider, siemens). 142 seconds
 # against a 9-minute warm run and a 15-minute target.
+_WEEKLY = ("alas,ubuntu,debian,ghsa,ghsa-repos,redhat,alpine,osv,mozilla,arch,"
+           "csaf,msrc,samsung")
 PROFILES = {
-    "weekly": ("alas,ubuntu,debian,ghsa,ghsa-repos,redhat,alpine,osv,mozilla,arch,"
-               "csaf,msrc,samsung"),
-    # Kept as a distinct name even though it is now identical to weekly, so the
-    # workflow's --profile argument and the docs do not have to change, and so a
-    # future heavy source has somewhere to go.
-    "deep": ("alas,ubuntu,debian,ghsa,ghsa-repos,redhat,alpine,osv,mozilla,arch,"
-             "csaf,msrc,samsung"),
+    "weekly": _WEEKLY,
+    # ONE STRING, REFERENCED TWICE, not two identical literals.
+    #
+    # `deep` is kept as a name so `deploy.yml`'s --profile choice and the docs do
+    # not have to change, and so a future heavy source has somewhere to go. It
+    # was kept as a SECOND COPY of the same thirteen feeds, which is a config
+    # duplicate waiting to drift: adding a feed to one and not the other would
+    # silently give the two profiles different meanings again, and the last time
+    # they had different meanings the gate was measured on a profile the cron did
+    # not run and `siemens` showed as uncovered while already being configured.
+    # Aliasing makes them identical BY CONSTRUCTION rather than by coincidence,
+    # and `test_deep_is_an_alias_of_weekly_not_a_copy_of_it` fails the day
+    # someone edits one of them.
+    "deep": _WEEKLY,
 }
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -59,12 +68,20 @@ BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 # Runner-local handoff from `run` to `publish stage`. Never published.
 
 
-def degraded_state(*, failures, truncated, capped, dropped, shrunk):
+def degraded_state(*, failures, truncated, capped, dropped, shrunk, stale):
     """One flag a consumer can branch on, plus the reasons. `(bool, [str])`.
 
     EXTRACTED FROM cli.run so it can be tested. It could not be before, and the
     result was that the single most-rendered piece of state on the site had no
     test at all.
+
+    EVERY PARAMETER IS REQUIRED, none has a default, and that is deliberate. The
+    withdrawn `reports_unreadable` sat here as a keyword every caller had to pass
+    to say "no", and the lesson taken was the wrong one: the problem was a
+    parameter nothing could fire, not that parameters are required. A default on
+    `stale` would let a caller silently skip the one check that catches a frozen
+    feed, and the failure would be invisible because a frozen feed's row count is
+    perfect.
 
     `capped` is deliberately NOT a degradation. A configured page cap fires on
     every run by design: ubuntu's 200-page cap always fires and ghsa's 40-page
@@ -97,6 +114,13 @@ def degraded_state(*, failures, truncated, capped, dropped, shrunk):
         # hardcoded False from that day on, so the branch could not fire and the
         # parameter was a keyword every caller had to supply to say "no". The
         # instinct still applies if an automated route ever comes back.
+        # A feed that has stopped updating is worse than usual and, unlike a
+        # page cap, is not a standing limit fired by design, so it stays loud
+        # until someone fixes it. This is the one failure a row count cannot see:
+        # a frozen feed returns the same number every run for ever, and
+        # `compare_magnitudes` only asks whether a number went DOWN.
+        + [f"{len(stale)} feed(s) have stopped returning recent advisories"
+           for _ in [0] if stale]
         + [f"{len(shrunk)} feed(s) returned far fewer ids than last run"
            for _ in [0] if shrunk])
     return bool(reasons), reasons
@@ -353,8 +377,15 @@ def cmd_run(args):
     # to name a CNA outside it. It needs only the corpus and the refs, both of
     # which are already in hand.
     cyr = int(today[:4])
+    # FEEDS.md section 2's rule, enforced rather than only written. A feed whose
+    # scorecard says `corroborating` has never referenced an id that was
+    # unpublished at the time, so it can strengthen a row it did not find and
+    # cannot credit a CNA as observable. Read from the committed verdicts; an
+    # unreadable file excludes nothing and says so in `coverage.corroborating_feeds`.
+    from . import feedlab as _feedlab
     cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr),
-                           sources=sources, own_channels=clock.OWNER_FEEDS)
+                           sources=sources, own_channels=clock.OWNER_FEEDS,
+                           corroborating=_feedlab.corroborating_feeds())
     cov["profile"] = args.profile if not args.sources else "custom"
     _covered = set(cov.get("covered") or [])
     _sightings = cov.get("sightings") or {}
@@ -511,9 +542,16 @@ def cmd_run(args):
         "live": _unattributed_stratum(
             {k: v for k, v in validation["live"].items() if k != "misses"}),
     }
+    # ONE detail dict, built once. It was called twice on adjacent lines, which
+    # was harmless while it was a pure function of module state and stops being
+    # harmless the moment anything is folded into it: the copy published under
+    # "detail" and the copy the `truncated` list was derived from would be
+    # different objects, and only one of them would carry the contribution
+    # counts. Same class as every other two-writers-one-population bug in here.
+    feed_detail = feeds.merge_contribution(feeds.health_detail(), reportable)
     stats["feeds"] = {"requested": sources, "failures": failures, "attempts": attempts,
-                      "detail": feeds.health_detail(),
-                      "truncated": [k for k, v in feeds.health_detail().items()
+                      "detail": feed_detail,
+                      "truncated": [k for k, v in feed_detail.items()
                                     if v.get("status") == feeds.TRUNCATED]}
     # The reservation oracle's own health. Previously the tally was printed to a
     # build log and discarded, so `unresolved` and `never_allocated` reached no
@@ -531,7 +569,7 @@ def cmd_run(args):
                              .get("feeds") or {}).get("detail") or {})
     except Exception:
         _prev_detail = {}
-    shrunk = feeds.compare_magnitudes(_prev_detail, feeds.health_detail())
+    shrunk = feeds.compare_magnitudes(_prev_detail, feed_detail)
     if shrunk:
         print("  DEGRADED: a feed returned far fewer ids than last run, without "
               "failing or truncating. This is the silent shrink; the count below "
@@ -539,6 +577,19 @@ def cmd_run(args):
         for line in shrunk:
             print(f"    - {line}")
     stats["feeds"]["shrunk"] = shrunk
+    # Freshness, which the row count is structurally blind to. `unmeasurable` is
+    # published beside it rather than folded in: a feed returning no dates at all
+    # cannot be checked by any threshold, and letting that read as "checked and
+    # fine" is the same error as letting a cap read as a complete read.
+    stale, unmeasurable = feeds.stale_feeds(feed_detail, today=today)
+    if stale:
+        print("  DEGRADED: a feed has stopped returning recent advisories. It "
+              "will keep returning a healthy-looking row count for ever, which "
+              "is why this is checked on dates rather than on counts.")
+        for line in stale:
+            print(f"    - {line}")
+    stats["feeds"]["stale"] = stale
+    stats["feeds"]["freshness_unmeasurable"] = unmeasurable
     stats["oracle"] = oracle
     stats["corpus_lag_days"] = corpus_lag
     # Counts only, never ids. Publishing which rows are withheld would undo the
@@ -548,7 +599,7 @@ def cmd_run(args):
     # correctly. True whenever this run's count is a lower floor than usual.
     stats["degraded"], stats["degraded_reasons"] = degraded_state(
         failures=failures, truncated=truncated, capped=capped,
-        dropped=oracle["dropped"], shrunk=shrunk)
+        dropped=oracle["dropped"], shrunk=shrunk, stale=stale)
     stats["limitations"] = capped
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.
@@ -594,8 +645,16 @@ def build_parser():
     r = sub.add_parser("run")
     r.add_argument("--years", default="")
     r.add_argument("--profile", choices=list(PROFILES), default="weekly",
-                   help="source set: 'weekly' = fast distro/OSS + Mozilla (default); "
-                        "'deep' = also CSAF aggregator + Microsoft (heavy, monthly cadence)")
+                   # The old help promised "'deep' = also CSAF aggregator +
+                   # Microsoft (heavy, monthly cadence)". Both moved into
+                   # `weekly` on 2026-08-22, because the gate is measured on the
+                   # profile the cron actually runs, so the text described a
+                   # choice that had not existed for five days and offered an
+                   # operator a lever that does nothing.
+                   help="source set. 'weekly' and 'deep' are currently the SAME "
+                        "thirteen feeds: csaf and msrc moved into weekly when the "
+                        "gate started being measured on the profile the cron runs. "
+                        "'deep' is retained as a name for a future heavy source.")
     r.add_argument("--sources", default="",
                    help="explicit comma list, overrides --profile")
     r.add_argument("--today", default="")

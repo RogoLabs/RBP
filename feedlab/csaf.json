@@ -1,12 +1,13 @@
 {
  "baseline": {
-  "effective_n": 126,
+  "effective_n": 128,
   "feeds": [
    "alas",
    "alpine",
    "arch",
    "debian",
    "ghsa",
+   "ghsa-repos",
    "mozilla",
    "msrc",
    "osv",
@@ -14,27 +15,29 @@
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
- "bytes": 145702213,
- "cnas_effective_alone": 46,
- "cnas_new_effective": 11,
+ "bytes": 322282106,
+ "cnas_effective_alone": 53,
+ "cnas_new_effective": 13,
  "cnas_new_effective_names": [
   "ABB",
   "CERTVDE",
   "CyberDanube",
-  "Esri",
+  "Mitsubishi",
   "Rockwell",
   "SICK_AG",
+  "Ubiquiti",
+  "WPScan",
   "fortinet",
   "jci",
   "palo_alto",
   "schneider",
   "siemens"
  ],
- "cnas_reached": 60,
+ "cnas_reached": 73,
  "disclosure": {
-  "dated_n": 3019,
+  "dated_n": 2931,
   "lead_examples": [
    "CVE-2026-28387",
    "CVE-2026-28388",
@@ -43,36 +46,36 @@
    "CVE-2025-68160"
   ],
   "lead_max_days": 728,
-  "lead_median_days": 86,
-  "lead_n": 582,
-  "lead_pct": 19.28,
-  "mirror_n": 2437,
+  "lead_median_days": 56,
+  "lead_n": 610,
+  "lead_pct": 20.81,
+  "mirror_n": 2321,
   "undated_n": 0,
   "unpublished_examples": [
+   "CVE-2025-30156",
+   "CVE-2025-64649",
    "CVE-2026-13336",
    "CVE-2026-13337",
-   "CVE-2026-13348",
-   "CVE-2026-15937",
-   "CVE-2026-18545"
+   "CVE-2026-13348"
   ],
-  "unpublished_n": 171
+  "unpublished_n": 61
  },
  "feed": "csaf",
  "health": {
   "capped": false,
-  "detail": "16/17 providers read; 3190 ids; unreachable: www.cisco.com (HTTP Error 403: Forbidden); capped: www.huawei.com 12/121 directories; no advisories in scope: www.huawei.com, www.innomic.com, www.sick.com, www.suse.com",
-  "ok": false,
-  "rows": 3190,
-  "status": "truncated",
-  "truncated": true
+  "detail": "17/17 providers read; 2992 ids; no advisories in scope: www.huawei.com, www.innomic.com",
+  "ok": true,
+  "rows": 2992,
+  "status": "ok",
+  "truncated": false
  },
- "ids": 3190,
- "ids_new": 681,
- "scored_at": "2026-08-24T14:41:46+00:00",
+ "ids": 2992,
+ "ids_new": 936,
+ "scored_at": "2026-08-28T00:44:56+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "11 marginal CNA(s) and 582 lead / 171 unpublished references",
- "wall_seconds": 193.9,
+ "verdict_reason": "13 marginal CNA(s) and 610 lead / 61 unpublished references",
+ "wall_seconds": 163.2,
  "years": [
   2025,
   2026

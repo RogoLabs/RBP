@@ -91,9 +91,17 @@ def run(tmp_path, monkeypatch):
     corpus = _corpus()
     monkeypatch.setattr(cli, "ensure_corpus", lambda force=False: (corpus, {}))
     monkeypatch.setattr(feeds, "gather", lambda sources, years: dict(_REFS))
+    # SHAPED LIKE THE REAL `health_detail`, including the keys `gather` records
+    # per feed since 2026-08-27. A stub that returns fewer keys than the function
+    # it stands in for is a fixture that cannot see a consumer of the missing
+    # ones, and every assertion about them passes on a dict that never carries
+    # them. `newest`/`oldest`/`dated_rows` are recorded in `gather`, which this
+    # fixture also stubs, so without them there is nothing here to drift AGAINST.
     monkeypatch.setattr(feeds, "health_detail",
                         lambda: {s: {"status": "ok", "detail": "", "rows": 1,
-                                     "ok": True, "truncated": False}
+                                     "ok": True, "truncated": False,
+                                     "newest": "2026-08-26",
+                                     "oldest": "2025-01-04", "dated_rows": 1}
                                  for s in ("debian", "osv", "ghsa")})
     # Every referenced id is RESERVED with the assigner redacted, which is the
     # live endpoint's actual behaviour for the reserved population.
@@ -235,3 +243,72 @@ def test_the_artefacts_cmd_run_writes_are_all_allowlisted_for_staging(run):
                                      "report.md")]
     assert not unexpected, (
         f"cmd_run writes {unexpected}, which publish.check will refuse to stage")
+
+
+def test_the_run_measures_what_each_feed_contributed_to_the_published_rows(run):
+    """Round 7 B4, through the REAL `cli.run` rather than a hand-written summary.
+
+    The fixture in `_sitefixture` asserts the shape of this block, which it can
+    only do because someone typed the numbers into it. This asserts the pipeline
+    actually computes them, from the population it actually publishes.
+
+    Both halves matter and they fail differently. A missing key means `/status`
+    silently renders a dash for every feed; a key computed off the wrong
+    population means the column is confidently wrong, which is worse.
+    """
+    stats = json.loads((run() / "summary.json").read_text())
+    detail = stats["feeds"]["detail"]
+    assert detail, "per-feed health did not reach the summary"
+
+    for name, h in detail.items():
+        assert "rows_published" in h, f"{name} carries no contribution count"
+        assert "rows_only" in h, f"{name} carries no only-source count"
+        assert h["rows_only"] <= h["rows_published"], (
+            f"{name}: only-source {h['rows_only']} exceeds rows touched "
+            f"{h['rows_published']}, which is arithmetically impossible")
+        assert h["rows_published"] <= stats["total"], (
+            f"{name} touches {h['rows_published']} rows out of a published "
+            f"total of {stats['total']}")
+
+    # Sole-source rows partition: no row has two only-sources, so the sum over
+    # feeds cannot exceed the total. This is the assertion that catches the
+    # contribution being measured against the BACKLOG rather than the published
+    # population, which is a superset and would let the sum run over.
+    assert sum(h["rows_only"] for h in detail.values()) <= stats["total"]
+
+
+def test_every_source_on_a_published_row_is_a_feed_the_run_reported_health_for(run):
+    """The two halves of `summary.feeds` must describe the same feed set.
+
+    A source string on a published row with no health entry means a row is
+    evidenced by something the run never accounted for, and it would be invisible
+    to every guard keyed on the health block, `compare_magnitudes` included.
+    """
+    sdir = run()
+    stats = json.loads((sdir / "summary.json").read_text())
+    rows = json.loads((sdir / "backlog.json").read_text())
+    named = set()
+    for r in rows:
+        named |= {s for s in (r.get("sources") or "").split(",") if s}
+    unaccounted = named - set(stats["feeds"]["detail"])
+    assert not unaccounted, (
+        f"published rows cite feeds with no health record: {sorted(unaccounted)}")
+
+
+def test_the_run_records_how_recent_each_feed_is(run):
+    """H1's recording, through the summary a consumer actually reads.
+
+    A feed frozen at a constant is invisible to `compare_magnitudes`, which only
+    ever asks whether a number went DOWN. `mozilla` returned exactly 607 ids on
+    six consecutive published snapshots and `arch` exactly 62; had either stopped
+    updating on day one, every guard on this site would have stayed green. The
+    row count cannot see that. The newest date can, and it has to reach the
+    artefact or it is a log line.
+    """
+    detail = json.loads((run() / "summary.json").read_text())["feeds"]["detail"]
+    for name, h in detail.items():
+        assert "newest" in h, f"{name} publishes no newest-advisory date"
+        assert "dated_rows" in h, (
+            f"{name} publishes no dated-row count, so a feed that cannot be "
+            "checked for freshness is indistinguishable from one that was not "
+            "looked at")

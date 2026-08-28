@@ -353,7 +353,7 @@ def test_an_id_outside_the_window_does_not_credit_a_cna():
 # --------------------------------------------------------------------------
 
 ENTRY = {
-    "shortName": "acme",
+    "shortName": "apache",
     "securityAdvisories": {"advisories": [{"url": "https://psirt.acme.example/advisories"}],
                            "alerts": []},
     "contact": [{"contact": [{"url": "https://www.acme.example/security"}]}],
@@ -493,3 +493,303 @@ def test_a_feed_that_failed_is_named_in_the_baseline_rather_than_omitted():
     src = inspect.getsource(feedlab.build_baseline)
     assert '"failed": failed' in src
     assert "failed[name]" in src
+
+
+# --------------------------------------------------------------------------
+# Round 7 H3: near the floor is not the same kind of miss as never sighted
+# --------------------------------------------------------------------------
+
+class _Roster:
+    """Minimal roster stand-in: normalise lowercases, index maps to itself."""
+    @staticmethod
+    def normalise(n):
+        return n.lower().replace("-", "").replace("_", "")
+
+
+def _idx(*names):
+    return {_Roster.normalise(n): n for n in names}
+
+
+def test_near_floor_names_the_cnas_that_are_two_sightings_from_counting():
+    """The cheapest headroom on the board, and nothing computed it.
+
+    `top_missed_effective` and `top_missed` were both published and the
+    DIFFERENCE between them is exactly this set, so it was derivable and never
+    derived. On 2026-08-27 the eight top-50 misses split three to five: `dell`,
+    `TR-CERT` and `sap` at one sighting each against a floor of three, and five
+    at zero, which is a parser apiece.
+    """
+    from rbp import coverage
+    sightings = {"dell": 1, "sap": 1, "TR-CERT": 1, "Axis": 2,
+                 "redhat": 900, "huawei": 0}
+    out = coverage._near_floor(sightings, _idx("dell", "sap", "TR-CERT", "Axis",
+                                               "redhat", "huawei"), _Roster)
+    names = [r["cna"] for r in out]
+
+    assert "redhat" not in names, "a CNA above the floor is not near it"
+    assert "huawei" not in names, (
+        "a CNA sighted zero times is a parser, not two sightings: putting it in "
+        "this list is the error the list exists to prevent")
+    # Closest first, so the list reads in priority order without recomputing.
+    assert names[0] == "Axis" and out[0]["short_by"] == 1
+    assert {r["cna"] for r in out if r["short_by"] == 2} == {"TR-CERT", "dell", "sap"}
+
+
+def test_near_floor_is_ordered_stably_across_runs():
+    """Sightings move every six hours. A list that reshuffles cannot be diffed
+    by whoever is deciding what to write next, so ties break on name."""
+    from rbp import coverage
+    idx = _idx("b", "a", "c")
+    first = coverage._near_floor({"b": 2, "a": 2, "c": 2}, idx, _Roster)
+    second = coverage._near_floor({"c": 2, "a": 2, "b": 2}, idx, _Roster)
+    assert [r["cna"] for r in first] == [r["cna"] for r in second] == ["a", "b", "c"]
+
+
+def test_near_floor_excludes_off_roster_assigners():
+    """Off-roster names are already excluded from the coverage numerator, so
+    promoting one buys nothing and listing it would send someone to write a
+    parser for a CNA the gate cannot count."""
+    from rbp import coverage
+    out = coverage._near_floor({"crafter": 2, "dell": 2}, _idx("dell"), _Roster)
+    assert [r["cna"] for r in out] == ["dell"]
+
+
+def test_the_floor_the_report_uses_is_the_one_inference_uses():
+    """`MIN_SIGHTINGS` is deliberately the same constant inference uses to decide
+    whether it will attach a CNA's name to a row. A near-floor report keyed on a
+    different number would invite loosening one to shorten the other, which is
+    the single change FEEDS.md section 0 forbids outright."""
+    from rbp import coverage, inference
+    assert coverage.MIN_SIGHTINGS is inference.MIN_SIGHTINGS
+
+
+# --------------------------------------------------------------------------
+# Round 7 B1 and B2: the harness has to describe the feed set that actually runs
+# --------------------------------------------------------------------------
+
+def _lab():
+    import pathlib
+    return pathlib.Path(__file__).parent.parent / "feedlab"
+
+
+def _profile_feeds():
+    from rbp.cli import PROFILES
+    return [x for x in PROFILES["weekly"].split(",") if x]
+
+
+def test_every_feed_in_the_running_profile_has_a_scorecard():
+    """feedlab/README.md, line 3: "no feed is merged without its scorecard in
+    the diff."
+
+    The rule was written, tested against the twelve feeds that predate it, and
+    broken by the first feed merged after it. `ghsa-repos` shipped 2026-08-26 and
+    within a day was carrying 1,188 of 1,709 published rows and was the SOLE
+    source for 1,015 of them, 59% of the headline, with no `cnas_new_effective`,
+    no `lead_n`, no `unpublished_n` and no verdict.
+
+    This is not a claim it would fail. It is that the number is not in the diff,
+    so nothing can be compared against it later, and the one feed whose collapse
+    would take six tenths of the site has no recorded baseline to collapse from.
+    """
+    missing = [f for f in _profile_feeds() if not (_lab() / f"{f}.json").exists()]
+    assert not missing, (
+        "these feeds run in the weekly profile with no scorecard committed: "
+        f"{missing}. Run `python -m rbp.feedlab score <name>`, or rebuild the "
+        "baseline and run `audit`, and commit the result.")
+
+
+def test_the_recorded_baseline_describes_the_profile_that_actually_runs():
+    """A stale baseline does not make the harness cautious. It makes it permissive.
+
+    `_baseline.json` was scored 2026-08-24 with `ghsa` at 3,321 rows. `8e3479d`
+    then replaced the page cap with a windowed read and ghsa returned 10,832, and
+    `ghsa-repos` (9,861) did not exist at all. Every marginal figure a later
+    `score` produced was marginal to a merged set roughly 20,000 ids smaller than
+    the real one.
+
+    The direction is what makes it a blocker: a baseline that is too SMALL makes a
+    candidate look like it reaches CNAs nobody else reaches, because the feeds
+    that already reach them were measured before they could. The next scorecard
+    it produces is the one that decides whether a new parser is worth two days.
+    """
+    path = _lab() / "_baseline.json"
+    assert path.exists(), "no recorded baseline"
+    recorded = set(json.loads(path.read_text()).get("feeds") or [])
+    profile = set(_profile_feeds())
+    assert recorded == profile, (
+        f"the baseline describes a feed set the pipeline does not run.\n"
+        f"  in the profile, not the baseline: {sorted(profile - recorded)}\n"
+        f"  in the baseline, not the profile: {sorted(recorded - profile)}\n"
+        "Re-run `python -m rbp.feedlab baseline`.")
+
+
+def test_the_baseline_gathers_the_years_the_pipeline_gathers():
+    """`coverage_years` (2024-2026) and the GATHER years (2025-2026) are different
+    windows and it is easy to pass one for the other.
+
+    Done exactly once while rebuilding this baseline: `--years 2024,2025,2026`
+    looked like the site's window, took alas from 11,674 rows to 16,026, and would
+    have recorded a merged set the pipeline never reads. Which is B2's defect
+    arriving inside B2's fix.
+    """
+    import datetime as dt
+    recorded = json.loads((_lab() / "_baseline.json").read_text())
+    years = set(recorded.get("years") or [])
+    now = dt.date.today().year
+    assert years == {now, now - 1}, (
+        f"baseline gathered {sorted(years)}; the pipeline gathers "
+        f"{sorted({now, now - 1})}. coverage_years is the other window.")
+
+
+def test_deep_is_an_alias_of_weekly_not_a_copy_of_it():
+    """Two identical string literals are a config duplicate waiting to drift.
+
+    The last time `weekly` and `deep` meant different things, the gate was
+    measured on a profile the cron did not run, and `siemens` showed as an
+    uncovered top-50 CNA while already being a configured CSAF provider. Adding a
+    feed to one literal and not the other would recreate that silently.
+    """
+    from rbp.cli import PROFILES
+    assert PROFILES["deep"] is PROFILES["weekly"], (
+        "deep is a separate string. Alias it, so the two cannot diverge without "
+        "someone meaning it.")
+
+
+def corpus_df_with(rows):
+    """A corpus frame from (cve_id, state, assigner) triples."""
+    return corpus([{"cve_id": c, "state": st, "assigner": a,
+                    "date_published": "2026-01-01", "vendor": "", "product": ""}
+                   for c, st, a in rows])
+
+
+# --------------------------------------------------------------------------
+# Round 7 H2: the corroborating rule, enforced rather than only written
+# --------------------------------------------------------------------------
+
+def test_a_corroborating_feed_cannot_credit_a_cna_as_observable():
+    """FEEDS.md section 2 and feedlab/README.md both said this and no code read it.
+
+    "It can strengthen a row it did not find; it cannot credit a CNA as
+    observable. Crediting a CNA on a feed that is structurally incapable of
+    surfacing an unpublished ID is how a launch gate clears while the site's
+    actual claim gets weaker."
+
+    `mozilla` has verdict `corroborating` and `unpublished_n` 0, and contributed
+    605 sightings to the gate figure like any other feed.
+    """
+    from rbp import coverage
+    corpus = corpus_df_with(
+        [("CVE-2026-1", "PUBLISHED", "apache"), ("CVE-2026-2", "PUBLISHED", "apache"),
+         ("CVE-2026-3", "PUBLISHED", "apache")])
+    refs = {f"CVE-2026-{i}": {"sources": {"mozilla"}} for i in (1, 2, 3)}
+
+    counted = coverage.compute(corpus, refs, recent_years=(2026,), sources=["mozilla"])
+    assert counted["cnas_effective"] == 1, (
+        "the fixture no longer demonstrates a CNA crossing the floor")
+
+    excluded = coverage.compute(corpus, refs, recent_years=(2026,),
+                                sources=["mozilla"], corroborating=["mozilla"])
+    assert excluded["cnas_effective"] == 0, (
+        "a CNA seen ONLY through a feed that has never surfaced an unpublished "
+        "id is still being credited as observable")
+    assert excluded["corroborating_feeds"] == ["mozilla"], (
+        "the exclusion is a quiet subtraction unless it is named")
+
+
+def test_a_row_a_corroborating_feed_merely_corroborates_still_counts():
+    """The other half of the same sentence, and the half that is easy to break.
+
+    "It CAN strengthen a row it did not find." A CVE seen by both a detecting
+    feed and a corroborating one must keep counting: excluding the id rather than
+    the feed would make adding a corroborating feed REDUCE coverage, which is
+    absurd and is the obvious wrong implementation.
+    """
+    from rbp import coverage
+    corpus = corpus_df_with(
+        [(f"CVE-2026-{i}", "PUBLISHED", "apache") for i in (1, 2, 3)])
+    refs = {f"CVE-2026-{i}": {"sources": {"debian", "mozilla"}} for i in (1, 2, 3)}
+    out = coverage.compute(corpus, refs, recent_years=(2026,),
+                           sources=["debian", "mozilla"], corroborating=["mozilla"])
+    assert out["cnas_effective"] == 1, (
+        "corroboration was treated as contamination: a row a detecting feed "
+        "found stopped counting because a corroborating feed also carried it")
+
+
+def test_the_exclusion_narrows_the_gate_figure_and_nothing_else():
+    """`sightings`, `covered` and `observed_*` describe what this site actually
+    saw and are honest as they stand. Narrowing them to satisfy a rule about a
+    different question would make the site under-report its own reach."""
+    from rbp import coverage
+    corpus = corpus_df_with(
+        [(f"CVE-2026-{i}", "PUBLISHED", "apache") for i in (1, 2, 3)])
+    refs = {f"CVE-2026-{i}": {"sources": {"mozilla"}} for i in (1, 2, 3)}
+    out = coverage.compute(corpus, refs, recent_years=(2026,),
+                           sources=["mozilla"], corroborating=["mozilla"])
+    assert out["cnas_effective"] == 0
+    assert out["cnas_sighted"] == 1, "cnas_sighted was narrowed too"
+    assert out["observed_ids"] == 3, "observed coverage was narrowed too"
+
+
+def test_an_unreadable_verdict_file_excludes_nothing_and_does_not_raise():
+    """Permissive on failure, because this refines one figure and must never be
+    the reason a publication stops. The guard that keeps the verdicts PRESENT is
+    test_every_feed_in_the_running_profile_has_a_scorecard, not this."""
+    assert feedlab.corroborating_feeds("/nonexistent/_audit.json") == set()
+
+
+def test_unmeasurable_is_not_treated_as_corroborating(tmp_path):
+    """`arch`'s verdict is `unmeasurable`: it published nothing datable to score.
+    That is an absence of evidence, not evidence it cannot detect, and conflating
+    them would quietly demote any new feed whose first scorecard was thin."""
+    p = tmp_path / "_audit.json"
+    p.write_text(json.dumps({"feeds": {
+        "arch": {"verdict": "unmeasurable"}, "mozilla": {"verdict": "corroborating"},
+        "debian": {"verdict": "detecting"}}}))
+    assert feedlab.corroborating_feeds(str(p)) == {"mozilla"}
+
+
+# --------------------------------------------------------------------------
+# Round 7 M2: stability was decoration on every merged feed
+# --------------------------------------------------------------------------
+
+def test_stability_is_null_until_there_are_two_real_fetches():
+    """README: "returning one anyway is how a scorecard field becomes
+    decoration." Null is the honest answer to one observation."""
+    assert feedlab.stability([]) is None
+    assert feedlab.stability([{"ids": 100}]) is None
+    assert feedlab.stability([{"ids": 100}, {"ids": 90}])["swing_pct"] == 10.0
+
+
+def test_the_audit_reads_the_fetch_history_and_never_appends_to_it():
+    """`audit` replays ONE baseline's stored rows. If it appended, every audit
+    run would add an identical id count and `stability` would report a 0% swing
+    over N "fetches" that were a single fetch.
+
+    A fabricated perfect reading is worse than null: null says "not measured",
+    0% says "measured, and perfect". That is the same distinction the freshness
+    guard draws between unmeasurable and fine, and the one this project keeps
+    having to relearn.
+    """
+    import pathlib
+    src = (pathlib.Path(feedlab.__file__)).read_text()
+    audit = src[src.index('if args.cmd == "audit":'):]
+    assert "_read_fetches(name)" in audit, (
+        "audit does not read the recorded history, so stability stays null")
+    assert "record_fetch(" not in audit, (
+        "audit appends to the fetch history, manufacturing stability out of one "
+        "real fetch")
+
+
+def test_a_baseline_rebuild_records_one_observation_per_feed():
+    """The only place a real fetch of every feed happens, so the only place an
+    honest observation can come from."""
+    import pathlib
+    src = (pathlib.Path(feedlab.__file__)).read_text()
+    build = src[src.index("def build_baseline("):src.index("def baseline_summary(")]
+    assert "record_fetch(" in build, (
+        "a baseline rebuild fetches every feed for real and records none of it, "
+        "so stability can never accrue")
+
+
+def test_reading_a_missing_fetch_history_is_empty_not_an_error(tmp_path):
+    assert feedlab._read_fetches("nope", str(tmp_path / "nope.json")) == []

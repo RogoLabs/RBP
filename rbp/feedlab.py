@@ -51,6 +51,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import glob
 import json
 import os
 import sys
@@ -380,6 +381,24 @@ def build_baseline(sources, years, corpus_df):
             failed[name] = str(e)[:160]
             print(f"  [{name}] FAILED: {e}", file=sys.stderr)
             continue
+        # STABILITY ACCRUES HERE, at the only place a REAL fetch happens.
+        #
+        # `stability` was null on all twelve committed scorecards, because only
+        # `score` called `record_fetch` and every merged feed had been scored by
+        # `audit`, which is offline by design. So the field this harness's own
+        # README calls out as "how a scorecard field becomes decoration" was
+        # decoration on every feed in the profile.
+        #
+        # It must NOT be recorded in `audit`. Audit replays one baseline's stored
+        # rows, so every audit run would append an identical id count and
+        # `stability` would report a 0% swing over N "fetches" that were one
+        # fetch. A fabricated 100%-stable reading is worse than null: null says
+        # "not measured", and 0% says "measured, and perfect".
+        #
+        # A baseline rebuild is a real fetch of every feed, so each one
+        # contributes one honest observation and the field fills in over
+        # successive rebuilds rather than being asserted.
+        record_fetch(name, {r["cve_id"] for r in rows if r.get("cve_id")})
         per_feed[name] = {
             "rows": [{"cve_id": r["cve_id"], "public_date": r.get("public_date") or ""}
                      for r in rows if r.get("cve_id")],
@@ -458,6 +477,16 @@ def record_fetch(name, ids, path=None):
                  "ids": len(ids)})
     write(hist, path)
     return hist
+
+
+def _read_fetches(name, path=None):
+    """The recorded fetch history for one feed, without appending to it."""
+    path = path or os.path.join(STATE, f"{name}.fetches.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        return []
 
 
 def stability(hist):
@@ -632,6 +661,85 @@ def _render(card):
     return "\n".join(L)
 
 
+def corroborating_feeds(path=None):
+    """Feed names whose committed scorecard says they cannot detect.
+
+    Read by `cli.run` so `coverage.compute` can enforce FEEDS.md section 2's rule
+    that a corroborating feed does not credit a CNA as observable. The verdicts
+    live in `feedlab/_audit.json`, which is committed precisely so the pipeline
+    does not have to re-derive them from twelve live fetches every six hours.
+
+    RETURNS EMPTY ON ANY PROBLEM, which is the permissive direction, and the
+    caller publishes the result so an empty exclusion is visible rather than
+    assumed. Failing closed here would mean an unreadable JSON file stops a
+    publication, and this is a refinement to one figure, not a correctness
+    guarantee. `test_every_feed_in_the_running_profile_has_a_scorecard` is what
+    actually keeps the verdicts present.
+
+    Only `corroborating` is excluded. `unmeasurable` is NOT: it means the feed
+    published nothing datable to score, which is an absence of evidence rather
+    than evidence a feed cannot detect, and treating the two the same would
+    quietly demote any new feed whose first scorecard was thin.
+    """
+    path = path or os.path.join(LAB, "_audit.json")
+    try:
+        with open(path, encoding="utf-8") as fh:
+            feeds_ = (json.load(fh).get("feeds") or {})
+    except Exception:
+        return set()
+    return {n for n, v in feeds_.items()
+            if isinstance(v, dict) and v.get("verdict") == "corroborating"}
+
+
+def _near_floor_report(args):
+    """Which CNAs are one or two sightings from counting, and which are not.
+
+    ROUND 7 H3. `top_missed_effective` and `top_missed` were both published and
+    the difference between the two lists is exactly the near-floor set, so the
+    cheapest headroom on the board was derivable and never derived. On
+    2026-08-27 the eight top-50 misses split three to five: `dell`, `TR-CERT`
+    and `sap` at one sighting each against a floor of three, and five at zero.
+    Two more sightings apiece takes the gate from 42 of 50 to 45.
+
+    Offline, out of the run's own summary.json. It fetches nothing, because the
+    numbers it needs were already published and nobody was reading them.
+    """
+    path = args.summary
+    if not path:
+        snaps = sorted(glob.glob(os.path.join(ROOT, "snapshots", "*",
+                                              "summary.json")))
+        if not snaps:
+            raise SystemExit(
+                "no snapshot to read. Pass --summary <path>, or run the "
+                "pipeline once so there is a coverage block to report on.")
+        path = snaps[-1]
+    with open(path, encoding="utf-8") as fh:
+        cov = (json.load(fh).get("coverage") or {})
+    near = cov.get("near_floor")
+    if near is None:
+        raise SystemExit(
+            f"{path} predates the near_floor measurement. Re-run the pipeline, "
+            "or point --summary at a snapshot written after 2026-08-27.")
+    missed = set(cov.get("top_missed_effective") or [])
+    floor = cov.get("min_sightings")
+    rows = [r for r in near if not args.top_only or r["cna"] in missed]
+
+    print(f"{path}: floor is {floor} sightings, {len(near)} roster CNA(s) "
+          f"sighted and short of it\n")
+    for r in rows:
+        flag = "  <- top-50 miss" if r["cna"] in missed else ""
+        print(f"  {r['cna']:<24} {r['sightings']} sighting(s), "
+              f"short by {r['short_by']}{flag}")
+    in_top = [r for r in near if r["cna"] in missed]
+    print(f"\n{len(in_top)} of the {len(missed)} top-50 misses are within "
+          f"{max((r['short_by'] for r in in_top), default=0)} sighting(s) of the "
+          f"floor: {', '.join(r['cna'] for r in in_top) or '-'}")
+    print("The rest are a parser apiece. FEEDS.md section 4 sequences the tail "
+          "by VOLUME, not by this;\nthe two orderings disagree and which one "
+          "wins is a decision, not a measurement.")
+    return 0
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(
         prog="python -m rbp.feedlab",
@@ -652,6 +760,14 @@ def main(argv=None):
                        help="score every merged feed against all the others, "
                             "offline, from the recorded baseline")
     a.add_argument("--years", default="2025,2026")
+
+    n = sub.add_parser("near-floor",
+                       help="roster CNAs sighted but short of the sighting "
+                            "floor; the cheapest coverage on the board")
+    n.add_argument("--summary", default="",
+                   help="a summary.json to read; default is the newest snapshot")
+    n.add_argument("--top-only", action="store_true",
+                   help="only CNAs that are also a top-50 miss")
 
     c = sub.add_parser("probe-csaf",
                        help="probe .well-known/csaf for named CNAs; a hit is one "
@@ -694,6 +810,9 @@ def main(argv=None):
                   "`python -m rbp.feedlab score csaf` after adding it, against "
                   "the baseline recorded before.")
         return 0
+
+    if args.cmd == "near-floor":
+        return _near_floor_report(args)
 
     corpus = _corpus(args.index)
     years = _years(args.years)
@@ -763,6 +882,10 @@ def main(argv=None):
                       "effective": sorted(effective(other_sight))}
             card = scorecard(name, set(base["years"]), corpus, base=others,
                              rows=payload["rows"], stats=payload["stats"])
+            # READ the history, never append to it. See build_baseline: audit
+            # replays stored rows, so appending here would manufacture a perfect
+            # stability reading out of a single fetch.
+            card["stability"] = stability(_read_fetches(name))
             cards.append(card)
             write(card, os.path.join(LAB, f"{name}.json"))
             print(_render(card))

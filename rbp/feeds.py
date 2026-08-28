@@ -18,6 +18,7 @@ import sys
 import time
 import zipfile
 import urllib.error
+import urllib.parse
 import urllib.request
 from urllib.parse import urlparse
 
@@ -132,6 +133,56 @@ def health_summary():
     return failures, truncated, len(top), capped
 
 
+def rows_by_source(rows):
+    """Per-feed contribution to the PUBLISHED rows: {feed: (touched, only)}.
+
+    IDS FETCHED IS NOT ROWS PUBLISHED, and until this existed the site published
+    only the first number and let a reader infer the second. `/status` rendered
+    one line per feed reading "arch  OK  62 ids" beside "csaf  OK  2,695 ids",
+    which are the same sentence about two feeds where one is the sole evidence
+    for 22 published rows and the other is the sole evidence for none.
+
+    Measured on the 2026-08-27 snapshot: `mozilla` (607 ids/run) and `arch` (62)
+    appeared in ZERO of the 1,709 published rows, on every run since they were
+    merged, and no surface on the site could say so. Meanwhile `ghsa-repos` was
+    the only source for 1,015 of those rows, 59% of the headline, and no surface
+    could say that either.
+
+    `only` is the number that matters and it is the one nobody had. It answers
+    "what disappears if this feed does", which is the question behind both feed
+    retirement and concentration risk, and it cannot be derived from `touched`:
+    four distro feeds touch 196 rows between them and are the sole source for
+    132, because they mostly corroborate each other.
+
+    Takes the published population, not the backlog, so it counts what a reader
+    can actually see. Source strings are the comma-joined form `classify` writes.
+    """
+    touched, only = {}, {}
+    for r in rows:
+        srcs = [x for x in (r.get("sources") or "").split(",") if x]
+        for s in srcs:
+            touched[s] = touched.get(s, 0) + 1
+        if len(srcs) == 1:
+            only[srcs[0]] = only.get(srcs[0], 0) + 1
+    return {s: (n, only.get(s, 0)) for s, n in touched.items()}
+
+
+def merge_contribution(detail, rows):
+    """Fold `rows_by_source` into a `health_detail()` dict, in place.
+
+    Every requested feed gets both keys, including the ones that contributed
+    nothing: a feed missing from the published rows must render as an explicit
+    zero, not as a blank. A blank reads as "not measured", which is the state
+    this function exists to end.
+    """
+    contrib = rows_by_source(rows)
+    for name, v in detail.items():
+        n, only = contrib.get(name, (0, 0))
+        v["rows_published"] = n
+        v["rows_only"] = only
+    return detail
+
+
 # A feed returning far fewer ids than last run is the silent-shrink signature,
 # and it is invisible to a status field. Ubuntu went 3,995 -> 1,079 ids overnight
 # while its status went from `truncated` to `ok`, and the headline fell 558 -> 458
@@ -197,6 +248,62 @@ def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
             if hit:
                 out.append(hit)
     return out
+
+
+# A feed frozen at a constant is invisible to `compare_magnitudes`, which only
+# ever asks whether a number went DOWN. `mozilla` returned exactly 607 ids on six
+# consecutive published snapshots, `arch` exactly 62, `samsung` exactly 420 on
+# five. Had any of them silently stopped updating on day one, every guard on this
+# site would still have been green.
+#
+# 45 DAYS, DERIVED FROM THE FEEDS' OWN CADENCES rather than picked. Measured over
+# the 2026-08-27 baseline, newest advisory per feed against the run date:
+#
+#   csaf, ghsa, ghsa-repos, osv, redhat, ubuntu   0 days
+#   alas                                          1
+#   mozilla                                       9
+#   msrc                                         16   (Patch Tuesday, monthly)
+#   samsung                                      26   (SMR bulletin, monthly)
+#   alpine, arch, debian                     undated
+#
+# The slowest genuine cadence in the set is monthly, whose newest advisory can
+# legitimately be ~35 days old just before the next bulletin lands. 45 leaves ten
+# days of slack past that and still catches a dead feed inside seven weeks.
+FRESHNESS_FLOOR_DAYS = 45
+
+
+def stale_feeds(detail, today=None, floor_days=FRESHNESS_FLOOR_DAYS):
+    """Feeds whose newest advisory is old enough that the feed has likely stopped.
+
+    Returns (stale, unmeasurable). `stale` is a degradation: a feed that has
+    stopped updating makes this run's counts a lower floor than usual, and unlike
+    a configured page cap it is not a standing limit fired by design, so it must
+    stay loud until someone fixes it.
+
+    `unmeasurable` is NOT a degradation and is reported separately. `alpine`,
+    `arch` and `debian` return no dates at all, so their freshness cannot be
+    checked by any threshold. Silently skipping them would let "cannot be
+    checked" read as "checked and fine", which is the distinction this whole
+    module keeps having to relearn.
+    """
+    base = dt.date.fromisoformat(today) if today else dt.date.today()
+    stale, unmeasurable = [], []
+    for name, v in sorted((detail or {}).items()):
+        if ":" in name:
+            continue                       # sub-fetch; the parent carries it
+        if not v.get("dated_rows"):
+            unmeasurable.append(f"{name}: returns no dated rows")
+            continue
+        newest = v.get("newest") or ""
+        try:
+            age = (base - dt.date.fromisoformat(newest[:10])).days
+        except ValueError:
+            unmeasurable.append(f"{name}: newest date {newest!r} did not parse")
+            continue
+        if age > floor_days:
+            stale.append(f"{name}: newest advisory is {newest}, {age} days old "
+                         f"(floor {floor_days}); the feed has likely stopped")
+    return stale, unmeasurable
 
 
 def health_detail():
@@ -446,6 +553,51 @@ def feed_alas(years):
 # while producing a worse feed than one that gives up and says so. When the budget
 # is spent the loop stops retrying and truncates, and the recorded reason says the
 # budget was hit rather than pretending the page simply failed.
+def _ubuntu_reach(page_cap, limit, total_results, rows, years):
+    """The Ubuntu cap stated in days, because pages are not a unit a reader has.
+
+    The line this replaces read, in full:
+
+        ubuntu: hit the 200-page cap; rows beyond it were not read
+
+    Every word true, and it would have read identically whether the cap cost one
+    day or three years. Measured live 2026-08-27, it costs almost everything:
+    `cves.json` is ordered newest-published-first, `limit` is hard-capped at 20,
+    so 200 pages is 4,000 of 75,993 records, and offset 3,980 lands on a row
+    published 2026-07-20. This feed sees **38 days** while `debian` beside it in
+    the same table sees the whole 2024-2026 window, and the site published the
+    two counts adjacently with nothing to distinguish them.
+
+    Exactly the finding `8e3479d` fixed for `feed_ghsa` the previous day: newest
+    first, a fixed row cap, a reach measured in weeks against a window measured in
+    years, at a constant count that reads as healthy. GHSA could be fixed by
+    sharding the walk by publication month. This endpoint offers no date filter,
+    so the reach is what it is and the honest move is to say so.
+    """
+    read = page_cap * limit
+    dates = sorted(r["public_date"] for r in rows if r.get("public_date"))
+    bits = [f"hit the {page_cap}-page cap at {read:,} records"]
+    if total_results:
+        bits[0] += f" of {total_results:,} ({100 * read / total_results:.1f}%)"
+    if dates:
+        span = _days_between(dates[0], dates[-1])
+        bits.append(f"read back to {dates[0]}"
+                    + (f", a {span}-day window" if span is not None else ""))
+        bits.append(f"the configured window opens {min(years)}-01-01, so most of "
+                    "it was not read")
+    else:
+        bits.append("rows beyond it were not read")
+    return "; ".join(bits)
+
+
+def _days_between(a, b):
+    """Whole days between two ISO dates, or None if either will not parse."""
+    try:
+        return (dt.date.fromisoformat(b[:10]) - dt.date.fromisoformat(a[:10])).days
+    except Exception:
+        return None
+
+
 UBUNTU_PAGE_RETRIES = 2
 UBUNTU_RETRY_WAITS = (5, 20)
 UBUNTU_RETRY_BUDGET_S = 120
@@ -453,6 +605,11 @@ UBUNTU_RETRY_BUDGET_S = 120
 
 def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
     out, offset, limit, capped = [], 0, 20, False  # Ubuntu API caps limit at 20
+    # The endpoint's own total, so the cap can be stated as a fraction of what
+    # exists rather than as a page count nobody can convert. Probed 2026-08-27:
+    # limit=50, 100 and 500 all error, so 20 is a hard ceiling and 200 pages is
+    # 4,000 records against a `total_results` of 75,993.
+    total_results = None
     # ATTEMPTS AND RECOVERIES ARE DIFFERENT NUMBERS, and conflating them made the
     # health line claim the opposite of what happened. See the note below.
     retry_attempts, recovered_pages, retry_spent = 0, 0, 0.0
@@ -500,6 +657,8 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
             print(f"  [ubuntu] stopped at offset {offset}: {last_err}", file=sys.stderr)
             ended = f"error at offset {offset}: {str(last_err)[:80]}"
             break
+        if isinstance(data, dict) and total_results is None:
+            total_results = data.get("total_results")
         rows = (data or {}).get("cves", []) if isinstance(data, dict) else []
         if not rows:
             # An empty page is only the end of the data if the request SUCCEEDED.
@@ -549,8 +708,8 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
         note = ""
     if capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
-        record_feed("ubuntu", CAPPED,
-                    f"hit the {page_cap}-page cap; rows beyond it were not read{note}")
+        record_feed("ubuntu", CAPPED, _ubuntu_reach(page_cap, limit, total_results,
+                                                    out, years) + note)
     elif ended != "exhausted":
         print(f"  [ubuntu] {ended}", file=sys.stderr)
         record_feed("ubuntu", TRUNCATED, ended + note)
@@ -758,6 +917,44 @@ def _read_repo_list(path):
     return [n for n in names if _REPO_RE.match(n)]
 
 
+_CURATED_RE = re.compile(r"^#\s*curated:\s*(\d{4}-\d{2}-\d{2})\s*$", re.M)
+
+
+def _repo_list_age_days(path, today=None):
+    """Days since the repo list was last curated, or None if it says nothing.
+
+    THE LARGEST SOURCE ON THIS SITE DECAYS AND NO NUMBER TRACKED IT. The file's
+    own header says so in words: "NOT SELF-REFRESHING. Discovering a repository
+    that publishes its FIRST advisory is a mining problem and it is not solved
+    here." Honest, and unmeasured, which is the combination that lets a decision
+    quietly become a default.
+
+    `compare_magnitudes` cannot see this. The repos on the list keep publishing,
+    so the id count stays healthy while the share of the real population the feed
+    can reach falls. On 2026-08-27 this feed was the sole source for 1,015 of
+    1,709 published rows, 59% of the headline, off 1,875 repositories frozen on
+    2026-08-26 and drawn from a 10,000-repo sweep.
+
+    A date in a comment is asserted config, which this codebase prefers to avoid,
+    and the alternative was a mining job nobody has scheduled. Asserted and
+    reported beats derived and absent: the age reaches the health line every run,
+    so the decision to leave the list alone has to keep being made rather than
+    happening.
+    """
+    try:
+        with open(path) as f:
+            m = _CURATED_RE.search(f.read())
+    except OSError:
+        return None
+    if not m:
+        return None
+    try:
+        base = dt.date.fromisoformat(today) if today else dt.date.today()
+        return (base - dt.date.fromisoformat(m.group(1))).days
+    except ValueError:
+        return None
+
+
 def _load_repo_state(path):
     try:
         with open(path) as f:
@@ -940,6 +1137,13 @@ def feed_ghsa_repos(years, budget_buffer=150, page_cap=20,
     detail = (f"{polled} of {len(repos)} repos polled "
               f"({counts['updated']} changed, {counts['not_modified']} unchanged, "
               f"{counts['not_found']} gone, {counts['error']} errored)")
+    # The age rides on EVERY branch below, including the healthy one, because a
+    # decaying list is not an error state and would otherwise be the one fact
+    # about this feed that only surfaces when something else has already broken.
+    # Same lesson as the CSAF disclosure that only survived on a degraded run.
+    age = _repo_list_age_days(list_path)
+    if age is not None:
+        detail += f"; repo list curated {age}d ago and does not self-refresh"
     if counts["error"] > max(5, polled * 0.2):
         record_feed("ghsa-repos", TRUNCATED, f"{detail}; error rate above 20%")
     elif stopped_at:
@@ -1044,14 +1248,62 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
 # GIT records carry their CVE references elsewhere. The estimate and the adapter
 # were measuring different things. Anything added here needs the adapter's own
 # number, not a probe's.
+# OSV ECOSYSTEMS, 15 OF 46. The four added on 2026-08-27 are the measured half of
+# FEEDS.md Tier 1's standing "merge the remaining 27" instruction, which treated 35
+# ecosystems as one decision called "bandwidth" and therefore never got made.
+#
+# Sizes fetched 2026-08-27. They are not one decision:
+#
+#   the small eight   GitHub Actions 99KB, SwiftURL 107KB, Hackage 51KB,
+#                     opam 49KB, VSCode 21KB, CRAN 12KB, GSD 6KB, UVI 1KB
+#                     = 346KB total, against osv's existing 305MB per run
+#   the large six     MinimOS 67MB, Linux 55MB, Chainguard 30MB, Wolfi 19MB,
+#                     Root 14MB, Bitnami 9MB = 195MB, a 64% increase, for six
+#                     distro-rebuild channels that are exactly the category
+#                     measured at +0 CNAs. NOT merged on this evidence.
+#
+# Scored as their own candidate before merging, against the 2026-08-27 baseline:
+#
+#   58 ids, 6 not already seen, 0 marginal CNAs, 7 unpublished now,
+#   disclosure lead on 24 of 51 dated references (median 13d, max 97d),
+#   1.1s and 0.3 MB.  VERDICT: corroborating.
+#
+# Merged on the strength of test 2, which FEEDS.md section 2 explicitly permits:
+# "corroborating is not a soft rejection. It means the feed may be merged." Zero
+# marginal CNAs means this buys NO coverage and no gate movement, and it is not
+# counted as progress toward either. What it buys is seven currently-unpublished
+# ids, which is the thing the site is actually about, for a tenth of a percent of
+# this adapter's existing bandwidth.
+#
+# MEASURED AT ZERO AND DELIBERATELY NOT MERGED: VSCode, CRAN, GSD, UVI. All four
+# returned 0 in-scope ids for 2025-2026 on 2026-08-27, at 41KB combined. Recorded
+# here rather than merged-and-empty so the next person does not re-probe them,
+# and dated so revisiting is a decision rather than an oversight.
 def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
                                 "Maven", "Packagist", "NuGet", "Pub", "Hex",
-                                "Android")):
+                                "Android",
+                                "GitHub Actions", "SwiftURL", "Hackage", "opam")):
     """OSV.dev bulk per-ecosystem dumps: language-ecosystem breadth. Each record's
     CVE aliases are the referenced IDs; package name is the attribution product."""
     out, seen = [], set()
     for eco in ecosystems:
-        url = f"https://osv-vulnerabilities.storage.googleapis.com/{eco}/all.zip"
+        # QUOTED. The ecosystem name goes into a URL path and five of OSV's 46
+        # names contain a space: "GitHub Actions", "Red Hat", "Rocky Linux",
+        # "Azure Linux" and "BellSoft Hardened Containers". Unquoted, urllib
+        # raises `URL can't contain control characters` before any request is
+        # made, so this adapter could not fetch any of them at all and would have
+        # recorded each as a hard FAILED.
+        #
+        # Latent until 2026-08-27 because none of the five was configured, and
+        # found by trying to merge the small ecosystems rather than by reading
+        # the code. It matters more than it looks: FEEDS.md's standing
+        # instruction to "merge the remaining 27" includes three of these, and
+        # the 2026-08-22 measurement that scored them at +0 CNAs was a full-text
+        # probe over the archives, NOT this adapter. That is the same
+        # probe-and-adapter-measure-different-things gap that made the GIT
+        # estimate wrong by its entire value, sitting unnoticed in the same table.
+        url = ("https://osv-vulnerabilities.storage.googleapis.com/"
+               f"{urllib.parse.quote(eco)}/all.zip")
         if not _url_ok(url):
             record_feed(f"osv:{eco}", False, "url rejected by the SSRF guard")
             continue
@@ -1160,6 +1412,28 @@ CSAF_PROVIDERS = (
     "https://www.cisco.com/.well-known/csaf/provider-metadata.json",              # Cisco PSIRT
     "https://www.suse.com/.well-known/csaf/provider-metadata.json",               # SUSE
 )
+
+# CLOSED, DO NOT RE-PROBE: Huawei. It is reachable and unreadable, which is not
+# the same as absent and reads exactly like a provider nobody has tried yet.
+#
+# `www.huawei.com` serves valid provider metadata at the well-known path, listing
+# 121 distributions, one directory per advisory. Every one of those directories
+# answers 401 Unauthorized, `changes.csv` and `index.txt` alike; the `/clear` root
+# exists and is empty. So Huawei publishes a CSAF catalogue no unauthenticated
+# client can read. Measured twice: `feedlab probe-csaf` on 2026-08-24 (recorded in
+# feedlab/_csaf_probe.json) and live at +0 on the same run.
+#
+# It is the single largest CNA the gate cannot see that serves CSAF at all
+# (444 published CVEs in the window), so it will keep looking like the obvious
+# next win to anyone reading the top-50 miss list. It is not one. The cost of
+# rediscovering this is a `probe-csaf` run and an afternoon.
+#
+# The related warning was ALSO wrong and is fixed: "capped: www.huawei.com
+# 12/121 directories" asserted a loss of 109 directories of advisories that do
+# not exist. The cap is now claimed only where the provider had readable
+# advisories, which is why that line disappeared from the health string on
+# 2026-08-27 while Huawei stayed in "no advisories in scope". That is the fix
+# landing, not a regression.
 
 # CSAF aggregators list many vendors' provider-metadata URLs in one file, one fetch
 # unlocks N vendors (Red Hat, Nozomi, Stackable, KUNBUS, ...).
@@ -1366,6 +1640,18 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             if meta is None:
                 print(f"  [csaf] {meta_url}: metadata skip ({e})", file=sys.stderr)
                 unreachable.append(f"{host} ({str(e)[:40]})")
+                # RECORDED HERE, NOT ONLY AT THE BOTTOM OF THE LOOP. This branch
+                # `continue`s, so the first version of the per-provider records
+                # gave no part at all to the one provider worth tracking most.
+                # `compare_magnitudes` iterates the CURRENT parts, so a provider
+                # that vanishes from the dict is not compared against anything:
+                # a provider going from 500 rows to unreachable would have been
+                # invisible to the guard this change exists to feed. Caught by
+                # `test_an_unreachable_csaf_provider_never_escalates_the_parent`,
+                # which was written for the status coupling and found this
+                # instead. CAPPED for the reason given at the other call site.
+                record_feed(f"csaf:{host}", CAPPED,
+                            f"provider unreachable: {str(e)[:60]}", rows=0)
                 continue
             # Reached, just not by the front door. The provider is NOT recorded
             # as unreachable, because we are about to read every advisory it
@@ -1444,6 +1730,55 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                         out.append(r)
         gained = len(out) - n0
         print(f"  [csaf] {host}: +{gained} new ({read} in scope)", file=sys.stderr)
+        # ONE RECORD PER PROVIDER, so `compare_magnitudes` can see a provider go
+        # dark. Until this landed, 17 providers shared a single `rows` number and
+        # this adapter's own docstring pointed at the shrink guard as the
+        # mechanism for "a provider that was working and stops", which that guard
+        # could not do: it compares whole feeds, and csaf's whole-feed total swung
+        # 3,296 -> 3,202 -> 3,938 -> 2,213 -> 2,695 across five published runs, so
+        # any provider holding under 40% of the total could stop forever inside
+        # the noise. `feed_osv` has recorded per-ecosystem parts all along; this is
+        # the same shape for the adapter that fans out to more third parties than
+        # any other. SUSE is the worked example: 14,486 in-scope advisories lost,
+        # absorbed by the aggregate, published as a fact about SUSE.
+        #
+        # `read`, NOT `gained`, for the reason the comment below already gives:
+        # `gained` is measured against a `seen` set shared across providers, so it
+        # depends on the order providers are visited and would fire this guard
+        # every time an earlier provider happened to carry the same advisory.
+        #
+        # STATUS IS DELIBERATELY OK FOR EVERY REACHABLE PROVIDER, including one
+        # with nothing to say. `health_detail` escalates a parent whose parts
+        # degraded, and `_record_csaf_health` owns csaf's aggregate status on
+        # reasoning this must not override: an unreachable provider is a STANDING
+        # limit (Cisco 403s on every run) and is published as CAPPED rather than
+        # TRUNCATED precisely so the site does not wear an incomplete-run banner
+        # forever. Marking a quiet vendor's part non-OK would escalate csaf from
+        # OK to TRUNCATED and do exactly that. The parts exist to be counted, not
+        # to re-decide the status.
+        #
+        # An unreachable provider is recorded CAPPED, NOT FAILED, and the
+        # difference is the whole banner argument. `health_summary` collects
+        # FAILED across every entry INCLUDING parts, `degraded_state` turns any
+        # failure into a degradation, and Cisco's edge 403s on every single run.
+        # Recording it FAILED would have made `degraded` permanently true, which
+        # is the exact furniture problem `degraded_state`'s docstring spends a
+        # paragraph rejecting, arrived at from a new direction. CAPPED is this
+        # project's existing word for a standing limit that is real, permanent,
+        # and not news, and it routes to `limitations` where the parent already
+        # publishes the same fact. The part is strictly better than the parent's
+        # line there: it names the provider instead of truncating a list at six.
+        #
+        # It also cannot escalate the parent: `_record_csaf_health` sets csaf to
+        # FAILED or CAPPED whenever `unreachable` is non-empty, and
+        # `health_detail`'s escalation only fires on a parent that is still OK.
+        # `test_an_unreachable_csaf_provider_never_escalates_the_parent` pins that
+        # coupling, because it is invisible from either function alone.
+        if host in _csaf_hosts(unreachable):
+            record_feed(f"csaf:{host}", CAPPED, "provider unreachable", rows=0)
+        else:
+            record_feed(f"csaf:{host}", OK,
+                        f"{read} ids in scope, {gained} new", rows=read)
         # `read`, not `gained`. A provider contributing nothing is not an error
         # and is not nothing, but `gained` measures against a `seen` set shared
         # across every provider in the run, so a provider whose advisories an
@@ -1472,6 +1807,15 @@ def _csaf_directory_count(meta):
     return len({(d.get("directory_url") or "").rstrip("/")
                 for d in (meta or {}).get("distributions", [])
                 if d.get("directory_url")})
+
+
+def _csaf_hosts(entries):
+    """Bare hosts from `unreachable`, whose entries are "host (error detail)".
+
+    Kept as a function rather than a set comprehension at the call site so the
+    format of that list has exactly one reader.
+    """
+    return {e.split(" ", 1)[0] for e in entries}
 
 
 def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back, rows):
@@ -1720,7 +2064,26 @@ def gather(sources, years):
             FEED_HEALTH[s]["rows"] = len(rows)
         else:
             record_feed(s, OK, f"{len(rows)} ids", rows=len(rows))
-        print(f"  [{s}] {len(rows)} referenced IDs in scope")
+        # HOW FAR BACK, AND HOW RECENT, recorded here rather than per adapter so
+        # thirteen adapters cannot drift out of step on it, which is the same
+        # reasoning that put health recording in this function.
+        #
+        # `newest` is the one that catches the failure a row count cannot see. A
+        # feed frozen at a constant reads as perfectly healthy to
+        # `compare_magnitudes`, which only ever asks whether a number went DOWN:
+        # `mozilla` returned exactly 607 on six consecutive published snapshots,
+        # `arch` exactly 62, `samsung` exactly 420 on five. If any of those had
+        # stopped updating on day one, every guard on this site would still have
+        # been green. `tests/test_ghsa_feeds.py` already named this shape for
+        # ghsa and called it a standing truncation that reads as a healthy feed.
+        #
+        # `oldest` is how the Ubuntu cap gets stated in days instead of pages.
+        dates = sorted(r["public_date"] for r in rows if r.get("public_date"))
+        FEED_HEALTH[s]["newest"] = dates[-1] if dates else ""
+        FEED_HEALTH[s]["oldest"] = dates[0] if dates else ""
+        FEED_HEALTH[s]["dated_rows"] = len(dates)
+        print(f"  [{s}] {len(rows)} referenced IDs in scope"
+              + (f", {dates[0]} to {dates[-1]}" if dates else ", undated"))
         for r in rows:
             cid = r["cve_id"]
             e = refs.setdefault(cid, {"sources": set(), "refs": set(), "public_date": "",

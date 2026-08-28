@@ -406,3 +406,56 @@ def test_a_repo_advisory_ref_without_its_repo_yields_no_link():
         "refs": "ghsa-repos:GHSA-g5v9-xmfp-7gxm"})
     assert source_urls == {}, source_urls
     assert url == "https://www.cve.org/CVERecord?id=CVE-2026-12521"
+
+
+# --------------------------------------------------------------------------
+# Round 7 H4: the largest source on the site decays and nothing measured it
+# --------------------------------------------------------------------------
+
+def test_the_repo_list_carries_a_machine_readable_curation_date():
+    """A prose header saying "NOT SELF-REFRESHING" is honest and unmeasured, and
+    that combination is how a decision quietly becomes a default.
+
+    This feed was the sole source for 1,015 of 1,709 published rows on
+    2026-08-27, 59% of the headline, off a hand-curated list. `compare_magnitudes`
+    is structurally blind to its decay: the repos on the list keep publishing, so
+    the id count stays healthy while the share of the real population the feed can
+    reach falls.
+    """
+    from rbp import feeds
+    age = feeds._repo_list_age_days(feeds.GHSA_REPOS_LIST, today="2026-08-27")
+    assert age is not None, (
+        "rbp/feed_data/ghsa_repos.txt carries no `# curated: YYYY-MM-DD` line, so "
+        "its age cannot reach the health record and the decay is unmeasured")
+    assert age >= 0, "the curation date is in the future"
+
+
+def test_the_repo_list_age_reaches_the_health_line_on_a_healthy_run(monkeypatch):
+    """On EVERY branch, not only the degraded ones.
+
+    A disclosure that survives only when a run is also broken is not a
+    disclosure. That is the CSAF lesson, in a different adapter: the pinned-feed
+    fallback was published in a health detail that `gather` overwrote on any run
+    where nothing else went wrong, so the one fact a reader most needed appeared
+    in a build log and reached no page.
+    """
+    import pathlib
+    from rbp import feeds
+    src = pathlib.Path(feeds.__file__).read_text()
+    # The age string is appended to `detail` BEFORE the branch that chooses a
+    # status, so no status can drop it. Positional rather than behavioural
+    # because reaching the healthy branch means polling real repositories.
+    i_age = src.index("repo list curated")
+    i_branch = src.index('record_feed("ghsa-repos", TRUNCATED')
+    assert i_age < i_branch, (
+        "the repo list age is added after the status branches, so a healthy run "
+        "will not carry it")
+
+
+def test_a_repo_list_with_no_curation_line_does_not_break_the_run(tmp_path):
+    """It is a health string. It must degrade to silence, not to an exception."""
+    from rbp import feeds
+    p = tmp_path / "repos.txt"
+    p.write_text("# no date here\nowner/repo\n")
+    assert feeds._repo_list_age_days(str(p)) is None
+    assert feeds._repo_list_age_days(str(tmp_path / "missing.txt")) is None

@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 136,
+  "effective_n": 140,
   "feeds": [
    "alas",
    "alpine",
@@ -8,53 +8,53 @@
    "csaf",
    "debian",
    "ghsa",
+   "ghsa-repos",
    "mozilla",
    "osv",
    "redhat",
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
- "bytes": 73527080,
- "cnas_effective_alone": 44,
+ "bytes": 73725914,
+ "cnas_effective_alone": 45,
  "cnas_new_effective": 2,
  "cnas_new_effective_names": [
   "Patchstack",
   "Tcpdump"
  ],
- "cnas_reached": 66,
+ "cnas_reached": 67,
  "disclosure": {
-  "dated_n": 10711,
+  "dated_n": 10846,
   "lead_examples": [
    "CVE-2026-1220",
+   "CVE-2026-25250",
    "CVE-2025-4609",
    "CVE-2025-47182",
-   "CVE-2025-47964",
-   "CVE-2025-47963"
+   "CVE-2025-47964"
   ],
   "lead_max_days": 148,
   "lead_median_days": 10,
-  "lead_n": 4677,
-  "lead_pct": 43.67,
-  "mirror_n": 6034,
+  "lead_n": 4810,
+  "lead_pct": 44.35,
+  "mirror_n": 6036,
   "undated_n": 0,
   "unpublished_examples": [
    "CVE-2026-11053",
-   "CVE-2026-11099",
-   "CVE-2026-25250"
+   "CVE-2026-11099"
   ],
-  "unpublished_n": 3
+  "unpublished_n": 2
  },
  "feed": "msrc",
  "health": {},
- "ids": 10714,
- "ids_new": 3133,
- "scored_at": "2026-08-24T14:41:48+00:00",
+ "ids": 10848,
+ "ids_new": 3131,
+ "scored_at": "2026-08-28T00:44:59+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "2 marginal CNA(s) and 4677 lead / 3 unpublished references",
- "wall_seconds": 6.1,
+ "verdict_reason": "2 marginal CNA(s) and 4810 lead / 2 unpublished references",
+ "wall_seconds": 5.5,
  "years": [
   2025,
   2026

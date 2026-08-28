@@ -1,12 +1,13 @@
 {
  "baseline": {
-  "effective_n": 137,
+  "effective_n": 141,
   "feeds": [
    "alas",
    "arch",
    "csaf",
    "debian",
    "ghsa",
+   "ghsa-repos",
    "mozilla",
    "msrc",
    "osv",
@@ -14,9 +15,9 @@
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
- "bytes": 681457,
+ "bytes": 681850,
  "cnas_effective_alone": 42,
  "cnas_new_effective": 1,
  "cnas_new_effective_names": [
@@ -31,7 +32,7 @@
   "lead_n": 0,
   "lead_pct": 0.0,
   "mirror_n": 0,
-  "undated_n": 2436,
+  "undated_n": 2453,
   "unpublished_examples": [
    "CVE-2025-141765",
    "CVE-2026-12184",
@@ -39,17 +40,17 @@
    "CVE-2026-25832",
    "CVE-2026-291i67"
   ],
-  "unpublished_n": 107
+  "unpublished_n": 103
  },
  "feed": "alpine",
  "health": {},
- "ids": 2543,
- "ids_new": 74,
- "scored_at": "2026-08-24T14:41:45+00:00",
+ "ids": 2556,
+ "ids_new": 67,
+ "scored_at": "2026-08-28T00:44:55+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "1 marginal CNA(s) and 0 lead / 107 unpublished references",
- "wall_seconds": 5.5,
+ "verdict_reason": "1 marginal CNA(s) and 0 lead / 103 unpublished references",
+ "wall_seconds": 5.7,
  "years": [
   2025,
   2026

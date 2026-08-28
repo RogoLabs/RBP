@@ -335,3 +335,68 @@ def test_status_names_no_cna(degraded_build):
     assert not named, (
         f"/status names {named}, which are certified CNA short names and not "
         "feeds this site reads")
+
+
+# --------------------------------------------------------------------------
+# Round 7 B4: ids fetched is not rows published, and the page has to say so
+# --------------------------------------------------------------------------
+
+def test_the_feed_table_separates_ids_read_from_rows_published(built_site):
+    """`/status` published one number per feed, ids fetched, and let a reader
+    infer the other two.
+
+    Measured on the 2026-08-27 snapshot: `arch` returned 62 ids and `mozilla`
+    607, on every run since they merged, and NEITHER appeared in any of the 1,709
+    published rows. The table rendered them beside csaf's 2,695 with nothing to
+    tell them apart, and csaf is the only source for 22 rows while those two are
+    the only source for none. Three different questions, one column.
+    """
+    body = (built_site / "status.html").read_text()
+    table = body[body.index("Feeds read on this run"):]
+    for header in ("IDs read", "Rows", "Only source"):
+        assert header in table, f"the feed table has no {header!r} column"
+
+
+def test_a_feed_that_accounts_for_no_published_rows_renders_an_explicit_zero(built_site):
+    """`{% if h.rows_published %}` would render zero as the same blank a snapshot
+    that never measured it renders. Those are opposite claims, and the zero is
+    the entire finding."""
+    body = (built_site / "status.html").read_text()
+    table = body[body.index("Feeds read on this run"):]
+    row = re.search(r'<td class="mono">arch</td>.*?</tr>', table, re.S)
+    assert row, "the fixture no longer carries a feed with zero published rows"
+    cells = re.findall(r'<td class="num">(.*?)</td>', row.group(0))
+    assert cells[:3] == ["62", "0", "0"], (
+        f"arch reads {cells[:3]}: 62 ids and no rows must render as an explicit "
+        "zero, not as a blank or a dash")
+
+
+def test_the_ubuntu_cap_reaches_the_reader_in_days(built_site):
+    """A cap stated in pages is not a unit a reader has. The line it replaces
+    would have read identically whether the cap cost one day or three years."""
+    body = (built_site / "status.html").read_text()
+    assert "37-day window" in body and "2024-01-01" in body, \
+        "the standing cap is still reported only as a page count"
+
+
+def test_the_feed_table_and_the_published_payload_report_the_same_contribution(built_site):
+    """The rendered column and the published JSON must not be able to disagree,
+    which is the failure `test_the_page_and_the_payload_cannot_disagree` exists
+    for one field further up.
+
+    Against `data/summary.json`, not `data/rbp.json`. The envelope publishes a
+    deliberately curated subset for consumers of the ROWS and carries no `feeds`
+    block at all, so a tool holding rbp.json cannot learn that 60% of those rows
+    rest on a single feed. That is round 7's D4 and it is a decision, not a
+    defect: leaving it here as a silently-passing assertion against an empty dict
+    was the actual defect, and this test failed on exactly that.
+    """
+    detail = ((json.loads((built_site / "data" / "summary.json").read_text())
+               .get("feeds") or {}).get("detail") or {})
+    assert detail, "the published summary carries no per-feed detail"
+    for name, h in detail.items():
+        assert "rows_published" in h, f"{name} publishes no contribution count"
+        assert "rows_only" in h, f"{name} publishes no only-source count"
+        assert h["rows_only"] <= h["rows_published"], (
+            f"{name}: only-source ({h['rows_only']}) exceeds rows touched "
+            f"({h['rows_published']}), which is arithmetically impossible")

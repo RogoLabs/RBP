@@ -1,12 +1,13 @@
 {
  "baseline": {
-  "effective_n": 129,
+  "effective_n": 133,
   "feeds": [
    "alas",
    "alpine",
    "arch",
    "csaf",
    "ghsa",
+   "ghsa-repos",
    "mozilla",
    "msrc",
    "osv",
@@ -14,15 +15,17 @@
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-24T14:38:17+00:00"
+  "scored_at": "2026-08-28T00:43:40+00:00"
  },
- "bytes": 86467550,
+ "bytes": 87195634,
  "cnas_effective_alone": 76,
- "cnas_new_effective": 9,
+ "cnas_new_effective": 11,
  "cnas_new_effective_names": [
+  "ClickHouse",
   "CyberArk",
   "ENISA",
   "GandC",
+  "Gridware",
   "PRJBLK",
   "Patchstack",
   "Perforce",
@@ -39,7 +42,7 @@
   "lead_n": 0,
   "lead_pct": 0.0,
   "mirror_n": 0,
-  "undated_n": 16934,
+  "undated_n": 17679,
   "unpublished_examples": [
    "CVE-2025-26843",
    "CVE-2025-30156",
@@ -47,17 +50,17 @@
    "CVE-2025-59490",
    "CVE-2026-11053"
   ],
-  "unpublished_n": 401
+  "unpublished_n": 230
  },
  "feed": "debian",
  "health": {},
- "ids": 17335,
- "ids_new": 1197,
- "scored_at": "2026-08-24T14:41:46+00:00",
+ "ids": 17909,
+ "ids_new": 922,
+ "scored_at": "2026-08-28T00:44:56+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "9 marginal CNA(s) and 0 lead / 401 unpublished references",
- "wall_seconds": 2.3,
+ "verdict_reason": "11 marginal CNA(s) and 0 lead / 230 unpublished references",
+ "wall_seconds": 1.5,
  "years": [
   2025,
   2026

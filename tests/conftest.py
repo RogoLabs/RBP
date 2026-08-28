@@ -25,24 +25,9 @@ import pytest
 
 import _sitefixture
 
-# Every environment variable that changes what the site publishes or how it decides
-# to publish it. Cleared for the whole session so no test inherits an operator's
-# shell or a workflow's env block.
-POSTURE_VARS = (
-    "RBP_LAUNCHED",     # front door: holding page or dashboard
-    "RBP_REHEARSE",     # skips the coverage-gate demotion
-    "RBP_EPOCH",        # zeroes the count from a date
-    "RBP_PAUSE",        # incident switch
-    "RBP_MIN_AGE_DAYS",  # the reportable buffer
-    "RBP_WITHHOLD",     # the withhold lever: ids dropped from every artefact
-    # Withdrawn levers, kept here so a stale value in an operator's shell cannot
-    # resurface as behaviour. RBP_SUPPRESS_KEY keyed the HMAC suppression list and
-    # RBP_ADVISORY_TOKEN authenticated the issue reader; both went with the
-    # automated withhold channel on 2026-08-26.
-    "RBP_SUPPRESS_KEY",
-    "RBP_ADVISORY_TOKEN",
-    "GITHUB_TOKEN",     # the corpus fetch, and the live oracle tests
-)
+# Defined in _sitefixture, which unlike `conftest` is a unique module name.
+# See the note there.
+POSTURE_VARS = _sitefixture.POSTURE_VARS
 
 
 @pytest.fixture(autouse=True, scope="session")

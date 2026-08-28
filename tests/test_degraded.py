@@ -398,7 +398,7 @@ def test_a_magnitude_drop_marks_the_run_degraded_in_the_cli():
     # search over source, which passes on code that never runs.
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=[], dropped=0,
-        shrunk=["osv: 11,000 -> 400 ids (96% fewer)"])
+        shrunk=["osv: 11,000 -> 400 ids (96% fewer)"], stale=[])
     assert on is True and any("fewer ids" in r for r in reasons), (
         "a magnitude drop does not reach degraded, so no banner renders")
 
@@ -410,7 +410,7 @@ def test_a_configured_cap_alone_does_not_degrade_the_run():
     from rbp import cli
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ubuntu: hit the 200-page cap"],
-        dropped=0, shrunk=[])
+        dropped=0, shrunk=[], stale=[])
     assert on is False and reasons == []
 
 
@@ -419,9 +419,12 @@ def test_every_other_signal_still_degrades_the_run():
     from rbp import cli
     for kw in ({"failures": ["debian: 500"]}, {"truncated": ["ghsa: reset"]},
                {"dropped": 12},
-               {"shrunk": ["osv: fewer"]}):
+               {"shrunk": ["osv: fewer"]},
+               # A feed that has stopped updating. Added 2026-08-27; without it
+               # this loop asserted that four of five signals still degrade.
+               {"stale": ["mozilla: newest advisory is 118 days old"]}):
         args = {"failures": [], "truncated": [], "capped": [], "dropped": 0,
-                "shrunk": [], **kw}
+                "shrunk": [], "stale": [], **kw}
         on, reasons = cli.degraded_state(**args)
         assert on is True and reasons, kw
 
@@ -784,7 +787,7 @@ def test_a_cap_is_a_standing_limit_and_not_a_degraded_run():
     which is furniture rather than a warning."""
     on, _reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ghsa: hit the 40-page cap"],
-        dropped=0, shrunk=[])
+        dropped=0, shrunk=[], stale=[])
     assert on is False
 
 
@@ -836,7 +839,7 @@ def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
     assert capped and not truncated and not failures
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
                                      capped=capped, dropped=0,
-                                     shrunk=[])
+                                     shrunk=[], stale=[])
     assert on is False, (
         f"a standing WAF block is being reported as a degraded run: {reasons}")
 
@@ -851,7 +854,7 @@ def test_a_provider_that_stops_working_is_caught_by_the_shrink_guard():
     assert shrunk, "a 87% collapse in csaf rows was not reported"
     on, _reasons = cli.degraded_state(failures=[], truncated=[], capped=[],
                                       dropped=0,
-                                      shrunk=shrunk)
+                                      shrunk=shrunk, stale=[])
     assert on is True
 
 
@@ -1047,3 +1050,363 @@ def test_the_directory_count_is_taken_before_the_cap_and_the_language_filter():
                               {"directory_url": "https://v.example/b/en"}]}
     assert feeds._csaf_directory_count(meta) == 3
     assert len(feeds._csaf_directories(meta, max_dirs=12)) == 2
+
+
+# --------------------------------------------------------------------------
+# Round 7 B5: seventeen CSAF providers behind one number
+# --------------------------------------------------------------------------
+
+def _csaf_meta(host, feed_url):
+    return {"distributions": [{"rolie": {"feeds": [{"url": feed_url}]}}]}
+
+
+def _run_csaf(monkeypatch, providers, rows_per_host, unreachable=()):
+    """Drive feed_csaf over fake providers. `rows_per_host` maps host -> CVE ids."""
+    def fake_get(url, timeout=90, retries=3, headers=None):
+        host = url.split("/")[2]
+        if host in unreachable:
+            raise RuntimeError("HTTP Error 403: Forbidden")
+        if url.endswith("provider-metadata.json"):
+            return _csaf_meta(host, f"https://{host}/rolie.json"), 200, {}
+        if url.endswith("rolie.json"):
+            return {"feed": {"entry": [
+                {"updated": "2026-08-01",
+                 "link": [{"rel": "self", "href": f"https://{host}/a{i}.json"}]}
+                for i, _ in enumerate(rows_per_host.get(host, []))]}}, 200, {}
+        i = int(url.rsplit("/a", 1)[1].split(".")[0])
+        cid = rows_per_host[host][i]
+        return ({"document": {"publisher": {"name": host}, "title": "t",
+                              "tracking": {"id": "T-1",
+                                           "initial_release_date": "2026-08-01"}},
+                 "vulnerabilities": [{"cve": cid, "title": "v"}]}, 200, {})
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    monkeypatch.setattr(feeds, "_get_text",
+                        lambda u, timeout=90: (_ for _ in ()).throw(RuntimeError("no dir")))
+    return feeds.feed_csaf([2026], providers=providers, aggregators=(), workers=1)
+
+
+def test_each_csaf_provider_records_its_own_row_count(monkeypatch):
+    """Seventeen providers shared ONE `rows` number, so `compare_magnitudes`
+    could not see a provider go dark.
+
+    This is the SUSE failure's shape. SUSE dropped 14,486 in-scope advisories,
+    the aggregate absorbed it, and the health line published the loss as a fact
+    about SUSE. `feed_osv` has recorded per-ecosystem parts all along; this
+    adapter fans out to more third parties than any other and recorded none.
+    """
+    providers = ("https://a.example/provider-metadata.json",
+                 "https://b.example/provider-metadata.json")
+    _run_csaf(monkeypatch, providers,
+              {"a.example": ["CVE-2026-1", "CVE-2026-2"], "b.example": ["CVE-2026-3"]})
+
+    assert feeds.FEED_HEALTH.get("csaf:a.example", {}).get("rows") == 2
+    assert feeds.FEED_HEALTH.get("csaf:b.example", {}).get("rows") == 1
+    # And they nest under the parent, so the top-level attempt count still means
+    # one FEED rather than one sub-fetch.
+    detail = feeds.health_detail()
+    assert set(detail["csaf"]["parts"]) == {"a.example", "b.example"}
+    assert "csaf:a.example" not in detail
+
+
+def test_one_csaf_provider_going_dark_is_caught_while_the_aggregate_looks_normal():
+    """The mutation test. With per-provider parts the collapse is reported; with
+    the single aggregate record this adapter used to write, it is not.
+
+    The numbers are csaf's real published totals: it swung 3,296 -> 3,202 ->
+    3,938 -> 2,213 -> 2,695 across five runs, so a provider holding under 40% of
+    the total can stop forever inside that noise.
+    """
+    prev = {"csaf": {"rows": 3938, "parts": {"suse.com": {"rows": 1700},
+                                             "siemens.com": {"rows": 2238}}}}
+    cur = {"csaf": {"rows": 3200, "parts": {"suse.com": {"rows": 0},
+                                            "siemens.com": {"rows": 3200}}}}
+    found = feeds.compare_magnitudes(prev, cur)
+    assert any("csaf:suse.com" in f for f in found), (
+        "a provider that stopped entirely was invisible: " + repr(found))
+
+    # THE MUTATION: strip the parts, which is exactly the record this adapter
+    # wrote before round 7. The aggregate moved 3,938 -> 3,200, an 19% dip, well
+    # inside MAGNITUDE_DROP, so nothing fires.
+    assert feeds.compare_magnitudes({"csaf": {"rows": 3938}},
+                                    {"csaf": {"rows": 3200}}) == [], (
+        "the fixture no longer demonstrates the blindness it exists to prove")
+
+
+def test_an_unreachable_csaf_provider_never_escalates_the_parent(monkeypatch):
+    """The coupling this project cannot see from either function alone.
+
+    `health_detail` escalates a parent whose parts degraded, but ONLY when the
+    parent is still OK. `_record_csaf_health` sets the parent to FAILED or CAPPED
+    whenever anything was unreachable. If either side changes, an unreachable
+    provider starts escalating csaf and the site wears a banner forever, because
+    Cisco's edge 403s on every single run.
+    """
+    providers = ("https://a.example/provider-metadata.json",
+                 "https://gone.example/provider-metadata.json")
+    _run_csaf(monkeypatch, providers, {"a.example": ["CVE-2026-1"]},
+              unreachable={"gone.example"})
+
+    part = feeds.FEED_HEALTH["csaf:gone.example"]
+    assert part["status"] == feeds.CAPPED, (
+        "an unreachable provider recorded FAILED reaches health_summary's "
+        "failures list, and degraded_state turns any failure into a degradation")
+    detail = feeds.health_detail()
+    assert detail["csaf"]["status"] == feeds.CAPPED
+    assert not detail["csaf"]["ok"]
+
+
+def test_a_provider_that_goes_from_healthy_to_unreachable_is_still_compared(monkeypatch):
+    """The defect the coupling test found by accident.
+
+    The unreachable branch `continue`s before the bottom of the loop, so the
+    first version of the per-provider records gave no part at all to a provider
+    that had gone dark. `compare_magnitudes` iterates the CURRENT parts, so a
+    part that vanishes is compared against nothing: a provider going from 500
+    rows to unreachable would have been invisible to the guard these records
+    exist to feed. Which is the original bug, reintroduced by its own fix.
+    """
+    providers = ("https://a.example/provider-metadata.json",
+                 "https://gone.example/provider-metadata.json")
+    _run_csaf(monkeypatch, providers, {"a.example": ["CVE-2026-1"]},
+              unreachable={"gone.example"})
+    cur = feeds.health_detail()
+    assert "gone.example" in cur["csaf"]["parts"], (
+        "an unreachable provider recorded no part, so it cannot be compared")
+
+    prev = {"csaf": {"rows": 501, "parts": {"a.example": {"rows": 1},
+                                            "gone.example": {"rows": 500}}}}
+    found = feeds.compare_magnitudes(prev, cur)
+    assert any("gone.example" in f for f in found), found
+
+
+def test_a_permanently_unreachable_csaf_provider_does_not_degrade_the_run(monkeypatch):
+    """The banner argument, end to end. Cisco 403s every run; if that made the
+    run degraded, `degraded` would be permanently true and a consumer could not
+    branch on it at all."""
+    providers = ("https://a.example/provider-metadata.json",
+                 "https://gone.example/provider-metadata.json")
+    _run_csaf(monkeypatch, providers, {"a.example": ["CVE-2026-1"]},
+              unreachable={"gone.example"})
+    failures, truncated, _attempts, capped = feeds.health_summary()
+    assert failures == [], failures
+    assert truncated == [], truncated
+    on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
+                                     capped=capped, dropped=0, shrunk=[], stale=[])
+    assert on is False, reasons
+    # It is still published, by name, as a standing limitation.
+    assert any("gone.example" in c for c in capped), capped
+
+
+# --------------------------------------------------------------------------
+# Round 7 B4: ids fetched is not rows published
+# --------------------------------------------------------------------------
+
+def test_a_feed_with_thousands_of_ids_and_no_published_rows_is_visible():
+    """`mozilla` returned 607 ids per run and `arch` 62, on every run since they
+    merged, and neither appeared in ANY of the 1,709 published rows. `/status`
+    rendered them beside csaf's 2,695 with nothing to tell them apart, and csaf
+    is the only source for 22 rows while those two are the only source for none.
+    """
+    rows = [{"sources": "ghsa-repos"}, {"sources": "ghsa-repos,osv"},
+            {"sources": "csaf"}]
+    detail = {"ghsa-repos": {"rows": 9861}, "osv": {"rows": 12434},
+              "csaf": {"rows": 2695}, "mozilla": {"rows": 607}, "arch": {"rows": 62}}
+    feeds.merge_contribution(detail, rows)
+
+    assert detail["mozilla"]["rows_published"] == 0
+    assert detail["arch"]["rows_published"] == 0
+    # An explicit zero, not a missing key. A blank renders as "not measured",
+    # which is the opposite claim.
+    assert detail["arch"]["rows_only"] == 0
+    assert "rows_published" in detail["arch"]
+
+
+def test_only_source_counts_what_disappears_if_the_feed_does():
+    """`touched` cannot answer it. Four distro feeds touch 196 rows between them
+    and are the sole source for 132, because they mostly corroborate each other;
+    ghsa-repos touches 1,188 and is the sole source for 1,015."""
+    rows = [{"sources": "a"}, {"sources": "a,b"}, {"sources": "b,c"}, {"sources": "c"}]
+    assert feeds.rows_by_source(rows) == {"a": (2, 1), "b": (2, 0), "c": (2, 1)}
+
+
+def test_contribution_survives_a_row_with_no_sources():
+    """Defensive: an empty source string must not create a feed named "".
+    `classify` comma-joins a set, and a set can be empty."""
+    assert feeds.rows_by_source([{"sources": ""}, {}]) == {}
+
+
+def test_every_published_source_name_is_a_feed_the_run_reports_health_for():
+    """The two halves of `summary.feeds` must describe the same feed set.
+
+    A source string appearing in a published row that has no health entry means
+    a row is evidenced by something the run never accounted for, and a health
+    entry with no rows is B4's finding. Both are worth failing on.
+    """
+    rows = [{"sources": "ghsa"}, {"sources": "ghsa,osv"}]
+    detail = {"ghsa": {"rows": 1}, "osv": {"rows": 1}, "arch": {"rows": 62}}
+    feeds.merge_contribution(detail, rows)
+    published = set(feeds.rows_by_source(rows))
+    assert published <= set(detail), published - set(detail)
+
+
+# --------------------------------------------------------------------------
+# Round 7 B3 and H1: how far a feed reached, and how recently
+# --------------------------------------------------------------------------
+
+def test_the_ubuntu_cap_is_stated_in_days_not_pages():
+    """The line this replaces read "hit the 200-page cap; rows beyond it were not
+    read", which would have read identically whether the cap cost one day or
+    three years. Measured live 2026-08-27: it costs all but 38 days of a
+    three-year window, and reads 4,000 of 75,993 records."""
+    rows = [{"public_date": "2026-07-20"}, {"public_date": "2026-08-26"}]
+    line = feeds._ubuntu_reach(200, 20, 75993, rows, {2024, 2025, 2026})
+    assert "4,000" in line and "75,993" in line and "5.3%" in line
+    assert "2026-07-20" in line and "37-day" in line
+    assert "2024-01-01" in line
+
+
+def test_the_ubuntu_reach_line_survives_a_run_with_no_dated_rows():
+    """It is a health string on the degraded path; it must not raise."""
+    line = feeds._ubuntu_reach(200, 20, None, [{"public_date": ""}], {2024})
+    assert "200-page cap" in line and "not read" in line
+
+
+def test_gather_records_how_recent_each_feed_is(monkeypatch):
+    """A feed frozen at a constant is invisible to `compare_magnitudes`, which
+    only ever asks whether a number went DOWN.
+
+    `mozilla` returned exactly 607 on six consecutive published snapshots, `arch`
+    exactly 62, `samsung` exactly 420 on five. Had any of them stopped updating
+    on day one, every guard on this site would still have been green. The row
+    count cannot see it; the newest date can.
+    """
+    monkeypatch.setattr(feeds, "ADAPTERS", {
+        "fresh": lambda years: [
+            {"cve_id": "CVE-2026-1", "source": "fresh", "source_ref": "r",
+             "public_date": "2026-08-26", "product": "", "description": ""},
+            {"cve_id": "CVE-2026-2", "source": "fresh", "source_ref": "r",
+             "public_date": "2026-01-02", "product": "", "description": ""}],
+        "undated": lambda years: [
+            {"cve_id": "CVE-2026-3", "source": "undated", "source_ref": "r",
+             "public_date": "", "product": "", "description": ""}],
+    })
+    feeds.gather(["fresh", "undated"], {2026})
+
+    assert feeds.FEED_HEALTH["fresh"]["newest"] == "2026-08-26"
+    assert feeds.FEED_HEALTH["fresh"]["oldest"] == "2026-01-02"
+    assert feeds.FEED_HEALTH["fresh"]["dated_rows"] == 2
+    # An undated feed reports zero dated rows rather than a missing key, so
+    # "cannot be checked" is distinguishable from "was not looked at". `arch`
+    # publishes no dates at all and is exactly this case.
+    assert feeds.FEED_HEALTH["undated"]["newest"] == ""
+    assert feeds.FEED_HEALTH["undated"]["dated_rows"] == 0
+
+
+# --------------------------------------------------------------------------
+# Round 7 H1: a frozen feed returns a perfect row count for ever
+# --------------------------------------------------------------------------
+
+def test_a_feed_that_stopped_updating_is_caught_on_dates_not_counts():
+    """The failure `compare_magnitudes` is structurally blind to.
+
+    It only ever asks whether a number went DOWN. A feed that silently stopped
+    returns the SAME number every run, for ever, which reads as perfect health.
+    `mozilla` returned exactly 607 ids on six consecutive published snapshots,
+    `arch` exactly 62, `samsung` exactly 420 on five.
+    """
+    detail = {"mozilla": {"newest": "2026-05-01", "dated_rows": 607, "rows": 607}}
+    stale, unmeasurable = feeds.stale_feeds(detail, today="2026-08-27")
+    assert len(stale) == 1 and "mozilla" in stale[0], stale
+    assert "118 days old" in stale[0]
+    assert unmeasurable == []
+
+    # And the count is unchanged across those runs, which is the whole point:
+    # the guard that reads counts sees nothing wrong.
+    assert feeds.compare_magnitudes({"mozilla": {"rows": 607}},
+                                    {"mozilla": {"rows": 607}}) == []
+
+
+def test_the_floor_clears_every_real_feed_cadence():
+    """45 days is derived from the feeds' own measured cadences, not picked.
+
+    Newest advisory per feed over the 2026-08-27 baseline. Samsung's monthly SMR
+    is the slowest genuine cadence at 26 days, and its worst legitimate case is
+    about 35 just before the next bulletin. A floor that flagged any of these
+    would be furniture inside a week.
+    """
+    measured = {"csaf": "2026-08-27", "ghsa": "2026-08-27",
+                "ghsa-repos": "2026-08-27", "osv": "2026-08-27",
+                "redhat": "2026-08-27", "ubuntu": "2026-08-27",
+                "alas": "2026-08-26", "mozilla": "2026-08-18",
+                "msrc": "2026-08-11", "samsung": "2026-08-01"}
+    detail = {n: {"newest": d, "dated_rows": 10} for n, d in measured.items()}
+    stale, _ = feeds.stale_feeds(detail, today="2026-08-27")
+    assert stale == [], f"the floor flags a healthy feed: {stale}"
+
+    # Samsung at its worst legitimate age still clears.
+    late = {"samsung": {"newest": "2026-07-23", "dated_rows": 420}}
+    assert feeds.stale_feeds(late, today="2026-08-27")[0] == []
+
+
+def test_a_feed_with_no_dates_is_unmeasurable_not_fine():
+    """`alpine`, `arch` and `debian` return no dates at all, so no threshold can
+    check them. Silently skipping them lets "cannot be checked" read as "checked
+    and fine", which is the same error as letting a page cap read as a complete
+    read."""
+    detail = {"debian": {"newest": "", "dated_rows": 0, "rows": 17909}}
+    stale, unmeasurable = feeds.stale_feeds(detail, today="2026-08-27")
+    assert stale == []
+    assert len(unmeasurable) == 1 and "debian" in unmeasurable[0]
+
+
+def test_staleness_degrades_the_run_and_unmeasurable_does_not():
+    """A dead feed makes this run's counts a lower floor than usual and stays
+    loud until fixed, which is not the same as a cap that fires by design."""
+    on, reasons = cli.degraded_state(
+        failures=[], truncated=[], capped=[], dropped=0, shrunk=[],
+        stale=["mozilla: newest advisory is 2026-05-01, 118 days old"])
+    assert on is True
+    assert any("stopped returning recent advisories" in r for r in reasons), reasons
+
+    off, _ = cli.degraded_state(failures=[], truncated=[], capped=[], dropped=0,
+                                shrunk=[], stale=[])
+    assert off is False
+
+
+def test_a_csaf_provider_part_is_not_freshness_checked_on_its_own():
+    """Parts have no dates of their own; the parent carries them. Checking a part
+    would report every provider as unmeasurable on every run, which is furniture."""
+    detail = {"csaf": {"newest": "2026-08-27", "dated_rows": 2992},
+              "csaf:www.cisco.com": {"newest": "", "dated_rows": 0}}
+    stale, unmeasurable = feeds.stale_feeds(detail, today="2026-08-27")
+    assert stale == [] and unmeasurable == []
+
+
+def test_osv_can_fetch_an_ecosystem_whose_name_contains_a_space(monkeypatch):
+    """Five of OSV's 46 ecosystem names contain a space: "GitHub Actions",
+    "Red Hat", "Rocky Linux", "Azure Linux", "BellSoft Hardened Containers".
+
+    Unquoted, the URL raises `URL can't contain control characters` before any
+    request is made, so the adapter could not fetch any of them and would record
+    each as a hard FAILED. Latent because none was configured, and found by
+    trying to merge them rather than by reading the code.
+
+    It matters beyond the five: FEEDS.md's 2026-08-22 measurement that scored the
+    unmerged ecosystems at +0 CNAs was a full-text probe over the archives, not
+    this adapter, which is the same probe-and-adapter-disagree gap that made the
+    GIT estimate wrong by its entire value.
+    """
+    seen = []
+
+    def fake_url_ok(u):
+        seen.append(u)
+        return False        # stop before the download; the URL is the assertion
+
+    monkeypatch.setattr(feeds, "_url_ok", fake_url_ok)
+    feeds.feed_osv([2026], ecosystems=("GitHub Actions", "Red Hat"))
+
+    assert seen, "the adapter never built a URL"
+    assert all(" " not in u for u in seen), seen
+    assert any("GitHub%20Actions" in u for u in seen), seen
+    assert any("Red%20Hat" in u for u in seen), seen

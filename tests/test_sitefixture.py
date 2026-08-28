@@ -21,7 +21,6 @@ from __future__ import annotations
 
 import pathlib
 
-import conftest
 import re
 
 import pytest
@@ -205,7 +204,35 @@ def test_every_posture_lever_is_listed_here():
     for src in (root / "rbp").glob("*.py"):
         found |= set(_re.findall(r'environ(?:\.get)?[(\[]\s*"(RBP_[A-Z_]+)"',
                                  src.read_text()))
-    missing = found - set(conftest.POSTURE_VARS)
+    missing = found - set(_sitefixture.POSTURE_VARS)
     assert not missing, (
         f"{sorted(missing)} change what the site publishes and are not cleared "
         "for the suite, so the tests inherit them from whoever is running them")
+
+
+def test_no_test_imports_the_ambiguous_conftest_module():
+    """`import conftest` resolves to whichever conftest.py pytest collected first.
+
+    There are two, `tests/conftest.py` and `tests/render/conftest.py`, neither in
+    a package, so pytest imports both under the top-level module name `conftest`
+    and the second to arrive does not get its own name: it loses. This file did
+    `import conftest` and read `POSTURE_VARS` off it, which resolved correctly
+    when this file was run alone and to the render conftest on a full-suite run.
+
+    So the guard that exists to catch an unlisted posture lever failed with
+    `AttributeError` on every full run and passed in isolation. That is the shape
+    that gets called flaky and reruns rather than fixed, and the thing it was
+    guarding is a variable that silently drops rows from every fixture build.
+
+    The constant lives in `_sitefixture` now, which is a unique module name.
+    Shared test state belongs in a uniquely-named module, never in `conftest`.
+    """
+    offenders = []
+    for path in sorted(TESTS.rglob("test_*.py")) + sorted(TESTS.rglob("conftest.py")):
+        for line in _code_lines(path):
+            if re.match(r"\s*(import\s+conftest|from\s+conftest\s+import)\b", line):
+                offenders.append(f"{path.relative_to(ROOT)}: {line.strip()}")
+    assert not offenders, (
+        "`conftest` is not a stable module name, there are two of them and they "
+        "shadow each other. Put shared state in a uniquely-named module and "
+        "import that:\n  " + "\n  ".join(offenders))

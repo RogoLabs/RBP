@@ -476,7 +476,7 @@ single-origin, uncheckable, coordinator-named claims with a dead evidence link.*
 
 ### Tier 1: ecosystems already reachable through a written adapter
 
-**OSV currently reads 6 of 46 ecosystems.** All 46 were enumerated live and the extra 29
+**OSV currently reads 11 of 46 ecosystems.** All 46 were enumerated live and the extra 29
 were downloaded and scored against the corpus. The result is the most useful measurement
 in this document, and it is bad news:
 
@@ -494,6 +494,58 @@ cheapest thing on this list.
 Merge `GIT` and `Android` and the remaining 27 anyway, since the adapter exists and the
 marginal cost is bandwidth, but **the 27 go in tagged `corroborating`** until they pass
 the disclosure-lead backtest, and none of them are counted as progress.
+
+> **CORRECTION 2026-08-27. This instruction was half executed and "bandwidth" was
+> never measured, which is why the other half stalled.**
+>
+> The adapter reads **11 of 46**, not 6: the original six plus `Packagist`, `NuGet`,
+> `Pub`, `Hex` and `Android`. `GIT` was correctly not merged. The remaining 27 were
+> neither merged nor un-recommended, so this document carried a standing instruction
+> that nobody could act on or close.
+>
+> The reason is in the word "bandwidth", which treats 35 ecosystems as one decision.
+> Sizes fetched 2026-08-27, and they are not one decision at all:
+>
+> | | |
+> |---|---|
+> | GitHub Actions 99KB, SwiftURL 107KB, Hackage 51KB, opam 49KB, VSCode 21KB, CRAN 12KB, GSD 6KB, UVI 1KB | **346KB total** |
+> | MinimOS 67MB, Linux 55MB, Chainguard 30MB, Wolfi 19MB, Root 14MB, Bitnami 9MB | **195MB total** |
+>
+> `osv` already pulls 305MB per run. The first group is 0.1% of that and is a tuple
+> edit; the second is +64% for six distro-rebuild channels that are exactly the
+> category measured at +0 CNAs above. **Split the instruction: merge the small
+> eight behind a scorecard, and do not merge the large six on this evidence.**
+>
+> What was never measured for ANY of the 29 is the half this site is actually
+> about. The table above is `cnas_new_effective`, admissibility test 1. Nobody had
+> ever run `unpublished_n` on them, so "buys nothing" was established for coverage
+> and unestablished for detection.
+>
+> **Scored and merged, same day.** The small eight were fetched as their own
+> candidate rather than folded into `osv` and scored afterwards, so the numbers
+> describe the decision being made:
+>
+> ```
+> osv-small   58 ids, 6 not already seen, 0 marginal CNAs, 7 unpublished now
+>             disclosure lead on 24 of 51 dated references, median 13d, max 97d
+>             1.1s, 0.3 MB          VERDICT: corroborating
+> ```
+>
+> Fails test 1, **clears test 2**, which section 2 says may be merged.
+> `GitHub Actions`, `SwiftURL`, `Hackage` and `opam` are in. `VSCode`, `CRAN`,
+> `GSD` and `UVI` returned zero in-scope ids and are recorded as measured-at-zero
+> with the date rather than merged empty, so nobody re-probes them. Scorecard at
+> `feedlab/osv-small.json`. It buys no coverage and is not counted as progress.
+>
+> **And the attempt found a bug worth more than the merge.** `feed_osv` built its
+> URL by f-string with no encoding, so it could not fetch ANY ecosystem whose name
+> contains a space: `GitHub Actions`, `Red Hat`, `Rocky Linux`, `Azure Linux`,
+> `BellSoft Hardened Containers`. `urllib` raises before a request is made, so
+> each would have been recorded as a hard FAILED. Three of the five are in the
+> "remaining 27" this section told someone to merge, and the +0 measurement above
+> reached them through a full-text probe over the archives, **not through the
+> adapter** -- the same probe-and-adapter gap that made the GIT row wrong by its
+> entire value, two rows up in the same table.
 
 > ### CORRECTION, 2026-08-23. The GIT row above was wrong by its entire value.
 >
@@ -530,8 +582,77 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 | **WPScan** | `api/v3` route 404; API is token-gated | WPScan (1,961) | +1, blocked on credentials |
 | **CSAF provider sweep** | probe `.well-known/csaf/` per vendor. Sampled: SonicWall **200**, Palo Alto **404**, Dell **403** | one CNA each, no parser each | +5 to +15 |
 | **National CERT feeds** | CERT-FR **200**, TWCERT **200**, JVN **200**, CERT-VDE **200**, CISA ICS **200** | TR-CERT, twcert, CERTVDE, INCD, CERT-In, CIRCL, DIVD, JPCERT | +5 to +8 |
-| **GitLab advisory DB** | repo **200** | mixed, overlaps GHSA heavily | unknown, likely low |
+| ~~**GitLab advisory DB**~~ | **REJECTED 2026-08-27, see below** | | **0** |
 | **Distro leftovers** (Oracle ELSA **200**, Rocky errata API **200**, Gentoo GLSA **200**) | all 200 | overlap with OSV distro ecosystems, which scored 0 new | likely 0, scorecard first |
+
+> ### REJECTED 2026-08-27: the GitLab advisory database, for 17MB and no adapter.
+>
+> This row read "repo 200; mixed, overlaps GHSA heavily; unknown, likely low." It is
+> now measured, and it is not low, it is **structurally zero**.
+>
+> ```
+> archive             17.1 MB        advisory files      51,818
+> distinct CVE ids    31,396         in window           13,211
+> files citing a GHSA 41,656 (80.4%) newest pubdate      2026-07-28
+> ecosystems          npm, maven, packagist, pypi, go, nuget, cargo, gem, conan, swift, pub
+> ```
+>
+> Two facts, and the second is permanent. 80% of the advisories are GHSA
+> re-publications and every ecosystem present is one OSV already covers. Then the
+> repository's own `.gitlab-ci.yml`:
+>
+>     yq -N 'select((now | to_unix) - (.pubdate | to_unix) > 30*24*3600) | filename'
+>
+> **The community mirror syncs only advisories older than 30 days, by design.** The
+> newest `pubdate` in the archive is 2026-07-28, exactly 30 days before the fetch.
+>
+> A feed with a mandated 30-day publication lag cannot clear admissibility test 2 at
+> any effort: by the time it carries a reference, the ID has had a month to be
+> published. It is not a weak detector, it is structurally incapable of being one,
+> which is precisely what section 2 was written to catch.
+>
+> Cost of establishing this: one download and reading someone else's CI file. Cost
+> of the alternative: a YAML parser over 51,818 files and a scorecard to find out
+> the same thing. **Fourth estimate in this document cancelled by measurement**, and
+> the first cancelled by reading a third party's build config rather than its data.
+
+> ### RE-PROBED 2026-08-27: the two national CERTs this plan recommends do not have the routes it assumed.
+>
+> `NEXT.md` says: *"Buy margin first. Target TWCERT and TR-CERT, the two that probed
+> 200 on their own advisory sites. Two CNAs for two days."* Both 200s were re-checked:
+>
+> | | |
+> |---|---|
+> | `twcert.org.tw/tw/lp-132-1.html` | 200, 30KB of HTML, Traditional Chinese listing page |
+> | `twcert.org.tw/en/lp-132-1.html` | **302**, no English locale at that path |
+> | `twcert.org.tw/{tw,en}/rss-100.xml` | **404** both locales |
+> | `usom.gov.tr/` | 200, 7,091 bytes |
+> | `usom.gov.tr/bildirim` | 200, **7,091 bytes** |
+> | `usom.gov.tr/rss.xml` | 200, **7,091 bytes**, `Content-Type: text/html` |
+>
+> **TR-CERT serves the same 7,091-byte HTML document at every path tried, including
+> `/rss.xml`.** There is no machine-readable route behind that 200. TWCERT has a real
+> listing page and no feed, so it is an HTML scrape against a Chinese-locale CMS with
+> pagination, which is the same family as the Android bulletin parser this document
+> cancelled for fragility.
+>
+> This document's own CSAF probe already recorded `dell`, `TR-CERT`, `HCL` and
+> `juniper` as "200 but not CSAF (an HTML error page)". The national-CERT row still
+> counted TR-CERT's 200 as a positive signal. **It is the same 200.** A status code
+> is not a feed, and this table has now been wrong about that twice.
+>
+> Also re-probed, since they shared the row: JVN RDF 200 (17KB, real RDF), MyJVN
+> `getVulnOverviewList` 200 (86KB, real XML), CERT-FR `/avis/feed/` 200 (22KB, real
+> XML). All three are genuine machine-readable feeds. JVN and MyJVN map to `jpcert`,
+> already effective at 12 sightings; CERT-FR maps to ANSSI, which appears nowhere in
+> the top-50 miss list. Real feeds, no established marginal CNA, and each would still
+> need a scorecard to claim one.
+>
+> **Two days is not the cost of TWCERT and TR-CERT.** Re-cost them, or pick a
+> different pair. And note the cheaper thing this comparison surfaced: `dell`,
+> `TR-CERT` and `sap` are each ONE sighting short of the floor rather than unsighted,
+> so two more sightings apiece is worth three parsers. `python -m rbp.feedlab
+> near-floor` reports it.
 
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated
