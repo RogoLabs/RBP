@@ -181,6 +181,21 @@ def merge_contribution(detail, rows):
         n, only = contrib.get(name, (0, 0))
         v["rows_published"] = n
         v["rows_only"] = only
+        # PARTS GET None, NOT 0, AND THE DIFFERENCE IS THE WHOLE POINT OF THE
+        # KEY. `rows_by_source` reads the `sources` string on each published
+        # row, and that string names the FEED (`csaf`), never the provider
+        # inside it, so no part can be looked up in it. Writing 0 would publish
+        # "this provider accounts for no rows on this site", which is a claim
+        # about the provider; None publishes "not measured", which is a claim
+        # about us and is the true one.
+        #
+        # Set explicitly rather than left absent, because absent is not the same
+        # as None to the template: `h.rows_published is not none` is TRUE for a
+        # missing key in Jinja, so an unset part takes the "measured" branch and
+        # renders a blank cell where a dash belongs.
+        for part in (v.get("parts") or {}).values():
+            part.setdefault("rows_published", None)
+            part.setdefault("rows_only", None)
     return detail
 
 
@@ -1759,7 +1774,7 @@ def _csaf_path_year_in_scope(path, years):
     return not segs or any(int(s) >= min(years) for s in segs)
 
 
-def _csaf_directory_entries(directory_url, years, cap):
+def _csaf_directory_entries(directory_url, years, cap=None):
     """Recent advisory URLs from a CSAF *directory* distribution.
 
     The spec allows two distribution shapes and this adapter originally handled
@@ -1771,6 +1786,18 @@ def _csaf_directory_entries(directory_url, years, cap):
     `changes.csv` is preferred: it carries timestamps, so a recency cap is
     meaningful. `index.txt` is the fallback, and carries no dates, so it is
     filtered on the year in the file path instead.
+
+    `cap` IS OPTIONAL, AND `feed_csaf` PASSES NONE. A per-directory cap applied
+    here is invisible to the caller: it returns 120 entries whether the provider
+    listed 120 or 83,091, so the one number needed to say how much of a provider
+    was read is destroyed before anything can report it. The whole listing has
+    already been downloaded and parsed by this point either way, so returning it
+    all costs a list rather than a fetch, and `feed_csaf` caps ONCE, where it
+    knows what it is cutting and can publish the cut.
+
+    The cap is kept as a parameter because bounding a single pathological
+    directory is still a reasonable thing for another caller to ask for, and
+    because the tests that pin its behaviour are pinning real behaviour.
 
     DO NOT reintroduce an early `break` here. This loop used to stop at the
     first out-of-window row, on the assumption that changes.csv is newest-first.
@@ -1804,7 +1831,7 @@ def _csaf_directory_entries(directory_url, years, cap):
             # Newest first, then cap, so the cap keeps the most recent advisories
             # whatever order the provider wrote the file in.
             out.sort(reverse=True)
-            return out[:cap]
+            return out if cap is None else out[:cap]
     except Exception:
         pass
     try:
@@ -1816,7 +1843,9 @@ def _csaf_directory_entries(directory_url, years, cap):
     # No timestamps here, so select on the year segment of the path and take the
     # tail, which these listings order oldest-first.
     keep = [p for p in paths if any(seg in wanted for seg in p.split("/"))]
-    return [("", f"{base}/{p.lstrip('/')}") for p in keep[-cap:]]
+    if cap is not None:
+        keep = keep[-cap:]
+    return [("", f"{base}/{p.lstrip('/')}") for p in keep]
 
 
 def _csaf_directories(meta, max_dirs):
@@ -1880,6 +1909,10 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     # That is the silent-shrink signature on the one adapter that fans out to
     # more than a dozen third parties.
     unreachable, empty, capped_dirs, fell_back = [], [], [], []
+    # The ADVISORY cap, which is a different loss from `capped_dirs` and was
+    # the one nothing measured. `capped_dirs` counts directories we declined to
+    # consult; this counts advisories we listed, could have read, and cut.
+    capped_reads = []
     all_providers = _expand_csaf_providers(providers, aggregators, max_providers)
     print(f"  [csaf] {len(all_providers)} providers (incl. aggregator-discovered)", file=sys.stderr)
     for meta_url in all_providers:
@@ -1926,7 +1959,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # again. The claim is deferred to after the fetch, where we know whether
         # the directories we DID read had anything in them.
         for durl in chosen:
-            entries.extend(_csaf_directory_entries(durl, years, cap_per_provider))
+            entries.extend(_csaf_directory_entries(durl, years))
         for furl in feed_urls:
             try:
                 fd, _, _ = _get(furl, timeout=90)
@@ -1941,6 +1974,29 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                 if href:
                     entries.append((upd, href))
         entries.sort(reverse=True)
+        # BEFORE THE CUT, because after it the number is gone. This is the whole
+        # point of reading the directories uncapped: `listed` is what the provider
+        # published in the window and `len(entries)` is what we agreed to read,
+        # and until 2026-08-28 the difference between them was applied here and
+        # reported nowhere.
+        #
+        # Measured live on the configured providers that day, in-scope advisories
+        # against a cap of 120:
+        #
+        #   suse.com                     83,091     0.1%
+        #   security.access.redhat.com   37,317     0.3%
+        #   wid.cert-bund.de             21,358     0.6%
+        #   cisa.gov                      2,243     5.3%
+        #   cisco.com                       535    22.4%
+        #   cert-portal.siemens.com         457    26.3%
+        #
+        # Every one of those six published `status: ok`. 144,281 advisories went
+        # unread with nothing on any page saying so, and no existing guard could
+        # see it: `compare_magnitudes` only ever asks whether a number went DOWN,
+        # and a hard cap holds it perfectly flat. That is the same signature as
+        # `mozilla` frozen at exactly 607 for six consecutive runs, arriving in
+        # the one shape the guard is structurally blind to.
+        listed = len(entries)
         entries = entries[:cap_per_provider]
 
         def _fetch(item):
@@ -1998,15 +2054,23 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # depends on the order providers are visited and would fire this guard
         # every time an earlier provider happened to carry the same advisory.
         #
-        # STATUS IS DELIBERATELY OK FOR EVERY REACHABLE PROVIDER, including one
-        # with nothing to say. `health_detail` escalates a parent whose parts
-        # degraded, and `_record_csaf_health` owns csaf's aggregate status on
-        # reasoning this must not override: an unreachable provider is a STANDING
-        # limit (Cisco 403s on every run) and is published as CAPPED rather than
-        # TRUNCATED precisely so the site does not wear an incomplete-run banner
-        # forever. Marking a quiet vendor's part non-OK would escalate csaf from
-        # OK to TRUNCATED and do exactly that. The parts exist to be counted, not
-        # to re-decide the status.
+        # STATUS IS OK FOR EVERY REACHABLE PROVIDER WE READ IN FULL, including
+        # one with nothing to say, and it is CAPPED for one we did not.
+        #
+        # The rule used to be "OK for every reachable provider" without the second
+        # half, and the second half is the entire disclosure: a provider read at
+        # 0.1% published the same `ok` as a provider read whole.
+        #
+        # The banner argument that produced the original rule still holds, and it
+        # is why this is CAPPED rather than TRUNCATED. `health_detail` escalates a
+        # still-OK parent to the worst of its parts, and the worst a cap can make
+        # it is CAPPED; `degraded_state` folds TRUNCATED into "this run is
+        # incomplete" and deliberately does not fold CAPPED, because a standing
+        # limit fires every run by design. So naming the cap costs no banner.
+        #
+        # A QUIET VENDOR IS STILL OK. `read == 0` is not a cap and must not
+        # borrow the word: it means the provider had nothing in the window, which
+        # is a fact about the provider, where a cap is a fact about us.
         #
         # An unreachable provider is recorded CAPPED, NOT FAILED, and the
         # difference is the whole banner argument. `health_summary` collects
@@ -2027,6 +2091,12 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # coupling, because it is invisible from either function alone.
         if host in _csaf_hosts(unreachable):
             record_feed(f"csaf:{host}", CAPPED, "provider unreachable", rows=0)
+        elif listed > len(entries):
+            capped_reads.append(f"{host} {len(entries)}/{listed:,} advisories")
+            record_feed(f"csaf:{host}", CAPPED,
+                        f"{read} ids in scope, {gained} new; read the newest "
+                        f"{len(entries)} of {listed:,} advisories this provider "
+                        f"lists in the window", rows=read)
         else:
             record_feed(f"csaf:{host}", OK,
                         f"{read} ids in scope, {gained} new", rows=read)
@@ -2044,7 +2114,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             # we consulted only some of its directories.
             capped_dirs.append(f"{host} {len(chosen)}/{available} directories")
     _record_csaf_health(all_providers, unreachable, empty, capped_dirs, fell_back,
-                        len(out))
+                        len(out), capped_reads)
     return out
 
 
@@ -2069,7 +2139,8 @@ def _csaf_hosts(entries):
     return {e.split(" ", 1)[0] for e in entries}
 
 
-def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back, rows):
+def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back,
+                        rows, capped_reads=()):
     """One health record for the fan-out adapter, derived from its providers.
 
     Ordered worst-first, because a single status has to mean the worst thing that
@@ -2090,13 +2161,22 @@ def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back, r
         bits.append(f"read via pinned feeds: {', '.join(sorted(fell_back)[:6])}")
     if capped_dirs:
         bits.append(f"capped: {', '.join(sorted(capped_dirs)[:6])}")
+    if capped_reads:
+        # Named separately from `capped_dirs`, because they are different losses
+        # and collapsing them would let the larger one hide behind the smaller.
+        # A capped directory is a distribution we declined to consult; a capped
+        # read is an advisory we listed and cut. Six providers hit the second on
+        # 2026-08-28 and none hit the first.
+        bits.append(f"advisory cap hit on {len(capped_reads)} of "
+                    f"{len(providers)} providers, newest only: "
+                    f"{', '.join(sorted(capped_reads)[:6])}")
     if empty:
         bits.append(f"no advisories in scope: {', '.join(sorted(empty)[:8])}")
     detail = "; ".join(bits)
     if unreachable and not rows:
         # Nothing was read from anywhere. That is an outage, not a limit.
         record_feed("csaf", FAILED, detail, rows=rows)
-    elif unreachable or capped_dirs:
+    elif unreachable or capped_dirs or capped_reads:
         # CAPPED, NOT TRUNCATED, and the distinction decides whether the site
         # wears a banner.
         #

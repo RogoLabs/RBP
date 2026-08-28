@@ -36,7 +36,7 @@ from one.
 3-sighting floor. 42 of 50 on 2026-08-27, up from 41 on 08-24. The re-derivation is
 in the constant's own comment in `rbp/site.py`.
 
-**809 offline tests in about fifteen seconds, plus 43 browser tests.** The offline
+**893 offline tests in about sixteen seconds, plus 53 browser tests.** The offline
 suite gates the publication; the browser suite and the linter are on the commit
 path only and cannot stop a publish.
 
@@ -623,3 +623,159 @@ ASSERTS, not how many rows it shows, so it wants its own measurement and its own
 round.
 
 **Guards.** `tests/test_ubuntu_dates.py`, 13 offline tests. 930 pass, lint clean.
+
+
+---
+
+## Round 9, 2026-08-28: the cap nobody was told about
+
+`feed_csaf` reads at most 120 advisories per provider. It has always done this,
+and until this round it said so on no page and in no field.
+
+Measured live on 2026-08-28, in-scope advisories in the configured window
+against that cap of 120:
+
+```
+suse.com                     83,091     0.1% read
+security.access.redhat.com   37,317     0.3%
+wid.cert-bund.de             21,358     0.6%
+cisa.gov                      2,243     5.3%
+cisco.com                       535    22.4%
+cert-portal.siemens.com         457    26.3%
+the other ten providers         <120     100%
+```
+
+**144,281 advisories go unread on every run, and all six of those providers
+published `status: ok`,** identical to a provider read whole.
+
+No existing guard could see it, and that is the part worth remembering.
+`compare_magnitudes` only ever asks whether a number went DOWN, and a hard cap
+holds it perfectly flat. It is the same signature as `mozilla` frozen at exactly
+607 for six consecutive runs, arriving in the one shape that guard is
+structurally blind to. The shrink guard is not a completeness guard, and nothing
+here was measuring completeness.
+
+### What shipped
+
+- `_csaf_directory_entries` takes `cap=None` and `feed_csaf` passes it. The cap
+  used to be applied inside that function, which returns 120 entries whether the
+  provider listed 120 or 83,091, so the one number needed to state the loss was
+  destroyed before anything could report it. The listing is downloaded and parsed
+  either way, so reading it whole costs a list, not a fetch. `feed_csaf` now caps
+  once, where it knows what it is cutting.
+- A capped provider records `CAPPED` and names both figures. A provider read in
+  full stays `OK`, so the word means something.
+- `read == 0` is still `OK`. A quiet provider is a fact about the provider; a cap
+  is a fact about us, and the two must not borrow each other's word.
+- The advisory cap is reported **separately** from the directory cap. They are
+  different losses, and on 2026-08-28 six providers hit the first and none hit
+  the second, so one shared count would have read as zero.
+- `/status` renders `parts`. They had been computed on every run and rendered on
+  no page for as long as they existed, which is the failure this codebase already
+  names in `feeds.py`: a disclosure that reaches no page is not a disclosure.
+- The cap is framed on the page as **this site's limit, not the provider's**. A
+  row reading "Capped" beside a vendor name is otherwise easy to read backwards.
+
+### Two things found while testing, both worth keeping in mind
+
+**Jinja reads a missing key as present.** `h.rows_published is not none` is TRUE
+for an absent key, so every part written before this round took the measured
+branch and `commafy` rendered `Undefined` as an empty cell. A blank in a numeric
+column reads as zero. The template comment claimed those rows showed a dash; a
+real build showed a blank. Both templates now read through `.get()`, which
+collapses absent and null into the one state they both mean.
+
+**The fixture caught a live layout bug the moment it got wider.** Adding the
+widest realistic provider row to `tests/_sitefixture.py` failed
+`test_no_page_scrolls_sideways_at_any_swept_width` at 769px with 192px of page
+overflow. `.mono { overflow-wrap: anywhere }` exists only inside the 768px
+reflow block, so a 42-character provider host could not break at any width above
+it. WCAG 1.4.10 is written about 320px and this sat in the gap that leaves.
+
+### Mutation results
+
+Six defects reintroduced against `rbp/feeds.py`, four against the template. Two
+survived the first pass and both were **fixture blindness**, not product bugs,
+which is the ratio this project keeps getting:
+
+- every csaf health test patches `_csaf_directory_entries` wholesale, and their
+  fakes ignore the `cap` argument, so re-capping inside it left all five green.
+  `test_the_listing_is_read_uncapped_so_the_cut_can_be_counted` drives the real
+  function through `_get_text` and is the only test that can see it.
+- every part in the status fixture set `rows_published` explicitly, so the
+  absent-key case the `.get()` fix exists for never occurred. A part carrying no
+  contribution keys at all is now in the fixture.
+
+### What this does NOT do
+
+**It does not raise the cap.** Reading SUSE whole is 83,091 advisory fetches on a
+six-hourly job, and what the right number is, or whether selection should be
+smarter than newest-120-by-revision-date, is a measurement nobody has done. This
+round makes the loss visible and stops there. Raising it is a FEEDS.md section 2
+exercise with a scorecard, not a constant to nudge.
+
+**It does not touch attribution.** No provider name reaches a row, `sources` is
+unchanged, the schema version is unchanged, and `publish check` passes exactly as
+before.
+
+---
+
+## Round 9 next: the per-provider filter, which is what was actually asked for
+
+The original ask was to sort and share by CSAF provider: `?src=csaf:www.cisa.gov`
+as a citable URL, because CSAF is a transport and the publisher is the source.
+That still stands and is designed. It sits behind this round deliberately: a
+provider view over an unreported 0.1% read publishes a number that looks
+authoritative and is not.
+
+Decisions already taken, so they are not re-opened:
+
+- provider becomes a **first-class identity in the published data**, `csaf:<host>`
+  in `sources`, `dates` and `source_urls`. That is a published-key meaning change
+  and takes `SCHEMA_VERSION` to 4.
+- `csaf` stays as the **roll-up**, so `?src=csaf` keeps meaning all providers and
+  every link already shared stays valid.
+- the control keeps its "Seen In" framing and gains one line stating the
+  publisher is not necessarily the reserving CNA.
+
+Measured, so the next round starts from data rather than from nothing. Per
+provider, reserved and publicly referenced on 2026-08-28: `wid.cert-bund.de` 21,
+`suse.com` 5, `cisa.gov` 4, `www.se.com` 4, `security.access.redhat.com` 1, every
+other provider 0. **573 IDs are carried by more than one provider and exactly one
+of them is RESERVED**, so fixing `feed_csaf`'s cross-provider `seen` dedupe is
+correct and changes one published row today. It is a correctness cleanup, not the
+thing that unlocks anything.
+
+### Traps this codebase has already set for that work
+
+- **`clock.origin_kind()` returns `"unknown"` for an unmapped slug, and unknown
+  is read as a TRACKER.** The moment `sources` says `csaf:www.suse.com`,
+  `advisory_date` returns None, `clock_origin` flips from `advisory` to
+  `tracker`, `advisory_days_public` goes to None and `past_expectation` goes to
+  False on every CSAF row. On a CSAF-only row that is the entire clock, and
+  nothing raises. Verified directly, not reasoned about. The map has to split
+  the family off the slug before the identity changes.
+- **`refs` is truncated at 250 characters** in `classify._row`. One CSAF ref runs
+  about 150. Three rows in the 2026-08-27 snapshot are already cut mid-ref and
+  have silently lost their Red Hat reference; recording a second provider per row
+  would push many more past it.
+- **`source_urls` holds one URL per feed slug**, so `csaf` maps to one advisory
+  link and `advisory_url` puts csaf last in precedence. CSAF-only rows link to a
+  Debian tracker while the CSAF advisory is the actual evidence.
+- **`merge_contribution` writes `None` to every part on purpose.** Once `sources`
+  carries provider slugs, `rows_by_source` can find them and those become real
+  numbers. Until then a 0 there would be a false claim about the provider.
+- **Host identity needs canonicalizing.** `sick.com` and `www.sick.com` are the
+  same provider reached through a 301 and are read as two today; both appear in
+  `/status` right now. Canonicalizing renames the `parts` keys, and
+  `compare_magnitudes` compares parts by name with `_cmp` returning None on a
+  missing previous value, so the rename gives the shrink guard a **one-run blind
+  spot on every provider**. That transition needs saying out loud in the health
+  detail on the run it happens.
+- **`publish check` will fail the build closed on a display label in JSON.**
+  `CISA`, `ABB`, `Rockwell`, `PTC`, `CERTVDE`, `CyberDanube`, `Nozomi`,
+  `Stackable`, `siemens`, `cisco`, `suse`, `schneider` and `huawei` are all exact
+  certified-CNA short names in the pinned roster, matched on whole-value
+  equality. Keeping identity as `csaf:<host>` stays inside the existing
+  `.sources` / `.dates.` / `.source_urls` / `.feeds.` allowlist entries; human
+  labels belong in the template's JS map, which is never scanned.

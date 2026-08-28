@@ -875,8 +875,8 @@ def _csaf_fixture(monkeypatch, n_dirs, advisories_per_dir):
     monkeypatch.setattr(feeds, "_get", fake_get)
     monkeypatch.setattr(
         feeds, "_csaf_directory_entries",
-        lambda durl, years, cap: [(f"2026-01-0{i + 1}T00:00:00Z", f"{durl}/a{i}.json")
-                                  for i in range(advisories_per_dir)])
+        lambda durl, years, cap=None: [(f"2026-01-0{i + 1}T00:00:00Z", f"{durl}/a{i}.json")
+                                       for i in range(advisories_per_dir)])
 
 
 def test_csaf_reports_a_provider_whose_directories_were_capped(monkeypatch):
@@ -949,8 +949,8 @@ def test_a_provider_whose_advisories_another_provider_already_gave_us_is_not_emp
 
     monkeypatch.setattr(feeds, "_get", fake_get)
     monkeypatch.setattr(feeds, "_csaf_directory_entries",
-                        lambda durl, years, cap: [("2026-01-01T00:00:00Z",
-                                                   f"{durl}/a.json")])
+                        lambda durl, years, cap=None: [("2026-01-01T00:00:00Z",
+                                                        f"{durl}/a.json")])
     # Two hosts publishing the SAME advisory. The second gains nothing new.
     feeds.feed_csaf({2026}, aggregators=(),
                     providers=("https://first.example/pm.json",
@@ -1223,6 +1223,40 @@ def test_a_feed_with_thousands_of_ids_and_no_published_rows_is_visible():
     # which is the opposite claim.
     assert detail["arch"]["rows_only"] == 0
     assert "rows_published" in detail["arch"]
+
+
+def test_a_provider_inside_a_feed_reads_as_not_measured_rather_than_as_zero():
+    """A PART IS NOT A FEED, and the difference is a claim about who is at fault.
+
+    `rows_by_source` reads the `sources` string on each published row, and that
+    string names the FEED (`csaf`), never the provider inside it. So no part can
+    ever be found in it. Writing 0 there publishes "this provider accounts for
+    no rows on this site", which is a statement about the provider and is false;
+    None publishes "not measured", which is a statement about us and is true.
+
+    The same distinction the sibling test above pins for a whole feed, where the
+    answer is the opposite: `arch` really did contribute zero, and an explicit 0
+    is the honest value precisely because it WAS measured.
+
+    Explicit rather than absent, because the template cannot tell them apart in
+    the direction that matters: in Jinja `h.rows_published is not none` is TRUE
+    for a missing key, so an unset part takes the measured branch and renders a
+    blank cell where a dash belongs."""
+    rows = [{"sources": "csaf"}, {"sources": "csaf,osv"}]
+    detail = {"csaf": {"rows": 2695,
+                       "parts": {"www.cisa.gov": {"rows": 600},
+                                 "wid.cert-bund.de": {"rows": 1746}}},
+              "osv": {"rows": 12434}}
+    feeds.merge_contribution(detail, rows)
+
+    assert detail["csaf"]["rows_published"] == 2, "the parent feed WAS measured"
+    for name, part in detail["csaf"]["parts"].items():
+        assert part["rows_published"] is None, (
+            f"{name} publishes a measured zero for a number nothing measured: "
+            f"{part['rows_published']!r}")
+        assert part["rows_only"] is None, name
+        assert "rows_published" in part, (
+            f"{name} leaves the key absent, which the template reads as measured")
 
 
 def test_only_source_counts_what_disappears_if_the_feed_does():
@@ -1531,3 +1565,150 @@ def test_the_page_cap_is_still_reported_as_a_standing_limit(monkeypatch):
                                capped=["ubuntu: capped"], dropped=0,
                                shrunk=[], stale=[])
     assert on is False, "a standing cap degraded the run"
+
+
+# --------------------------------------------------------------------------
+# the ADVISORY cap, which is a different loss from the directory cap and was
+# applied on every run and reported nowhere
+# --------------------------------------------------------------------------
+
+def test_csaf_reports_a_provider_whose_advisories_were_capped(monkeypatch):
+    """THE SILENT CAP. `feed_csaf` reads at most 120 advisories per provider and
+    said so on no page and in no field.
+
+    Measured live on 2026-08-28, in-scope advisories against that cap:
+    suse.com 83,091 (0.1% read), security.access.redhat.com 37,317 (0.3%),
+    wid.cert-bund.de 21,358 (0.6%), cisa.gov 2,243 (5.3%), cisco.com 535,
+    cert-portal.siemens.com 457. All six published `status: ok`, identical to a
+    provider read whole. 144,281 advisories went unread with nothing saying so.
+
+    No existing guard could see it. `compare_magnitudes` only ever asks whether
+    a number went DOWN, and a hard cap holds it perfectly flat: the same
+    signature as `mozilla` frozen at exactly 607 for six consecutive runs,
+    arriving in the one shape that guard is structurally blind to."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=200)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+
+    part = feeds.FEED_HEALTH.get("csaf:v.example")
+    assert part and part["status"] == feeds.CAPPED, (
+        f"a provider read at 120 of 200 advisories reported {part}")
+    assert "120 of 200 advisories" in part["detail"], (
+        f"the provider row does not say how much of the provider was read: {part['detail']}")
+
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert h["status"] == feeds.CAPPED, h
+    assert "advisory cap" in h["detail"], (
+        f"the aggregate does not name the advisory cap: {h['detail']}")
+    assert "v.example 120/200 advisories" in h["detail"], h["detail"]
+
+
+def test_the_advisory_cap_does_not_put_the_site_in_a_degraded_state(monkeypatch):
+    """CAPPED, not TRUNCATED, and the distinction decides whether the site wears
+    a banner on every single run.
+
+    This cap fires for six of seventeen providers every time the pipeline runs.
+    Folding it into "this run is incomplete" would make `degraded` permanently
+    true, which is the furniture problem `degraded_state` exists to refuse: "a
+    warning that is always on is not a warning, it is furniture, and it teaches
+    a reader to ignore the banner on the day it means something."
+
+    So the cap is disclosed on /status, in the row it belongs to, and it does
+    not raise a site-wide alarm."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=200)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+
+    failures, truncated, _n, capped = feeds.health_summary()
+    assert capped, "the cap was not recorded as a standing limit"
+    assert not truncated and not failures, (failures, truncated)
+    on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
+                                     capped=capped, dropped=0, shrunk=[], stale=[])
+    assert on is False, f"a standing advisory cap is degrading the run: {reasons}"
+
+
+def test_a_provider_read_in_full_is_never_reported_as_capped(monkeypatch):
+    """The complement, and the one that makes the claim above worth anything.
+
+    A status word that fires whatever happened carries no information. A
+    provider whose whole in-scope listing was read must read OK, so that CAPPED
+    on the row next to it means what it says."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=5)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+
+    part = feeds.FEED_HEALTH.get("csaf:v.example")
+    assert part["status"] == feeds.OK, f"a complete read reported {part}"
+    assert "advisories" not in part["detail"], (
+        f"a complete read is claiming a cut: {part['detail']}")
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert "advisory cap" not in h["detail"], h["detail"]
+    assert h["status"] == feeds.OK, h
+
+
+def test_a_provider_with_nothing_in_the_window_is_not_called_capped(monkeypatch):
+    """`read == 0` is a fact about the provider. A cap is a fact about us, and
+    the two must not borrow each other's word.
+
+    Huawei and innomic.com both return zero in-scope advisories. Reporting them
+    as capped would send a reader looking for advisories that are not there,
+    which is the same furniture failure as a cap claimed over empty directories,
+    and that one has already been fixed here once."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=0)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+
+    part = feeds.FEED_HEALTH.get("csaf:v.example")
+    assert part["status"] == feeds.OK, part
+    h = feeds.FEED_HEALTH.get("csaf")
+    assert "advisory cap" not in h["detail"], h["detail"]
+    assert "no advisories in scope: v.example" in h["detail"]
+
+
+def test_the_two_caps_are_reported_as_two_different_losses(monkeypatch):
+    """A capped DIRECTORY is a distribution this site declined to consult. A
+    capped READ is an advisory it listed and cut. Collapsing them into one word
+    would let the larger loss hide behind the smaller: on 2026-08-28 six
+    providers hit the advisory cap and none hit the directory cap, so a single
+    "capped" count would have read as zero."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=40, advisories_per_dir=200)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+
+    detail = feeds.FEED_HEALTH["csaf"]["detail"]
+    assert f"capped: v.example {feeds.CSAF_MAX_DIRS}/40 directories" in detail, detail
+    assert "advisory cap hit on 1 of 1 providers" in detail, detail
+
+
+def test_the_listing_is_read_uncapped_so_the_cut_can_be_counted(monkeypatch):
+    """FIXTURE BLINDNESS, ANSWERED. Every test above patches
+    `_csaf_directory_entries` wholesale, so none of them can see the defect this
+    change actually fixed: a per-directory cap applied INSIDE that function,
+    which returns 120 entries whether the provider listed 120 or 83,091 and
+    destroys the number before anything can report it.
+
+    Reintroducing that cap leaves all five tests above green, because their fake
+    ignores the `cap` argument. So this one drives the real function through
+    `_get_text` and asserts on the count, which is the only place the defect is
+    observable."""
+    feeds.reset_health()
+    rows = "".join(f'"2026/a{i}.json","2026-01-01T00:00:{i % 60:02d}Z"\n'
+                   for i in range(200))
+    meta = {"distributions": [{"directory_url": "https://v.example/csaf"}]}
+    doc = {"document": {"publisher": {"name": "V Corp"}, "tracking": {"id": "V-1"}},
+           "vulnerabilities": [{"cve": "CVE-2026-0001", "title": "t"}]}
+    monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: rows)
+    monkeypatch.setattr(feeds, "_get",
+                        lambda url, timeout=None, retries=3, headers=None: (
+                            (meta if url.endswith("pm.json") else doc), 200, {}))
+
+    # The listing itself, uncapped: all 200, not the newest 120.
+    got = feeds._csaf_directory_entries("https://v.example/csaf", {2026})
+    assert len(got) == 200, (
+        f"the listing came back capped at {len(got)}; the pre-cut count is gone "
+        "and no health line can state it")
+
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+    part = feeds.FEED_HEALTH["csaf:v.example"]
+    assert part["status"] == feeds.CAPPED, part
+    assert "120 of 200 advisories" in part["detail"], part["detail"]

@@ -286,7 +286,31 @@ def summary(rows, date=SNAPSHOT_DATE):
                                        "status": "ok", "rows": 2695,
                                        "detail": "2695 ids in scope, 2695 new",
                                        "ok": True, "truncated": False,
-                                       "capped": False}}},
+                                       "capped": False},
+                                   # THE WIDEST ROW THE TABLE CAN ACTUALLY
+                                   # PRODUCE, and it belongs in the SHARED
+                                   # fixture rather than only in the status
+                                   # tests, because the thing at risk here is
+                                   # layout and the layout suite reads this one.
+                                   #
+                                   # Longest real provider host in the configured
+                                   # set, indented, beside the longest detail
+                                   # string the adapter emits: the advisory cap
+                                   # naming both figures with a comma group. The
+                                   # site has had 926px of horizontal page scroll
+                                   # at 320 CSS px before, from exactly this
+                                   # shape, and `table.table-sm` only stops the
+                                   # PAGE scrolling if the cell text can wrap.
+                                   "csaf.data.security.nozominetworks.com": {
+                                       "status": "capped", "rows": 883,
+                                       "detail": ("883 ids in scope, 286 new; "
+                                                  "read the newest 120 of 83,091 "
+                                                  "advisories this provider lists "
+                                                  "in the window"),
+                                       "ok": False, "truncated": True,
+                                       "capped": True,
+                                       "rows_published": None,
+                                       "rows_only": None}}},
                   }},
         "coverage": {"total_cnas": 539, "cnas_effective": 117,
                      "cnas_sighted": 152, "cnas_own_channel": 2,

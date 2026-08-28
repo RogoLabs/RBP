@@ -242,6 +242,24 @@
       feed referenced. The three are very different numbers, and a feed can
       return tens of thousands of IDs while accounting for none of the list.
     </p>
+    {# THE CAP IS NAMED HERE BECAUSE IT IS OURS, NOT THE PROVIDER'S.
+
+       A row marked Capped had more to give and was not asked for it. That is a
+       limit this site imposes to keep a six-hourly run finishable, and until
+       2026-08-28 it was applied silently: a provider read at a fraction of one
+       percent of what it publishes reported OK, identically to one read whole.
+
+       Stated as a bound on the count rather than as an apology, because it is
+       the same claim the rest of the site already makes. Every number here is a
+       floor, and this is one of the reasons why. #}
+    <p class="small text-muted">
+      A feed that reads from many third-party providers lists each provider
+      beneath it. <strong>Capped</strong> on any of those rows means this site
+      read only the newest advisories that provider publishes and stopped,
+      which is a limit this site sets rather than anything the provider did.
+      The note column says how many of how many. Those providers hold more
+      than is counted here.
+    </p>
     {% if summary.feeds and summary.feeds.get('stale') %}
     {# Same markup as the silent-shrink block below, deliberately. These are the
        two failures a status field cannot show, they are read the same way, and
@@ -261,7 +279,7 @@
     {% set detail = (summary.feeds or {}).get('detail') or {} %}
     {% if detail %}
     <table class="table table-sm small">
-      <caption class="sr-only">Every configured advisory feed, the state it ended in, how many CVE IDs it returned, how many rows on this site it accounts for, how many of those it is the only source for, and any note about why it stopped.</caption>
+      <caption class="sr-only">Every configured advisory feed, the state it ended in, how many CVE IDs it returned, how many rows on this site it accounts for, how many of those it is the only source for, and any note about why it stopped. A feed that fans out to third-party providers lists each provider beneath it.</caption>
       <thead>
         <tr>
           <th scope="col">Feed</th>
@@ -283,15 +301,60 @@
             {% else %}<span class="chip chip-must">Failed</span>{% endif %}
           </td>
           <td class="num">{% if h.rows is not none %}{{ h.rows | commafy }}{% else %}not recorded{% endif %}</td>
-          {# `is not none`, not truthiness: a feed that accounts for zero rows is
-             the finding, and `{% if h.rows_published %}` would render it as the
-             same blank as a snapshot that never measured it. Those are opposite
-             claims. Snapshots written before 2026-08-27 carry neither key and
-             correctly show the dash. #}
-          <td class="num">{% if h.rows_published is not none %}{{ h.rows_published | commafy }}{% else %}&mdash;{% endif %}</td>
-          <td class="num">{% if h.rows_only is not none %}{{ h.rows_only | commafy }}{% else %}&mdash;{% endif %}</td>
+          {# THREE STATES, NOT TWO, AND `.get` IS WHAT KEEPS THEM APART.
+
+             `{% if h.rows_published %}` would render a measured zero as a blank,
+             and a measured zero is the finding: `arch` returns 62 ids per run and
+             accounts for none of the list. So the test is `is not none`.
+
+             But attribute access is the wrong reader for it. In Jinja a MISSING
+             key yields Undefined, and `Undefined is not none` is TRUE, so a
+             snapshot that never recorded the key took the measured branch and
+             `commafy` rendered Undefined as an empty cell. Every snapshot
+             written before 2026-08-27 did exactly that, and the comment here
+             claimed they showed the dash. Verified against a real build on
+             2026-08-28: they showed a blank.
+
+             `.get()` returns None for an absent key, so absent and null collapse
+             to the one state they both mean, and only a real number renders. #}
+          {% set rows_pub = h.get('rows_published') %}
+          {% set rows_only = h.get('rows_only') %}
+          <td class="num">{% if rows_pub is not none %}{{ rows_pub | commafy }}{% else %}&mdash;{% endif %}</td>
+          <td class="num">{% if rows_only is not none %}{{ rows_only | commafy }}{% else %}&mdash;{% endif %}</td>
           <td class="text-muted">{{ h.detail or '' }}</td>
         </tr>
+        {# THE PROVIDERS BEHIND A FAN-OUT FEED, and until 2026-08-28 they were
+           computed on every run and rendered on no page.
+
+           `csaf` is not one publisher, it is seventeen: CISA, Siemens, SUSE,
+           Cisco, Red Hat's CSAF endpoint, CERT-Bund and the rest, each read
+           separately and each recorded separately in `parts`. Rolled into one
+           line they share a single status, so a provider read at 0.1% of what
+           it publishes and a provider read whole are indistinguishable, which
+           is exactly the state the per-provider records were added to end.
+
+           This is the same argument the adapter's own comments make about
+           `compare_magnitudes` needing per-provider rows, applied to the
+           reader rather than to the guard. A number nobody can see is not a
+           disclosure. #}
+        {% for pname, p in (h.parts or {}) | dictsort %}
+        <tr class="subrow">
+          <td class="mono indent">{{ name }}:{{ pname }}</td>
+          <td>
+            {% if p.status == 'ok' %}<span class="chip chip-ok">OK</span>
+            {% elif p.status == 'capped' %}<span class="chip chip-unmeasured">Capped</span>
+            {% elif p.status == 'truncated' %}<span class="chip chip-late">Truncated</span>
+            {% else %}<span class="chip chip-must">Failed</span>{% endif %}
+          </td>
+          {% set p_rows = p.get('rows') %}
+          {% set p_pub = p.get('rows_published') %}
+          {% set p_only = p.get('rows_only') %}
+          <td class="num">{% if p_rows is not none %}{{ p_rows | commafy }}{% else %}not recorded{% endif %}</td>
+          <td class="num">{% if p_pub is not none %}{{ p_pub | commafy }}{% else %}&mdash;{% endif %}</td>
+          <td class="num">{% if p_only is not none %}{{ p_only | commafy }}{% else %}&mdash;{% endif %}</td>
+          <td class="text-muted">{{ p.detail or '' }}</td>
+        </tr>
+        {% endfor %}
         {% endfor %}
       </tbody>
     </table>

@@ -400,3 +400,160 @@ def test_the_feed_table_and_the_published_payload_report_the_same_contribution(b
         assert h["rows_only"] <= h["rows_published"], (
             f"{name}: only-source ({h['rows_only']}) exceeds rows touched "
             f"({h['rows_published']}), which is arithmetically impossible")
+
+
+# --------------------------------------------------------------------------
+# the providers behind a fan-out feed, and the cap this site imposes on them
+# --------------------------------------------------------------------------
+
+def _capped_csaf(summary):
+    """A csaf feed of three providers: one capped hard, one capped lightly, one
+    read whole. Shaped exactly as `feeds.health_detail` nests them."""
+    summary["feeds"]["detail"] = {
+        "osv": {"status": "ok", "detail": "1200 ids", "rows": 1200, "ok": True,
+                "rows_published": 12, "rows_only": 3},
+        "csaf": {
+            "status": "capped", "rows": 2992, "ok": False,
+            "rows_published": 11, "rows_only": 4,
+            "detail": ("17/17 providers read; 2992 ids; advisory cap hit on 2 of "
+                       "17 providers, newest only: cisa.gov 120/2,243 advisories, "
+                       "suse.com 120/83,091 advisories"),
+            "parts": {
+                "suse.com": {
+                    "status": "capped", "rows": 883, "ok": False,
+                    "rows_published": None, "rows_only": None,
+                    "detail": ("883 ids in scope, 286 new; read the newest 120 of "
+                               "83,091 advisories this provider lists in the window")},
+                "cisa.gov": {
+                    "status": "capped", "rows": 600, "ok": False,
+                    "rows_published": None, "rows_only": None,
+                    "detail": ("600 ids in scope, 203 new; read the newest 120 of "
+                               "2,243 advisories this provider lists in the window")},
+                "psirt.abb.com": {
+                    "status": "ok", "rows": 77, "ok": True,
+                    "rows_published": None, "rows_only": None,
+                    "detail": "77 ids in scope, 60 new"},
+                # NO CONTRIBUTION KEYS AT ALL, which is not a hypothetical: it
+                # is the shape of every part in every snapshot written before
+                # 2026-08-28, and those snapshots are still on the data branch
+                # and still rendered by /status through the archive. A fixture
+                # that sets the key to None on every part cannot see the bug
+                # that absent and None are different to Jinja, which is exactly
+                # how this survived its first mutation pass.
+                "legacy.example": {
+                    "status": "ok", "rows": 5, "ok": True,
+                    "detail": "5 ids in scope, 5 new"},
+            },
+        },
+    }
+
+
+@pytest.fixture(scope="module")
+def capped_build(tmp_path_factory):
+    return _build(tmp_path_factory.mktemp("capped"), launched=True, mutate=_capped_csaf)
+
+
+def _feed_table(out):
+    body = (pathlib.Path(out) / "status.html").read_text()
+    m = re.search(r"<caption[^>]*>Every configured advisory feed.*?</tbody>", body, re.S)
+    assert m, "the feed table is not on the page"
+    return m.group(0)
+
+
+def test_the_providers_behind_a_fan_out_feed_are_on_the_page(capped_build):
+    """COMPUTED EVERY RUN, RENDERED NOWHERE, for as long as `parts` existed.
+
+    `csaf` is seventeen publishers, each fetched separately and each recorded
+    separately in `summary.feeds.detail.csaf.parts`. The table iterated only the
+    top level, so all seventeen shared one status line and one row count. This
+    project's own standard for that is written into feeds.py: a disclosure that
+    reaches no page is not a disclosure."""
+    table = _feed_table(capped_build)
+    for provider in ("csaf:suse.com", "csaf:cisa.gov", "csaf:psirt.abb.com"):
+        assert provider in table, f"{provider} is recorded and not rendered"
+
+
+def test_a_capped_provider_says_how_much_of_it_was_read(capped_build):
+    """The number is the disclosure. "Capped" alone tells a reader something was
+    cut and not whether it was 1% or 99%, and the honest answers here are 5.3%
+    and 0.1%."""
+    table = _feed_table(capped_build)
+    assert "read the newest 120 of 2,243 advisories" in table, table[:400]
+    assert "read the newest 120 of 83,091 advisories" in table, table[:400]
+
+
+def test_a_provider_read_in_full_is_not_marked_capped_on_the_page(capped_build):
+    """A word that appears on every row carries nothing. `psirt.abb.com` was read
+    whole and must read OK beside two that were not."""
+    table = _feed_table(capped_build)
+    abb = re.search(r"csaf:psirt\.abb\.com.*?</tr>", table, re.S).group(0)
+    assert "chip-ok" in abb, abb
+    assert "Capped" not in abb, abb
+
+
+def test_the_page_says_the_cap_is_this_sites_limit_and_not_the_providers(capped_build):
+    """FRAMING, AND IT IS THE POINT OF SAYING ANY OF THIS.
+
+    A row reading "Capped" beside a vendor's name is easy to read as a fact
+    about the vendor. It is a fact about this site: the provider published
+    83,091 advisories and this site asked for 120 of them. The page has to say
+    which way round that is, or the disclosure creates a worse impression than
+    the silence it replaced."""
+    body = (pathlib.Path(capped_build) / "status.html").read_text()
+    assert "a limit this site sets rather than anything the provider did" in body
+    assert "hold more" in body, (
+        "the page does not say the count is a floor for exactly this reason")
+
+
+def test_an_unmeasured_provider_contribution_renders_as_a_dash_not_a_blank(capped_build):
+    """`rows_published` is null on every part, because `rows_by_source` reads the
+    `sources` string on a published row and that string names the FEED, never the
+    provider inside it. Null must reach the reader as "not measured".
+
+    It did not. In Jinja `p.rows_published is not none` is TRUE for a MISSING key,
+    so the cell took the measured branch and `commafy` rendered Undefined as an
+    empty string. Verified against a real build on 2026-08-28: blank, not a dash.
+    A blank in a numeric column reads as zero, which is the opposite claim."""
+    table = _feed_table(capped_build)
+    abb = re.search(r"csaf:psirt\.abb\.com.*?</tr>", table, re.S).group(0)
+    cells = re.findall(r'<td class="num">(.*?)</td>', abb, re.S)
+    assert len(cells) == 3, cells
+    assert cells[0].strip() == "77", cells
+    assert cells[1].strip() == "&mdash;", f"unmeasured rendered as {cells[1]!r}"
+    assert cells[2].strip() == "&mdash;", f"unmeasured rendered as {cells[2]!r}"
+
+
+def test_a_measured_zero_is_still_a_zero_and_not_a_dash(capped_build):
+    """The other direction, and the reason the dash cannot simply be "falsy".
+
+    `arch` returns 62 ids per run and accounts for none of the published list.
+    That zero was measured and is the finding. Rendering it as a dash would hide
+    round 7's B4 result behind the fix for this one."""
+    table = _feed_table(capped_build)
+    csaf = re.search(r'<td class="mono">csaf</td>.*?</tr>', table, re.S).group(0)
+    cells = re.findall(r'<td class="num">(.*?)</td>', csaf, re.S)
+    assert cells[1].strip() == "11", cells
+    assert cells[2].strip() == "4", cells
+
+
+def test_a_part_that_predates_the_contribution_keys_still_renders_a_dash(capped_build):
+    """THE ABSENT KEY, WHICH IS THE REAL LEGACY STATE AND NOT THE NULL ONE.
+
+    Every part recorded before 2026-08-28 carries no `rows_published` at all.
+    `p.rows_published` yields Jinja's Undefined for it, `Undefined is not none`
+    is TRUE, so the cell took the measured branch and `commafy` returned the
+    Undefined unchanged, which renders as nothing. A blank in a numeric column
+    beside real numbers reads as zero.
+
+    `.get()` collapses absent and null into the one state they both mean. The
+    first mutation pass on this file missed it, because every part in the
+    fixture set the key explicitly and no fixture produced the state the
+    assertion is about."""
+    table = _feed_table(capped_build)
+    legacy = re.search(r"csaf:legacy\.example.*?</tr>", table, re.S).group(0)
+    cells = re.findall(r'<td class="num">(.*?)</td>', legacy, re.S)
+    assert len(cells) == 3, cells
+    assert cells[0].strip() == "5", cells
+    assert cells[1].strip() == "&mdash;", (
+        f"an absent contribution rendered as {cells[1]!r}, which reads as zero")
+    assert cells[2].strip() == "&mdash;", f"an absent contribution rendered as {cells[2]!r}"

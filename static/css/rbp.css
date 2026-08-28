@@ -193,6 +193,39 @@ td.desc { color: var(--color-text-secondary); min-width: 22rem; }
    different ratios depending on which table it landed in. */
 td.unattributed { color: var(--rbp-text-muted); font-style: italic; }
 
+/* ---- fan-out feed sub-rows (/status) ----------------------------------- */
+/*
+   `csaf` is one row in the feed table and seventeen providers underneath it.
+   The sub-rows are subordinate, not separate: same columns, same alignment, so
+   a reader compares a provider's IDs-read against its parent's by looking
+   straight up the column.
+
+   Indent AND a muted label, because indent alone is invisible once the table
+   scrolls sideways on a narrow viewport, which is exactly where these rows are
+   hardest to place. Both cues are decoration over a label that already reads
+   `csaf:www.cisa.gov`, so nothing here is the only thing carrying the meaning.
+*/
+tr.subrow > td { border-bottom-color: var(--color-border-light); }
+tr.subrow > td.mono { color: var(--rbp-text-muted); }
+td.indent { padding-left: 1.6rem; }
+
+/*
+   A PROVIDER LABEL MUST BE ABLE TO BREAK, AT EVERY WIDTH.
+
+   `csaf:csaf.data.security.nozominetworks.com` is 42 monospace characters with
+   no break opportunity a browser will take on its own, and it sits in an
+   indented cell. Under 768px the reflow block at the foot of this file already
+   allows `.mono` to break anywhere; above it, nothing did, so the table pushed
+   the PAGE sideways: measured at 192px of overflow at 769px and 61px at 900px,
+   immediately above the breakpoint where the mobile rule stops applying.
+
+   WCAG 1.4.10 is written about 320px, which is why the existing rule is where it
+   is, and this failure sat in the gap that rule leaves. Scoped to this table
+   rather than made global: `.mono` on the list page carries CVE IDs, which are
+   short, break badly, and are meant to be selected whole.
+*/
+table.table-sm td.mono { overflow-wrap: anywhere; }
+
 /* ---- filter bar -------------------------------------------------------- */
 .filters {
   display: flex;
