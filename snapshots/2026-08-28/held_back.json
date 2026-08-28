@@ -40,89 +40,6 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-63676",
-  "state": "RESERVED",
-  "public_date": "2026-08-26",
-  "sources": "alas,alpine,debian,ubuntu",
-  "feed_count": 4,
-  "dates": {
-   "alas": "2026-08-26",
-   "ubuntu": "2026-08-27"
-  },
-  "refs": "alas:CVE-2026-63676;alpine:perl-yaml;debian:libyaml-perl;ubuntu:CVE-2026-63676",
-  "description": "Backtracking leads to exponential load time in libyaml library.",
-  "state_verified_this_run": true,
-  "days_public": 2,
-  "clock_known": true,
-  "hours_public": 48,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 2,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "perl-yaml",
-  "ecosystem": "",
-  "vendor": "Amazon Linux",
-  "advisory_url": "https://ubuntu.com/security/CVE-2026-63676",
-  "source_urls": {
-   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63676.html",
-   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-63676",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63676",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-63676"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-77117",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "alas,debian,redhat,ubuntu",
-  "feed_count": 4,
-  "dates": {
-   "alas": "2026-08-26",
-   "ubuntu": "2026-08-27",
-   "redhat": "2026-08-25"
-  },
-  "refs": "alas:CVE-2026-77117;debian:glibc;redhat:CVE-2026-77117;ubuntu:CVE-2026-77117",
-  "description": "A flaw was found in glibc.",
-  "state_verified_this_run": true,
-  "days_public": 3,
-  "clock_known": true,
-  "hours_public": 72,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 3,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "glibc",
-  "ecosystem": "",
-  "vendor": "Red Hat",
-  "advisory_url": "https://access.redhat.com/security/cve/CVE-2026-77117",
-  "source_urls": {
-   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-77117.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-77117",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-77117",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-77117"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
   "cve_id": "CVE-2026-19499",
   "state": "RESERVED",
   "public_date": "2026-08-25",
@@ -200,6 +117,89 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-19542",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-19542",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-19542"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-63676",
+  "state": "RESERVED",
+  "public_date": "2026-08-26",
+  "sources": "alas,alpine,debian,ubuntu",
+  "feed_count": 4,
+  "dates": {
+   "alas": "2026-08-26",
+   "ubuntu": "2026-08-27"
+  },
+  "refs": "alas:CVE-2026-63676;alpine:perl-yaml;debian:libyaml-perl;ubuntu:CVE-2026-63676",
+  "description": "Backtracking leads to exponential load time in libyaml library.",
+  "state_verified_this_run": true,
+  "days_public": 2,
+  "clock_known": true,
+  "hours_public": 48,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-26",
+  "advisory_days_public": 2,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "perl-yaml",
+  "ecosystem": "",
+  "vendor": "Amazon Linux",
+  "advisory_url": "https://ubuntu.com/security/CVE-2026-63676",
+  "source_urls": {
+   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63676.html",
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-63676",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63676",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-63676"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-77117",
+  "state": "RESERVED",
+  "public_date": "2026-08-25",
+  "sources": "alas,debian,redhat,ubuntu",
+  "feed_count": 4,
+  "dates": {
+   "alas": "2026-08-26",
+   "ubuntu": "2026-08-27",
+   "redhat": "2026-08-25"
+  },
+  "refs": "alas:CVE-2026-77117;debian:glibc;redhat:CVE-2026-77117;ubuntu:CVE-2026-77117",
+  "description": "A flaw was found in glibc.",
+  "state_verified_this_run": true,
+  "days_public": 3,
+  "clock_known": true,
+  "hours_public": 72,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-25",
+  "advisory_days_public": 3,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "glibc",
+  "ecosystem": "",
+  "vendor": "Red Hat",
+  "advisory_url": "https://access.redhat.com/security/cve/CVE-2026-77117",
+  "source_urls": {
+   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-77117.html",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-77117",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-77117",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-77117"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -700,6 +700,44 @@
   "held_back_reason": "undated"
  },
  {
+  "cve_id": "CVE-2026-80489",
+  "state": "RESERVED",
+  "public_date": "2026-08-27",
+  "sources": "debian,redhat",
+  "feed_count": 2,
+  "dates": {
+   "redhat": "2026-08-27"
+  },
+  "refs": "debian:glibc;redhat:CVE-2026-80489",
+  "description": "glibc: Non-progress DoS in SHIFT_JISX0213 -&gt; UCS-4 conversion state",
+  "state_verified_this_run": true,
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "glibc",
+  "ecosystem": "",
+  "vendor": "Red Hat",
+  "advisory_url": "https://access.redhat.com/security/cve/CVE-2026-80489",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-80489",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-80489"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2025-55662",
   "state": "RESERVED",
   "public_date": "",
@@ -733,6 +771,82 @@
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
+ },
+ {
+  "cve_id": "CVE-2026-81500",
+  "state": "RESERVED",
+  "public_date": "2026-08-27",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-08-27"
+  },
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-9pqw-c7m4-xvg7",
+  "description": "lxc/incus repository advisory GHSA-9pqw-c7m4-xvg7",
+  "state_verified_this_run": true,
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "incus",
+  "ecosystem": "",
+  "vendor": "Debian",
+  "advisory_url": "https://security-tracker.debian.org/tracker/CVE-2026-81500",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81500",
+   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-9pqw-c7m4-xvg7"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-81501",
+  "state": "RESERVED",
+  "public_date": "2026-08-27",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-08-27"
+  },
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-c6wx-8679-hpr9",
+  "description": "lxc/incus repository advisory GHSA-c6wx-8679-hpr9",
+  "state_verified_this_run": true,
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "incus",
+  "ecosystem": "",
+  "vendor": "Debian",
+  "advisory_url": "https://security-tracker.debian.org/tracker/CVE-2026-81501",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81501",
+   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-c6wx-8679-hpr9"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
  },
  {
   "cve_id": "CVE-2026-61626",
@@ -2639,13 +2753,12 @@
   "cve_id": "CVE-2026-76821",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,ghsa-repos",
-  "feed_count": 2,
+  "sources": "ghsa-repos",
+  "feed_count": 1,
   "dates": {
-   "ghsa-repos": "2026-08-26",
-   "csaf": "2026-08-26"
+   "ghsa-repos": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3055\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3055.json;ghsa-repos:OpenCTI-Platform/opencti\tGHSA-7g3x-wc2m-9h9x",
+  "refs": "ghsa-repos:OpenCTI-Platform/opencti\tGHSA-7g3x-wc2m-9h9x",
   "description": "OpenCTI-Platform/opencti repository advisory GHSA-7g3x-wc2m-9h9x",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -2666,7 +2779,6 @@
   "vendor": "",
   "advisory_url": "https://github.com/OpenCTI-Platform/opencti/security/advisories/GHSA-7g3x-wc2m-9h9x",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3055.json",
    "ghsa-repos": "https://github.com/OpenCTI-Platform/opencti/security/advisories/GHSA-7g3x-wc2m-9h9x"
   },
   "veto_evaluated": false,
@@ -2752,12 +2864,13 @@
   "cve_id": "CVE-2026-59944",
   "state": "RESERVED",
   "public_date": "2026-08-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-08-27"
+   "ghsa-repos": "2026-08-27",
+   "csaf": "2026-08-27"
   },
-  "refs": "ghsa-repos:composer/composer\tGHSA-96h3-5x6v-m776",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3072\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3072.json;ghsa-repos:composer/composer\tGHSA-96h3-5x6v-m776",
   "description": "composer/composer repository advisory GHSA-96h3-5x6v-m776",
   "state_verified_this_run": true,
   "days_public": 1,
@@ -2778,6 +2891,7 @@
   "vendor": "",
   "advisory_url": "https://github.com/composer/composer/security/advisories/GHSA-96h3-5x6v-m776",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3072.json",
    "ghsa-repos": "https://github.com/composer/composer/security/advisories/GHSA-96h3-5x6v-m776"
   },
   "veto_evaluated": false,
@@ -3526,80 +3640,6 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-81500",
-  "state": "RESERVED",
-  "public_date": "2026-08-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-27"
-  },
-  "refs": "ghsa-repos:lxc/incus\tGHSA-9pqw-c7m4-xvg7",
-  "description": "lxc/incus repository advisory GHSA-9pqw-c7m4-xvg7",
-  "state_verified_this_run": true,
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-27",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "vendor": "",
-  "advisory_url": "https://github.com/lxc/incus/security/advisories/GHSA-9pqw-c7m4-xvg7",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-9pqw-c7m4-xvg7"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-81501",
-  "state": "RESERVED",
-  "public_date": "2026-08-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-27"
-  },
-  "refs": "ghsa-repos:lxc/incus\tGHSA-c6wx-8679-hpr9",
-  "description": "lxc/incus repository advisory GHSA-c6wx-8679-hpr9",
-  "state_verified_this_run": true,
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-27",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "vendor": "",
-  "advisory_url": "https://github.com/lxc/incus/security/advisories/GHSA-c6wx-8679-hpr9",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-c6wx-8679-hpr9"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
   "cve_id": "CVE-2026-77605",
   "state": "RESERVED",
   "public_date": "2026-08-24",
@@ -3639,21 +3679,22 @@
  {
   "cve_id": "CVE-2026-71403",
   "state": "RESERVED",
-  "public_date": "2026-08-28",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "public_date": "2026-08-27",
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-08-28"
+   "ghsa-repos": "2026-08-28",
+   "csaf": "2026-08-27"
   },
-  "refs": "ghsa-repos:rancher/rancher\tGHSA-wfvm-w99r-cjgc",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3073\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json;ghsa-repos:rancher/rancher\tGHSA-wfvm-w99r-cjgc",
   "description": "rancher/rancher repository advisory GHSA-wfvm-w99r-cjgc",
   "state_verified_this_run": true,
-  "days_public": 0,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 0,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-28",
-  "advisory_days_public": 0,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -3666,6 +3707,7 @@
   "vendor": "",
   "advisory_url": "https://github.com/rancher/rancher/security/advisories/GHSA-wfvm-w99r-cjgc",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json",
    "ghsa-repos": "https://github.com/rancher/rancher/security/advisories/GHSA-wfvm-w99r-cjgc"
   },
   "veto_evaluated": false,
@@ -3676,21 +3718,22 @@
  {
   "cve_id": "CVE-2026-71404",
   "state": "RESERVED",
-  "public_date": "2026-08-28",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "public_date": "2026-08-27",
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-08-28"
+   "ghsa-repos": "2026-08-28",
+   "csaf": "2026-08-27"
   },
-  "refs": "ghsa-repos:rancher/rancher\tGHSA-92jp-phmj-wv65",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3073\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json;ghsa-repos:rancher/rancher\tGHSA-92jp-phmj-wv65",
   "description": "rancher/rancher repository advisory GHSA-92jp-phmj-wv65",
   "state_verified_this_run": true,
-  "days_public": 0,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 0,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-28",
-  "advisory_days_public": 0,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -3703,6 +3746,7 @@
   "vendor": "",
   "advisory_url": "https://github.com/rancher/rancher/security/advisories/GHSA-92jp-phmj-wv65",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json",
    "ghsa-repos": "https://github.com/rancher/rancher/security/advisories/GHSA-92jp-phmj-wv65"
   },
   "veto_evaluated": false,
@@ -3713,21 +3757,22 @@
  {
   "cve_id": "CVE-2026-75033",
   "state": "RESERVED",
-  "public_date": "2026-08-28",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "public_date": "2026-08-27",
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-08-28"
+   "ghsa-repos": "2026-08-28",
+   "csaf": "2026-08-27"
   },
-  "refs": "ghsa-repos:rancher/rancher\tGHSA-5hf4-f4mp-g6h4",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3073\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json;ghsa-repos:rancher/rancher\tGHSA-5hf4-f4mp-g6h4",
   "description": "rancher/rancher repository advisory GHSA-5hf4-f4mp-g6h4",
   "state_verified_this_run": true,
-  "days_public": 0,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 0,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-28",
-  "advisory_days_public": 0,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -3740,6 +3785,7 @@
   "vendor": "",
   "advisory_url": "https://github.com/rancher/rancher/security/advisories/GHSA-5hf4-f4mp-g6h4",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json",
    "ghsa-repos": "https://github.com/rancher/rancher/security/advisories/GHSA-5hf4-f4mp-g6h4"
   },
   "veto_evaluated": false,
@@ -3750,21 +3796,22 @@
  {
   "cve_id": "CVE-2026-75034",
   "state": "RESERVED",
-  "public_date": "2026-08-28",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "public_date": "2026-08-27",
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-08-28"
+   "ghsa-repos": "2026-08-28",
+   "csaf": "2026-08-27"
   },
-  "refs": "ghsa-repos:rancher/rancher\tGHSA-j637-8xgr-436x",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3073\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json;ghsa-repos:rancher/rancher\tGHSA-j637-8xgr-436x",
   "description": "rancher/rancher repository advisory GHSA-j637-8xgr-436x",
   "state_verified_this_run": true,
-  "days_public": 0,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 0,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-28",
-  "advisory_days_public": 0,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -3777,6 +3824,7 @@
   "vendor": "",
   "advisory_url": "https://github.com/rancher/rancher/security/advisories/GHSA-j637-8xgr-436x",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json",
    "ghsa-repos": "https://github.com/rancher/rancher/security/advisories/GHSA-j637-8xgr-436x"
   },
   "veto_evaluated": false,
@@ -3787,21 +3835,22 @@
  {
   "cve_id": "CVE-2026-75035",
   "state": "RESERVED",
-  "public_date": "2026-08-28",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "public_date": "2026-08-27",
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-08-28"
+   "ghsa-repos": "2026-08-28",
+   "csaf": "2026-08-27"
   },
-  "refs": "ghsa-repos:rancher/rancher\tGHSA-h923-rr66-g2w5",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3073\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json;ghsa-repos:rancher/rancher\tGHSA-h923-rr66-g2w5",
   "description": "rancher/rancher repository advisory GHSA-h923-rr66-g2w5",
   "state_verified_this_run": true,
-  "days_public": 0,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 0,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-28",
-  "advisory_days_public": 0,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -3814,6 +3863,7 @@
   "vendor": "",
   "advisory_url": "https://github.com/rancher/rancher/security/advisories/GHSA-h923-rr66-g2w5",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json",
    "ghsa-repos": "https://github.com/rancher/rancher/security/advisories/GHSA-h923-rr66-g2w5"
   },
   "veto_evaluated": false,
@@ -3852,45 +3902,6 @@
   "advisory_url": "https://github.com/vllm-project/vllm/security/advisories/GHSA-hcwq-8wjf-3gcr",
   "source_urls": {
    "ghsa-repos": "https://github.com/vllm-project/vllm/security/advisories/GHSA-hcwq-8wjf-3gcr"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-80489",
-  "state": "RESERVED",
-  "public_date": "2026-08-26",
-  "sources": "csaf,redhat",
-  "feed_count": 2,
-  "dates": {
-   "redhat": "2026-08-27",
-   "csaf": "2026-08-26"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3051\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3051.json;redhat:CVE-2026-80489",
-  "description": "glibc: Non-progress DoS in SHIFT_JISX0213 -&gt; UCS-4 conversion state",
-  "state_verified_this_run": true,
-  "days_public": 2,
-  "clock_known": true,
-  "hours_public": 48,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 2,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "CVE-2026-80489",
-  "ecosystem": "",
-  "vendor": "Red Hat",
-  "advisory_url": "https://access.redhat.com/security/cve/CVE-2026-80489",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3051.json",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-80489"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -4533,13 +4544,12 @@
   "cve_id": "CVE-2026-81167",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/address_suggestion",
+  "refs": "osv:Packagist:drupal/address_suggestion",
   "description": "The Address Suggestion module provides address autocomplete functionality using configured address providers.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4560,7 +4570,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81167",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81167"
   },
   "veto_evaluated": false,
@@ -4572,13 +4581,12 @@
   "cve_id": "CVE-2026-81165",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/blazy",
+  "refs": "osv:Packagist:drupal/blazy",
   "description": "This module enables users to display a field of a target entity through a Blazy Filter plugin shortcode.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4599,7 +4607,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81165",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81165"
   },
   "veto_evaluated": false,
@@ -4611,13 +4618,12 @@
   "cve_id": "CVE-2026-81168",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/captcha_protected_page",
+  "refs": "osv:Packagist:drupal/captcha_protected_page",
   "description": "This module enables site administrators to require CAPTCHA confirmation on specific pages.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4638,7 +4644,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81168",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81168"
   },
   "veto_evaluated": false,
@@ -4650,13 +4655,12 @@
   "cve_id": "CVE-2026-81159",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/commerce_cybersource",
+  "refs": "osv:Packagist:drupal/commerce_cybersource",
   "description": "This module integrates Drupal Commerce with the CyberSource payment gateway.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4677,7 +4681,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81159",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81159"
   },
   "veto_evaluated": false,
@@ -4689,13 +4692,12 @@
   "cve_id": "CVE-2026-81161",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/content_moderation_notifications",
+  "refs": "osv:Packagist:drupal/content_moderation_notifications",
   "description": "The module provides a permission that allows users to configure email templates containing Twig code.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4716,7 +4718,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81161",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81161"
   },
   "veto_evaluated": false,
@@ -4728,13 +4729,12 @@
   "cve_id": "CVE-2026-81269",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/datafield",
+  "refs": "osv:Packagist:drupal/datafield",
   "description": "This module enables you to store structured data in configurable fields and expose Data Field values through JSON endpoints.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4755,7 +4755,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81269",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81269"
   },
   "veto_evaluated": false,
@@ -4767,13 +4766,12 @@
   "cve_id": "CVE-2026-81166",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/digital_signage_framework",
+  "refs": "osv:Packagist:drupal/digital_signage_framework",
   "description": "The Digital Signage Framework module provides a route that signage devices can call to refresh dynamic blocks on a display.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4794,7 +4792,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81166",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81166"
   },
   "veto_evaluated": false,
@@ -4806,13 +4803,12 @@
   "cve_id": "CVE-2026-81162",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/dxpr_builder",
+  "refs": "osv:Packagist:drupal/dxpr_builder",
   "description": "The DXPR Builder module provides a visual / AI page builder for Drupal.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4833,7 +4829,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81162",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81162"
   },
   "veto_evaluated": false,
@@ -4845,13 +4840,12 @@
   "cve_id": "CVE-2026-81158",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/entity",
+  "refs": "osv:Packagist:drupal/entity",
   "description": "The Entity API module extends the Drupal core entity API to provide a unified way to deal with entities and their properties.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4872,7 +4866,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81158",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81158"
   },
   "veto_evaluated": false,
@@ -4884,13 +4877,12 @@
   "cve_id": "CVE-2026-81164",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/entity_pdf",
+  "refs": "osv:Packagist:drupal/entity_pdf",
   "description": "The Entity PDF module can create a PDF from any entity based on any View mode.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4911,7 +4903,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81164",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81164"
   },
   "veto_evaluated": false,
@@ -4923,13 +4914,12 @@
   "cve_id": "CVE-2026-81205",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/ldap_auth",
+  "refs": "osv:Packagist:drupal/ldap_auth",
   "description": "This module enables users to authenticate using LDAP or Active Directory credentials.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4950,7 +4940,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81205",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81205"
   },
   "veto_evaluated": false,
@@ -4962,13 +4951,12 @@
   "cve_id": "CVE-2026-81201",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/monster_menus",
+  "refs": "osv:Packagist:drupal/monster_menus",
   "description": "This module enables you to create one or more multisites with highly granular page permissions.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -4989,7 +4977,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81201",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81201"
   },
   "veto_evaluated": false,
@@ -5001,13 +4988,12 @@
   "cve_id": "CVE-2026-81160",
   "state": "RESERVED",
   "public_date": "2026-08-26",
-  "sources": "csaf,osv",
-  "feed_count": 2,
+  "sources": "osv",
+  "feed_count": 1,
   "dates": {
-   "osv": "2026-08-26",
-   "csaf": "2026-08-26"
+   "osv": "2026-08-26"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3041\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json;osv:Packagist:drupal/slick",
+  "refs": "osv:Packagist:drupal/slick",
   "description": "Slick UI, a sub-module of Slick, enables you to add Slick option sets that may contain HTML for carousel buttons.",
   "state_verified_this_run": true,
   "days_public": 2,
@@ -5028,7 +5014,6 @@
   "vendor": "",
   "advisory_url": "https://osv.dev/list?q=CVE-2026-81160",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3041.json",
    "osv": "https://osv.dev/list?q=CVE-2026-81160"
   },
   "veto_evaluated": false,
@@ -5185,23 +5170,23 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2025-64649",
+  "cve_id": "CVE-2026-77159",
   "state": "RESERVED",
-  "public_date": "2026-08-26",
+  "public_date": "2026-08-27",
   "sources": "csaf",
   "feed_count": 1,
   "dates": {
-   "csaf": "2026-08-26"
+   "csaf": "2026-08-27"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3046\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json",
-  "description": "CVE-2025-64649",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11622-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11622-1.json",
+  "description": "CVE-2026-77159",
   "state_verified_this_run": true,
-  "days_public": 2,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 48,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 2,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -5212,9 +5197,9 @@
   "package": "",
   "ecosystem": "",
   "vendor": "",
-  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json",
+  "advisory_url": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11622-1.json",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json"
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11622-1.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -5222,23 +5207,23 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-3627",
+  "cve_id": "CVE-2026-75036",
   "state": "RESERVED",
-  "public_date": "2026-08-26",
+  "public_date": "2026-08-27",
   "sources": "csaf",
   "feed_count": 1,
   "dates": {
-   "csaf": "2026-08-26"
+   "csaf": "2026-08-27"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3046\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json",
-  "description": "CVE-2026-3627",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3073\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json",
+  "description": "CVE-2026-75036",
   "state_verified_this_run": true,
-  "days_public": 2,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 48,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 2,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -5249,9 +5234,9 @@
   "package": "",
   "ecosystem": "",
   "vendor": "",
-  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json",
+  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3046.json"
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3073.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -5259,23 +5244,23 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-5522",
+  "cve_id": "CVE-2026-65643",
   "state": "RESERVED",
-  "public_date": "2026-08-26",
+  "public_date": "2026-08-27",
   "sources": "csaf",
   "feed_count": 1,
   "dates": {
-   "csaf": "2026-08-26"
+   "csaf": "2026-08-27"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3043\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3043.json",
-  "description": "CVE-2026-5522",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3061\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3061.json",
+  "description": "CVE-2026-65643",
   "state_verified_this_run": true,
-  "days_public": 2,
+  "days_public": 1,
   "clock_known": true,
-  "hours_public": 48,
+  "hours_public": 24,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-26",
-  "advisory_days_public": 2,
+  "advisory_date": "2026-08-27",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -5286,9 +5271,9 @@
   "package": "",
   "ecosystem": "",
   "vendor": "",
-  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3043.json",
+  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3061.json",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3043.json"
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3061.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -5296,24 +5281,24 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-75604",
+  "cve_id": "CVE-2026-18729",
   "state": "RESERVED",
-  "public_date": "2026-08-25",
+  "public_date": "2026-08-24",
   "sources": "csaf",
   "feed_count": 1,
   "dates": {
-   "csaf": "2026-08-25"
+   "csaf": "2026-08-24"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3027\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3027.json",
-  "description": "CVE-2026-75604",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2995\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json",
+  "description": "CVE-2026-18729",
   "state_verified_this_run": true,
-  "days_public": 3,
+  "days_public": 4,
   "clock_known": true,
-  "hours_public": 72,
+  "hours_public": 96,
   "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 3,
-  "past_expectation": false,
+  "advisory_date": "2026-08-24",
+  "advisory_days_public": 4,
+  "past_expectation": true,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
   "rule": "4.5.1.6",
@@ -5323,9 +5308,83 @@
   "package": "",
   "ecosystem": "",
   "vendor": "",
-  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3027.json",
+  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3027.json"
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-19286",
+  "state": "RESERVED",
+  "public_date": "2026-08-24",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-08-24"
+  },
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2995\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json",
+  "description": "CVE-2026-19286",
+  "state_verified_this_run": true,
+  "days_public": 4,
+  "clock_known": true,
+  "hours_public": 96,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-24",
+  "advisory_days_public": 4,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "vendor": "",
+  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json",
+  "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-19295",
+  "state": "RESERVED",
+  "public_date": "2026-08-24",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-08-24"
+  },
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2995\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json",
+  "description": "CVE-2026-19295",
+  "state_verified_this_run": true,
+  "days_public": 4,
+  "clock_known": true,
+  "hours_public": 96,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-24",
+  "advisory_days_public": 4,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "vendor": "",
+  "advisory_url": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json",
+  "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2995.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
