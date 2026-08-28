@@ -247,6 +247,15 @@ def test_the_guard_refuses_each_leak_that_actually_shipped(tmp_path, rel, body, 
      "an advisory summary that is exactly a package name. Real row"),
     ("snapshots/d/summary.json", {"coverage": {"covered": ["suse", "redhat"]}},
      "the covered set, published on purpose so the naming gate is inspectable"),
+    ("snapshots/d/summary.json",
+     {"coverage": {"near_floor": [{"cna": "suse", "sightings": 2, "short_by": 1}]}},
+     "near-floor CNAs: aggregate coverage in the same sense top_missed_effective "
+     "already is, and strictly weaker, since it is a list of what this site "
+     "CANNOT yet do. Round 7; this guard refused the publication until it was "
+     "allowlisted, which is the allowlist working"),
+    ("snapshots/d/summary.json", {"coverage": {"corroborating_feeds": ["mozilla"]}},
+     "a list of FEED names. mozilla is a feed that shares its name with a CNA, "
+     "exactly like redhat and suse in `dates` above"),
     ("snapshots/d/backlog.csv", "cve_id,package,description\nCVE-1,glibc,A flaw in suse packaging\n",
      "a CSV description mentioning a CNA in prose"),
 ])
@@ -268,6 +277,23 @@ def test_the_legitimacy_list_is_an_allowlist_not_a_denylist():
     that five leaks walked around. A new field must default to REFUSED."""
     assert publish._roster_name_hits({"brand_new_field": "GitHub_M"},
                                      {"GitHub_M"})
+
+
+def test_the_round_7_coverage_allowlist_entries_are_not_over_broad(tmp_path):
+    """Allowlisting two coverage fields must not open `coverage` as a whole.
+
+    `_name_path_allowed` is a SUBSTRING test, so a careless entry like
+    ".coverage." would have permitted every future field under it, including one
+    that did attribute a row. The two entries added in round 7 name their fields
+    in full, and this asserts an unrelated coverage field still defaults to
+    REFUSED.
+    """
+    problems = [p for p in publish.check(_tree(tmp_path, {
+        "snapshots/d/summary.json": {"coverage": {"invented_later": ["suse"]}}}))
+        if "certified CNA" in p]
+    assert problems, (
+        "a new field under `coverage` was permitted without anyone justifying "
+        "it, which is the denylist failure this guard replaced")
 
 
 def test_a_prose_word_that_is_also_a_cna_does_not_fire_in_markdown(tmp_path):

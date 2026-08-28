@@ -482,6 +482,25 @@ _NAME_OK_PATHS = (
     ".coverage.top_missed",
     ".coverage.top_missed_effective",
     ".coverage.off_roster",
+    # Added 2026-08-27 (round 7), and this guard REFUSED THE PUBLICATION until
+    # they were, which is the allowlist working exactly as its docstring says:
+    # "a new field defaults to REFUSED and someone has to justify adding it here."
+    # The build failed closed on `mozilla` and 36 other names, the site was not
+    # republished, and nothing leaked. The justification, per field:
+    #
+    # `near_floor` is aggregate coverage in precisely the sense
+    # `top_missed_effective` already is. It is the site's statement about its own
+    # reach: which roster CNAs it has sighted but not often enough to count. It
+    # attributes no ROW to anyone. In fact it is strictly weaker than the entry
+    # above it, since a near-floor CNA is one whose CVEs we can see, published in
+    # a list of what this site CANNOT yet do.
+    ".coverage.near_floor",
+    # `corroborating_feeds` is a list of FEED names, not CNAs, and lands here for
+    # the reason the `.dates.` entry above already gives: several feeds share a
+    # name with a CNA (redhat, debian, suse, alpine, mozilla, arch). The one
+    # entry in it today is `mozilla`, and "the mozilla FEED cannot credit a CNA
+    # as observable" is a fact about our feed set, not about who reserved a CVE.
+    ".coverage.corroborating_feeds",
     ".feeds.",              # feed health, keyed by feed
     ".sources",             # which feeds saw this row
     ".requested",           # the configured feed list
