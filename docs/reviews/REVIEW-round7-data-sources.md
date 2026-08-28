@@ -23,9 +23,10 @@ site build, not only against fixtures.
 Completed items are marked inline rather than deleted, because the reasoning is
 the record.
 
-**Four defects were found by the fixes rather than by the review**, including one
-in a fix for a finding in this document and one that had made a five-day-old
-measurement in FEEDS.md unsound. All four are under "Found while fixing".
+**Five defects were found by the fixes rather than by the review**, including one
+in a fix for a finding in this document, one that had made a five-day-old
+measurement in FEEDS.md unsound, and one where the publication guard refused this
+review's own work and was right to. All five are under "Found while fixing".
 
 **The four D-list questions are still yours.** Nothing below decides them.
 
@@ -265,7 +266,7 @@ honest column and makes both of these visible without an argument about deletion
 Then take `arch` out, or record in `feedlab/arch.json` why an `unmeasurable` feed
 is kept.
 
-### B5. `compare_magnitudes` cannot see a CSAF provider go dark, and the code says so while relying on it. FIXED 2026-08-27
+### B5. `compare_magnitudes` cannot see a CSAF provider go dark, and the code says so while relying on it. FIXED 2026-08-27, and it fired the same night
 
 `_record_csaf_health` (`rbp/feeds.py:1477`) writes **one** health record for all
 17 providers, with one `rows` total. `feed_osv` (`rbp/feeds.py:1047`) calls
@@ -296,6 +297,23 @@ adapter the per-provider instrumentation that would have named the loss.
 **Fix:** `record_feed(f"csaf:{publisher}", ...)` per provider, exactly as OSV
 does. The fan-out already tracks per-provider rows to build the health string; it
 throws the numbers away and keeps the prose.
+
+> **It earned its keep on the first live run after it shipped.** The 2026-08-28
+> build published:
+>
+>     csaf:www.suse.com: provider unreachable: Expecting value: line 1 column 1
+>     csaf: 16/17 providers read; 2789 ids
+>
+> **SUSE**, of all providers, went unreachable that night, and it is named on its
+> own limitation line with its own row count of zero. Under the previous
+> instrumentation this would have been one aggregate moving 2,992 to 2,789, a 7%
+> dip well inside `MAGNITUDE_DROP`, with the provider's name appearing only if it
+> happened to fall inside a list truncated at six.
+>
+> That is the same provider whose silent loss of 14,486 advisories is the worked
+> example this finding was argued from. Recorded here rather than in a commit
+> message because a guard that fires within hours of shipping is the strongest
+> evidence a review can offer that the finding was real.
 
 ---
 
@@ -908,6 +926,44 @@ by its entire value, sitting unnoticed in the same table for five days.
 
 Fixed with `urllib.parse.quote`. `test_osv_can_fetch_an_ecosystem_whose_name_contains_a_space`
 asserts on the URL rather than on a download, so it costs no network.
+
+### F4. The de-naming guard refused this review's own work, and was right to
+
+Pushed to `main`, and the build failed closed:
+
+    REFUSING TO PUBLISH:
+      snapshots/2026-08-28/summary.json names 37 certified CNA(s), first:
+      $.coverage.corroborating_feeds[0] = 'mozilla'
+
+`deploy` was skipped, the site was not republished, and nothing leaked.
+
+Both new `coverage` fields publish roster names. `near_floor` is a list of CNAs
+by construction, and `corroborating_feeds` contains `mozilla`, which is a feed
+name that collides with a certified CNA. `publish._NAME_OK_PATHS` is an explicit
+allowlist whose own docstring says *"a new field defaults to REFUSED and someone
+has to justify adding it here"*, because it replaced a denylist of nine field
+names that five separate leaks walked around.
+
+**So this is the guard working, and it is worth writing down as such.** Round 7
+spent its length arguing that guards which pass either way are not guards, and
+then added two fields that a guard correctly stopped. The fix was to write the
+justification the allowlist asks for, in the guard's own taxonomy: `near_floor`
+is aggregate coverage in exactly the sense `top_missed_effective` already is, and
+strictly weaker, since it is a list of what the site CANNOT yet do;
+`corroborating_feeds` is a list of feeds, which is the case the `.dates.` entry
+was already written for.
+
+One thing that had to be got right on the way in. `_name_path_allowed` is a
+**substring** test, so an entry of `".coverage."` would have permitted every
+future field under it, including one that did attribute a row. Both entries name
+their field in full, and
+`test_the_round_7_coverage_allowlist_entries_are_not_over_broad` asserts an
+unrelated new `coverage` field still defaults to REFUSED.
+
+The lesson for the next reviewer is narrower than "the guard works": **a finding
+that adds a published field has a publication guard to satisfy, and the review
+that adds it should say so before the push rather than after.** Nothing in this
+document's order of work mentioned `publish check`, and it should have.
 
 ### And one that was not this review's subject at all
 
