@@ -175,64 +175,64 @@ def test_the_front_page_answers_the_counter_quotes_rather_than_only_listing_them
 # historical claims: pinned, because these are the contested ones
 # --------------------------------------------------------------------------
 
-def test_the_issue_numbers_and_dates_are_pinned(built):
-    """#835 withdrew the v1.0 PDF; #842 commented out the table thirteen days
-    later. Both numbers and both dates appear on the site and neither was pinned."""
-    text = _text(built / "overview.html") + _text(built / "policy.html")
-    assert "842" in text and "835" in text
-    assert "7 February 2022" in text
-    assert "February 2021" in text
-    assert "Q3" in text and "2021" in text
+# --------------------------------------------------------------------------
+# THE PROGRAM'S RETIRED METRIC IS NOT THIS SITE'S SUBJECT, 2026-08-27.
+#
+# The site used to carry the whole history of the quarterly RBP table: that it
+# ran on the CVE Metrics page, that it was commented out in February 2022 as
+# item 2 of a three-item restructuring (cve-website #842), that the v1.0 policy
+# PDF had been withdrawn thirteen days earlier (#835), and that the final column
+# already read N/A. It was scrupulously exculpatory, and five tests pinned it
+# here so it could not be softened by accident.
+#
+# It is gone, at Jerry's direction, and the reason is one the exculpation could
+# not fix: raising an accusation in order to rebut it plants the accusation
+# either way. A reader who arrives with no theory about why the table went away
+# leaves with one. That is not the argument this project wants to be making, and
+# the measurement stands without it.
+#
+# The flow-versus-stock non-comparability note went with it in the same pass.
+# That one was NOT accusatory and did real work, stopping a reader treating this
+# count as the Program's own; the call to remove it anyway was made deliberately.
+# What still guards against over-reading: the "counts are a floor" line in the
+# footer, "a count of a state, not a count of violations" in the meta
+# description, and the coverage table on /method.
+#
+# This guard replaces those five tests. Deleting copy without a guard is how it
+# comes back.
+NARRATIVE_GONE = (
+    "concealment",
+    "842",
+    "4,326",
+    "will not be that series",
+    "The Program used to publish",
+    "metric that used to exist",
+    "quarterly to annual",
+    "item 2 of a three-item",
+)
 
 
-def test_the_three_item_restructuring_is_described_not_asserted(built):
-    """"Item 2 of three" only exculpates if a reader can see what items 1 and 3
-    were. The first draft of this asserted them from memory and was wrong; they
-    come from cve-website#842 and are now named with the issue linked."""
-    text = _text(built / "overview.html")
-    assert "item 2 of a three-item" in text
-    assert "issue" in text and "842" in text
-    # Item 1 and item 3, from the issue body.
-    assert "Reserved IDs tables" in text or "Published Records" in text
-    assert "quarterly to annual" in text
+def test_the_retired_metrics_table_narrative_stays_removed():
+    """Every trace of the "why was the RBP table commented out" passage.
 
+    Scoped to template SOURCE with comments stripped, so the reasoning above can
+    keep naming what it removed without tripping its own guard.
 
-def test_the_n_a_final_column_fact_is_on_both_front_doors(built):
-    """The most exculpatory fact available: the series had stopped being populated
-    before anyone commented it out. It was on /policy only, which nobody can reach
-    pre-launch."""
-    assert "N/A" in _text(built / "overview.html")
-    assert "N/A" in _text(built / "policy.html")
-    assert "N/A" in _text(built / "index.html"), "missing from the holding page"
-
-
-def test_the_flow_versus_stock_distinction_is_on_the_holding_page():
-    """The holding page is the only page anyone can reach pre-launch, so it is
-    where good faith is cheapest to establish. It implied this site publishes the
-    Program's archived metric, which /policy retracts on a page nobody can reach."""
-    text = _text(PLACEHOLDER)
-    assert "flow" in text and "stock" in text
-    assert "not comparable" in text
-    assert "minority of CNAs" in text, "the coverage bound is missing"
-
-
-def test_the_ask_is_anchored_on_the_in_force_document(built):
-    """Asking for the return of a v1.0-era quarterly table under a policy that
-    withdrew the arithmetic that table scored is answerable with "that was v1.0".
-    v2.0.0 names "Program metrics and audits" as its own identification channel.
-
-    The `if not exists(): continue` this used to carry was a skip wearing a
-    loop's clothing: it never raised, so it never reported, and on CI it checked
-    the placeholder and silently walked past the built page. Both are asserted
-    now, unconditionally.
+    #835 is deliberately NOT in the list. It survives once, on /policy, in the
+    note warning readers that RBP Policy v1.0 is not in force and its 5% and 50%
+    thresholds should not be cited. That is a factual correction about a document
+    rather than a claim about anyone's motives, and it is the one reference to
+    the 2022 sequence the site still needs.
     """
-    for path in (PLACEHOLDER, built / "overview.html"):
-        assert "metrics and audits" in _text(path), path
+    for tpl in TEMPLATES.glob("*.html"):
+        body = re.sub(r"\{#.*?#\}", "", tpl.read_text(), flags=re.S)
+        body = re.sub(r"<!--.*?-->", "", body, flags=re.S)
+        for phrase in NARRATIVE_GONE:
+            assert phrase not in body, (
+                f"{tpl.name} reintroduces the retired-metric narrative: {phrase!r}. "
+                "It was removed on 2026-08-27 because rebutting an accusation "
+                "still plants it.")
 
-
-# --------------------------------------------------------------------------
-# claims stated as completed facts
-# --------------------------------------------------------------------------
 
 def test_no_built_page_states_an_interval_as_a_completed_fact(built):
     """A grep guard for the class, not just the instance that was found."""
@@ -573,15 +573,18 @@ def test_the_about_page_and_the_front_door_share_one_copy(built_site):
     """
     partial = PLACEHOLDER.read_text()
     # A sentence from each of the three passages the project names as load-bearing:
-    # the glossary provenance, the 4.5.1.7 quotation, and the narrow ask.
-    # "should not be listed, ask" was the third pinned phrase until 2026-08-27,
-    # when the removal ask was retired from every surface. The other two are the
-    # load-bearing ones the project names: the glossary provenance and the 4.5.1.7
-    # quotation. The third slot is the flow-versus-stock distinction, which is the
-    # other passage this project treats as not-to-be-summarised.
+    # the glossary provenance, the 4.5.1.7 quotation, and one more.
+    #
+    # THE THIRD SLOT HAS MOVED TWICE. It was "should not be listed, ask" until the
+    # removal ask was retired on 2026-08-27, then the flow-versus-stock passage
+    # until the retired-metric narrative was cut later the same day. It is now the
+    # redaction-restraint sentence: this site can recover ownership from public
+    # data and does not publish it. That is the load-bearing self-limit, and of
+    # everything left in this copy it is the passage that would do the most damage
+    # to lose to a careless edit.
     for phrase in ("The term is the CVE Program's own",
                    "The Secretariat MAY publicly identify",
-                   "will not be that series"):
+                   "redaction to stay as it is"):
         assert phrase in partial, f"the shared copy lost {phrase!r}"
         for page in ("index.html", "about-this-count.html"):
             assert phrase in _text(built_site / page), f"{page} lost {phrase!r}"

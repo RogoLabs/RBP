@@ -241,14 +241,114 @@
     return m[2] === "-" ? {max: n} : {min: n};
   }
 
+  // hasOwnProperty rather than truthiness. NAMES is a plain object, so
+  // `NAMES["constructor"]` is a function rather than undefined, and ?src=constructor
+  // labelled a control with the source of Object. A feed slug arrives from outside
+  // the data in exactly one place, the query string, so the guard lives here.
+  function feedName(v) {
+    return Object.prototype.hasOwnProperty.call(NAMES, v) ? NAMES[v] : v;
+  }
+
+  function hasOption(sel, v) {
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === v) { return true; }
+    }
+    return false;
+  }
+
+  // The label is bounded because for an unknown value it comes from the query
+  // string, and `?src=` followed by five thousand characters would otherwise
+  // render a five-thousand-character option and take the command bar with it. The
+  // VALUE is kept whole, so the filter still means exactly what the URL said.
+  function addOption(sel, value, label) {
+    var o = document.createElement("option");
+    o.value = value;
+    o.textContent = label.length > 44 ? label.slice(0, 43) + "\u2026" : label;
+    sel.appendChild(o);
+    return o;
+  }
+
+  // THE SOURCE OPTIONS ARE TODAY'S FEEDS, which is the whole reason setSrc below
+  // exists: this list changes with the data, and a URL does not.
   var seen = {};
   ROWS.forEach(function (r) {
     (r.sources || "").split(",").forEach(function (s) { if (s) { seen[s] = 1; } });
   });
   Object.keys(seen).sort().forEach(function (s) {
-    var o = document.createElement("option");
-    o.value = s; o.textContent = NAMES[s] || s;
-    els.src.appendChild(o);
+    addOption(els.src, s, feedName(s));
+  });
+
+  // A LINK MEANS WHAT IT SAYS, and for a feed that had gone quiet it meant the
+  // opposite.
+  //
+  // Assigning a <select> a value it has no <option> for neither throws nor sticks:
+  // `value` reads back "" and `selectedIndex` is -1. So a src slug with no option
+  // left the filter empty and `matches()` stopped applying it, and the page
+  // rendered EVERY row for a URL that asked for one feed.
+  //
+  // Measured in a browser on 2026-08-28 rather than reasoned about: 60 of 60 rows
+  // in the render fixture here, and all 1,672 of 1,672 on the live page in the
+  // review that reported it. `mozilla` and `arch` have contributed zero rows since
+  // they merged, which is round 7's B4 finding and is why /status reads `62 / 0 / 0`
+  // for arch, so this was the behaviour for both of them and no chip anywhere on
+  // the page could reveal it.
+  //
+  // It inverts the one promise this control makes. A view here is meant to be
+  // citable, and a citation of a feed that later goes quiet turned into a link
+  // showing everything, which is the worst available reading of that link.
+  //
+  // So an unknown slug gets an option of its own and keeps filtering. For a feed
+  // with no rows that is a zero-result view, which is the true answer, and the
+  // empty state names the feed and offers a way out of it.
+  function setSrc(v) {
+    if (v && !hasOption(els.src, v)) {
+      // Marked, because the select is a list of the feeds behind today's rows and
+      // this one is not one of them. Unmarked, the dropdown offers "Mozilla"
+      // alongside ten feeds that do have rows as though it were another of them.
+      //
+      // It stays in the list once added: it names a feed a reader linked to, and
+      // choosing it again gives the same honest zero.
+      addOption(els.src, v, feedName(v) + " (0 rows)");
+    }
+    els.src.value = v;
+  }
+
+  // The same defect one control over, and it needs a different answer.
+  //
+  // The age options are a fixed set rather than a reading of the data, so nothing
+  // here can go quiet. What a URL can still carry is a bound the control does not
+  // offer: `?age=45+` is a perfectly good view someone can construct by hand, and
+  // it too silently rendered everything. It gets an option and filters.
+  //
+  // A value that parses as no bound at all ("", "soon") falls back to the explicit
+  // everything state rather than to a blank select. Blank filters nothing while
+  // looking like it might be filtering something, which is the same lie in a
+  // smaller font.
+  function setAge(v) {
+    if (v && hasOption(els.age, v)) { els.age.value = v; return; }
+    var b = ageBound(v);
+    if (!b) { els.age.value = "any"; return; }
+    // Canonical, so a bare "90" resolves to the "90+" option the control already
+    // has rather than adding a second one that reads identically to it.
+    var canon = b.max !== undefined ? b.max + "-" : b.min + "+";
+    if (!hasOption(els.age, canon)) {
+      addOption(els.age, canon, b.max !== undefined ? "Under " + b.max + " Days"
+                                                    : b.min + "+ Days");
+    }
+    els.age.value = canon;
+  }
+
+  // HOW EACH CONTROL TAKES A VALUE FROM THE URL, keyed on `els` and iterated from
+  // `els`, so the two cannot drift apart. A control added to one and not the other
+  // throws on load instead of quietly ceasing to be linkable, which is the shape of
+  // the bug that left `minage` in the clear-filters handler after the rename.
+  var FROM_URL = {
+    q: function (v) { els.q.value = v; },
+    src: setSrc,
+    age: setAge
+  };
+  Object.keys(els).forEach(function (k) {
+    if (!FROM_URL[k]) { throw new Error("control " + k + " has no URL reader"); }
   });
 
   // EVERY LINK NAMES ITS ROW.
@@ -267,7 +367,7 @@
     // Advisory advisory for CVE-2026-1" to a screen reader. Pre-existing, and
     // only visible once the names were title-cased and the doubling stopped
     // reading as a lower-case noun.
-    var name = NAMES[feed] || feed;
+    var name = feedName(feed);
     var tail = /advisory$/i.test(name) ? " for " : " advisory for ";
     return esc(name + tail + cve);
   }
@@ -280,7 +380,7 @@
     });
     if (!names.length) { return '<span class="chip nolink">Not Recorded</span>'; }
     return names.sort().map(function (k) {
-      var lab = esc(NAMES[k] || k);
+      var lab = esc(feedName(k));
       return urls[k]
         ? '<a class="chip" href="' + esc(urls[k]) + '" rel="noopener" aria-label="' +
           chipLabel(k, r.cve_id) + '">' + lab + "</a>"
@@ -291,7 +391,7 @@
   function detail(r) {
     var d = r.dates || {}, urls = r.source_urls || {};
     var items = Object.keys(d).sort().map(function (k) {
-      return "<dt>" + esc(NAMES[k] || k) + "</dt><dd>First seen " + esc(d[k]) +
+      return "<dt>" + esc(feedName(k)) + "</dt><dd>First seen " + esc(d[k]) +
         (urls[k] ? ' &middot; <a href="' + esc(urls[k]) + '" rel="noopener" aria-label="' +
                    chipLabel(k, r.cve_id) + '">Open Advisory</a>' : "") +
         "</dd>";
@@ -371,7 +471,7 @@
 
     if (!filtered.length) {
       $("list").innerHTML =
-        '<div class="empty"><b>Nothing matches ' + describeFilters() + ".</b>" +
+        '<div class="empty"><b>Nothing matches ' + esc(describeFilters()) + ".</b>" +
         "<p>" + ROWS.length.toLocaleString() + " rows are being tracked. " +
         "Try a different term, or widen a filter.</p>" +
         '<button type="button" class="morebtn" id="clear">Clear Filters</button></div>';
@@ -400,10 +500,16 @@
       ROWS.length.toLocaleString() + " rows shown";
   }
 
+  // PLAIN TEXT, and the caller escapes it. Two of these three bits are read
+  // straight from the query string, and this string used to be concatenated into
+  // `innerHTML` raw: `?q=<img src=x onerror=...>` matched no rows, so the empty
+  // state rendered the tag and the handler ran. Measured on 2026-08-28. On a site
+  // whose entire product is a link other people are asked to trust, a URL that
+  // executes script under rbptracker.org is the most expensive defect on this page.
   function describeFilters() {
     var bits = [];
     if (els.q.value.trim()) { bits.push("\u201c" + els.q.value.trim() + "\u201d"); }
-    if (els.src.value) { bits.push("in " + (NAMES[els.src.value] || els.src.value)); }
+    if (els.src.value) { bits.push("in " + feedName(els.src.value)); }
     var a = ageBound(els.age.value);
     if (a) {
       bits.push(a.max !== undefined ? "public under " + a.max + " days"
@@ -432,7 +538,11 @@
     // view someone sent them, so the default applies. Any parameter at all, even
     // one this control does not read, means they are looking at something chosen.
     if (!location.search) { els.age.value = DEFAULT_AGE; }
-    Object.keys(els).forEach(function (k) { if (p.get(k) !== null) { els[k].value = p.get(k); } });
+    // Through FROM_URL, never straight onto the element: a select silently
+    // discards a value it has no option for. See setSrc.
+    Object.keys(els).forEach(function (k) {
+      if (p.get(k) !== null) { FROM_URL[k](p.get(k)); }
+    });
     // ?minage=90 was this control's parameter until 2026-08-27. Any link shared
     // before then still points at a real view, so it is translated rather than
     // ignored: "90" normalises to "90+" via ageBound, and setting the select to
@@ -440,7 +550,7 @@
     var legacy = p.get("minage");
     if (legacy !== null && p.get("age") === null) {
       var b = ageBound(legacy);
-      if (b && b.min !== undefined) { els.age.value = b.min + "+"; }
+      if (b && b.min !== undefined) { setAge(b.min + "+"); }
     }
   }
 

@@ -419,6 +419,68 @@ D-list decisions in the review that are yours.
 
 ---
 
+## Round 8, 2026-08-28: the filter that stopped filtering
+
+Reported by a front-end review before the announcement, then reproduced in a
+browser here rather than read off the source. Three defects, all on the list page,
+all reachable by pasting a URL or by typing.
+
+**The reported one.** `/?src=mozilla&age=any` rendered every row instead of none:
+1,672 of 1,672 measured on the live page by the review, 60 of 60 measured here in
+the render fixture.
+The source options are built from the slugs present in the current rows, and
+assigning a `<select>` a value it has no `<option>` for neither throws nor sticks:
+`value` reads back `""`, `selectedIndex` becomes -1, and `matches()` then skips the
+filter entirely. `mozilla` and `arch` have contributed zero rows since they merged,
+which is round 7's B4 finding, so this was the live behaviour for two of the
+thirteen feeds and for any feed that goes quiet later.
+
+It inverts the only promise the control makes. A view here is meant to be citable,
+and a citation of a quiet feed became a link showing everything.
+
+**Two more in the same twenty lines, both measured.** The empty state concatenated
+the reader's own filter text into `innerHTML` raw, so `?q=<img src=x
+onerror=...>` matched no rows, rendered the tag and ran the handler: script
+execution under this origin, from a link, on a site whose entire product is a link
+other people are asked to trust. And that box had no wrapping rule at all, so 400
+unbroken characters typed into the filter scrolled the document sideways by
+2,466px at 1280 wide, and 80 characters did it at 375. The second one needs no
+crafted link, only a pasted package coordinate.
+
+**What changed**
+
+- An unknown `src` slug gets an option of its own and keeps filtering, which for a
+  feed with no rows is a zero-result view. The option is marked `(0 rows)`, because
+  the dropdown is otherwise a list of the feeds behind today's rows.
+- `?age=45+` and `?age=45-` now work. The offered thresholds are the
+  `age_buckets` boundaries; a bound of a reader's own was silently dropped the same
+  way. A value that parses as no bound at all falls back to the explicit `any`
+  rather than to a blank select, which filtered nothing while looking like it
+  might.
+- The URL readers are keyed on the control map and iterated from it, so the two
+  cannot drift. A control with no reader throws at load, which the browser suite
+  catches. Two lists is how `minage` outlived its rename.
+- `esc()` at the `innerHTML` sink, and `describeFilters()` is documented as plain
+  text. One lookup on `NAMES`, guarded with `hasOwnProperty`, so `?src=constructor`
+  cannot label a control with the source of `Object`.
+- `.empty { overflow-wrap: anywhere }`, at every width. The rule existed for
+  `.mono, code, pre` and only below 768px.
+
+**Guards.** `tests/test_filter_links.py` is offline and therefore gates the
+publication: it asserts the structure, which is weaker than measuring and is the
+half that can stop a publish. `tests/render/test_filters.py` measures the
+behaviour in a browser, including the escaping and the sideways scroll at both
+widths. Fourteen mutations run across the two files, every one caught. The browser
+suite is 53, up from 43.
+
+**Two things left standing, deliberately.** The marked option stays in the
+dropdown after the filter is cleared: it names a feed a reader linked to, and
+choosing it again gives the same honest zero. And the review reported that this
+defect was written up in the README. It was not, in the README or anywhere else in
+the tree, which is worth knowing about the next report from the same source.
+
+---
+
 ## What to be careful of
 
 **THE SITE IS LAUNCHED.** `RBP_LAUNCHED=1` was set as a repository variable on
@@ -474,3 +536,90 @@ the suite was green, and it was green partly because 14 of its tests were readin
 files nobody rendered and 14 more were skipping while reporting coverage.
 
 On this project, *the test passes* and *the test works* are different claims.
+
+---
+
+## Round 8, 2026-08-28: the 82 rows with no age
+
+Reported as a single missing CVE and it was not one. Someone pointed at
+[CVE-2026-44235](https://ubuntu.com/security/CVE-2026-44235) and asked whether
+the site had an Ubuntu gap. `cveawg` returns `CVE_RECORD_DNE` for it, Ubuntu
+published it 2026-06-11 and shipped USN-8437-1 on 2026-06-16, so it is an RBP by
+the site's own definition. It was already in the data, in `held_back.json`, in
+every snapshot since 2026-08-22, `state: RESERVED`, `sources: debian`,
+`held_back_reason: undated`.
+
+**The mechanism, which is not about Ubuntu being missing.** `alpine`, `arch` and
+`debian` return no dates at all. A row only those feeds saw has no age at any
+threshold, so `report.build` holds it back and it is never counted. Ubuntu can
+date such a row and mostly cannot be walked to it: the walk reads newest-first,
+the cap is 4,000 records, and offset 3,980 lands on 2026-07-25. This advisory is
+six weeks past that edge.
+
+**The size of it, measured against the live endpoint.** All 82 rows held back as
+`undated` on 2026-08-27 were asked for by name. On a pass with no failed lookups:
+**64 have an Ubuntu date, every one of the 64 clears the 7-day buffer, every one
+is beyond the walk's reach.** The remaining 18 Ubuntu genuinely does not carry.
+The headline goes 1,670 to 1,734. They are also the OLDEST evidence the site has,
+151 days down to 36, which is the opposite of a marginal population:
+`CVE-2026-35332/3/4` have been public since 2026-04-22.
+
+**Not a reason to move the cap, and that was checked first.** `0389f41` had
+already settled the walk: the full window is 1,128 pages and 35 to 44 minutes. It
+is also the wrong lever. `cves.json?q=<id>` is an exact-match filter that answers
+in one request, so the rows that need a date can be asked for BY NAME and depth
+stops mattering. The pass is bounded by the size of the held-back population, not
+by how far back the rows go. And it is the better trade on the walk's own terms:
+the feed being bought is the sole source for zero published rows.
+
+**What landed.** `feeds.resolve_dates_ubuntu`, run in `cli` between `classify`
+and `clock.annotate`, gated on `ubuntu` being a configured source. Live over the
+real population: 82 ids in ~300s at 4 workers. Three passes returned 59, 62 and
+64 dated, and the difference is entirely transient lookup failures rather than
+anything about the rows. That spread is the reason a failed lookup is retried on
+the next run rather than recorded as a final answer.
+
+**It dates rows, it does not sight them,** and that is the load-bearing decision.
+Every id it is given is one another feed already found, because that is the only
+way into the backlog, so the lookup can never add a row `ubuntu` alone would have
+seen. Crediting `ubuntu` with a sighting would raise `feed_count` out of a sample
+chosen by which rows were already undated, which is corroboration climbing
+precisely where corroboration is weakest. For the same reason the date stays out
+of `dates`, whose consumers all read it against `sources`. It lands in
+`public_date` only, which starts the buffer and cannot start the 72-hour clock,
+because `ubuntu` is a tracker in `clock._ORIGIN_KIND` and this endpoint's
+`published` is a tracker date whether it arrives by walk or by name.
+`public_date_origin` is published beside it so a reader can tell the two apart.
+
+**FOUND WHILE WRITING IT.** `q=` is a SEARCH, not a key lookup, and it matches
+description text. Taking `cves[0]` would have dated a row from another CVE's
+record, and the row would have been published with a confident, invented age.
+The resolver matches on `id` and skips everything else. Separately, `_get`
+returns `(None, 404, {})` rather than raising, and an unknown id answers 200 with
+an empty list, so a 404 here is the endpoint moving: reading it as "no date"
+would have turned a retired path into a silently undated backlog.
+
+**The health states are three, and the middle one is a judgement.** Two failed
+lookups in eighty-two is this endpoint on an ordinary afternoon, and reporting
+that as TRUNCATED would degrade most runs, which is the furniture problem
+`degraded_state` rejects reached from a fourth direction. Staying green is safe
+here for a reason not true of a feed walk: a row this pass fails to date stays in
+`held_back.json` as `undated`, exactly where it already was, and the next run
+asks again. The population self-heals, so the cost is a day of latency on a floor
+rather than a silent shrink, and the count is still stated in `detail`. A spent
+budget is CAPPED, because a configured limit belongs in `limitations`. Every
+lookup failing is FAILED, because then there is no self-healing to appeal to and
+`ok, dated 0` would be the silent shrink wearing that excuse as a disguise.
+
+**Still open.** The 18 rows Ubuntu genuinely does not carry are still undated and
+no configured feed can date them. And the deeper one this exposed: Ubuntu's
+`cves.json` carries `notices` and `notices_ids` on every row, with the USN id and
+its publication timestamp, and the adapter reads `id`, `published` and
+`description` and drops them. `clock._ORIGIN_KIND` calls `ubuntu` a tracker on
+the note that "none of the three reads DSA/DLA, USN or ASA", which is true of the
+adapter and not of the endpoint. Reading `notices` would give real advisory dates
+and move rows from SHOULD/4.5.1.6 toward MUST/4.5.1.4. That changes what the site
+ASSERTS, not how many rows it shows, so it wants its own measurement and its own
+round.
+
+**Guards.** `tests/test_ubuntu_dates.py`, 13 offline tests. 930 pass, lint clean.

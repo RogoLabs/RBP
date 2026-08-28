@@ -851,7 +851,16 @@ body.locked{overflow:hidden}
 .morebtn{border:1px solid var(--color-border);background:var(--color-bg-content);
   color:var(--rbp-link);border-radius:6px;padding:8px 18px;font:inherit;cursor:pointer}
 .morebtn:hover,.morebtn:focus-visible{border-color:var(--rbp-link)}
+/* THE EMPTY STATE DRAWS THE READER'S OWN TEXT, so it wraps at every width.
+   `overflow-wrap: anywhere` was declared for `.mono, code, pre` and only inside
+   the 768px media query, and nothing covered this box at all: 400 unbroken
+   characters typed into the filter scrolled the document sideways by 2,466px at
+   1280 wide, and 80 characters did it at 375. Measured on 2026-08-28. No link is
+   needed to reach it, only a pasted package name or a token, and the reader is
+   already looking at "nothing matches" when the page starts scrolling.
+   Inherited, so the `b` and the `p` inside are covered by the one declaration. */
 .empty{padding:44px 20px;text-align:center;color:var(--rbp-text-muted);
+  overflow-wrap:anywhere;
   background:var(--color-bg-content);border:1px solid var(--color-border);border-radius:8px}
 .empty b{display:block;color:var(--color-text-primary);font-size:1rem;margin-bottom:6px}
 

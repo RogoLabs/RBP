@@ -373,6 +373,36 @@ def cmd_run(args):
         print(f"  carried forward {oracle['carried_forward']} unverified row(s) "
               f"from the previous snapshot")
 
+    # DATE THE ROWS NO FEED DATED, before anything downstream reads a clock.
+    #
+    # `alpine`, `arch` and `debian` return no dates at all, so a row only those
+    # feeds saw has no age at any threshold and report.build holds it back as
+    # `undated`. That is not a rare corner: 82 of the 151 rows held back on
+    # 2026-08-27 were there for this reason and nothing else, and 64 of the 82
+    # have an Ubuntu date that clears the buffer, the oldest public for 151 days.
+    #
+    # The walk cannot supply those dates and the 2026-08-28 measurement closed
+    # the door on making it: the full window is 1,128 pages and 35 to 44 minutes.
+    # feeds.resolve_dates_ubuntu asks for the ids BY NAME instead, one exact-match
+    # query each, which is why it is bounded by the size of the held-back
+    # population rather than by how far back the rows go.
+    #
+    # Gated on `ubuntu` being a configured source. A profile that does not read
+    # Ubuntu must not reach Ubuntu, or /status names a feed set the run did not
+    # keep to.
+    for r in backlog:
+        r["public_date_origin"] = "feed" if r.get("public_date") else "none"
+    undated_rows = [r for r in backlog if not r.get("public_date")]
+    if undated_rows and "ubuntu" in sources:
+        dated = feeds.resolve_dates_ubuntu([r["cve_id"] for r in undated_rows])
+        for r in undated_rows:
+            d = dated.get(r["cve_id"])
+            if d:
+                r["public_date"] = d
+                r["public_date_origin"] = "lookup"
+        print(f"  dated {len(dated)} of {len(undated_rows)} undated row(s) "
+              "by name against Ubuntu")
+
     # The covered set has to exist before inference, because inference refuses
     # to name a CNA outside it. It needs only the corpus and the refs, both of
     # which are already in hand.

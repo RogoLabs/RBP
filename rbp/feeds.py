@@ -15,6 +15,7 @@ import re
 import socket
 import subprocess
 import sys
+import threading
 import time
 import zipfile
 import urllib.error
@@ -553,7 +554,7 @@ def feed_alas(years):
 # while producing a worse feed than one that gives up and says so. When the budget
 # is spent the loop stops retrying and truncates, and the recorded reason says the
 # budget was hit rather than pretending the page simply failed.
-def _ubuntu_reach(page_cap, limit, total_results, rows, years):
+def _ubuntu_reach(page_cap, limit, total_results, rows, years, why=None):
     """The Ubuntu cap stated in days, because pages are not a unit a reader has.
 
     The line this replaces read, in full:
@@ -576,7 +577,7 @@ def _ubuntu_reach(page_cap, limit, total_results, rows, years):
     """
     read = page_cap * limit
     dates = sorted(r["public_date"] for r in rows if r.get("public_date"))
-    bits = [f"hit the {page_cap}-page cap at {read:,} records"]
+    bits = [(why or f"hit the {page_cap}-page cap") + f" at {read:,} records"]
     if total_results:
         bits[0] += f" of {total_results:,} ({100 * read / total_results:.1f}%)"
     if dates:
@@ -603,110 +604,199 @@ UBUNTU_RETRY_WAITS = (5, 20)
 UBUNTU_RETRY_BUDGET_S = 120
 
 
-def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
-    out, offset, limit, capped = [], 0, 20, False  # Ubuntu API caps limit at 20
-    # The endpoint's own total, so the cap can be stated as a fraction of what
-    # exists rather than as a page count nobody can convert. Probed 2026-08-27:
-    # limit=50, 100 and 500 all error, so 20 is a hard ceiling and 200 pages is
-    # 4,000 records against a `total_results` of 75,993.
-    total_results = None
-    # ATTEMPTS AND RECOVERIES ARE DIFFERENT NUMBERS, and conflating them made the
-    # health line claim the opposite of what happened. See the note below.
-    retry_attempts, recovered_pages, retry_spent = 0, 0, 0.0
-    # WHY the loop ended, not just that it ended. Three different exits used to
-    # look identical from outside: the natural end of the data, an error response
-    # laundered into an empty page, and the year heuristic firing early. Only the
-    # page cap recorded anything, so the other two published a short feed as `ok`.
-    # Measured consequence: ubuntu returned 3,995 ids on 2026-08-21 and 1,079 the
-    # next day, the status went from `truncated` to `ok`, and the site's headline
-    # fell from 558 to 458 with every health surface green. The health signal
-    # improved while the data got worse.
-    ended = "exhausted"
-    while offset < page_cap * limit:
-        url = f"https://ubuntu.com/security/cves.json?limit={limit}&offset={offset}"
-        data = code = None
-        last_err = None
-        # Attempt 0 is the ordinary fetch; the rest are the pagination-level
-        # retries described above. Broad on purpose: keep the partial results. A
-        # page that fails every attempt truncates the feed, which is recorded,
-        # rather than discarding every page already read.
-        for attempt in range(UBUNTU_PAGE_RETRIES + 1):
-            try:
-                data, code, _ = _get(url, timeout=60)
-                if attempt:
-                    recovered_pages += 1   # it only got here BY retrying
-                last_err = None
+UBUNTU_WORKERS = 6
+UBUNTU_TIME_BUDGET_S = 900
+
+
+def _ubuntu_page(offset, limit, retries, waits, budget_s, spent):
+    """One page, with the pagination-level retries. Returns (rows, code, err, spent).
+
+    Extracted from the walk so the walk can run pages CONCURRENTLY. Broad on
+    purpose: a page that fails every attempt truncates the feed, which is
+    recorded, rather than discarding every page already read.
+    """
+    url = f"https://ubuntu.com/security/cves.json?limit={limit}&offset={offset}"
+    last_err = None
+    for attempt in range(retries + 1):
+        try:
+            data, code, _ = _get(url, timeout=60)
+            return data, code, None, spent, attempt > 0
+        except Exception as e:
+            last_err = e
+            if attempt == retries:
                 break
-            except Exception as e:
-                last_err = e
-                if attempt == UBUNTU_PAGE_RETRIES:
-                    break
-                wait = UBUNTU_RETRY_WAITS[min(attempt, len(UBUNTU_RETRY_WAITS) - 1)]
-                if retry_spent + wait > retry_budget_s:
-                    print(f"  [ubuntu] retry budget spent at offset {offset}",
-                          file=sys.stderr)
-                    last_err = RuntimeError(
-                        f"{str(e)[:60]} (retry budget of {retry_budget_s}s spent)")
-                    break
-                print(f"  [ubuntu] {str(e)[:60]} at offset {offset}; "
-                      f"retrying in {wait}s", file=sys.stderr)
-                time.sleep(wait)
-                retry_spent += wait
+            wait = waits[min(attempt, len(waits) - 1)]
+            if spent + wait > budget_s:
+                last_err = RuntimeError(
+                    f"{str(e)[:60]} (retry budget of {budget_s}s spent)")
+                break
+            time.sleep(wait)
+            spent += wait
+    return None, None, last_err, spent, False
+
+
+def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S,
+                workers=UBUNTU_WORKERS, time_budget_s=UBUNTU_TIME_BUDGET_S):
+    """Ubuntu's CVE tracker, read newest-first in concurrent batches.
+
+    WHY BATCHES AND NOT A SEQUENTIAL WALK. Pages are offset-addressed and
+    independent, and the ordering was verified strictly descending by publish
+    date at fifteen sampled offsets spanning the whole 76,753-record endpoint,
+    within pages and across them. Nothing about a sequential walk was load-bearing
+    except the early stop, which a batch preserves: the batch is fetched
+    concurrently and the STOP DECISION is still made in offset order.
+
+    Measured 2026-08-28, cold offsets, 24 pages: 6 workers 56.1s, 10 workers
+    44.6s. Ten buys 20% over six, so the bottleneck is server-side and widening
+    the pool spends politeness for nothing. Six.
+
+    WHY THE CAP DOES NOT SIMPLY GO AWAY, which is the question round 7 left open.
+    The {2025, 2026} window is **22,548 records, 1,128 pages** (binary-searched
+    2026-08-28: offset 22,547 is published 2025-01-02 and 22,548 is 2024-12-31).
+    At the measured rate that is 35 to 44 minutes against a 45-minute job that
+    already takes 21, so a full-window read is not available at any worker count
+    this project is willing to use. The cap is a real limit on a real constraint,
+    and the honest move is to say what it costs, which `_ubuntu_reach` does.
+
+    A WALL-CLOCK BUDGET SITS BESIDE THE PAGE CAP because a page cap's cost in
+    time is not stable: measured cold latency ranged 1.25s to 30s per page on the
+    same endpoint within an hour, and the 2026-08-27 baseline spent 1,070s on the
+    200 pages that a warm run does in a fraction of that. A cap denominated only
+    in pages is a cap whose cost varies five-fold with the endpoint's mood, and
+    the job timeout is denominated in time.
+    """
+    out, seen, offset, limit, capped = [], set(), 0, 20, False
+    total_results = None
+    retry_attempts, recovered_pages, retry_spent = 0, 0, 0.0
+    ended = "exhausted"
+    t0 = time.time()
+    # Batch wide enough to keep every worker busy and narrow enough that the
+    # early stop is not overshot by much: at most `batch` pages past the window
+    # boundary are fetched and discarded.
+    batch = workers * 4
+
+    budget_spent = False
+    while offset < page_cap * limit:
+        if time.time() - t0 > time_budget_s:
+            budget_spent = True
+            break
+        offsets = [offset + i * limit for i in range(batch)
+                   if offset + i * limit < page_cap * limit]
+        if not offsets:
+            break
+        results = {}
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+            futs = {ex.submit(_ubuntu_page, o, limit, UBUNTU_PAGE_RETRIES,
+                              UBUNTU_RETRY_WAITS, retry_budget_s, retry_spent): o
+                    for o in offsets}
+            for f in concurrent.futures.as_completed(futs):
+                results[futs[f]] = f.result()
+
+        # ONE stop reason, decided in OFFSET ORDER, and the loop breaks on the
+        # first one rather than letting a later page overwrite an earlier one.
+        #
+        # The first version of this batch walk kept three separate variables and
+        # assigned `stop` in two of the branches, so an empty page at offset 40
+        # clobbered a year-heuristic stop at offset 20 and the run then took the
+        # genuine-end-of-data exit: `ended` stayed "exhausted", nothing was
+        # recorded, and `health_detail()` returned {} for a feed that had
+        # truncated. Which is the exact class of defect this adapter's own
+        # docstring is about, reintroduced by the change that was meant to speed
+        # it up. Offsets ascend, so the lowest one wins and everything past it is
+        # beyond the boundary anyway.
+        stop_reason = None
+        for o in offsets:
+            data, code, err, spent, recovered = results[o]
+            retry_spent = max(retry_spent, spent)
+            if recovered:
+                recovered_pages += 1
+            elif err is not None:
                 retry_attempts += 1
-        if last_err is not None:
-            print(f"  [ubuntu] stopped at offset {offset}: {last_err}", file=sys.stderr)
-            ended = f"error at offset {offset}: {str(last_err)[:80]}"
+            if err is not None:
+                stop_reason = ("error", o, err)
+                break
+            rows = (data or {}).get("cves", []) if isinstance(data, dict) else []
+            if isinstance(data, dict) and total_results is None:
+                total_results = data.get("total_results")
+            if not rows:
+                # An empty page is only the end of the data if the request
+                # SUCCEEDED. `_get` returns (None, 404, {}) on a retired path or
+                # a WAF block, and binding `code` without reading it is how a 404
+                # once ended pagination and was recorded as a healthy feed.
+                stop_reason = ("empty", o, code)
+                break
+            heuristic = False
+            for r in rows:
+                cid = r.get("id", "")
+                if _year(cid) in years and cid not in seen:
+                    seen.add(cid)
+                    out.append({"cve_id": cid, "source": "ubuntu", "source_ref": cid,
+                                "public_date": _d(r.get("published")), "product": "",
+                                "description": (r.get("description") or "")[:400]})
+                py = _date_year(r.get("published"))
+                if py is not None and py < min(years):
+                    heuristic = True
+            if heuristic:
+                # The year heuristic. It assumes the feed is ordered by publish
+                # date descending, which was VERIFIED across the whole endpoint
+                # on 2026-08-28 rather than assumed. The page's in-window rows
+                # are kept: they were appended above before this fires. Still
+                # recorded, because "we stopped" and "there was nothing left"
+                # must never look the same from outside.
+                stop_reason = ("year", o, None)
+                break
+        # DEDUPED, which a sequential walk did not have to be. Concurrent pages
+        # are fetched against a live, growing table: if Ubuntu publishes while a
+        # batch is in flight every later offset shifts by one and the same record
+        # can appear in two pages. `gather` dedupes into `refs` and so the ids
+        # were never wrong, but the ROW COUNT would have been inflated, and that
+        # count is what `compare_magnitudes` compares.
+        if stop_reason is not None:
+            kind, o, extra = stop_reason
+            if kind == "error":
+                print(f"  [ubuntu] stopped at offset {o}: {extra}", file=sys.stderr)
+                ended = f"error at offset {o}: {str(extra)[:80]}"
+            elif kind == "empty" and extra and extra != 200:
+                ended = f"HTTP {extra} at offset {o}, treated as end of data"
+            elif kind == "year":
+                ended = (f"year heuristic stopped pagination at offset {o}; rows "
+                         "beyond it were not read")
+            # kind == "empty" with a 200 is the genuine end of the data, and
+            # `ended` stays "exhausted".
             break
-        if isinstance(data, dict) and total_results is None:
-            total_results = data.get("total_results")
-        rows = (data or {}).get("cves", []) if isinstance(data, dict) else []
-        if not rows:
-            # An empty page is only the end of the data if the request SUCCEEDED.
-            # `_get` returns (None, 404, {}) on a retired path or a WAF block, and
-            # every caller bound `code` and never read it, so a 404 ended
-            # pagination through this branch and was recorded as a healthy feed.
-            if code and code != 200:
-                ended = f"HTTP {code} at offset {offset}, treated as end of data"
-            break
-        stop = False
-        for r in rows:
-            cid = r.get("id", "")
-            if _year(cid) in years:
-                out.append({"cve_id": cid, "source": "ubuntu", "source_ref": cid,
-                            "public_date": _d(r.get("published")), "product": "",
-                            "description": (r.get("description") or "")[:400]})
-            # stop on PUBLISH-date year, not CVE-ID year (a fresh advisory can cite an old CVE)
-            py = _date_year(r.get("published"))
-            if py is not None and py < min(years):
-                stop = True
-        if stop:
-            # The year heuristic assumes the feed is ordered by publish date
-            # descending. When it fires, rows beyond this page were NOT read, which
-            # is truncation whether or not the assumption held.
-            ended = (f"year heuristic stopped pagination at offset {offset}; rows "
-                     "beyond it were not read")
-            break
-        offset += limit
+        offset += len(offsets) * limit
     else:
         capped = True
-    # A feed that only completed because it waited has to say so. Otherwise the
-    # fix for the truncation looks identical on /status to the truncation never
-    # having happened, and the next person cannot tell a healthy endpoint from one
-    # being carried by retries.
-    #
-    # RECOVERED IS NOT ATTEMPTED, and the first version of this counted attempts
-    # and called them recoveries. The 2026-08-27 rehearsal caught it: Ubuntu 503'd
-    # twice and then 504'd, the page was never read, and the health line said
-    # "error at offset 20 ... recovered 2 page(s) on retry" -- a claim of success
-    # on the same line as the failure. That is the exact defect the docstring at
-    # the top of this function is about, reintroduced by the fix for it.
+
     if recovered_pages:
         note = f"; recovered {recovered_pages} page(s) on retry"
     elif retry_attempts:
         note = f"; {retry_attempts} retry attempt(s) did not recover it"
     else:
         note = ""
-    if capped:
+    if budget_spent:
+        # CAPPED, NOT TRUNCATED, and the difference decides whether the site
+        # wears a degraded posture. A wall-clock budget is a CONFIGURED limit in
+        # exactly the sense the page cap is, so it belongs in `limitations` beside
+        # it rather than in `degraded`.
+        #
+        # It is not a fine distinction here, it is the whole reason the budget is
+        # safe to add. The measured live cost of the 200-page cap is 553s against
+        # a 900s budget, and cold page latency on this endpoint ranges 1.25s to
+        # 30s, so a slow afternoon puts the two within reach of each other.
+        # Classifying budget exhaustion as TRUNCATED would have marked the run
+        # degraded on any slow day, which is the furniture problem
+        # `degraded_state` spends a paragraph rejecting, arrived at from a third
+        # direction. `compare_magnitudes` still catches a real collapse in rows,
+        # which is the guard for "worse than usual".
+        pages_read = offset // limit
+        print(f"  [ubuntu] wall-clock budget ({time_budget_s}s) spent after "
+              f"{pages_read} pages", file=sys.stderr)
+        record_feed("ubuntu", CAPPED,
+                    _ubuntu_reach(pages_read, limit, total_results, out, years,
+                                  why=f"spent the {time_budget_s}s wall-clock budget")
+                    + note)
+    elif capped:
         print(f"  [ubuntu] hit page cap ({page_cap}), coverage may be truncated", file=sys.stderr)
         record_feed("ubuntu", CAPPED, _ubuntu_reach(page_cap, limit, total_results,
                                                     out, years) + note)
@@ -716,6 +806,167 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S):
     elif recovered_pages:
         record_feed("ubuntu", True, f"{len(out)} ids{note}")
     return out
+
+
+# 82 undated rows on 2026-08-27 and the endpoint answers a `q=` in 1.2s to 30s
+# with no pattern to it, so the pass is sized by measurement rather than by a
+# per-row estimate: 4 workers dated 59 of 82 in 180s, which is ~3s a row, and a
+# complete pass wants ~250s. 600 leaves room for a bad afternoon and still lands
+# a 21-minute job inside a 45-minute timeout.
+#
+# Workers stay at 4. The 2026-08-28 walk measurement found this endpoint's
+# bottleneck is server-side (10 workers bought 20% over 6), so a wider pool
+# spends politeness for very little, and this pass is the one that runs AFTER
+# the walk has already taken its share.
+UBUNTU_RESOLVE_BUDGET_S = 600
+UBUNTU_RESOLVE_WORKERS = 4
+
+
+def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
+                         workers=UBUNTU_RESOLVE_WORKERS, timeout=30):
+    """Ubuntu publication dates for named IDs, asked for one at a time.
+
+    THE ROWS THIS EXISTS FOR CANNOT BE WALKED TO. `feed_ubuntu` reads newest
+    first and the cap stays at 200 pages, which is 4,000 of the window's 22,548
+    records; offset 3,980 lands on 2026-07-25 and everything older is invisible
+    to it. Moving the cap was measured on 2026-08-28 and rejected: the full
+    window is 1,128 pages and 35 to 44 minutes against a job that takes 21.
+
+    So the reach problem has no answer on the walk, and it did not need one.
+    `cves.json?q=<id>` is an exact-match filter that answers in a single request,
+    which means the rows that need a date can be asked for BY NAME instead of
+    paged past. Depth stops mattering: a row published in April costs exactly
+    what a row published yesterday costs.
+
+    Measured over the 82 rows held back as `undated` in the 2026-08-27 snapshot,
+    on a pass with no failed lookups: 64 have an Ubuntu date, every one of the 64
+    clears the 7-day buffer, every one is beyond the walk's reach, and the oldest
+    has been public 151 days. Those 64 are not marginal rows. They are the OLDEST
+    evidence the site has, and they were invisible because the only feed that
+    could date them is the one feed whose reach is measured in weeks.
+
+    THIS DATES ROWS. IT DOES NOT SIGHT THEM, and the distinction is the whole
+    reason `sources` and `feed_count` are left alone here.
+
+    Every ID passed to this function is one another feed already found, because
+    that is the only way it reaches the backlog. So the lookup can never add a
+    row `ubuntu` alone would have seen, and crediting `ubuntu` with a sighting
+    on the ones it does answer would raise corroboration out of a sample chosen
+    by which rows were already undated. `feed_count` would climb on exactly the
+    rows where independent corroboration is weakest. That is a biased probe
+    reported as evidence, which is the shape of error this project spends most
+    of its comments on.
+
+    For the same reason the date does not enter `dates`, whose consumers all read
+    it against `sources`: `clock.disclosure_order` filters it by `own`/`others`
+    membership derived from `sources`, so a key with no matching source is
+    silently dropped, and a key that DID gain a matching source would start
+    feeding an ordering claim built out of this bias.
+
+    It lands in `public_date`, which `clock.advisory_date` documents as the
+    earliest date from any ingested source, tracker rows included, as against the
+    advisory date that may start a 72-hour clock. That is exactly the right
+    strength. It starts the 7-day buffer, so the row can be counted. It cannot
+    start the expectation clock, because `ubuntu` is a tracker in
+    `clock._ORIGIN_KIND` and this endpoint's `published` field is a tracker date
+    whether it arrives by walk or by name.
+
+    Health is recorded under `ubuntu:dates`, a sub-entry rather than a
+    fourteenth feed, so a bad lookup pass shows up in `health_summary`'s
+    truncation list without changing what `attempts` counts. A spent budget or a
+    failed lookup is TRUNCATED and says how many, because a resolver that
+    quietly returns fewer dates than it was asked for is the silent shrink this
+    project has already been bitten by twice, arriving in a new place.
+    """
+    ids = list(dict.fromkeys(cve_ids))
+    if not ids:
+        record_feed("ubuntu:dates", OK, "no undated rows to date", rows=0)
+        return {}
+
+    started = time.monotonic()
+    found, errors, asked = {}, 0, 0
+    lock = threading.Lock()
+
+    def one(cid):
+        nonlocal errors, asked
+        with lock:
+            if time.monotonic() - started > budget_s:
+                return
+            asked += 1
+        try:
+            data, code, _ = _get(f"https://ubuntu.com/security/cves.json?q={cid}",
+                                 timeout=timeout)
+        except Exception:
+            with lock:
+                errors += 1
+            return
+        if not isinstance(data, dict):
+            # `_get` returns (None, 404, {}) rather than raising, and a 404 on
+            # this path is the endpoint moving, not the id being unknown: an
+            # unknown id answers 200 with an empty `cves`. Counting it as "no
+            # date" would turn a retired endpoint into a silently undated
+            # backlog.
+            with lock:
+                errors += 1
+            return
+        for row in data.get("cves") or []:
+            # `q` is a SEARCH, not a key lookup. It has matched on description
+            # text in probing, so a row that is not the id we asked for is some
+            # other CVE's date and must never be attached to this one.
+            if row.get("id") != cid:
+                continue
+            d = _d(row.get("published"))
+            if d:
+                with lock:
+                    found[cid] = d
+            break
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+        list(ex.map(one, ids))
+
+    unasked = len(ids) - asked
+    detail = f"dated {len(found)} of {len(ids)} undated row(s) by name"
+    if errors:
+        detail += f"; {errors} lookup(s) failed"
+    if unasked:
+        detail += (f"; the {budget_s}s budget was spent with {unasked} "
+                   "row(s) never asked for")
+
+    # THREE STATES, AND THE MIDDLE ONE IS THE POINT.
+    #
+    # Measured live over the real held-back population on 2026-08-28: 82 ids in
+    # ~300s, and three passes returned 59, 62 and 64 dated. The whole spread is
+    # transient lookup failures. A couple of them in eighty-two is this endpoint
+    # on an ordinary afternoon, and reporting that as TRUNCATED
+    # would mark the run degraded on most runs. That is the furniture problem
+    # `degraded_state` rejects, reached from a fourth direction: a warning that
+    # is always on is a warning nobody reads.
+    #
+    # It is safe to keep those runs green for a reason specific to this pass and
+    # not true of a feed walk. A row this pass fails to date is not published
+    # wrong and is not dropped from a count; it stays in `held_back.json` as
+    # `undated`, exactly where it already was, and the NEXT run asks for it
+    # again. The population is self-healing across runs, so a failed lookup
+    # costs a day of latency on the floor rather than silently shrinking it. The
+    # count still says so out loud in `detail`, which is where `feed_csaf`
+    # already puts the same shape of partial result.
+    #
+    # A spent budget is CAPPED, not TRUNCATED, for the reason the walk's own
+    # wall-clock budget is: a configured limit belongs in `limitations` rather
+    # than in the degraded banner.
+    #
+    # But Ubuntu being DOWN is none of the above. If every lookup failed there
+    # is no self-healing to appeal to, the pass learned nothing, and reporting
+    # `ok, dated 0` would be the silent shrink wearing the excuse above as a
+    # disguise. That one is loud.
+    if ids and errors == len(ids):
+        status = FAILED
+    elif unasked:
+        status = CAPPED
+    else:
+        status = OK
+    record_feed("ubuntu:dates", status, detail, rows=len(found))
+    return found
 
 
 def feed_debian(years):
