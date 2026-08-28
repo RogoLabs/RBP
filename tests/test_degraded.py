@@ -438,16 +438,20 @@ def test_ubuntu_records_truncation_when_the_year_heuristic_fires(monkeypatch):
     ran and gather stamped `ok`. The heuristic assumes the feed is ordered by
     publish date descending; when it fires, rows beyond that page were not read,
     which is truncation whether or not the assumption held."""
-    pages = [
-        {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
-        {"cves": [{"id": "CVE-2019-9", "published": "2019-01-01T00:00:00Z"}]},
-    ]
-    calls = {"n": 0}
+    # KEYED ON OFFSET, not on call order. The real endpoint returns the page an
+    # offset names; a fake that returns pages in the order it happens to be
+    # called only agrees with that while the walk is sequential, and encodes
+    # "fetched one at a time, in order" as though it were part of the contract.
+    # It is not: pages are offset-addressed and independent, which is what makes
+    # the concurrent batch walk sound.
+    pages = {
+        0: {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
+        20: {"cves": [{"id": "CVE-2019-9", "published": "2019-01-01T00:00:00Z"}]},
+    }
 
     def fake_get(url, timeout=None):
-        i = calls["n"]
-        calls["n"] += 1
-        return (pages[i] if i < len(pages) else {"cves": []}), 200, {}
+        off = int(url.split("offset=")[1])
+        return pages.get(off, {"cves": []}), 200, {}
 
     monkeypatch.setattr(feeds, "_get", fake_get)
     feeds.feed_ubuntu({2026})
@@ -485,22 +489,21 @@ def test_ubuntu_retries_a_failed_page_before_truncating(monkeypatch):
     sleeps = []
     monkeypatch.setattr(feeds.time, "sleep", lambda s: sleeps.append(s))
 
-    pages = [
-        {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
-        {"cves": [{"id": "CVE-2026-2", "published": "2026-08-01T00:00:00Z"}]},
-        {"cves": []},
-    ]
-    state = {"n": 0, "failed": False}
+    pages = {
+        0: {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
+        20: {"cves": [{"id": "CVE-2026-2", "published": "2026-08-01T00:00:00Z"}]},
+    }
+    state = {"failed": False}
 
     def fake_get(url, timeout=None):
-        # Fail the SECOND page once, then serve it. The first page is already in
-        # `out`, so a version that abandons the sweep keeps one row and truncates.
-        if state["n"] == 1 and not state["failed"]:
+        # Fail the page at offset 20 ONCE, then serve it. Keyed on offset rather
+        # than on call order, so this still fails the intended page whatever
+        # order the batch fetches in.
+        off = int(url.split("offset=")[1])
+        if off == 20 and not state["failed"]:
             state["failed"] = True
             raise OSError("HTTP Error 503: Service Unavailable")
-        page = pages[state["n"]] if state["n"] < len(pages) else {"cves": []}
-        state["n"] += 1
-        return page, 200, {}
+        return pages.get(off, {"cves": []}), 200, {}
 
     monkeypatch.setattr(feeds, "_get", fake_get)
     out = feeds.feed_ubuntu({2026})
@@ -1410,3 +1413,121 @@ def test_osv_can_fetch_an_ecosystem_whose_name_contains_a_space(monkeypatch):
     assert all(" " not in u for u in seen), seen
     assert any("GitHub%20Actions" in u for u in seen), seen
     assert any("Red%20Hat" in u for u in seen), seen
+
+
+# --------------------------------------------------------------------------
+# Ubuntu: the concurrent batch walk
+# --------------------------------------------------------------------------
+
+def _ubuntu_pages(mapping, monkeypatch):
+    """Serve pages by OFFSET, the way the real endpoint does."""
+    def fake_get(url, timeout=None):
+        off = int(url.split("offset=")[1])
+        return mapping.get(off, {"cves": []}), 200, {}
+    monkeypatch.setattr(feeds, "_get", fake_get)
+
+
+def test_a_year_stop_early_in_a_batch_beats_an_empty_page_later_in_it(monkeypatch):
+    """The bug the batch walk introduced, and the reason it is worth a test.
+
+    The first version kept separate variables for the three stop conditions and
+    assigned the same `stop` in two of them, so an empty page at a HIGHER offset
+    overwrote a year-heuristic stop at a LOWER one. The run then took the
+    genuine-end-of-data exit, `ended` stayed "exhausted", nothing was recorded,
+    and `health_detail()` returned {} for a feed that had truncated.
+
+    A sequential walk could not produce this: it stopped at the first condition
+    it met. A batch sees several pages at once, so the reasons have to be ordered
+    by offset explicitly.
+    """
+    _ubuntu_pages({
+        0: {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
+        20: {"cves": [{"id": "CVE-2019-9", "published": "2019-01-01T00:00:00Z"}]},
+        # 40 onwards are empty, and land in the SAME batch as the year stop.
+    }, monkeypatch)
+    feeds.feed_ubuntu({2026})
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h, "a feed that truncated recorded no health at all"
+    assert h.get("status") == feeds.TRUNCATED, h
+    assert "year heuristic" in (h.get("detail") or ""), h
+    assert "offset 20" in (h.get("detail") or ""), (
+        f"the stop was attributed to the wrong offset: {h.get('detail')!r}")
+
+
+def test_the_batch_walk_returns_what_a_sequential_walk_would(monkeypatch):
+    """Concurrency must not change the answer, only the wall clock. Ten pages of
+    in-window rows and then the end of the data."""
+    pages = {i * 20: {"cves": [{"id": f"CVE-2026-{i}",
+                                "published": "2026-08-01T00:00:00Z"}]}
+             for i in range(10)}
+    _ubuntu_pages(pages, monkeypatch)
+    out = feeds.feed_ubuntu({2026})
+    assert sorted(r["cve_id"] for r in out) == sorted(f"CVE-2026-{i}" for i in range(10))
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") != feeds.TRUNCATED, h
+
+
+def test_a_record_served_at_two_offsets_is_counted_once(monkeypatch):
+    """Concurrent pages are fetched against a LIVE, growing table. If Ubuntu
+    publishes while a batch is in flight, every later offset shifts and the same
+    record can appear in two pages.
+
+    `gather` dedupes into `refs`, so the ids were never wrong. The ROW COUNT
+    would have been inflated, and that count is what `compare_magnitudes`
+    compares run to run, so a burst of publishing would have read as a feed
+    growing rather than as an artefact of the walk.
+    """
+    _ubuntu_pages({
+        0: {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
+        20: {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}]},
+        40: {"cves": [{"id": "CVE-2026-2", "published": "2026-08-01T00:00:00Z"}]},
+    }, monkeypatch)
+    out = feeds.feed_ubuntu({2026})
+    assert [r["cve_id"] for r in out] == ["CVE-2026-1", "CVE-2026-2"], out
+
+
+def test_the_wall_clock_budget_is_a_standing_limit_not_a_degradation(monkeypatch):
+    """A page cap's cost in TIME is not stable: measured cold latency ranged
+    1.25s to 30s per page on the same endpoint within an hour, and the
+    2026-08-27 baseline spent 1,070s on 200 pages. A cap denominated only in
+    pages is one whose cost varies five-fold with the endpoint's mood, and the
+    job timeout is denominated in time.
+
+    CAPPED, not TRUNCATED, and that is the whole reason the budget is safe to
+    add. The live cost of the 200-page cap is 553s against a 900s budget, so a
+    slow afternoon brings the two within reach. Classifying budget exhaustion as
+    TRUNCATED would mark the run degraded on any slow day, which is the furniture
+    problem `degraded_state` rejects, reached from a third direction.
+    """
+    pages = {i * 20: {"cves": [{"id": f"CVE-2026-{i}",
+                                "published": "2026-08-01T00:00:00Z"}]}
+             for i in range(4000)}
+    _ubuntu_pages(pages, monkeypatch)
+    feeds.feed_ubuntu({2026}, time_budget_s=-1)      # already spent
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") == feeds.CAPPED, h
+    assert "wall-clock budget" in (h.get("detail") or ""), h
+
+    _f, truncated, _a, capped = feeds.health_summary()
+    assert truncated == [], "a configured time budget degraded the run"
+    assert any("ubuntu" in c for c in capped), capped
+    on, _ = cli.degraded_state(failures=[], truncated=truncated, capped=capped,
+                               dropped=0, shrunk=[], stale=[])
+    assert on is False, "spending the time budget put the site in a degraded posture"
+
+
+def test_the_page_cap_is_still_reported_as_a_standing_limit(monkeypatch):
+    """CAPPED, not TRUNCATED. A configured cap fires by design on every run and
+    must not put the site into a degraded posture for ever."""
+    pages = {i * 20: {"cves": [{"id": f"CVE-2026-{i}",
+                                "published": "2026-08-01T00:00:00Z"}]}
+             for i in range(500)}
+    _ubuntu_pages(pages, monkeypatch)
+    feeds.feed_ubuntu({2026}, page_cap=10)
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") == feeds.CAPPED, h
+    assert h.get("capped") is True
+    on, _ = cli.degraded_state(failures=[], truncated=[],
+                               capped=["ubuntu: capped"], dropped=0,
+                               shrunk=[], stale=[])
+    assert on is False, "a standing cap degraded the run"

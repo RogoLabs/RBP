@@ -419,6 +419,68 @@ D-list decisions in the review that are yours.
 
 ---
 
+## Round 8, 2026-08-28: the filter that stopped filtering
+
+Reported by a front-end review before the announcement, then reproduced in a
+browser here rather than read off the source. Three defects, all on the list page,
+all reachable by pasting a URL or by typing.
+
+**The reported one.** `/?src=mozilla&age=any` rendered every row instead of none:
+1,672 of 1,672 measured on the live page by the review, 60 of 60 measured here in
+the render fixture.
+The source options are built from the slugs present in the current rows, and
+assigning a `<select>` a value it has no `<option>` for neither throws nor sticks:
+`value` reads back `""`, `selectedIndex` becomes -1, and `matches()` then skips the
+filter entirely. `mozilla` and `arch` have contributed zero rows since they merged,
+which is round 7's B4 finding, so this was the live behaviour for two of the
+thirteen feeds and for any feed that goes quiet later.
+
+It inverts the only promise the control makes. A view here is meant to be citable,
+and a citation of a quiet feed became a link showing everything.
+
+**Two more in the same twenty lines, both measured.** The empty state concatenated
+the reader's own filter text into `innerHTML` raw, so `?q=<img src=x
+onerror=...>` matched no rows, rendered the tag and ran the handler: script
+execution under this origin, from a link, on a site whose entire product is a link
+other people are asked to trust. And that box had no wrapping rule at all, so 400
+unbroken characters typed into the filter scrolled the document sideways by
+2,466px at 1280 wide, and 80 characters did it at 375. The second one needs no
+crafted link, only a pasted package coordinate.
+
+**What changed**
+
+- An unknown `src` slug gets an option of its own and keeps filtering, which for a
+  feed with no rows is a zero-result view. The option is marked `(0 rows)`, because
+  the dropdown is otherwise a list of the feeds behind today's rows.
+- `?age=45+` and `?age=45-` now work. The offered thresholds are the
+  `age_buckets` boundaries; a bound of a reader's own was silently dropped the same
+  way. A value that parses as no bound at all falls back to the explicit `any`
+  rather than to a blank select, which filtered nothing while looking like it
+  might.
+- The URL readers are keyed on the control map and iterated from it, so the two
+  cannot drift. A control with no reader throws at load, which the browser suite
+  catches. Two lists is how `minage` outlived its rename.
+- `esc()` at the `innerHTML` sink, and `describeFilters()` is documented as plain
+  text. One lookup on `NAMES`, guarded with `hasOwnProperty`, so `?src=constructor`
+  cannot label a control with the source of `Object`.
+- `.empty { overflow-wrap: anywhere }`, at every width. The rule existed for
+  `.mono, code, pre` and only below 768px.
+
+**Guards.** `tests/test_filter_links.py` is offline and therefore gates the
+publication: it asserts the structure, which is weaker than measuring and is the
+half that can stop a publish. `tests/render/test_filters.py` measures the
+behaviour in a browser, including the escaping and the sideways scroll at both
+widths. Fourteen mutations run across the two files, every one caught. The browser
+suite is 53, up from 43.
+
+**Two things left standing, deliberately.** The marked option stays in the
+dropdown after the filter is cleared: it names a feed a reader linked to, and
+choosing it again gives the same honest zero. And the review reported that this
+defect was written up in the README. It was not, in the README or anywhere else in
+the tree, which is worth knowing about the next report from the same source.
+
+---
+
 ## What to be careful of
 
 **THE SITE IS LAUNCHED.** `RBP_LAUNCHED=1` was set as a repository variable on

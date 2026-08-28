@@ -34,42 +34,6 @@
   <p>So this site lists the identifier and the advisories it appears in, and leaves
   attribution to the Program. Ownership can be estimated from public data, and this version does not publish those estimates: the same reasoning that recovers an owner for a referenced ID would work across the whole reserved space, which is a good reason for the redaction to stay as it is.</p>
 
-  <h2>The Program used to publish this</h2>
-  <p>The Program used to publish a count of these. A quarterly table ran on the CVE
-  Metrics page and was commented out in February 2022, as item 2 of a three-item
-  quarterly-to-annual table restructuring
-  (<a href="https://github.com/CVEProject/cve-website/issues/842">cve-website #842</a>),
-  a fortnight after the v1.0 policy PDF was withdrawn to be
-  &ldquo;replaced with a new version of the document at a later date&rdquo;
-  (<a href="https://github.com/CVEProject/cve-website/issues/835">#835</a>). That
-  replacement is now v2.0.0. The series has not resumed. Its final column already read
-  <code>N/A</code>, so it had stopped being populated before anyone commented it out.</p>
-  <p><strong>This site will not be that series, and is not comparable to it.</strong>
-  That table was a quarterly <em>flow</em> of newly identified RBPs, measured with
-  authoritative internal access, falling from 4,326 in Q1 2017 to 350 in Q3 2021. What is
-  being built here is a live <em>stock</em>, discovered from downstream advisory feeds
-  that reach a minority of CNAs, with the owner inferred rather than known. Both numbers
-  would be real. They would not be the same measurement, and neither replaces the other.</p>
-  <p>RBP Policy v2.0.0 names &ldquo;Program metrics and audits&rdquo; as one of the
-  Program's own channels for identifying RBPs. If the Program publishes a figure of its own it will be measured with internal access, and this one is not a substitute for it. </p>
-
-  {# The exculpatory detail, VERBATIM from the old index.html.
-     tests/test_copy.py insists on it and is right to: "item 2 of three" only
-     exculpates if a reader can see what items 1 and 3 were, and the first draft
-     of that claim asserted them from memory and was wrong. #}
-  <p>
-      The record shows routine maintenance rather than concealment, and all three
-      exculpatory facts belong here rather than one click away. The table was commented
-      out as <em>item 2 of a three-item</em> release, so it was not singled out:
-      <a href="https://github.com/CVEProject/cve-website/issues/842">issue&nbsp;#842</a>
-      lists item 1 as updating the Published Records and Reserved IDs tables with
-      Q4&nbsp;2021 stats and item 3 as converting the CNA-versus-CNA-LR table from
-      quarterly to annual totals. The v1.0 policy PDF had been withdrawn thirteen days
-      earlier pending a replacement. And the final column already read
-      <span>N/A</span>, so the series had stopped being populated before
-      anyone commented it out.
-    </p>
-
   <h2>What this measures, and what it does not</h2>
   {# VERBATIM from the old index.html. tests/test_copy.py's delegation-caveat
      test caught its loss when that page stopped rendering. The distinction it
