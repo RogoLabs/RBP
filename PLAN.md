@@ -51,13 +51,16 @@ from no enforcement at all, and right now there is:
 - no public enforcement log,
 - no public attribution: `owning_cna` is redacted for exactly the reserved population,
   despite §4.5.1.7 expressly permitting the Secretariat to name it after 24 hours,
-- and no Program RBP metric at all. One existed: a quarterly RBP table went live on the
-  CVE Metrics page in **February 2021** and was **commented out on 2022-02-07**, after
-  about a year public. The block is still in `src/views/About/Metrics.vue` on `main`,
-  frozen, its last column Q3 2021, and `metrics.json` carries no RBP series. The live page
-  reports published records and reserved IDs and nothing on the overlap. Verified in the
-  rendered DOM, not just the source: the string "Reserved but Public" does not appear on
+- and no public Program RBP metric. The live Metrics page reports published records and
+  reserved IDs and nothing on the overlap between them. Verified in the rendered DOM
+  rather than the source: the string "Reserved but Public" does not appear on
   cve.org/About/Metrics.
+
+> **The history of that metric came out on 2026-08-27**, here and from every page of the
+> site. This section used to narrate when an earlier RBP table appeared, when it stopped
+> being published, and why that was probably innocent. Even written charitably, raising
+> the question plants it: a reader who arrives with no theory about it leaves with one.
+> The measurement stands on the current fact alone, which is the bullet above.
 
 The site publishes the observable half and reconstructs the redacted half with a graded
 method.
@@ -171,30 +174,33 @@ Consequences, all of which are already applied below:
 - A normalised rate is still worth showing so a large CNA with 200 RBPs is not compared
   naively against a five-person CNA with two, but it carries no threshold and no verdict.
 
-The CVE Program has no public RBP metric. It had one: a quarterly table (4,326 in 2017 Q1
-falling to ~350-550 by 2021) that went live in February 2021 and was commented out of the
-Metrics page on **2022-02-07**. The markup survives in `main`; the data file has no RBP
-series; the rendered page contains no "Reserved but Public" string. Since v2.0.0 names
-"Program metrics and audits" as an RBP identification channel, the public face of that
-channel has been switched off for four and a half years.
+The CVE Program has no public RBP metric. The Metrics page carries no "Reserved but
+Public" string and `metrics.json` has no RBP series. v2.0.0 names "Program metrics and
+audits" as an RBP identification channel, and nothing in public shows what that channel
+reports.
 
-Correction worth recording: an earlier draft of this claimed the page "still promises
-figures from 2017 to present and stops at Q3 2021." That came from reading the repo source
-rather than the live DOM, and the section is commented out. Read the rendered page before
-asserting what a site says.
+Lesson worth keeping from an earlier draft of this section, which asserted what the
+Metrics page "still promises" on the strength of the repo source and was wrong: **read the
+rendered page before asserting what a site says.** The source and the DOM disagree, and
+only one of them is what a reader sees.
 
 ---
 
 ## 2a. Editorial stance
 
-**The site leads with the count.** *"We are publishing the dashboard they should have
-published."*
+**The site leads with the count.**
 
-That is literally true, and it is a stronger position than criticism. The CVE Program
-shipped a quarterly RBP table in February 2021 and commented it out on 2022-02-07. This
-site resumes an abandoned Program artifact rather than attacking anyone, which keeps it
-useful rather than merely critical and makes every CNA a potential ally instead of a
-target.
+Publishing a measurement is a stronger position than criticising the absence of one. The
+site states what is observable and stops there, which keeps it useful rather than merely
+critical and makes every CNA a potential ally instead of a target.
+
+> **The justification for this stance was rewritten on 2026-08-27.** It used to claim the
+> site was supplying an instrument the Program itself ought to have been publishing,
+> resting on the history of an earlier Program RBP table and when it stopped being
+> published. The old wording is deliberately not quoted here. That framing came out of
+> the site, the README and this file on the same day: it argues from what someone else
+> failed to do, and the measurement does not need it. The stance itself is unchanged and
+> the reasoning below still holds.
 
 Design consequences, binding on phase 4:
 

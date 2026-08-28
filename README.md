@@ -18,11 +18,6 @@ attribution](#why-there-is-no-attribution).
 
 ## Why this exists
 
-The Program used to publish a count of these. A quarterly RBP table went live on
-the CVE Metrics page in February 2021 and was commented out on 2022-02-07. The
-block is still in `src/views/About/Metrics.vue` on `main`, frozen, its last column
-Q3 2021, and `metrics.json` carries no RBP series.
-
 RBP Policy v2.0.0, approved by the CVE Board on 2026-08-13, expects a record
 within 72 hours of disclosure. Enforcement is four discretionary levers the
 Program *"may take"*. The previous policy had an automatic arithmetic trigger that
