@@ -242,8 +242,8 @@ COLUMNS = [
     # identity
     "cve_id", "state",
     # the clock
-    "days_public", "hours_public", "public_date", "clock_known",
-    "past_expectation",
+    "days_public", "hours_public", "public_date", "public_date_origin",
+    "clock_known", "past_expectation",
     # the rule call, and its inputs
     "rule", "rule_strength", "rule_certainty", "rule_basis",
     "self_disclosed", "own_feed_date", "earliest_other_date",
@@ -283,6 +283,18 @@ FIELDS = {
                     "lateness. null when no feed supplied a usable date."),
     "hours_public": ("integer|null", "null", "The same quantity in the rule's unit."),
     "public_date": ("date|null", "null", "Earliest advisory date this site saw."),
+    "public_date_origin": ("string", "never absent",
+                           "How `public_date` was obtained. 'feed' where a "
+                           "configured feed supplied it during the gather. "
+                           "'lookup' where no feed did and Ubuntu's tracker was "
+                           "asked for this ID by name, which is how rows older "
+                           "than the Ubuntu walk's reach get an age at all. "
+                           "'none' where the row still has no date and cannot be "
+                           "aged. A 'lookup' date is a tracker date exactly as a "
+                           "walked one is: it starts the buffer and never the "
+                           "72-hour expectation, and it adds no source to "
+                           "`sources` because the ID was only looked up on the "
+                           "strength of another feed having already found it."),
     "clock_known": ("boolean", "never absent",
                     "false when no feed supplied a date, in which case the row "
                     "cannot be aged at any threshold."),

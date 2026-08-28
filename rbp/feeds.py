@@ -15,6 +15,7 @@ import re
 import socket
 import subprocess
 import sys
+import threading
 import time
 import zipfile
 import urllib.error
@@ -805,6 +806,167 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S,
     elif recovered_pages:
         record_feed("ubuntu", True, f"{len(out)} ids{note}")
     return out
+
+
+# 82 undated rows on 2026-08-27 and the endpoint answers a `q=` in 1.2s to 30s
+# with no pattern to it, so the pass is sized by measurement rather than by a
+# per-row estimate: 4 workers dated 59 of 82 in 180s, which is ~3s a row, and a
+# complete pass wants ~250s. 600 leaves room for a bad afternoon and still lands
+# a 21-minute job inside a 45-minute timeout.
+#
+# Workers stay at 4. The 2026-08-28 walk measurement found this endpoint's
+# bottleneck is server-side (10 workers bought 20% over 6), so a wider pool
+# spends politeness for very little, and this pass is the one that runs AFTER
+# the walk has already taken its share.
+UBUNTU_RESOLVE_BUDGET_S = 600
+UBUNTU_RESOLVE_WORKERS = 4
+
+
+def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
+                         workers=UBUNTU_RESOLVE_WORKERS, timeout=30):
+    """Ubuntu publication dates for named IDs, asked for one at a time.
+
+    THE ROWS THIS EXISTS FOR CANNOT BE WALKED TO. `feed_ubuntu` reads newest
+    first and the cap stays at 200 pages, which is 4,000 of the window's 22,548
+    records; offset 3,980 lands on 2026-07-25 and everything older is invisible
+    to it. Moving the cap was measured on 2026-08-28 and rejected: the full
+    window is 1,128 pages and 35 to 44 minutes against a job that takes 21.
+
+    So the reach problem has no answer on the walk, and it did not need one.
+    `cves.json?q=<id>` is an exact-match filter that answers in a single request,
+    which means the rows that need a date can be asked for BY NAME instead of
+    paged past. Depth stops mattering: a row published in April costs exactly
+    what a row published yesterday costs.
+
+    Measured over the 82 rows held back as `undated` in the 2026-08-27 snapshot,
+    on a pass with no failed lookups: 64 have an Ubuntu date, every one of the 64
+    clears the 7-day buffer, every one is beyond the walk's reach, and the oldest
+    has been public 151 days. Those 64 are not marginal rows. They are the OLDEST
+    evidence the site has, and they were invisible because the only feed that
+    could date them is the one feed whose reach is measured in weeks.
+
+    THIS DATES ROWS. IT DOES NOT SIGHT THEM, and the distinction is the whole
+    reason `sources` and `feed_count` are left alone here.
+
+    Every ID passed to this function is one another feed already found, because
+    that is the only way it reaches the backlog. So the lookup can never add a
+    row `ubuntu` alone would have seen, and crediting `ubuntu` with a sighting
+    on the ones it does answer would raise corroboration out of a sample chosen
+    by which rows were already undated. `feed_count` would climb on exactly the
+    rows where independent corroboration is weakest. That is a biased probe
+    reported as evidence, which is the shape of error this project spends most
+    of its comments on.
+
+    For the same reason the date does not enter `dates`, whose consumers all read
+    it against `sources`: `clock.disclosure_order` filters it by `own`/`others`
+    membership derived from `sources`, so a key with no matching source is
+    silently dropped, and a key that DID gain a matching source would start
+    feeding an ordering claim built out of this bias.
+
+    It lands in `public_date`, which `clock.advisory_date` documents as the
+    earliest date from any ingested source, tracker rows included, as against the
+    advisory date that may start a 72-hour clock. That is exactly the right
+    strength. It starts the 7-day buffer, so the row can be counted. It cannot
+    start the expectation clock, because `ubuntu` is a tracker in
+    `clock._ORIGIN_KIND` and this endpoint's `published` field is a tracker date
+    whether it arrives by walk or by name.
+
+    Health is recorded under `ubuntu:dates`, a sub-entry rather than a
+    fourteenth feed, so a bad lookup pass shows up in `health_summary`'s
+    truncation list without changing what `attempts` counts. A spent budget or a
+    failed lookup is TRUNCATED and says how many, because a resolver that
+    quietly returns fewer dates than it was asked for is the silent shrink this
+    project has already been bitten by twice, arriving in a new place.
+    """
+    ids = list(dict.fromkeys(cve_ids))
+    if not ids:
+        record_feed("ubuntu:dates", OK, "no undated rows to date", rows=0)
+        return {}
+
+    started = time.monotonic()
+    found, errors, asked = {}, 0, 0
+    lock = threading.Lock()
+
+    def one(cid):
+        nonlocal errors, asked
+        with lock:
+            if time.monotonic() - started > budget_s:
+                return
+            asked += 1
+        try:
+            data, code, _ = _get(f"https://ubuntu.com/security/cves.json?q={cid}",
+                                 timeout=timeout)
+        except Exception:
+            with lock:
+                errors += 1
+            return
+        if not isinstance(data, dict):
+            # `_get` returns (None, 404, {}) rather than raising, and a 404 on
+            # this path is the endpoint moving, not the id being unknown: an
+            # unknown id answers 200 with an empty `cves`. Counting it as "no
+            # date" would turn a retired endpoint into a silently undated
+            # backlog.
+            with lock:
+                errors += 1
+            return
+        for row in data.get("cves") or []:
+            # `q` is a SEARCH, not a key lookup. It has matched on description
+            # text in probing, so a row that is not the id we asked for is some
+            # other CVE's date and must never be attached to this one.
+            if row.get("id") != cid:
+                continue
+            d = _d(row.get("published"))
+            if d:
+                with lock:
+                    found[cid] = d
+            break
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+        list(ex.map(one, ids))
+
+    unasked = len(ids) - asked
+    detail = f"dated {len(found)} of {len(ids)} undated row(s) by name"
+    if errors:
+        detail += f"; {errors} lookup(s) failed"
+    if unasked:
+        detail += (f"; the {budget_s}s budget was spent with {unasked} "
+                   "row(s) never asked for")
+
+    # THREE STATES, AND THE MIDDLE ONE IS THE POINT.
+    #
+    # Measured live over the real held-back population on 2026-08-28: 82 ids in
+    # ~300s, and three passes returned 59, 62 and 64 dated. The whole spread is
+    # transient lookup failures. A couple of them in eighty-two is this endpoint
+    # on an ordinary afternoon, and reporting that as TRUNCATED
+    # would mark the run degraded on most runs. That is the furniture problem
+    # `degraded_state` rejects, reached from a fourth direction: a warning that
+    # is always on is a warning nobody reads.
+    #
+    # It is safe to keep those runs green for a reason specific to this pass and
+    # not true of a feed walk. A row this pass fails to date is not published
+    # wrong and is not dropped from a count; it stays in `held_back.json` as
+    # `undated`, exactly where it already was, and the NEXT run asks for it
+    # again. The population is self-healing across runs, so a failed lookup
+    # costs a day of latency on the floor rather than silently shrinking it. The
+    # count still says so out loud in `detail`, which is where `feed_csaf`
+    # already puts the same shape of partial result.
+    #
+    # A spent budget is CAPPED, not TRUNCATED, for the reason the walk's own
+    # wall-clock budget is: a configured limit belongs in `limitations` rather
+    # than in the degraded banner.
+    #
+    # But Ubuntu being DOWN is none of the above. If every lookup failed there
+    # is no self-healing to appeal to, the pass learned nothing, and reporting
+    # `ok, dated 0` would be the silent shrink wearing the excuse above as a
+    # disguise. That one is loud.
+    if ids and errors == len(ids):
+        status = FAILED
+    elif unasked:
+        status = CAPPED
+    else:
+        status = OK
+    record_feed("ubuntu:dates", status, detail, rows=len(found))
+    return found
 
 
 def feed_debian(years):

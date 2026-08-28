@@ -536,3 +536,90 @@ the suite was green, and it was green partly because 14 of its tests were readin
 files nobody rendered and 14 more were skipping while reporting coverage.
 
 On this project, *the test passes* and *the test works* are different claims.
+
+---
+
+## Round 8, 2026-08-28: the 82 rows with no age
+
+Reported as a single missing CVE and it was not one. Someone pointed at
+[CVE-2026-44235](https://ubuntu.com/security/CVE-2026-44235) and asked whether
+the site had an Ubuntu gap. `cveawg` returns `CVE_RECORD_DNE` for it, Ubuntu
+published it 2026-06-11 and shipped USN-8437-1 on 2026-06-16, so it is an RBP by
+the site's own definition. It was already in the data, in `held_back.json`, in
+every snapshot since 2026-08-22, `state: RESERVED`, `sources: debian`,
+`held_back_reason: undated`.
+
+**The mechanism, which is not about Ubuntu being missing.** `alpine`, `arch` and
+`debian` return no dates at all. A row only those feeds saw has no age at any
+threshold, so `report.build` holds it back and it is never counted. Ubuntu can
+date such a row and mostly cannot be walked to it: the walk reads newest-first,
+the cap is 4,000 records, and offset 3,980 lands on 2026-07-25. This advisory is
+six weeks past that edge.
+
+**The size of it, measured against the live endpoint.** All 82 rows held back as
+`undated` on 2026-08-27 were asked for by name. On a pass with no failed lookups:
+**64 have an Ubuntu date, every one of the 64 clears the 7-day buffer, every one
+is beyond the walk's reach.** The remaining 18 Ubuntu genuinely does not carry.
+The headline goes 1,670 to 1,734. They are also the OLDEST evidence the site has,
+151 days down to 36, which is the opposite of a marginal population:
+`CVE-2026-35332/3/4` have been public since 2026-04-22.
+
+**Not a reason to move the cap, and that was checked first.** `0389f41` had
+already settled the walk: the full window is 1,128 pages and 35 to 44 minutes. It
+is also the wrong lever. `cves.json?q=<id>` is an exact-match filter that answers
+in one request, so the rows that need a date can be asked for BY NAME and depth
+stops mattering. The pass is bounded by the size of the held-back population, not
+by how far back the rows go. And it is the better trade on the walk's own terms:
+the feed being bought is the sole source for zero published rows.
+
+**What landed.** `feeds.resolve_dates_ubuntu`, run in `cli` between `classify`
+and `clock.annotate`, gated on `ubuntu` being a configured source. Live over the
+real population: 82 ids in ~300s at 4 workers. Three passes returned 59, 62 and
+64 dated, and the difference is entirely transient lookup failures rather than
+anything about the rows. That spread is the reason a failed lookup is retried on
+the next run rather than recorded as a final answer.
+
+**It dates rows, it does not sight them,** and that is the load-bearing decision.
+Every id it is given is one another feed already found, because that is the only
+way into the backlog, so the lookup can never add a row `ubuntu` alone would have
+seen. Crediting `ubuntu` with a sighting would raise `feed_count` out of a sample
+chosen by which rows were already undated, which is corroboration climbing
+precisely where corroboration is weakest. For the same reason the date stays out
+of `dates`, whose consumers all read it against `sources`. It lands in
+`public_date` only, which starts the buffer and cannot start the 72-hour clock,
+because `ubuntu` is a tracker in `clock._ORIGIN_KIND` and this endpoint's
+`published` is a tracker date whether it arrives by walk or by name.
+`public_date_origin` is published beside it so a reader can tell the two apart.
+
+**FOUND WHILE WRITING IT.** `q=` is a SEARCH, not a key lookup, and it matches
+description text. Taking `cves[0]` would have dated a row from another CVE's
+record, and the row would have been published with a confident, invented age.
+The resolver matches on `id` and skips everything else. Separately, `_get`
+returns `(None, 404, {})` rather than raising, and an unknown id answers 200 with
+an empty list, so a 404 here is the endpoint moving: reading it as "no date"
+would have turned a retired path into a silently undated backlog.
+
+**The health states are three, and the middle one is a judgement.** Two failed
+lookups in eighty-two is this endpoint on an ordinary afternoon, and reporting
+that as TRUNCATED would degrade most runs, which is the furniture problem
+`degraded_state` rejects reached from a fourth direction. Staying green is safe
+here for a reason not true of a feed walk: a row this pass fails to date stays in
+`held_back.json` as `undated`, exactly where it already was, and the next run
+asks again. The population self-heals, so the cost is a day of latency on a floor
+rather than a silent shrink, and the count is still stated in `detail`. A spent
+budget is CAPPED, because a configured limit belongs in `limitations`. Every
+lookup failing is FAILED, because then there is no self-healing to appeal to and
+`ok, dated 0` would be the silent shrink wearing that excuse as a disguise.
+
+**Still open.** The 18 rows Ubuntu genuinely does not carry are still undated and
+no configured feed can date them. And the deeper one this exposed: Ubuntu's
+`cves.json` carries `notices` and `notices_ids` on every row, with the USN id and
+its publication timestamp, and the adapter reads `id`, `published` and
+`description` and drops them. `clock._ORIGIN_KIND` calls `ubuntu` a tracker on
+the note that "none of the three reads DSA/DLA, USN or ASA", which is true of the
+adapter and not of the endpoint. Reading `notices` would give real advisory dates
+and move rows from SHOULD/4.5.1.6 toward MUST/4.5.1.4. That changes what the site
+ASSERTS, not how many rows it shows, so it wants its own measurement and its own
+round.
+
+**Guards.** `tests/test_ubuntu_dates.py`, 13 offline tests. 930 pass, lint clean.
