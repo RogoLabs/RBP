@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 
 import pandas as pd
 import pytest
@@ -1712,3 +1713,105 @@ def test_the_listing_is_read_uncapped_so_the_cut_can_be_counted(monkeypatch):
     part = feeds.FEED_HEALTH["csaf:v.example"]
     assert part["status"] == feeds.CAPPED, part
     assert "120 of 200 advisories" in part["detail"], part["detail"]
+
+
+def test_a_provider_that_stalls_the_run_is_stopped_and_named(monkeypatch):
+    """THE 2026-08-29 OUTAGE. The scheduled build was cancelled at the 45-minute
+    ceiling and the log named the cause exactly:
+
+        17:11:23  [csaf] www.huawei.com: +0 new (0 in scope)
+        17:29:24  [csaf] www.open-xchange.com: +0 new (0 in scope)
+        17:29:43  ##[error]The operation was canceled.
+
+    Eighteen minutes inside one provider, which then returned nothing, while
+    every other provider that run finished in about eleven seconds. Nothing
+    stopped it and nothing named it: the site simply did not publish, and the
+    only record of which provider did it was in a build log.
+
+    A stalling third party must cost its own share of the run and no more."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=5)
+    # A host that answers, slowly, forever.
+    real = feeds._csaf_directory_entries
+    def slow(durl, years, cap=None):
+        time.sleep(0.25)
+        return real(durl, years, cap)
+    monkeypatch.setattr(feeds, "_csaf_directory_entries", slow)
+    feeds.feed_csaf({2026}, providers=("https://slow.example/pm.json",),
+                    aggregators=(), per_provider_budget_s=0.05)
+
+    part = feeds.FEED_HEALTH.get("csaf:slow.example")
+    assert part["status"] == feeds.CAPPED, part
+    assert "over this provider's" in part["detail"], part["detail"]
+    h = feeds.FEED_HEALTH["csaf"]
+    assert "stopped on time budget: slow.example" in h["detail"], h["detail"]
+    assert h["status"] == feeds.CAPPED, h
+
+
+def test_the_budget_stops_the_listing_phase_partway(monkeypatch):
+    """THE GUARD THAT ACTUALLY SAVES THE RUN, and the sibling test above cannot
+    see it.
+
+    That test uses one directory, so the loop guard never has to fire: the sleep
+    happens inside the single call and the provider is reported over budget
+    afterwards either way. Deleting the listing-phase guard leaves it green.
+    Confirmed by mutation on 2026-08-29.
+
+    But the listing phase is exactly where the 18 minutes went. open-xchange
+    never reached the advisory fetch. So the property worth pinning is not "the
+    provider is reported late", it is "we STOPPED asking", and that needs more
+    than one directory to be observable at all.
+
+    Five directories, each slow, against a budget that expires during the second.
+    A run that reads all five is a run the budget did not stop."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=5, advisories_per_dir=2)
+    calls = []
+    real = feeds._csaf_directory_entries
+
+    def slow(durl, years, cap=None):
+        calls.append(durl)
+        time.sleep(0.12)
+        return real(durl, years, cap)
+
+    monkeypatch.setattr(feeds, "_csaf_directory_entries", slow)
+    feeds.feed_csaf({2026}, providers=("https://slow.example/pm.json",),
+                    aggregators=(), per_provider_budget_s=0.15)
+
+    assert len(calls) < 5, (
+        f"the budget expired and the listing loop still read all {len(calls)} "
+        "directories; nothing stopped the provider, it was only reported late")
+    assert calls, "the budget stopped the provider before it read anything at all"
+
+
+def test_the_time_budget_does_not_fire_on_a_healthy_provider(monkeypatch):
+    """The complement. A budget that trips on a normal read is worse than none:
+    it would mark every provider Capped and the word would stop meaning
+    anything, which is the same argument the advisory cap already makes."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=5)
+    feeds.feed_csaf({2026}, providers=("https://fast.example/pm.json",),
+                    aggregators=(), per_provider_budget_s=120)
+
+    part = feeds.FEED_HEALTH.get("csaf:fast.example")
+    assert part["status"] == feeds.OK, part
+    assert "time budget" not in feeds.FEED_HEALTH["csaf"]["detail"]
+
+
+def test_a_stalled_provider_does_not_put_the_site_in_a_degraded_state(monkeypatch):
+    """CAPPED, not FAILED. Cisco's WAF 403s every run and that argument is
+    already written down here: a standing third-party limit must not put a
+    permanent banner on the site. A slow host is the same fact arriving as
+    latency instead of a status code."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=5)
+    real = feeds._csaf_directory_entries
+    monkeypatch.setattr(feeds, "_csaf_directory_entries",
+                        lambda d, y, cap=None: (time.sleep(0.25), real(d, y, cap))[1])
+    feeds.feed_csaf({2026}, providers=("https://slow.example/pm.json",),
+                    aggregators=(), per_provider_budget_s=0.05)
+    failures, truncated, _n, capped = feeds.health_summary()
+    assert capped and not failures and not truncated
+    on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
+                                     capped=capped, dropped=0, shrunk=[], stale=[])
+    assert on is False, f"a slow third party is degrading the run: {reasons}"

@@ -1747,6 +1747,35 @@ CSAF_METADATA_FALLBACK = {
 # cap a single provider dominates the run.
 CSAF_MAX_DIRS = 12
 
+# How long one CSAF provider may hold the run, in seconds.
+#
+# THE 2026-08-29 OUTAGE, and it is the reason this exists. The scheduled build
+# was cancelled at the 45-minute ceiling, and the log names the cause exactly:
+#
+#   17:11:23  [csaf] www.huawei.com: +0 new (0 in scope)
+#   17:29:24  [csaf] www.open-xchange.com: +0 new (0 in scope)
+#   17:29:43  ##[error]The operation was canceled.
+#
+# Eighteen minutes inside ONE provider, which then returned nothing. Every other
+# provider that run finished in about eleven seconds, the slowest legitimate one
+# (wid.cert-bund.de) in twenty. The same host answers in under a second from a
+# laptop and yields 15 advisories, so this is the host stalling GitHub's egress,
+# the same shape as CISA's 403 to the runners, arriving as latency instead of a
+# status code. `_get` retries three times at a 90-second timeout, so a handful of
+# stalled URLs is a quarter of an hour with nothing to show.
+#
+# 120 seconds: six times the slowest honest provider, so it cannot fire on a
+# healthy read, and it would have cut that 18 minutes to 2 and finished the run.
+#
+# THE BUDGET GUARDS THE LISTING PHASE TOO, which is where those minutes went.
+# A budget that only wrapped the advisory fetch would not have caught this at
+# all: open-xchange never reached the advisory fetch.
+#
+# This is a configured limit in exactly the sense the Ubuntu wall-clock budget
+# and the advisory cap are, so it is reported the same way: CAPPED, named, with
+# the number, and not a degradation.
+CSAF_PROVIDER_BUDGET_S = 120
+
 
 _CSAF_YEAR_SEG = re.compile(r"^(19|20)\d{2}$")
 
@@ -1896,7 +1925,8 @@ def _expand_csaf_providers(providers, aggregators, max_providers):
 
 
 def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
-              cap_per_provider=120, max_providers=40, workers=8):
+              cap_per_provider=120, max_providers=40, workers=8,
+              per_provider_budget_s=CSAF_PROVIDER_BUDGET_S):
     """Generic CSAF/ROLIE ingester: unlocks vendor/enterprise/ICS CNAs. Expands
     aggregators into providers, then for each provider: metadata -> ROLIE feed(s)
     -> recent advisory docs -> CVEs in scope."""
@@ -1909,6 +1939,8 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     # That is the silent-shrink signature on the one adapter that fans out to
     # more than a dozen third parties.
     unreachable, empty, capped_dirs, fell_back = [], [], [], []
+    # Providers that ran out of wall clock. See CSAF_PROVIDER_BUDGET_S.
+    over_budget = []
     # The ADVISORY cap, which is a different loss from `capped_dirs` and was
     # the one nothing measured. `capped_dirs` counts directories we declined to
     # consult; this counts advisories we listed, could have read, and cut.
@@ -1917,6 +1949,13 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     print(f"  [csaf] {len(all_providers)} providers (incl. aggregator-discovered)", file=sys.stderr)
     for meta_url in all_providers:
         host = meta_url.split("/")[2]
+        # ONE CLOCK PER PROVIDER, started before the first byte is requested,
+        # because the 18 minutes that killed the 2026-08-29 run were spent in
+        # the LISTING phase, not the advisory phase.
+        t_provider = time.time()
+
+        def _out_of_budget():
+            return time.time() - t_provider > per_provider_budget_s
         try:
             meta, _, _ = _get(meta_url, timeout=40)
         except Exception as e:
@@ -1959,8 +1998,12 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # again. The claim is deferred to after the fetch, where we know whether
         # the directories we DID read had anything in them.
         for durl in chosen:
+            if _out_of_budget():
+                break
             entries.extend(_csaf_directory_entries(durl, years))
         for furl in feed_urls:
+            if _out_of_budget():
+                break
             try:
                 fd, _, _ = _get(furl, timeout=90)
             except Exception:
@@ -2001,6 +2044,11 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
 
         def _fetch(item):
             upd, href = item
+            # Checked per item rather than once: the pool has up to
+            # `cap_per_provider` items queued and a stalling host makes each one
+            # slow, so the budget has to be able to stop the queue draining.
+            if _out_of_budget():
+                return []
             try:
                 d, _, _ = _get(href, timeout=40)
             except Exception:
@@ -2028,6 +2076,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             return rows
 
         n0, read = len(out), 0
+        spent = time.time() - t_provider
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
             for rows in ex.map(_fetch, entries):
                 read += len(rows)
@@ -2036,6 +2085,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                         seen.add(r["cve_id"])
                         out.append(r)
         gained = len(out) - n0
+        spent = time.time() - t_provider
         print(f"  [csaf] {host}: +{gained} new ({read} in scope)", file=sys.stderr)
         # ONE RECORD PER PROVIDER, so `compare_magnitudes` can see a provider go
         # dark. Until this landed, 17 providers shared a single `rows` number and
@@ -2091,6 +2141,15 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # coupling, because it is invisible from either function alone.
         if host in _csaf_hosts(unreachable):
             record_feed(f"csaf:{host}", CAPPED, "provider unreachable", rows=0)
+        elif spent > per_provider_budget_s:
+            # NAMED, because this is the failure that took the site off the air
+            # for a scheduled run and nothing in the artefact said which provider
+            # did it. The log had it; no page did.
+            over_budget.append(f"{host} {spent:.0f}s")
+            record_feed(f"csaf:{host}", CAPPED,
+                        f"{read} ids in scope, {gained} new; stopped after "
+                        f"{spent:.0f}s, over this provider's "
+                        f"{per_provider_budget_s}s share of the run", rows=read)
         elif listed > len(entries):
             capped_reads.append(f"{host} {len(entries)}/{listed:,} advisories")
             record_feed(f"csaf:{host}", CAPPED,
@@ -2114,7 +2173,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             # we consulted only some of its directories.
             capped_dirs.append(f"{host} {len(chosen)}/{available} directories")
     _record_csaf_health(all_providers, unreachable, empty, capped_dirs, fell_back,
-                        len(out), capped_reads)
+                        len(out), capped_reads, over_budget)
     return out
 
 
@@ -2140,7 +2199,7 @@ def _csaf_hosts(entries):
 
 
 def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back,
-                        rows, capped_reads=()):
+                        rows, capped_reads=(), over_budget=()):
     """One health record for the fan-out adapter, derived from its providers.
 
     Ordered worst-first, because a single status has to mean the worst thing that
@@ -2170,13 +2229,15 @@ def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back,
         bits.append(f"advisory cap hit on {len(capped_reads)} of "
                     f"{len(providers)} providers, newest only: "
                     f"{', '.join(sorted(capped_reads)[:6])}")
+    if over_budget:
+        bits.append(f"stopped on time budget: {', '.join(sorted(over_budget)[:6])}")
     if empty:
         bits.append(f"no advisories in scope: {', '.join(sorted(empty)[:8])}")
     detail = "; ".join(bits)
     if unreachable and not rows:
         # Nothing was read from anywhere. That is an outage, not a limit.
         record_feed("csaf", FAILED, detail, rows=rows)
-    elif unreachable or capped_dirs or capped_reads:
+    elif unreachable or capped_dirs or capped_reads or over_budget:
         # CAPPED, NOT TRUNCATED, and the distinction decides whether the site
         # wears a banner.
         #
