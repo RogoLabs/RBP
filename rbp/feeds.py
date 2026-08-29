@@ -2200,11 +2200,12 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             doc = (d or {}).get("document", {})
             pub = (doc.get("publisher", {}) or {}).get("name", "")
             tr = doc.get("tracking", {}) or {}
-            rel = tr.get("initial_release_date", "") or upd
             tid = tr.get("id", "")
             rows = []
             for v in (d or {}).get("vulnerabilities", []):
                 cid = v.get("cve", "")
+                # PER ID, not per advisory. See csaf_id_date.
+                rel = csaf_id_date(cid, tr, upd)
                 if cid and _year(cid) in years:
                     # source_ref carries publisher, tracking id AND the advisory
                     # URL. Without the URL, report._u had no csaf branch to write
@@ -2378,6 +2379,66 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     _record_csaf_health(all_providers, unreachable, empty, capped_dirs, fell_back,
                         len(out), capped_reads, over_budget, behind)
     return out
+
+
+def csaf_id_date(cid, tracking, fallback=""):
+    """When THIS id became public in THIS advisory, not when the advisory did.
+
+    An advisory is revised, and a revision can ADD a CVE id. Dating every id in
+    it from `initial_release_date` overstates the age of every id added later,
+    by the whole gap.
+
+    LIVE ON THE SITE, 2026-08-29, which is how this was found. ICSA-24-345-06
+    was first published 2024-12-10 and its own revision history reads:
+
+        rev 1  2024-12-10  Initial Publication
+        rev 4  2026-06-23  Update C - Added CVE-2026-6071
+
+    The site published CVE-2026-6071 at 627 days public. The advisory says 67.
+    An overstated age on a public row about a named vendor's advisory, checkable
+    by anyone in thirty seconds, is the worst error this site can make, and the
+    120-advisory cap had been hiding it by never reading advisories this old.
+
+    Two signals, both conservative, because every number here is a floor and the
+    safe direction to be wrong in is younger:
+
+    1. THE EARLIEST REVISION WHOSE SUMMARY NAMES THE ID. Publishers write "Update
+       C - Added CVE-2026-6071", so the id's first appearance is at latest that
+       revision. Earliest such revision, since a later one may merely be a CVSS
+       correction.
+
+    2. A CVE ID CANNOT PREDATE ITS OWN YEAR. CVE-2026-6071 cannot have been
+       public in 2024 whatever any date field says. When the chosen date falls
+       before the id's year, the earliest revision in or after that year is used
+       instead. This catches the case where a revision added ids without listing
+       them, which no summary-matching can reach.
+
+    Falls back to `initial_release_date`, which is right for the v1 advisories
+    that are most of them.
+    """
+    tr = tracking or {}
+    revs = [r for r in (tr.get("revision_history") or []) if r.get("date")]
+    initial = (tr.get("initial_release_date") or fallback or "")[:10]
+
+    named = sorted(r["date"][:10] for r in revs
+                   if cid and cid in (r.get("summary") or ""))
+    if named:
+        return named[0]
+
+    year = _year(cid)
+    if year is not None and initial and len(initial) >= 4:
+        try:
+            if int(initial[:4]) < year:
+                after = sorted(r["date"][:10] for r in revs
+                               if len(r["date"]) >= 4 and int(r["date"][:4]) >= year)
+                if after:
+                    return after[0]
+                cur = (tr.get("current_release_date") or "")[:10]
+                if cur:
+                    return cur
+        except ValueError:
+            pass
+    return initial
 
 
 def _csaf_directory_count(meta):

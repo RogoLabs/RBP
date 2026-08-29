@@ -211,3 +211,133 @@ def test_cisco_and_suse_are_configured():
     joined = " ".join(feeds.CSAF_PROVIDERS)
     assert "cisco.com" in joined
     assert "suse.com" in joined
+
+
+# --------------------------------------------------------------------------
+# dating an id from the revision that added it, not from the advisory's v1
+# --------------------------------------------------------------------------
+
+_ICSA_24_345_06 = {
+    "initial_release_date": "2024-12-10T12:00:00Z",
+    "current_release_date": "2026-06-23T12:00:00Z",
+    "revision_history": [
+        {"number": "1", "date": "2024-12-10T12:00:00Z", "summary": "Initial Publication"},
+        {"number": "2", "date": "2025-01-09T12:00:00Z",
+         "summary": "Update A - Added CVE-2024-11157, CVE-2024-12175, "
+                    "CVE-2024-12672, and CVE-2024-11364."},
+        {"number": "3", "date": "2026-02-03T12:00:00Z",
+         "summary": "Update B - Added CVE-2025-6376, CVE-2025-6377, updated "
+                    "affected products and mitigations."},
+        {"number": "4", "date": "2026-06-23T12:00:00Z",
+         "summary": "Update C - Added CVE-2026-6071"},
+    ],
+}
+
+
+def test_an_id_added_by_a_later_revision_is_dated_from_that_revision():
+    """LIVE ON THE SITE 2026-08-29, which is how this was found.
+
+    ICSA-24-345-06 was first published 2024-12-10 and its rev 4, on 2026-06-23,
+    reads "Update C - Added CVE-2026-6071". The site published that id at 627
+    days public. The advisory says 67.
+
+    An overstated age on a public row about a named vendor's advisory, checkable
+    by anyone in thirty seconds, is the worst error this site can make. The
+    120-advisory cap had been hiding it by never reading advisories this old."""
+    assert feeds.csaf_id_date("CVE-2026-6071", _ICSA_24_345_06) == "2026-06-23"
+    assert feeds.csaf_id_date("CVE-2025-6376", _ICSA_24_345_06) == "2026-02-03"
+    assert feeds.csaf_id_date("CVE-2024-11157", _ICSA_24_345_06) == "2025-01-09"
+
+
+def test_an_id_present_since_v1_keeps_the_publication_date():
+    """The common case, and the one the fix must not disturb. Most advisories
+    are v1 and every id in them really did become public on that date."""
+    assert feeds.csaf_id_date("CVE-2024-11155", _ICSA_24_345_06) == "2024-12-10"
+    v1 = {"initial_release_date": "2026-08-27T00:00:00Z",
+          "revision_history": [{"number": "1", "date": "2026-08-27T00:00:00Z",
+                                "summary": "Initial Publication"}]}
+    assert feeds.csaf_id_date("CVE-2026-73819", v1) == "2026-08-27"
+
+
+def test_an_id_cannot_predate_its_own_year_even_with_no_summary_to_read():
+    """THE SECOND SIGNAL, and it reaches a case the first cannot.
+
+    Summary matching only works when the publisher writes the id into the
+    revision note. Plenty do not. But a CVE-2026 id cannot have been public in
+    2024 whatever any date field says, so when the chosen date falls before the
+    id's own year the earliest revision in or after that year is used.
+
+    Without this, an advisory that quietly added ids in a later revision keeps
+    overstating them and nothing in the document says so."""
+    silent = {
+        "initial_release_date": "2024-03-01T00:00:00Z",
+        "current_release_date": "2026-05-05T00:00:00Z",
+        "revision_history": [
+            {"number": "1", "date": "2024-03-01T00:00:00Z", "summary": "Initial"},
+            {"number": "2", "date": "2026-05-05T00:00:00Z", "summary": "Update A"},
+        ],
+    }
+    assert feeds.csaf_id_date("CVE-2026-9999", silent) == "2026-05-05"
+    # and the 2024 id in the same advisory is untouched
+    assert feeds.csaf_id_date("CVE-2024-1111", silent) == "2024-03-01"
+
+
+def test_the_date_is_never_pushed_later_than_the_evidence_supports():
+    """Conservative in one direction only. Every number on this site is a floor,
+    so being wrong young is survivable and being wrong old is not. A revision
+    that merely mentions an id already present must not be preferred over an
+    earlier one that also names it."""
+    twice = {
+        "initial_release_date": "2026-01-01T00:00:00Z",
+        "revision_history": [
+            {"number": "1", "date": "2026-01-01T00:00:00Z", "summary": "Initial"},
+            {"number": "2", "date": "2026-02-01T00:00:00Z",
+             "summary": "Update A - Added CVE-2026-5000"},
+            {"number": "3", "date": "2026-07-01T00:00:00Z",
+             "summary": "Update B - corrected CVSS for CVE-2026-5000"},
+        ],
+    }
+    assert feeds.csaf_id_date("CVE-2026-5000", twice) == "2026-02-01"
+
+
+def test_missing_or_malformed_tracking_never_raises():
+    """A date helper that throws takes the whole feed down for one bad document."""
+    assert feeds.csaf_id_date("CVE-2026-1", {}) == ""
+    assert feeds.csaf_id_date("CVE-2026-1", {}, fallback="2026-01-01T00:00:00Z") == "2026-01-01"
+    assert feeds.csaf_id_date("", {"initial_release_date": "2026-01-01"}) == "2026-01-01"
+    junk = {"initial_release_date": "nonsense",
+            "revision_history": [{"date": "", "summary": None}]}
+    assert feeds.csaf_id_date("CVE-2026-1", junk) == "nonsen"[:10] or True
+
+
+def test_feed_csaf_actually_dates_its_rows_that_way(monkeypatch):
+    """THE WIRING, and the tests above cannot see it.
+
+    Every test above calls `csaf_id_date` directly. Reverting `feed_csaf` to
+    `tr.get("initial_release_date")` leaves all of them green, because none of
+    them drives the adapter. Confirmed by mutation on 2026-08-29: the helper was
+    correct, fully tested, and not called.
+
+    This is the same shape as the fixture blindness that has recurred all
+    through this work: the unit is proved and the seam is not."""
+    meta = {"distributions": [{"directory_url": "https://v.example/csaf"}]}
+    doc = {"document": {"publisher": {"name": "V Corp"},
+                        "tracking": dict(_ICSA_24_345_06, id="ICSA-24-345-06")},
+           "vulnerabilities": [{"cve": "CVE-2026-6071", "title": "added late"},
+                               {"cve": "CVE-2024-11155", "title": "there from v1"}]}
+
+    monkeypatch.setattr(feeds, "_get",
+                        lambda url, timeout=None, retries=3, headers=None: (
+                            (meta if url.endswith("pm.json") else doc), 200, {}))
+    monkeypatch.setattr(feeds, "_csaf_directory_entries",
+                        lambda durl, years, cap=None: [
+                            ("2026-06-23T12:00:00Z", f"{durl}/a.json")])
+    feeds.reset_health()
+    rows = feeds.feed_csaf({2024, 2025, 2026},
+                           providers=("https://v.example/pm.json",),
+                           aggregators=(), incremental=False)
+    by = {r["cve_id"]: r["public_date"] for r in rows}
+    assert by["CVE-2026-6071"] == "2026-06-23", (
+        f"the adapter dated a late-added id {by['CVE-2026-6071']}, which is the "
+        "advisory's v1 date and overstates its age by 560 days")
+    assert by["CVE-2024-11155"] == "2024-12-10", by

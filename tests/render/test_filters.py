@@ -317,3 +317,74 @@ def test_reading_a_filter_from_the_url_never_throws(page, server):
         st = _goto(pg, server, query)
         assert st["total"] > 0, f"the row island is empty on {query!r}"
     assert not errors, f"the list page threw while reading a URL: {errors}"
+
+
+def test_the_csaf_publishers_are_offered_separately(page, server):
+    """CSAF IS A TRANSPORT, NOT A PUBLISHER, and the control treated it as one.
+
+    Measured on the live site 2026-08-29: 143 rows read over CSAF, from five
+    different publishers, all collapsed into one option reading "CSAF Advisory".
+    Every other entry in this control is already a named publisher, several of
+    them certified CNAs; CSAF was the only feed whose publishers were hidden, and
+    they were hidden by how the row was fetched rather than by any decision.
+
+    The consequence was concrete: eight CVE ids referenced in public CISA
+    advisories were on the site and there was no way to find them or to send
+    anyone a link to them."""
+    page.goto(f"{server}/?age=any")
+    opts = page.eval_on_selector_all(
+        "#src option", "els => els.map(e => e.value)")
+    facets = [o for o in opts if o.startswith("csaf:")]
+    assert len(facets) >= 2, (
+        f"the control offers {facets} as CSAF publishers; with fewer than two it "
+        "cannot be distinguished from the roll-up")
+    assert "csaf" in opts, "the csaf roll-up option was dropped"
+
+
+def test_a_publisher_link_selects_only_that_publishers_rows(page, server):
+    """The point of the facet is a citable URL. `?src=csaf:cisa` must select the
+    rows whose advisory CISA published and no others."""
+    page.goto(f"{server}/?age=any")
+    facet = page.evaluate(
+        "[...document.querySelectorAll('#src option')].map(e=>e.value)"
+        ".filter(v=>v.indexOf('csaf:')===0)[0]")
+    page.goto(f"{server}/?age=any&src={facet}")
+    page.wait_for_selector("#list .rbprow")
+    n_facet = page.eval_on_selector_all("#list .rbprow", "els => els.length")
+
+    page.goto(f"{server}/?age=any&src=csaf")
+    page.wait_for_selector("#list .rbprow")
+    n_roll = page.eval_on_selector_all("#list .rbprow", "els => els.length")
+
+    assert 0 < n_facet < n_roll, (
+        f"filtering to one publisher showed {n_facet} rows against {n_roll} for "
+        "the whole transport; the facet is not narrowing anything")
+
+
+def test_the_csaf_rollup_link_still_means_what_it_said(page, server):
+    """Every ?src=csaf link already shared has to keep working. The roll-up
+    selects every row read over CSAF, publishers included."""
+    page.goto(f"{server}/?age=any&src=csaf")
+    page.wait_for_selector("#list .rbprow")
+    n = page.eval_on_selector_all("#list .rbprow", "els => els.length")
+    assert n > 0, "?src=csaf now selects nothing; a shared link has been broken"
+
+
+def test_a_chip_names_the_publisher_not_the_file_format(page, server):
+    """"CSAF Advisory" told a reader the serialisation the advisory arrived in
+    and nothing about who wrote it, which is the one thing the chip is for."""
+    page.goto(f"{server}/?age=any&src=csaf")
+    page.wait_for_selector("#list .rbprow")
+    labels = set(page.eval_on_selector_all(
+        "#list .rbprow .where .chip", "els => els.map(e => e.textContent.trim())"))
+    # NAMED, not merely "not one of two other feeds". The first version of this
+    # assertion allowed any chip that was not OSV or GitHub, so "Debian" and
+    # "Ubuntu" satisfied it and reverting the chip to "CSAF Advisory" left it
+    # green. Confirmed by mutation on 2026-08-29.
+    #
+    # The fixture publishes under two names on purpose (see _sitefixture); at
+    # least one has to reach the chip, and the format label must be gone.
+    assert labels & {"CISA", "Siemens ProductCERT"}, (
+        f"no chip names the publisher the advisory states: {sorted(labels)}")
+    assert "CSAF Advisory" not in labels, (
+        "the chip still names the serialisation rather than the publisher")

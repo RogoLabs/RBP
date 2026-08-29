@@ -779,3 +779,122 @@ thing that unlocks anything.
   equality. Keeping identity as `csaf:<host>` stays inside the existing
   `.sources` / `.dates.` / `.source_urls` / `.feeds.` allowlist entries; human
   labels belong in the template's JS map, which is never scanned.
+
+
+---
+
+## Round 10, 2026-08-29: the cap comes off, and what it was hiding
+
+The 120-advisory cap is gone. It was the wrong unit: a fixed count reads 100% of
+a small provider and 0.1% of a large one and reports both as `ok`, and its cost
+in time swings with the host. Measured against an uncapped sweep of all
+seventeen providers, that cap captured **12%** of the reserved rows available.
+
+Replaced by a **read cursor**, two marks per provider in `data/csaf_state.json`,
+cached by `deploy.yml` the way `data/ghsa_repos_state.json` already was. A run
+reads what changed. SUSE lists 83,111 in-window advisories and six of them
+changed in 24 hours; re-reading the other 83,105 to find those six is why a cap
+had to exist at all.
+
+The time budget stays, at 300s, and it now bounds **how fast the backlog
+drains** rather than what the site can ever see. It never fires again once a
+provider is caught up.
+
+Live result, first run: `csaf` went 4,416 to **21,810 ids**, 14 of 17 providers
+caught up, rows 1,700 to 1,769, build 34m09s to 29m10s. `timeout-minutes` 45 to
+60, because the 45 was a setting rather than a law and a cancelled job publishes
+nothing.
+
+### CSAF is broken out by publisher on the front page
+
+`?src=csaf:cisa` is a citable URL. Derived from `refs` in the template, NOT
+added to `sources`, which avoids the whole trap list round 9 recorded: no schema
+break, `origin_kind` untouched so the 72-hour clock is unaffected, `feed_count`
+unchanged, `refs` truncation irrelevant, and every `?src=csaf` link already
+shared keeps meaning what it said. `csaf` stays as the roll-up.
+
+Keyed on the publisher's own stated name, not the URL host: CISA 403s the
+runners, so its advisories arrive from `raw.githubusercontent.com` and
+host-keying would file eight CISA advisories under GitHub.
+
+The panel recommended against provider identity (round 9 D4) and was right about
+the cost of the `sources` version. Its fallback reasoning was wrong: it held
+that the publisher was "already recoverable" from `source_urls`, but `matches()`
+searches `cve_id + package + description + sources` only, so `?q=cisa` returned
+zero and there was no shareable URL for it. Recoverable by eye is not findable.
+
+### An overstated age, live on the site, found by uncapping
+
+`CVE-2026-6071` published at **627 days**. Its advisory's own revision history
+says rev 4, 2026-06-23, "Update C - Added CVE-2026-6071", which is **67 days**.
+Every id in a revised advisory was being dated from the advisory's v1.
+
+`csaf_id_date` now dates each id from the earliest revision naming it, with a
+second guard: an id cannot predate its own year, which catches advisories that
+add ids without listing them in the summary. Both signals are conservative,
+because every number here is a floor and the safe direction is younger.
+
+The cap had been hiding this by never reading advisories old enough to have been
+revised. Uncapping surfaced it within one run.
+
+### THE OPEN DECISION: the year window
+
+`--years` defaults to the current year and the previous one. The 2026-08-29 run
+used `years=[2025, 2026]`.
+
+Of the 422 rows the uncapped sweep found that the site does not have:
+
+```
+2024: 104     outside the window, will never list
+2025:  79
+2026: 239
+inside the window and past the buffer: 262
+```
+
+**The 104 excluded include the strongest evidence the sweep found**:
+`CVE-2024-31884` at 971 days, `CVE-2024-0234` at 968, and a long tail of
+CERT-Bund rows in the 860 to 960 day range. The site's current oldest visible
+row is 572 days.
+
+This is a scope decision, not a bug, and it is Jerry's. Widening to 2024 is a
+one-flag change (`--years`) and would roughly double the age ceiling the site
+can show. It also enlarges every feed's fetch, so it should be measured against
+the job budget before it is set. Not done.
+
+### Corrections to earlier claims in this file and in conversation
+
+- Round 9's "358 new rows, 316 listable" was computed on 15 of 17 providers and
+  a 2024-2026 window. The complete, window-corrected figure is **262**.
+- The CISA pinned-fallback was NOT covering less history than the canonical
+  metadata. Both reach exactly 3,979 entries. The five missing CISA ids are
+  2024-numbered and excluded by the year window.
+
+### Mutation results
+
+Twelve reintroduced across the cursor, the facet and the dating; all caught,
+**four only after a test was rewritten**. Every survivor was the same shape and
+it is worth naming because it keeps recurring: the unit was proved and the seam
+was not.
+
+- the budget test started cold, so it never exercised `_csaf_plan`'s fresh
+  window at all, and reversing that ordering left it green;
+- `csaf_id_date` was fully tested and `feed_csaf` was never proved to call it;
+- the chip test allowed any label that was not OSV or GitHub, so "Debian"
+  satisfied it and reverting the chip left it green;
+- and the fix for that one then found a real bug: `chips()` re-added `csaf` from
+  `source_urls` after the swap, so rows rendered BOTH "CISA" and "CSAF Advisory".
+
+### Two bugs this round introduced and fixed before shipping
+
+`empty` keyed on "this run read nothing", which after the cursor is the
+signature of the healthiest state there is. The parent line read "no advisories
+in scope: cert-portal.siemens.com, ..." about providers whose every advisory had
+been read, and named `wid.cert-bund.de` as having nothing in scope on the same
+line saying it was 20,285 behind. A false claim about named third parties. It
+keys on the listing now. This is the sick.com lesson from a new direction:
+corroboration was not emptiness, and neither is being up to date.
+
+The suite wrote the real `data/csaf_state.json` and leaked marks between tests,
+failing twelve on state they never set; running the tests changed what the next
+real run would fetch. Fixed with a per-test autouse fixture in `conftest.py`.
+

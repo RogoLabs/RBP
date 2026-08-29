@@ -148,6 +148,21 @@
      {{ ((summary.get('min_age_days', 7) * 24 / expectation_hours) | round(1)) }}x
      the {{ expectation_hours }}-hour expectation, so ordinary latency and short
      coordinated-disclosure windows are excluded.</p>
+  {# PUBLISHER IS NOT ASSIGNER, and the filter makes that confusable in a way it
+     was not before. "Seen In: CISA" is a fact about whose advisory carries the
+     id. It is NOT a claim that CISA reserved it, and for ICS advisories it
+     frequently was not: CISA coordinates disclosures for vendors who hold their
+     own CVE ids, and Rockwell, Johnson Controls and Schneider Electric are all
+     CNAs in their own right.
+
+     The reservation endpoint returns "owning_cna": "[REDACTED]" for every
+     reserved id, which is exactly this population, so the assigner is not
+     observable here by anyone. #}
+  <p><strong>A source is who published the advisory, not who reserved the ID.</strong>
+     Filtering to a publisher shows the IDs their advisories reference. The CVE
+     Program redacts the assigner for reserved IDs, so this site cannot say who
+     holds any of them, and does not.</p>
+
   <p>The feeds reach a minority of CNAs, so <strong>every number here is a
      floor</strong>, never a census. <a href="method.html">The method in full</a>,
      and <a href="policy.html">the policy quotations</a>.</p>

@@ -79,6 +79,29 @@ _LONG_DESC = ("A specially crafted request to the administrative interface allow
 _LONG_SOURCES = "osv,ghsa,debian,ubuntu,alpine,redhat,alas,csaf,msrc,samsung"
 _LONG_REF = "osv:Packagist:codingms/additional-tca-with-a-deliberately-long-suffix"
 
+# A REAL-SHAPED CSAF REF, because the front page derives the CSAF publisher facet
+# from this string and nothing in the fixture produced one.
+#
+# `sources` said `csaf` on a third of the rows while `refs` carried only an OSV
+# entry, so every assertion about the per-publisher filter would have been
+# vacuous: no row had a publisher to file under, the control offered no facet,
+# and a test asserting the facet worked would have passed on an empty list.
+#
+# Two publishers, deliberately. One is indistinguishable from the roll-up: with a
+# single publisher, "filter to CISA" and "filter to csaf" select the same rows and
+# a broken filter looks correct. The names are the shape the documents really
+# use, a coordinator's bare acronym and a vendor's team name, because the slug is
+# derived from them.
+_CSAF_PUB_A = "CISA"
+_CSAF_PUB_B = "Siemens ProductCERT"
+
+
+def _csaf_ref(n):
+    pub = _CSAF_PUB_A if n % 2 == 0 else _CSAF_PUB_B
+    tag = "ICSA-26-100-0" if n % 2 == 0 else "SSA-99000"
+    return (f"csaf:{pub}\t{tag}{n}\t"
+            f"https://example.invalid/csaf/{n}.json")
+
 # The launch epoch. Set so `backlog-at-launch.html` renders its table at all: it
 # is `{% if summary.epoch and held_back %}`, and without an epoch that whole page
 # is prose and its .rbp table is never rendered or laid out.
@@ -115,7 +138,7 @@ def _row(n, public_date="2026-08-05", days=19):
         "source_urls": {
             src: f"https://example.invalid/{src}/CVE-2025-{30000 + n}"
             for src in (_LONG_SOURCES if n % 3 == 0 else "osv,ghsa").split(",")},
-        "refs": _LONG_REF,
+        "refs": (_LONG_REF + ";" + _csaf_ref(n)) if n % 3 == 0 else _LONG_REF,
         "description": _LONG_DESC if n % 2 == 0 else "Cross-Site Scripting (XSS)",
         "veto_evaluated": False,
         "days_public": days + n,

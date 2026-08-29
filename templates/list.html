@@ -190,6 +190,49 @@
                "ghsa-repos":"GitHub Repo Advisory"};
   var MAXDAYS = ROWS.reduce(function (m, r) { return Math.max(m, r.days_public || 0); }, 1);
 
+  // CSAF IS A TRANSPORT, NOT A PUBLISHER, and the control treated it as one.
+  //
+  // `sources` says `csaf` for every row read over CSAF, so 143 rows from five
+  // different publishers collapsed into one option reading "CSAF Advisory".
+  // Every other entry in this control is already a named publisher (Red Hat,
+  // Debian, Microsoft, Amazon Linux), several of which are certified CNAs; CSAF
+  // was the only feed whose publishers were hidden, and they were hidden by how
+  // the row was fetched rather than by any decision.
+  //
+  // DERIVED HERE, not added to `sources`, and that is deliberate. Putting the
+  // provider in `sources` means a schema break plus ten separate breakages
+  // downstream: `origin_kind` reads an unmapped slug as a tracker and silently
+  // stops the 72-hour clock, `feed_count` changes meaning, `refs` is already cut
+  // at 250 characters, and `?src=csaf` links already shared stop matching. None
+  // of that is necessary. `refs` ALREADY carries the publisher the document
+  // states about itself, on every row, so the facet is a read rather than a
+  // migration.
+  //
+  // The publisher NAME, not the URL host. CISA 403s the build runners, so its
+  // advisories are fetched through the pinned feeds it publishes on GitHub and
+  // the host on those rows is `raw.githubusercontent.com`. Keying on the host
+  // would file eight CISA advisories under GitHub.
+  var CSAF_PUB = {};          // slug -> the publisher's own name
+
+  function csafSlugs(r) {
+    var out = [], parts = (r.refs || "").split(";");
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].indexOf("csaf:") !== 0) { continue; }
+      var name = parts[i].slice(5).split("\t")[0];
+      if (!name) { continue; }
+      var sl = name.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+                   .replace(/^-+|-+$/g, "").slice(0, 40);
+      if (!sl) { continue; }
+      if (!Object.prototype.hasOwnProperty.call(CSAF_PUB, sl)) { CSAF_PUB[sl] = name; }
+      if (out.indexOf(sl) < 0) { out.push(sl); }
+    }
+    return out;
+  }
+
+  // Computed once per row rather than on every keystroke: `matches` runs across
+  // every row on each render and this parses a string.
+  ROWS.forEach(function (r) { r._csaf = csafSlugs(r); });
+
   // WINDOWED. The previous table put every row in the DOM at once and it was the
   // slowest thing on the page at 577 rows. Rendering a page at a time keeps the
   // first paint flat as the backlog grows, and "show more" is a real control
@@ -246,6 +289,10 @@
   // labelled a control with the source of Object. A feed slug arrives from outside
   // the data in exactly one place, the query string, so the guard lives here.
   function feedName(v) {
+    if (String(v).indexOf("csaf:") === 0) {
+      var sl = String(v).slice(5);
+      return Object.prototype.hasOwnProperty.call(CSAF_PUB, sl) ? CSAF_PUB[sl] : v;
+    }
     return Object.prototype.hasOwnProperty.call(NAMES, v) ? NAMES[v] : v;
   }
 
@@ -273,9 +320,21 @@
   var seen = {};
   ROWS.forEach(function (r) {
     (r.sources || "").split(",").forEach(function (s) { if (s) { seen[s] = 1; } });
+    r._csaf.forEach(function (sl) { seen["csaf:" + sl] = 1; });
   });
-  Object.keys(seen).sort().forEach(function (s) {
-    addOption(els.src, s, feedName(s));
+  // `csaf` itself stays in the list and stays FIRST among its own entries: it is
+  // the roll-up, every ?src=csaf link already shared keeps meaning what it said,
+  // and a reader who wants "everything read over CSAF" can still ask for it.
+  Object.keys(seen).sort(function (a, b) {
+    var ac = a.indexOf("csaf") === 0, bc = b.indexOf("csaf") === 0;
+    if (ac !== bc) { return ac ? -1 : 1; }
+    if (a === "csaf") { return -1; }
+    if (b === "csaf") { return 1; }
+    return feedName(a).localeCompare(feedName(b));
+  }).forEach(function (s) {
+    addOption(els.src, s, s.indexOf("csaf:") === 0
+      ? "\u2007\u2007" + feedName(s)          // indented under the roll-up
+      : feedName(s));
   });
 
   // A LINK MEANS WHAT IT SAYS, and for a feed that had gone quiet it meant the
@@ -378,9 +437,24 @@
     Object.keys(urls).forEach(function (k) {
       if (names.indexOf(k) === -1) { names.push(k); }
     });
+    // NAME THE PUBLISHER ON THE CHIP. "CSAF Advisory" told a reader the format
+    // the advisory was serialised in and nothing about who wrote it, which is
+    // the one thing the chip is there to say.
+    //
+    // AFTER the source_urls union, not before. Doing it first left `csaf` out of
+    // `names` and the union promptly put it back from `source_urls`, so the row
+    // rendered BOTH "CISA" and "CSAF Advisory" and the swap looked like an
+    // addition. Caught by the mutation pass on the chip test.
+    if (r._csaf.length) {
+      names = names.filter(function (n) { return n !== "csaf"; })
+                   .concat(r._csaf.map(function (sl) { return "csaf:" + sl; }));
+    }
     if (!names.length) { return '<span class="chip nolink">Not Recorded</span>'; }
     return names.sort().map(function (k) {
       var lab = esc(feedName(k));
+      // A derived csaf facet has no key of its own in source_urls; the advisory
+      // link lives under the transport it arrived on.
+      if (!urls[k] && k.indexOf("csaf:") === 0) { urls = Object.assign({}, urls); urls[k] = urls.csaf; }
       return urls[k]
         ? '<a class="chip" href="' + esc(urls[k]) + '" rel="noopener" aria-label="' +
           chipLabel(k, r.cve_id) + '">' + lab + "</a>"
@@ -425,7 +499,13 @@
       if (a.min !== undefined && d < a.min) { return false; }
       if (a.max !== undefined && d >= a.max) { return false; }
     }
-    if (s && (r.sources || "").split(",").indexOf(s) < 0) { return false; }
+    if (s) {
+      // `csaf:<publisher>` filters on the derived facet; `csaf` alone is the
+      // roll-up and keeps matching every row read over CSAF.
+      if (s.indexOf("csaf:") === 0) {
+        if (r._csaf.indexOf(s.slice(5)) < 0) { return false; }
+      } else if ((r.sources || "").split(",").indexOf(s) < 0) { return false; }
+    }
     if (q) {
       var hay = (r.cve_id + " " + (r.package || "") + " " + (r.description || "") +
                  " " + (r.sources || "")).toLowerCase();
