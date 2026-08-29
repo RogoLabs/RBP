@@ -25,9 +25,34 @@ import pytest
 
 import _sitefixture
 
+from rbp import feeds
+
 # Defined in _sitefixture, which unlike `conftest` is a unique module name.
 # See the note there.
 POSTURE_VARS = _sitefixture.POSTURE_VARS
+
+
+@pytest.fixture(autouse=True)
+def _hermetic_csaf_cursor(tmp_path, monkeypatch):
+    """No test may read or write the real CSAF read marks.
+
+    `feed_csaf` keeps per-provider read marks in data/csaf_state.json so a run
+    reads what changed rather than the whole catalogue. Without this fixture two
+    things go wrong at once, and both did on 2026-08-29 within a minute of the
+    cursor landing:
+
+      - the suite WROTE data/csaf_state.json on the developer's machine, so
+        running the tests changed what the next real run would fetch;
+      - marks leaked between tests, so a provider "already read" by an earlier
+        test returned nothing in a later one and twelve tests failed on state
+        they never set.
+
+    Per-test rather than session-scoped, because the leak is between tests and a
+    session-scoped temp file would still let the second test see the first
+    test's marks.
+    """
+    monkeypatch.setattr(feeds, "CSAF_STATE",
+                        str(tmp_path / "csaf_state.json"), raising=False)
 
 
 @pytest.fixture(autouse=True, scope="session")

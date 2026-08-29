@@ -131,7 +131,23 @@ jobs:
     # Measured wall times are 6.9 to 14.9 minutes against a 360-minute default,
     # so a hung fetch would otherwise burn six hours and collide with the next
     # scheduled tick.
-    timeout-minutes: 45
+    # 45 -> 60 on 2026-08-29, with the CSAF count cap removed.
+    #
+    # The 45 was never a law, it was a setting, and rbp/feeds.py's Ubuntu note
+    # reasoned from it as though it were fixed ("35 to 44 minutes against a
+    # 45-minute job"). GitHub allows up to 360.
+    #
+    # Measured on the 2026-08-29 build: 31.3 min for everything except csaf
+    # (18.4 of it corpus + alas + ubuntu, which spends its configured 900s
+    # budget in full, and 9.7 min resolving ids against the reservation oracle).
+    # csaf at a 300s per-provider budget costs ~21 min while the four large
+    # providers are still catching up, so ~52 min total, falling back to a few
+    # minutes once they are caught up.
+    #
+    # A cancelled job publishes NOTHING: the 16:43Z run hit the old ceiling at
+    # 46m9s and deploy never ran. Headroom here is what keeps a slow provider
+    # from costing a publication rather than costing some rows.
+    timeout-minutes: 60
     env:
       # SCOPED TO THIS JOB, not the workflow.
       #
@@ -242,6 +258,26 @@ jobs:
           # rather than restoring a state whose cursor has already passed them.
           key: ghsa-repos-${{ hashFiles('data/ghsa_repos.txt') }}-${{ github.run_id }}
           restore-keys: ghsa-repos-${{ hashFiles('data/ghsa_repos.txt') }}-
+
+      # The CSAF read marks, and this cache is what turns the cap into a
+      # backlog. Without it every run is a cold start, `_csaf_plan` reads from
+      # the top of every provider, and the site is back to re-fetching 150,000
+      # advisories it already knows about.
+      #
+      # Rolling, exactly like the poller state above: the run id makes each run
+      # save a fresh entry and the prefix restores the most recent. Not keyed on
+      # anything else, because the provider list living in rbp/feeds.py can grow
+      # without invalidating the marks of the providers already read; a NEW
+      # provider simply has no entry and starts cold, which is correct.
+      #
+      # Losing this cache is safe and costs re-reading, which is the behaviour
+      # that existed before it. It is not correctness state.
+      - name: Cache CSAF read marks
+        uses: actions/cache@v5
+        with:
+          path: data/csaf_state.json
+          key: csaf-marks-${{ github.run_id }}
+          restore-keys: csaf-marks-
 
       - name: Install dependencies
         run: pip install -r requirements.txt

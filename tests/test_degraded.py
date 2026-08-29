@@ -1589,7 +1589,12 @@ def test_csaf_reports_a_provider_whose_advisories_were_capped(monkeypatch):
     arriving in the one shape that guard is structurally blind to."""
     feeds.reset_health()
     _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=200)
-    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+    # EXPLICIT, because the count cap is no longer the default: since
+    # 2026-08-29 `cap_per_provider` is None and a provider is bounded by its
+    # share of the wall clock instead. The count cap still exists and still has
+    # to report itself honestly when a caller asks for one.
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), cap_per_provider=120)
 
     part = feeds.FEED_HEALTH.get("csaf:v.example")
     assert part and part["status"] == feeds.CAPPED, (
@@ -1618,7 +1623,8 @@ def test_the_advisory_cap_does_not_put_the_site_in_a_degraded_state(monkeypatch)
     not raise a site-wide alarm."""
     feeds.reset_health()
     _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=200)
-    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), cap_per_provider=120)
 
     failures, truncated, _n, capped = feeds.health_summary()
     assert capped, "the cap was not recorded as a standing limit"
@@ -1640,8 +1646,13 @@ def test_a_provider_read_in_full_is_never_reported_as_capped(monkeypatch):
 
     part = feeds.FEED_HEALTH.get("csaf:v.example")
     assert part["status"] == feeds.OK, f"a complete read reported {part}"
-    assert "advisories" not in part["detail"], (
-        f"a complete read is claiming a cut: {part['detail']}")
+    # Asserted on the CLAIM, not on the word. The healthy line legitimately says
+    # "caught up across all N advisories", so testing for the substring
+    # "advisories" pinned the sentence rather than the meaning and broke the
+    # moment the sentence improved.
+    for cut in ("read the newest", "still to read", "over this provider's"):
+        assert cut not in part["detail"], (
+            f"a complete read is claiming a cut: {part['detail']}")
     h = feeds.FEED_HEALTH.get("csaf")
     assert "advisory cap" not in h["detail"], h["detail"]
     assert h["status"] == feeds.OK, h
@@ -1674,7 +1685,8 @@ def test_the_two_caps_are_reported_as_two_different_losses(monkeypatch):
     "capped" count would have read as zero."""
     feeds.reset_health()
     _csaf_fixture(monkeypatch, n_dirs=40, advisories_per_dir=200)
-    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), cap_per_provider=120)
 
     detail = feeds.FEED_HEALTH["csaf"]["detail"]
     assert f"capped: v.example {feeds.CSAF_MAX_DIRS}/40 directories" in detail, detail
@@ -1709,7 +1721,8 @@ def test_the_listing_is_read_uncapped_so_the_cut_can_be_counted(monkeypatch):
         f"the listing came back capped at {len(got)}; the pre-cut count is gone "
         "and no health line can state it")
 
-    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), cap_per_provider=120)
     part = feeds.FEED_HEALTH["csaf:v.example"]
     assert part["status"] == feeds.CAPPED, part
     assert "120 of 200 advisories" in part["detail"], part["detail"]
@@ -1815,3 +1828,275 @@ def test_a_stalled_provider_does_not_put_the_site_in_a_degraded_state(monkeypatc
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
                                      capped=capped, dropped=0, shrunk=[], stale=[])
     assert on is False, f"a slow third party is degrading the run: {reasons}"
+
+
+def test_a_provider_is_read_in_full_by_default(monkeypatch):
+    """THE CAP IS GONE, and this is the test that says so.
+
+    `cap_per_provider` defaulted to 120 and that was the wrong unit. A fixed
+    count reads 100% of a small provider and 0.1% of a large one while reporting
+    both identically, and its cost in TIME swings with the host: the same 120
+    advisories took 0.4s from Siemens and 12s from SUSE.
+
+    Measured on 2026-08-29, against the 358 rows an uncapped sweep found that
+    the site did not have, the count cap of 120 captured 42 of them. Twelve
+    percent.
+
+    So the default is None and the bound is CSAF_PROVIDER_BUDGET_S, the
+    provider's share of the run's wall clock. Fourteen of seventeen configured
+    providers are small enough to be read whole inside it, and that is what this
+    pins: given 200 advisories and no cap, all 200 are read and nothing claims a
+    cut that did not happen."""
+    feeds.reset_health()
+    _csaf_fixture(monkeypatch, n_dirs=1, advisories_per_dir=200)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=())          # no cap argument: the real default
+
+    part = feeds.FEED_HEALTH["csaf:v.example"]
+    assert part["rows"] == 200, (
+        f"a 200-advisory provider yielded {part['rows']} with no cap set")
+    assert part["status"] == feeds.OK, part
+    for cut in ("read the newest", "still to read", "over this provider's"):
+        assert cut not in part["detail"], (
+            f"a complete read is claiming a cut: {part['detail']}")
+    assert "advisory cap" not in feeds.FEED_HEALTH["csaf"]["detail"]
+    assert "still catching up" not in feeds.FEED_HEALTH["csaf"]["detail"]
+
+
+# --------------------------------------------------------------------------
+# the read cursor: what makes both caps unnecessary
+# --------------------------------------------------------------------------
+
+def _csaf_dated(monkeypatch, n, day_start=1):
+    """One provider, one directory, `n` advisories dated one day apart."""
+    meta = {"distributions": [{"directory_url": "https://v.example/csaf"}]}
+
+    def fake_get(url, timeout=None, retries=3, headers=None):
+        if url.endswith("pm.json"):
+            return meta, 200, {}
+        i = int(url.rsplit("/a", 1)[1].split(".")[0])
+        return ({"document": {"publisher": {"name": "V"},
+                              "tracking": {"id": f"V-{i}"}},
+                 "vulnerabilities": [{"cve": f"CVE-2026-{1000 + i}", "title": "t"}]},
+                200, {})
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    monkeypatch.setattr(
+        feeds, "_csaf_directory_entries",
+        lambda durl, years, cap=None: [
+            (f"2026-01-{day_start + i:02d}T00:00:00Z", f"{durl}/a{i}.json")
+            for i in range(n)])
+
+
+def test_a_caught_up_provider_refetches_nothing(tmp_path, monkeypatch):
+    """THE POINT OF THE WHOLE CHANGE. SUSE lists 83,111 in-window advisories and
+    SIX of them changed in the last 24 hours; zero in the last 6. Re-reading
+    83,105 unchanged documents to find 6 is why a cap had to exist at all.
+
+    Second run over an unchanged provider must fetch no advisory."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 20)
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+    first = feeds.FEED_HEALTH["csaf:v.example"]["rows"]
+    assert first == 20, first
+
+    fetched = []
+    real = feeds._get
+    def counting(url, timeout=None, retries=3, headers=None):
+        if "/a" in url:
+            fetched.append(url)
+        return real(url, timeout=timeout, retries=retries, headers=headers)
+    monkeypatch.setattr(feeds, "_get", counting)
+
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+    assert fetched == [], (
+        f"a caught-up provider re-fetched {len(fetched)} advisories; the cursor "
+        "is not being consulted and the run is doing the work the cap existed "
+        "to bound")
+    assert feeds.FEED_HEALTH["csaf:v.example"]["status"] == feeds.OK
+
+
+def test_only_what_changed_is_read_on_the_next_run(tmp_path, monkeypatch):
+    """A revised advisory gets a newer timestamp, rises above `newest_read`, and
+    is picked up. Nothing else is."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 10)
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+
+    _csaf_dated(monkeypatch, 12)          # two newer advisories appear
+    fetched = []
+    real = feeds._get
+    monkeypatch.setattr(feeds, "_get", lambda url, timeout=None, retries=3,
+                        headers=None: (fetched.append(url) if "/a" in url else None,
+                                       real(url, timeout=timeout, retries=retries,
+                                            headers=headers))[1])
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+    assert len(fetched) == 2, (
+        f"expected the 2 new advisories, fetched {len(fetched)}")
+
+
+def test_a_budget_stop_defers_advisories_rather_than_losing_them(tmp_path, monkeypatch):
+    """THE INVARIANT THE CURSOR EXISTS FOR, and the one thing that could make it
+    worse than the cap it replaced.
+
+    The old cap discarded 144,281 advisories every run and they were never
+    coming back. The cursor must DEFER instead: whatever a budget stop leaves
+    unread has to be read by a later run, with no permanent hole in the middle.
+
+    That is why the plan reads fresh advisories oldest-first and backfill
+    newest-first, and why the marks move only over documents actually fetched.
+    Run repeatedly under a budget that stops it early; every advisory must
+    eventually be read exactly once."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 30)
+    seen_urls = []
+    real = feeds._get
+
+    def counting(url, timeout=None, retries=3, headers=None):
+        if "/a" in url:
+            seen_urls.append(url)
+            time.sleep(0.02)          # make the budget bite
+        return real(url, timeout=timeout, retries=retries, headers=headers)
+
+    monkeypatch.setattr(feeds, "_get", counting)
+    for _ in range(12):
+        feeds.reset_health()
+        feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                        aggregators=(), state_path=str(st),
+                        per_provider_budget_s=0.05, workers=2)
+
+    assert len(set(seen_urls)) == 30, (
+        f"only {len(set(seen_urls))} of 30 advisories were ever read across 12 "
+        "runs; a budget stop is losing advisories permanently, which is worse "
+        "than the cap this replaced")
+
+
+def test_the_run_says_how_far_behind_a_provider_still_is(tmp_path, monkeypatch):
+    """A backlog is not a loss and the page has to say which it is. The old cap
+    published `ok` while discarding 99.9% of a provider; a provider still
+    catching up must publish the number that is falling."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 40)
+    real = feeds._get
+    monkeypatch.setattr(feeds, "_get", lambda url, timeout=None, retries=3,
+                        headers=None: (time.sleep(0.02) if "/a" in url else None,
+                                       real(url, timeout=timeout, retries=retries,
+                                            headers=headers))[1])
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st),
+                    per_provider_budget_s=0.05, workers=2)
+
+    part = feeds.FEED_HEALTH["csaf:v.example"]
+    assert "still to read on later runs" in part["detail"], part["detail"]
+    assert "still catching up: v.example" in feeds.FEED_HEALTH["csaf"]["detail"]
+    assert json.load(open(st))["v.example"]["behind"] > 0
+
+
+def test_a_burst_of_new_advisories_is_never_half_skipped(tmp_path, monkeypatch):
+    """THE FRESH-WINDOW HOLE, and the sibling budget test cannot see it.
+
+    That test starts cold, which takes `_csaf_plan`'s cold-start path and never
+    exercises the ordering of the FRESH window at all. Reversing that ordering
+    leaves it green. Confirmed by mutation on 2026-08-29.
+
+    The case that needs it is real and measured: SUSE had 6 advisories change in
+    24 hours but 9,938 in 7 days, because providers re-timestamp in bulk. So a
+    caught-up provider can wake up thousands behind, and the budget will stop
+    partway through that burst.
+
+    If the burst is read NEWEST-first, `newest_read` jumps to the top of it and
+    everything between the old mark and there is skipped forever: the next run
+    sees nothing above the mark and nothing below `oldest_read`. Reading it
+    OLDEST-first walks the mark up contiguously, so a stop just leaves the rest
+    for next time.
+
+    Establish a cursor, drop 25 newer advisories in at once, then run under a
+    budget that cannot finish them, repeatedly. Every one must be read."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 5)
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+    assert json.load(open(st))["v.example"]["newest_read"]
+
+    # 25 newer advisories land at once, and each is slow enough to bite.
+    _csaf_dated(monkeypatch, 30)
+    seen = []
+    real = feeds._get
+
+    def counting(url, timeout=None, retries=3, headers=None):
+        if "/a" in url:
+            seen.append(url)
+            time.sleep(0.02)
+        return real(url, timeout=timeout, retries=retries, headers=headers)
+
+    monkeypatch.setattr(feeds, "_get", counting)
+    for _ in range(15):
+        feeds.reset_health()
+        feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                        aggregators=(), state_path=str(st),
+                        per_provider_budget_s=0.05, workers=2)
+
+    fresh_read = {u for u in seen if int(u.rsplit("/a", 1)[1].split(".")[0]) >= 5}
+    assert len(fresh_read) == 25, (
+        f"only {len(fresh_read)} of the 25 new advisories were ever read across "
+        "15 runs; the fresh window is being skipped in the middle and those "
+        "advisories are lost permanently, not deferred")
+
+
+def test_a_caught_up_provider_is_not_published_as_having_nothing(tmp_path, monkeypatch):
+    """CAUGHT UP IS NOT EMPTY, and for one commit it was published as if it were.
+
+    `empty` keyed on "this run read nothing", which before the cursor was a fair
+    proxy for "this provider has nothing in the window" and after it is the
+    signature of the healthiest state there is.
+
+    Measured against the live providers the moment the cursor landed, the parent
+    health line read "no advisories in scope: advisories.stackable.tech,
+    cert-portal.siemens.com, ..." about providers whose every advisory had been
+    read, and named wid.cert-bund.de as having nothing in scope on the same line
+    that said it was 20,285 advisories behind.
+
+    That is a false claim about a named third party on a public page, which is
+    the one kind of error this site cannot afford. It is also the sick.com
+    lesson arriving from a new direction: corroboration was not emptiness, and
+    neither is being up to date."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 12)
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+    detail = feeds.FEED_HEALTH["csaf"]["detail"]
+    assert "no advisories in scope" not in detail, (
+        f"a provider whose 12 advisories were all read is published as having "
+        f"none: {detail}")
+    assert feeds.FEED_HEALTH["csaf:v.example"]["status"] == feeds.OK
+
+
+def test_a_genuinely_empty_provider_is_still_named(tmp_path, monkeypatch):
+    """The complement, so the fix above does not simply delete the disclosure.
+
+    Huawei serves valid metadata and every one of its directories answers 401,
+    so it really does contribute nothing and readers are told so on every run.
+    A provider whose LISTING is empty is a fact about the provider."""
+    st = tmp_path / "s.json"
+    monkeypatch.setattr(feeds, "_get",
+                        lambda url, timeout=None, retries=3, headers=None: (
+                            {"distributions": []}, 200, {}))
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://quiet.example/pm.json",),
+                    aggregators=(), state_path=str(st))
+    assert "no advisories in scope: quiet.example" in feeds.FEED_HEALTH["csaf"]["detail"]

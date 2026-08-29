@@ -1764,8 +1764,45 @@ CSAF_MAX_DIRS = 12
 # status code. `_get` retries three times at a 90-second timeout, so a handful of
 # stalled URLs is a quarter of an hour with nothing to show.
 #
-# 120 seconds: six times the slowest honest provider, so it cannot fire on a
-# healthy read, and it would have cut that 18 minutes to 2 and finished the run.
+# SET TO 300s ON 2026-08-29, when the COUNT cap was removed and the read cursor
+# replaced it. Sized against the real job rather than picked:
+#
+#   measured cold run, 45s budget:  10,838 ids in 332s, 13 of 17 caught up
+#   at 300s the four large providers read ~6.7x that each, and csaf costs
+#   4 x 300s + ~60s for the other thirteen = ~21 min
+#   the rest of the pipeline measured 31.3 min on the 2026-08-29 build
+#   total ~52 min, which is why timeout-minutes goes 45 -> 60 in deploy.yml
+#
+# CATCH-UP TIME, which is the number this budget actually buys, at four runs
+# a day from the cold state measured above:
+#
+#   www.cisa.gov                 caught up in under a day
+#   security.access.redhat.com   ~1 day
+#   wid.cert-bund.de             ~2 days
+#   www.suse.com                 ~8 days
+#
+# After that the budget never fires again: a caught-up provider reads only what
+# changed, which on SUSE was six advisories in 24 hours against 83,111 listed.
+# This is a limit on how fast the backlog drains, not on what the site can see. Those are one
+# change: the budget is now the only thing bounding a provider, so it has to be
+# large enough to be worth reading and small enough that seventeen of them fit.
+#
+# Measured, not guessed. Read rates per provider, 10 workers: siemens 65/s,
+# cisa 51/s, redhat 32/s, cisco 22/s, cert-bund 16/s, suse 10/s. At 600s that
+# is roughly 19,000 advisories from Red Hat, 9,600 from CERT-Bund and 6,000
+# from SUSE, against 120 from each of them before.
+#
+# What that buys, measured against the 358 rows an uncapped sweep found on
+# 2026-08-29 that the site does not have:
+#
+#   cap    120 ->  42 rows (12%)     what the site did
+#   cap  1,000 -> 117 rows (33%)
+#   cap  5,000 -> 247 rows (69%)
+#   cap 10,000 -> 342 rows (96%)
+#
+# Only three providers are big enough to spend the whole budget; the other
+# fourteen finish in seconds and are read IN FULL, which is what removing the
+# count cap means for them.
 #
 # THE BUDGET GUARDS THE LISTING PHASE TOO, which is where those minutes went.
 # A budget that only wrapped the advisory fetch would not have caught this at
@@ -1774,7 +1811,74 @@ CSAF_MAX_DIRS = 12
 # This is a configured limit in exactly the sense the Ubuntu wall-clock budget
 # and the advisory cap are, so it is reported the same way: CAPPED, named, with
 # the number, and not a degradation.
-CSAF_PROVIDER_BUDGET_S = 120
+CSAF_PROVIDER_BUDGET_S = 300
+
+# Where each provider got to, so a run reads what CHANGED instead of re-reading
+# what it already knows.
+#
+# THIS IS WHAT MAKES THE CAPS UNNECESSARY, and it is the answer to "why is there
+# a time box at all". There was a time box because the reader was stateless: it
+# threw away everything it learned and re-fetched the whole catalogue every six
+# hours, so something had to stop it. Measured on SUSE 2026-08-29: 83,111
+# in-window advisories, of which SIX changed in the last 24 hours and ZERO in the
+# last 6. Re-reading 83,105 unchanged documents to find 6 is the entire problem.
+#
+# Two marks per provider, and the pair is what makes a budget stop safe:
+#
+#   newest_read   everything at or below this has been read at least once
+#   oldest_read   ... down to here. The window [oldest_read, newest_read] is
+#                 CONTIGUOUS, which is the whole invariant.
+#
+# Fresh advisories (ts > newest_read) are read OLDEST-FIRST so newest_read walks
+# up without leaving a hole. Backfill (ts < oldest_read) is read NEWEST-FIRST so
+# oldest_read walks down without leaving one. A budget stop in either direction
+# truncates the walk and the mark simply stops where the reading stopped, so the
+# next run resumes exactly there. Nothing is ever skipped, only deferred, and
+# /status says how far behind each provider still is.
+#
+# A revised advisory gets a NEWER timestamp, so it rises above newest_read and is
+# re-read on the next run. That is correct and free.
+#
+# Same shape as data/ghsa_repos_state.json, which has done this for the repo
+# poller since it was written, cached by .github/workflows/deploy.yml.
+CSAF_STATE = os.path.join(os.path.dirname(_HERE), "data", "csaf_state.json")
+
+
+def _csaf_state_load(path=None):
+    """Per-provider read marks. A missing or corrupt file is a cold start, not
+    an error: cold start means read from the top and backfill from there."""
+    try:
+        d = json.load(open(path or CSAF_STATE))
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _csaf_state_save(state, path=None):
+    path = path or CSAF_STATE
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as fh:
+            json.dump(state, fh, indent=1, sort_keys=True)
+    except OSError as e:
+        # Never fail a run over the cursor. A lost cursor costs re-reading, which
+        # is exactly the behaviour that existed before it.
+        print(f"  [csaf] could not save read marks: {e}", file=sys.stderr)
+
+
+def _csaf_plan(entries, newest_read, oldest_read):
+    """What to read this run, in the order that keeps both marks contiguous.
+
+    `entries` is [(ts, url)], any order. Returns (todo, fresh_n, backfill_n).
+
+    Cold start reads newest-first, because on a provider nobody has read the
+    recent advisories are the ones most likely to hold a reserved id.
+    """
+    if not newest_read:
+        return sorted(entries, reverse=True), len(entries), 0
+    fresh = sorted((e for e in entries if e[0] > newest_read))          # ascending
+    older = sorted((e for e in entries if e[0] < oldest_read), reverse=True)
+    return fresh + older, len(fresh), len(older)
 
 
 _CSAF_YEAR_SEG = re.compile(r"^(19|20)\d{2}$")
@@ -1925,11 +2029,28 @@ def _expand_csaf_providers(providers, aggregators, max_providers):
 
 
 def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
-              cap_per_provider=120, max_providers=40, workers=8,
-              per_provider_budget_s=CSAF_PROVIDER_BUDGET_S):
+              cap_per_provider=None, max_providers=40, workers=8,
+              per_provider_budget_s=CSAF_PROVIDER_BUDGET_S,
+              state_path=None, incremental=True):
     """Generic CSAF/ROLIE ingester: unlocks vendor/enterprise/ICS CNAs. Expands
     aggregators into providers, then for each provider: metadata -> ROLIE feed(s)
-    -> recent advisory docs -> CVEs in scope."""
+    -> recent advisory docs -> CVEs in scope.
+
+    THERE IS NO COUNT CAP. `cap_per_provider` defaults to None and the only bound
+    on a provider is CSAF_PROVIDER_BUDGET_S, its share of the run's wall clock.
+
+    The count cap was 120 and it was the wrong unit. A fixed count reads 100% of
+    a small provider and 0.1% of a large one while reporting both identically,
+    and its cost in TIME swings with the host: the same 120 advisories took 0.4s
+    from Siemens and 12s from SUSE. Time is what the job actually runs out of, so
+    time is what a provider is now given, and a provider that spends it says so
+    on /status with the numbers.
+
+    Fourteen of the seventeen configured providers are small enough to be read in
+    full inside the budget. Three are not, and SUSE at 83,111 in-window advisories
+    cannot be read in full by any schedule this project can run: at a measured
+    10/s that is 138 minutes for one provider. Reading it whole needs an
+    incremental cursor, not a bigger number. See NEXT.md."""
     out, seen = [], set()
     # Per-provider outcomes, so the aggregate this adapter reports is derived
     # rather than asserted. `feed_csaf` recorded NO health at all: `gather` filled
@@ -1941,6 +2062,11 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     unreachable, empty, capped_dirs, fell_back = [], [], [], []
     # Providers that ran out of wall clock. See CSAF_PROVIDER_BUDGET_S.
     over_budget = []
+    # How far behind each provider still is, in advisories. This is the
+    # number the cap never had: not 'we read 120' but 'N remain unread, and
+    # they will be read on subsequent runs'.
+    behind = []
+    state = _csaf_state_load(state_path) if incremental else {}
     # The ADVISORY cap, which is a different loss from `capped_dirs` and was
     # the one nothing measured. `capped_dirs` counts directories we declined to
     # consult; this counts advisories we listed, could have read, and cut.
@@ -2016,7 +2142,15 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                              if ln.get("rel") == "self"), None)
                 if href:
                     entries.append((upd, href))
-        entries.sort(reverse=True)
+        # WHAT TO READ THIS RUN, which since 2026-08-29 is "what changed"
+        # rather than "the newest 120". See CSAF_STATE.
+        st = (state.get(host) or {}) if incremental else {}
+        listed = len(entries)
+        if incremental:
+            entries, n_fresh, n_older = _csaf_plan(
+                entries, st.get("newest_read") or "", st.get("oldest_read") or "")
+        else:
+            entries, n_fresh, n_older = sorted(entries, reverse=True), listed, 0
         # BEFORE THE CUT, because after it the number is gone. This is the whole
         # point of reading the directories uncapped: `listed` is what the provider
         # published in the window and `len(entries)` is what we agreed to read,
@@ -2039,8 +2173,18 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # and a hard cap holds it perfectly flat. That is the same signature as
         # `mozilla` frozen at exactly 607 for six consecutive runs, arriving in
         # the one shape the guard is structurally blind to.
-        listed = len(entries)
+        # `planned` is what the cursor decided to read; `entries` after this
+        # slice is what a count cap (if a caller set one) allows.
+        #
+        # THE COUNT CAP MUST BE MEASURED AGAINST THE PLAN, NOT THE LISTING. It
+        # was measured against the listing, and the moment the cursor landed a
+        # fully caught-up provider with nothing to do reported CAPPED, "read the
+        # newest 0 of 20 advisories", because the plan was legitimately empty.
+        # A provider that is up to date is the healthiest state there is and it
+        # was publishing the loudest warning on the page.
+        planned = len(entries)
         entries = entries[:cap_per_provider]
+        cap_cut = planned - len(entries)
 
         def _fetch(item):
             upd, href = item
@@ -2048,7 +2192,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             # `cap_per_provider` items queued and a stalling host makes each one
             # slow, so the budget has to be able to stop the queue draining.
             if _out_of_budget():
-                return []
+                return None          # NOT [], see below
             try:
                 d, _, _ = _get(href, timeout=40)
             except Exception:
@@ -2075,16 +2219,38 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                                  "product": "", "description": (v.get("title") or doc.get("title") or "")[:400]})
             return rows
 
-        n0, read = len(out), 0
-        spent = time.time() - t_provider
+        n0, read, done_n = len(out), 0, 0
+        # `None` means the budget stopped us before the fetch; `[]` means we read
+        # the advisory and it carried no in-scope CVE. Collapsing the two would
+        # advance the read marks over documents nobody looked at, which is the
+        # one way this cursor could silently lose an advisory forever.
         with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
-            for rows in ex.map(_fetch, entries):
+            for item, rows in zip(entries, ex.map(_fetch, entries)):
+                if rows is None:
+                    continue
+                done_n += 1
+                ts = item[0]
+                if ts:
+                    # Both marks move only over what was actually read, and the
+                    # plan's ordering (fresh ascending, backfill descending)
+                    # keeps the window contiguous when the budget truncates.
+                    if not st.get("newest_read") or ts > st["newest_read"]:
+                        st["newest_read"] = ts
+                    if not st.get("oldest_read") or ts < st["oldest_read"]:
+                        st["oldest_read"] = ts
                 read += len(rows)
                 for r in rows:
                     if r["cve_id"] not in seen:
                         seen.add(r["cve_id"])
                         out.append(r)
         gained = len(out) - n0
+        unread = max(0, len(entries) - done_n)
+        if incremental:
+            st["listed"] = listed
+            st["behind"] = unread
+            state[host] = st
+            if unread:
+                behind.append(f"{host} {unread:,}")
         spent = time.time() - t_provider
         print(f"  [csaf] {host}: +{gained} new ({read} in scope)", file=sys.stderr)
         # ONE RECORD PER PROVIDER, so `compare_magnitudes` can see a provider go
@@ -2147,18 +2313,32 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             # did it. The log had it; no page did.
             over_budget.append(f"{host} {spent:.0f}s")
             record_feed(f"csaf:{host}", CAPPED,
-                        f"{read} ids in scope, {gained} new; stopped after "
-                        f"{spent:.0f}s, over this provider's "
-                        f"{per_provider_budget_s}s share of the run", rows=read)
-        elif listed > len(entries):
-            capped_reads.append(f"{host} {len(entries)}/{listed:,} advisories")
+                        f"{read} ids in scope, {gained} new; read {done_n:,} "
+                        f"advisories then stopped after {spent:.0f}s, over this "
+                        f"provider's {per_provider_budget_s}s share of the run; "
+                        f"{unread:,} still to read on later runs", rows=read)
+        elif cap_cut > 0:
+            capped_reads.append(f"{host} {len(entries)}/{planned:,} advisories")
             record_feed(f"csaf:{host}", CAPPED,
                         f"{read} ids in scope, {gained} new; read the newest "
-                        f"{len(entries)} of {listed:,} advisories this provider "
-                        f"lists in the window", rows=read)
+                        f"{len(entries)} of {planned:,} advisories this run "
+                        f"planned to read", rows=read)
         else:
-            record_feed(f"csaf:{host}", OK,
-                        f"{read} ids in scope, {gained} new", rows=read)
+            # SAY WHICH KIND OF WORK THIS WAS. "12 ids in scope" is the same
+            # sentence whether the provider is fully caught up and had nothing
+            # new, or is 70,000 advisories behind and chewing through history.
+            # Those are opposite states and a reader has to be able to tell.
+            if incremental and unread:
+                record_feed(f"csaf:{host}", CAPPED,
+                            f"{read} ids in scope, {gained} new; read "
+                            f"{done_n:,} of {listed:,} advisories "
+                            f"({n_fresh:,} new, {n_older:,} older); "
+                            f"{unread:,} still to read on later runs", rows=read)
+            else:
+                record_feed(f"csaf:{host}", OK,
+                            f"{read} ids in scope, {gained} new; caught up "
+                            f"across all {listed:,} advisories this provider "
+                            f"lists", rows=read)
         # `read`, not `gained`. A provider contributing nothing is not an error
         # and is not nothing, but `gained` measures against a `seen` set shared
         # across every provider in the run, so a provider whose advisories an
@@ -2166,14 +2346,37 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # "no advisories in scope". www.sick.com is sick.com after a 301, the
         # same host reached twice, and the second pass was reported as a vendor
         # with nothing to say. Corroboration is not emptiness.
-        if read == 0:
+        # CAUGHT UP IS NOT EMPTY, and this line said it was.
+        #
+        # `empty` was keyed on `read == 0`, which meant "this run got nothing".
+        # Before the cursor that was a fair proxy for "this provider has nothing
+        # in the window". After it, it is the signature of the HEALTHIEST state
+        # there is: we have already read everything this provider published and
+        # nothing has changed since.
+        #
+        # Measured immediately after the cursor landed: the parent line read
+        # "no advisories in scope: advisories.stackable.tech,
+        # cert-portal.siemens.com, ..." about providers whose 457 advisories had
+        # all been read, and listed wid.cert-bund.de as having nothing in scope
+        # on the same line that said it was 20,285 advisories behind.
+        #
+        # This is the sick.com lesson again, in a new form. That one is already
+        # written down twenty lines up: a provider whose advisories an earlier
+        # provider had supplied "was reported to readers as a vendor with nothing
+        # to say. Corroboration is not emptiness." Neither is being up to date.
+        #
+        # So it keys on the LISTING, which is a fact about the provider, rather
+        # than on this run's reading, which is a fact about us.
+        if listed == 0:
             empty.append(host)
         elif available > len(chosen):
             # Now it means something: this provider had readable advisories AND
             # we consulted only some of its directories.
             capped_dirs.append(f"{host} {len(chosen)}/{available} directories")
+    if incremental:
+        _csaf_state_save(state, state_path)
     _record_csaf_health(all_providers, unreachable, empty, capped_dirs, fell_back,
-                        len(out), capped_reads, over_budget)
+                        len(out), capped_reads, over_budget, behind)
     return out
 
 
@@ -2199,7 +2402,7 @@ def _csaf_hosts(entries):
 
 
 def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back,
-                        rows, capped_reads=(), over_budget=()):
+                        rows, capped_reads=(), over_budget=(), behind=()):
     """One health record for the fan-out adapter, derived from its providers.
 
     Ordered worst-first, because a single status has to mean the worst thing that
@@ -2231,13 +2434,18 @@ def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back,
                     f"{', '.join(sorted(capped_reads)[:6])}")
     if over_budget:
         bits.append(f"stopped on time budget: {', '.join(sorted(over_budget)[:6])}")
+    if behind:
+        # A BACKLOG, NOT A LOSS, and the wording has to carry that. The old cap
+        # discarded 144,281 advisories every run and they were never coming back.
+        # These are queued: each run reads more of them and this number falls.
+        bits.append(f"still catching up: {', '.join(sorted(behind)[:6])}")
     if empty:
         bits.append(f"no advisories in scope: {', '.join(sorted(empty)[:8])}")
     detail = "; ".join(bits)
     if unreachable and not rows:
         # Nothing was read from anywhere. That is an outage, not a limit.
         record_feed("csaf", FAILED, detail, rows=rows)
-    elif unreachable or capped_dirs or capped_reads or over_budget:
+    elif unreachable or capped_dirs or capped_reads or over_budget or behind:
         # CAPPED, NOT TRUNCATED, and the distinction decides whether the site
         # wears a banner.
         #
