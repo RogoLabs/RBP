@@ -895,7 +895,8 @@ def load(snap_root, data_dir):
         # `launch` IS NOT IN THE CONTEXT ANY MORE, removed 2026-08-27 with the
         # /method section that was its only reader.
         #
-        # NEXT.md records the same shape as a defect once already: `site._changes`
+        # This project has shipped the same shape as a defect once already:
+        # `site._changes`
         # was computed on every run, put in the render context, and rendered by
         # nothing, with five tests guarding an output no reader could reach. A
         # structure computed for a template that no longer exists is exactly that,

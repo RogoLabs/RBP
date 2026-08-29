@@ -182,23 +182,28 @@ def test_the_list_page_still_says_the_count_is_a_floor(degraded_build):
     It used to assert the hedge above the rows: unconditional, ahead of the first
     CVE, and travelling with a copy of the list. That hedge was removed on Jerry's
     call, so this can no longer make the strong claim, and pretending otherwise by
-    deleting the test would leave NEXT.md's argument for dropping the banner
-    resting on something that no longer exists.
+    deleting the test would leave the argument for dropping the degraded
+    banner resting on something that no longer exists.
 
     What is still true and is asserted here: the floor claim is in the page's
     HTML, unconditional, on a degraded run. It is in the panel, which is a hidden
     dialog rather than prose above the rows, so it does NOT travel with a
     selection or a paste.
 
-    The gap that leaves is real and is named in NEXT.md: on a degraded run a
-    reader who copies the rows carries neither the floor claim nor a note that the
-    count is lower than usual. /status, `degraded` in rbp.json and the staleness
-    banner are the three disclosures that remain.
+    The gap that leaves is real: on a degraded run a reader who copies the rows
+    carries neither the floor claim nor a note that the count is lower than
+    usual. /status, `degraded` in rbp.json and the staleness banner are the three
+    disclosures that remain.
+
+    Stated here rather than cited from NEXT.md. It used to read "is named in
+    NEXT.md", and when that file was cut back to what is actually open the
+    sentence it pointed at stopped existing, leaving a test whose stated
+    justification was a dangling reference. A test should carry its own reason.
     """
     body = (degraded_build / "index.html").read_text()
     assert "floor" in body.lower(), (
         "the list page no longer says the count is a floor ANYWHERE, which is the "
-        "claim NEXT.md's case for removing the degraded banner rests on")
+        "claim the case for removing the degraded banner rests on")
     # Unconditional: it must not have become something that only renders on a
     # clean run, which would make it useless on precisely the runs it is for.
     assert "every number here is a floor" in body.lower() or \

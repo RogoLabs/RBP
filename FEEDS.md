@@ -618,8 +618,9 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 
 > ### RE-PROBED 2026-08-27: the two national CERTs this plan recommends do not have the routes it assumed.
 >
-> `NEXT.md` says: *"Buy margin first. Target TWCERT and TR-CERT, the two that probed
-> 200 on their own advisory sites. Two CNAs for two days."* Both 200s were re-checked:
+> This document recommended buying gate margin by targeting TWCERT and TR-CERT, the
+> two national CERTs that probed 200 on their own advisory sites, on an estimate of
+> two CNAs for two days' work. Both 200s were re-checked:
 >
 > | | |
 > |---|---|

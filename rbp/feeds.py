@@ -2050,7 +2050,7 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
     full inside the budget. Three are not, and SUSE at 83,111 in-window advisories
     cannot be read in full by any schedule this project can run: at a measured
     10/s that is 138 minutes for one provider. Reading it whole needs an
-    incremental cursor, not a bigger number. See NEXT.md."""
+    incremental cursor, not a bigger number, which is what CSAF_STATE is."""
     out, seen = [], set()
     # Per-provider outcomes, so the aggregate this adapter reports is derived
     # rather than asserted. `feed_csaf` recorded NO health at all: `gather` filled
