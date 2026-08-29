@@ -1898,7 +1898,7 @@ def test_a_caught_up_provider_refetches_nothing(tmp_path, monkeypatch):
     _csaf_dated(monkeypatch, 20)
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
     first = feeds.FEED_HEALTH["csaf:v.example"]["rows"]
     assert first == 20, first
 
@@ -1912,7 +1912,7 @@ def test_a_caught_up_provider_refetches_nothing(tmp_path, monkeypatch):
 
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
     assert fetched == [], (
         f"a caught-up provider re-fetched {len(fetched)} advisories; the cursor "
         "is not being consulted and the run is doing the work the cap existed "
@@ -1927,7 +1927,7 @@ def test_only_what_changed_is_read_on_the_next_run(tmp_path, monkeypatch):
     _csaf_dated(monkeypatch, 10)
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
 
     _csaf_dated(monkeypatch, 12)          # two newer advisories appear
     fetched = []
@@ -1938,7 +1938,7 @@ def test_only_what_changed_is_read_on_the_next_run(tmp_path, monkeypatch):
                                             headers=headers))[1])
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
     assert len(fetched) == 2, (
         f"expected the 2 new advisories, fetched {len(fetched)}")
 
@@ -1970,7 +1970,7 @@ def test_a_budget_stop_defers_advisories_rather_than_losing_them(tmp_path, monke
     for _ in range(12):
         feeds.reset_health()
         feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                        aggregators=(), state_path=str(st),
+                        aggregators=(), state_path=str(st), incremental=True,
                         per_provider_budget_s=0.05, workers=2)
 
     assert len(set(seen_urls)) == 30, (
@@ -1992,7 +1992,7 @@ def test_the_run_says_how_far_behind_a_provider_still_is(tmp_path, monkeypatch):
                                             headers=headers))[1])
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st),
+                    aggregators=(), state_path=str(st), incremental=True,
                     per_provider_budget_s=0.05, workers=2)
 
     part = feeds.FEED_HEALTH["csaf:v.example"]
@@ -2025,7 +2025,7 @@ def test_a_burst_of_new_advisories_is_never_half_skipped(tmp_path, monkeypatch):
     _csaf_dated(monkeypatch, 5)
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
     assert json.load(open(st))["v.example"]["newest_read"]
 
     # 25 newer advisories land at once, and each is slow enough to bite.
@@ -2043,7 +2043,7 @@ def test_a_burst_of_new_advisories_is_never_half_skipped(tmp_path, monkeypatch):
     for _ in range(15):
         feeds.reset_health()
         feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                        aggregators=(), state_path=str(st),
+                        aggregators=(), state_path=str(st), incremental=True,
                         per_provider_budget_s=0.05, workers=2)
 
     fresh_read = {u for u in seen if int(u.rsplit("/a", 1)[1].split(".")[0]) >= 5}
@@ -2074,11 +2074,11 @@ def test_a_caught_up_provider_is_not_published_as_having_nothing(tmp_path, monke
     _csaf_dated(monkeypatch, 12)
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
 
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
     detail = feeds.FEED_HEALTH["csaf"]["detail"]
     assert "no advisories in scope" not in detail, (
         f"a provider whose 12 advisories were all read is published as having "
@@ -2098,5 +2098,65 @@ def test_a_genuinely_empty_provider_is_still_named(tmp_path, monkeypatch):
                             {"distributions": []}, 200, {}))
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://quiet.example/pm.json",),
-                    aggregators=(), state_path=str(st))
+                    aggregators=(), state_path=str(st), incremental=True)
     assert "no advisories in scope: quiet.example" in feeds.FEED_HEALTH["csaf"]["detail"]
+
+
+@pytest.mark.xfail(strict=True, reason=(
+    "KNOWN BROKEN, and this marker is the record. The cursor caches the read "
+    "position and not the result, so a caught-up provider returns nothing and "
+    "its rows leave the site. `incremental` defaults to False because of it. "
+    "strict=True: fixing the cursor makes this XPASS and fails the suite, which "
+    "is the prompt to delete the marker rather than quietly leave it."))
+def test_a_caught_up_provider_still_returns_its_rows(tmp_path, monkeypatch):
+    """THE SILENT SHRINK THE CURSOR CAUSED, and the reason it is off by default.
+
+    The cursor caches the READ POSITION. It does not cache the RESULT, and this
+    pipeline needs the result: `gather` builds the reference set from what each
+    adapter RETURNS ON THIS RUN, so a provider that correctly reads nothing
+    because it is caught up also contributes nothing.
+
+    Live on 2026-08-29 22:21Z, the first run able to restore the cursor cache:
+    twelve of seventeen providers reported "+0 new (0 in scope)", every word of
+    it true, and the published list fell 1,769 to 1,760 while the CSAF publisher
+    facet went from five publishers to two. All eight CISA rows vanished.
+    /status published "csaf:www.cisa.gov  OK  0 ids  caught up across all 1,833
+    advisories", an accurate sentence about a provider whose rows had just been
+    erased.
+
+    This test is the property that was missing. Every cursor test asserted what
+    was FETCHED; none asserted what was RETURNED, so a change that fetched
+    nothing and returned nothing passed all of them.
+
+    It fails today, which is why `incremental` defaults to False. Turning the
+    cursor back on means making this pass by carrying the references in the
+    state, not by deleting the assertion."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 12)
+    feeds.reset_health()
+    first = feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                            aggregators=(), state_path=str(st), incremental=True)
+    assert len(first) == 12, first
+
+    feeds.reset_health()
+    second = feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                             aggregators=(), state_path=str(st), incremental=True)
+    assert {r["cve_id"] for r in second} == {r["cve_id"] for r in first}, (
+        f"a caught-up provider returned {len(second)} rows where it knows about "
+        f"{len(first)}; every id whose only evidence is this provider will drop "
+        "off the site on this run")
+
+
+def test_the_default_read_returns_everything_every_run(tmp_path, monkeypatch):
+    """The guarantee `gather` actually depends on, asserted at the default.
+
+    Whatever the fetching strategy is, an adapter must return the full set of
+    references it knows about on every run, because the pipeline keeps no memory
+    of its own."""
+    _csaf_dated(monkeypatch, 12)
+    for _ in range(2):
+        feeds.reset_health()
+        rows = feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                               aggregators=())
+        assert len(rows) == 12, (
+            f"the adapter returned {len(rows)} of 12 known ids on a repeat run")

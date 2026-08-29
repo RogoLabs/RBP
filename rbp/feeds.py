@@ -1813,8 +1813,39 @@ CSAF_MAX_DIRS = 12
 # the number, and not a degradation.
 CSAF_PROVIDER_BUDGET_S = 300
 
-# Where each provider got to, so a run reads what CHANGED instead of re-reading
-# what it already knows.
+# Where each provider got to.
+#
+# OFF BY DEFAULT SINCE 2026-08-29, HOURS AFTER IT SHIPPED, because it caused a
+# silent shrink on the live site. Read this before turning it back on.
+#
+# The cursor caches the READ POSITION. It does not cache the RESULT, and this
+# pipeline needs the result. `gather` builds the reference set from what each
+# adapter RETURNS ON THIS RUN, so a provider that correctly reads nothing
+# because it is caught up also contributes nothing, and every id whose only
+# evidence was that provider drops off the site.
+#
+# Measured on the run of 2026-08-29 22:21Z, the second run after the cursor
+# landed and the first able to restore its cache: twelve of seventeen providers
+# reported "+0 new (0 in scope)", which was true and correct, and the published
+# list fell 1,769 -> 1,760 while the CSAF publisher facet went from five
+# publishers to two. All eight CISA rows disappeared, along with SUSE's and
+# Schneider's, and CERT-Bund's fell 112 -> 59. /status published
+# "csaf:www.cisa.gov  OK  0 ids  caught up across all 1,833 advisories", which
+# is an accurate sentence about a provider whose rows had just been erased.
+#
+# That is the silent-shrink signature this whole adapter exists to prevent,
+# introduced by the change that removed the cap to stop losing rows.
+#
+# TO FINISH IT: the state has to carry the per-provider REFERENCES, not just two
+# timestamps, and a caught-up provider must replay them without re-fetching.
+# That is roughly 22,000 ids at a few hundred bytes each, which is the same
+# order as data/ghsa_repos_state.json already in the cache. The read marks and
+# the plan are correct and tested and should be kept as they are.
+#
+# Until then `incremental=False` re-reads each provider every run, bounded by
+# CSAF_PROVIDER_BUDGET_S. That is not a regression from before the cursor: the
+# count cap is still gone, and the cold runs it produces read 10,838 and 21,810
+# ids where the old cap yielded 4,416.
 #
 # THIS IS WHAT MAKES THE CAPS UNNECESSARY, and it is the answer to "why is there
 # a time box at all". There was a time box because the reader was stateless: it
@@ -2031,7 +2062,7 @@ def _expand_csaf_providers(providers, aggregators, max_providers):
 def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
               cap_per_provider=None, max_providers=40, workers=8,
               per_provider_budget_s=CSAF_PROVIDER_BUDGET_S,
-              state_path=None, incremental=True):
+              state_path=None, incremental=False):
     """Generic CSAF/ROLIE ingester: unlocks vendor/enterprise/ICS CNAs. Expands
     aggregators into providers, then for each provider: metadata -> ROLIE feed(s)
     -> recent advisory docs -> CVEs in scope.
