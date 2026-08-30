@@ -1893,22 +1893,31 @@ CSAF_PROVIDER_BUDGET_S = 300
 CSAF_STATE = os.path.join(os.path.dirname(_HERE), "data", "csaf_state.json")
 
 
+CSAF_STATE_VERSION = 2      # 1 stored read marks only; 2 adds `refs`
+
+
 def _csaf_state_load(path=None):
     """Per-provider read marks. A missing or corrupt file is a cold start, not
     an error: cold start means read from the top and backfill from there."""
     try:
         d = json.load(open(path or CSAF_STATE))
-        return d if isinstance(d, dict) else {}
+        if not isinstance(d, dict):
+            return {}
+        return {k: v for k, v in d.items() if not k.startswith("_")}
     except (OSError, ValueError):
         return {}
 
 
 def _csaf_state_save(state, path=None):
+    # Stamped, so the NEXT shape change is a discard rather than a shrink. The
+    # per-provider `refs` check above is the actual guard; this makes a future
+    # migration visible to anyone reading the file.
     path = path or CSAF_STATE
     try:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as fh:
-            json.dump(state, fh, indent=1, sort_keys=True)
+            json.dump(dict(state, _version=CSAF_STATE_VERSION), fh,
+                      indent=1, sort_keys=True)
     except OSError as e:
         # Never fail a run over the cursor. A lost cursor costs re-reading, which
         # is exactly the behaviour that existed before it.
@@ -2194,6 +2203,25 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # WHAT TO READ THIS RUN, which since 2026-08-29 is "what changed"
         # rather than "the newest 120". See CSAF_STATE.
         st = (state.get(host) or {}) if incremental else {}
+        # A STATE FROM AN OLDER SHAPE IS A COLD START, NOT A CAUGHT-UP PROVIDER.
+        #
+        # THE SECOND SHRINK, 2026-08-30. The first version of this cursor stored
+        # only the read marks. When `refs` was added, the deploy cache still held
+        # the old shape, so every provider restored marks that said "caught up"
+        # beside a `refs` that did not exist. `known` came back empty, the plan
+        # fetched almost nothing because the marks said there was nothing new,
+        # and the provider emitted almost nothing.
+        #
+        # Live effect within one run: CISA fell 13 rows -> 3, and the three ids
+        # cited in cisagov/CSAF#466 came off the site while that issue was open
+        # and linking to them.
+        #
+        # The marks are only meaningful ALONGSIDE the refs they were advanced
+        # over. A state carrying one without the other is not a partial state, it
+        # is a false one, and the safe reading is that this provider has never
+        # been read.
+        if incremental and "refs" not in st:
+            st = {}
         listed = len(entries)
         if incremental:
             entries, n_fresh, n_older = _csaf_plan(

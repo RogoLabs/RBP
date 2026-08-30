@@ -2198,3 +2198,50 @@ def test_the_state_drops_ids_that_leave_the_year_window(tmp_path, monkeypatch):
         "state; the cache has no floor and will grow forever")
     assert json.load(open(st))["v.example"]["refs"] == {}, (
         "out-of-window ids are still held in the state")
+
+
+def test_a_state_from_an_older_shape_is_a_cold_start(tmp_path, monkeypatch):
+    """THE SECOND SHRINK, 2026-08-30, and it reached the live site.
+
+    The first cursor stored only the read marks. When `refs` was added, the
+    deploy cache still held the old shape, so every provider restored marks
+    saying "caught up" beside a `refs` that did not exist. `known` came back
+    empty, the plan fetched almost nothing because the marks said there was
+    nothing new, and the provider emitted almost nothing.
+
+    CISA fell from 13 rows to 3 within one run, and the three ids cited in
+    cisagov/CSAF#466 came off the site while that issue was open and linking to
+    them.
+
+    The marks are only meaningful ALONGSIDE the refs they were advanced over. A
+    state carrying one without the other is not partial, it is false, and the
+    safe reading is that the provider has never been read."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 8)
+    # exactly the shape the old cursor wrote: marks, no refs
+    json.dump({"v.example": {"newest_read": "2026-01-08T00:00:00Z",
+                             "oldest_read": "2026-01-01T00:00:00Z",
+                             "listed": 8, "behind": 0}}, open(st, "w"))
+
+    feeds.reset_health()
+    rows = feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                           aggregators=(), state_path=str(st), incremental=True)
+    assert len(rows) == 8, (
+        f"a pre-refs state was trusted as caught-up and the provider returned "
+        f"{len(rows)} of 8 ids")
+    assert len(json.load(open(st))["v.example"]["refs"]) == 8
+
+
+def test_the_saved_state_carries_its_shape_version(tmp_path, monkeypatch):
+    """So the next shape change is a discard rather than a shrink. The
+    per-provider `refs` check is the guard that actually fires; this makes the
+    migration visible to anyone reading the file."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 3)
+    feeds.reset_health()
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), state_path=str(st), incremental=True)
+    saved = json.load(open(st))
+    assert saved["_version"] == feeds.CSAF_STATE_VERSION
+    # and the meta key must not be mistaken for a provider on the way back in
+    assert "_version" not in feeds._csaf_state_load(str(st))
