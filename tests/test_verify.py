@@ -153,3 +153,38 @@ def test_the_cli_exits_zero_on_a_clean_artefact(tmp_path, capsys):
     site = _site(tmp_path, [_row(i) for i in range(5)])
     assert verify.main(["--site", site, "--snapshots", str(tmp_path / "none")]) == 0
     assert "no findings" in capsys.readouterr().out
+
+
+def test_a_small_source_moving_by_tens_is_not_a_finding(tmp_path):
+    """THE FIRST REAL RUN OF THIS CHECK FAILED THE BUILD ON NOISE, which is how
+    a guard earns the reputation that gets it ignored.
+
+    It reported nozominetworks at 62 -> 35 and kunbus at 26 -> 15: 44% and 42%,
+    and 27 and 11 ids. The site was correct at the time, verified independently.
+
+    Two causes. These are small providers where tens of ids is ordinary
+    movement. And `rows` for a provider had just changed meaning, from "CVE rows
+    fetched this run" to "distinct ids this provider knows", so the high-water
+    mark was being compared across a semantic change."""
+    site = _site(tmp_path, [_row(i) for i in range(50)])
+    snaps = _snap(tmp_path, "2026-08-29", 1800,
+                  {"csaf": {"rows": 20000,
+                            "parts": {"csaf.data.security.nozominetworks.com": {"rows": 62},
+                                      "psirt.kunbus.com": {"rows": 26}}}})
+    _snap(tmp_path, "2026-08-30", 1790,
+          {"csaf": {"rows": 19800,
+                    "parts": {"csaf.data.security.nozominetworks.com": {"rows": 35},
+                              "psirt.kunbus.com": {"rows": 15}}}})
+    assert verify.check(site, snaps) == []
+
+
+def test_a_small_source_going_dark_is_still_a_finding(tmp_path):
+    """The floor applies to proportional drops only. A source at zero is a
+    finding at any size, because that is how all three regressions presented and
+    because zero rows means every id it alone evidenced has left the site."""
+    site = _site(tmp_path, [_row(i) for i in range(50)])
+    snaps = _snap(tmp_path, "2026-08-29", 1800,
+                  {"csaf": {"rows": 20000, "parts": {"psirt.kunbus.com": {"rows": 26}}}})
+    _snap(tmp_path, "2026-08-30", 1790,
+          {"csaf": {"rows": 19800, "parts": {"psirt.kunbus.com": {"rows": 0}}}})
+    assert any("kunbus" in p and "goes dark" in p for p in verify.check(site, snaps))

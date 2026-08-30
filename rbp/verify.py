@@ -56,6 +56,28 @@ import sys
 # right response to that is to read the diff, not to widen the threshold.
 MAX_ROW_DROP = 0.25
 
+# ... and a ratio alone is not enough on a small source.
+#
+# THE FIRST REAL RUN OF THIS CHECK FAILED THE BUILD ON NOISE, which is the way a
+# guard earns the reputation that gets it ignored. It reported
+# `csaf.data.security.nozominetworks.com` at 62 -> 35 and `psirt.kunbus.com` at
+# 26 -> 15: 44% and 42%, and 27 and 11 ids. The site was correct.
+#
+# Two causes, both worth stating. These are small providers where tens of ids is
+# ordinary movement. And `rows` for a provider CHANGED MEANING in the commit
+# before this one, from "CVE rows fetched this run", which double-counts an id
+# appearing in several advisories, to "distinct ids this provider knows".
+# Comparing a high-water mark straight across a semantic change is unsound for
+# exactly one transition, and this was it.
+#
+# So a proportional drop is a finding only when the absolute loss is also
+# material. A source going to ZERO stays a finding at any size, because that is
+# how all three of the regressions this module exists for presented.
+#
+# 100 from the data: the regressions lost 21,510 ids and two went to zero
+# outright; the false positives lost 27 and 11.
+MIN_ABSOLUTE_LOSS = 100
+
 # A feed that contributed rows and now contributes none.
 #
 # Separate from the row-count check because it is the sharper signal: the whole
@@ -169,7 +191,8 @@ def check(site_dir, snapshots_dir=None):
             problems.append(
                 f"{name} returned {high:,} ids at its best and 0 now; a source "
                 "that goes dark takes every row it alone evidenced with it")
-        elif isinstance(cur, int) and cur < high * (1 - MAX_ROW_DROP):
+        elif (isinstance(cur, int) and cur < high * (1 - MAX_ROW_DROP)
+              and high - cur >= MIN_ABSOLUTE_LOSS):
             problems.append(
                 f"{name} returned {high:,} ids at its best and {cur:,} now "
                 f"({round(100 * (high - cur) / high)}% down)")
