@@ -1433,6 +1433,44 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-77478",
+  "state": "RESERVED",
+  "public_date": "2026-08-30",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-08-30"
+  },
+  "refs": "ghsa-repos:containers/fuse-overlayfs\tGHSA-33p3-j627-gwr3",
+  "description": "containers/fuse-overlayfs repository advisory GHSA-33p3-j627-gwr3",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-30",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "vendor": "",
+  "advisory_url": "https://github.com/containers/fuse-overlayfs/security/advisories/GHSA-33p3-j627-gwr3",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/containers/fuse-overlayfs/security/advisories/GHSA-33p3-j627-gwr3"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-73513",
   "state": "RESERVED",
   "public_date": "2026-08-26",
