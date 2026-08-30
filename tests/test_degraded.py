@@ -2245,3 +2245,36 @@ def test_the_saved_state_carries_its_shape_version(tmp_path, monkeypatch):
     assert saved["_version"] == feeds.CSAF_STATE_VERSION
     # and the meta key must not be mistaken for a provider on the way back in
     assert "_version" not in feeds._csaf_state_load(str(st))
+
+
+def test_an_unrecognised_state_version_is_discarded_entirely(tmp_path, monkeypatch):
+    """A VERSION STAMP NOTHING READS IS DECORATION, and that is exactly what it
+    was for two deploys.
+
+    Version 2 added `refs` and a per-provider "no refs key means cold start"
+    guard. But version 2 was written by a run that had itself restored a
+    version-1 cache, so it saved marks claiming "caught up" beside a `refs` that
+    was nearly empty. The guard could not see it: the key was present, it was
+    just wrong. The damaged state re-saved itself every run, and CISA sat at 3
+    rows instead of 13 across two deploys while cisagov/CSAF#466 was open and
+    linking to those rows.
+
+    Discarding the whole file on an unrecognised stamp costs one cold start and
+    no rows, because a provider always returns everything it knows and a cold
+    provider knows it from this run. Trusting it costs a silent shrink."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 9)
+    # a state that looks complete and is not: marks say caught up, refs is thin
+    json.dump({"_version": 2,
+               "v.example": {"newest_read": "2026-01-09T00:00:00Z",
+                             "oldest_read": "2026-01-01T00:00:00Z",
+                             "listed": 9, "behind": 0,
+                             "refs": {"CVE-2026-1000": ["a\tb\tc", "2026-01-01", ""]}}},
+              open(st, "w"))
+    feeds.reset_health()
+    rows = feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                           aggregators=(), state_path=str(st), incremental=True)
+    assert len(rows) == 9, (
+        f"a state stamped with an old version was trusted and the provider "
+        f"returned {len(rows)} of 9 ids")
+    assert json.load(open(st))["_version"] == feeds.CSAF_STATE_VERSION

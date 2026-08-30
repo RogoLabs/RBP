@@ -1893,7 +1893,15 @@ CSAF_PROVIDER_BUDGET_S = 300
 CSAF_STATE = os.path.join(os.path.dirname(_HERE), "data", "csaf_state.json")
 
 
-CSAF_STATE_VERSION = 2      # 1 stored read marks only; 2 adds `refs`
+# 1: read marks only.
+# 2: adds `refs`, the references each provider has seen.
+# 3: forced discard. Version 2 was written by a run that had itself restored a
+#    version-1 cache, so it saved marks claiming "caught up" beside a `refs` that
+#    was nearly empty. The per-provider "no refs key means cold start" guard
+#    could not see that: the key was present, it was just wrong. The damaged
+#    state then re-saved itself every run and CISA sat at 3 rows instead of 13
+#    across two deploys.
+CSAF_STATE_VERSION = 3
 
 
 def _csaf_state_load(path=None):
@@ -1902,6 +1910,24 @@ def _csaf_state_load(path=None):
     try:
         d = json.load(open(path or CSAF_STATE))
         if not isinstance(d, dict):
+            return {}
+        # THE STAMP IS CHECKED, NOT JUST WRITTEN, and not checking it is what
+        # let a damaged cache outlive the fix for it.
+        #
+        # A version stamp nothing reads is decoration. The previous change wrote
+        # this field and then loaded the file regardless, so a state saved by a
+        # broken run was restored by the run that fixed the bug, re-saved, and
+        # carried forward again. Two deploys with CISA at 3 rows instead of 13
+        # while cisagov/CSAF#466 was open and pointing at them.
+        #
+        # Discarding the whole file costs one cold start, which is a few minutes
+        # of re-reading and no lost rows, because a provider always RETURNS
+        # everything it knows and a cold provider simply knows it from this run.
+        # Trusting an unrecognised state costs a silent shrink.
+        if d.get("_version") != CSAF_STATE_VERSION:
+            print(f"  [csaf] read marks are version {d.get('_version')!r}, "
+                  f"expected {CSAF_STATE_VERSION}; starting cold",
+                  file=sys.stderr)
             return {}
         return {k: v for k, v in d.items() if not k.startswith("_")}
     except (OSError, ValueError):
