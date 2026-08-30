@@ -1672,7 +1672,23 @@ def feed_msrc(years):
 CSAF_PROVIDERS = (
     "https://cert-portal.siemens.com/productcert/csaf/provider-metadata.json",   # Siemens (ICS CNA)
     "https://www.cisa.gov/sites/default/files/csaf/provider-metadata.json",       # CISA (ICS)
-    "https://sick.com/.well-known/csaf/provider-metadata.json",                   # SICK (ICS CNA)
+    # SICK IS DELETED FROM HERE, NOT MISSING. The BSI aggregator supplies
+    # `www.sick.com` and this line configured `sick.com`; `_expand_csaf_providers`
+    # dedupes on the exact URL string, so both were read and the same publisher
+    # occupied two provider slots.
+    #
+    # It cost two rows on a public page with contradictory numbers, 120 duplicate
+    # advisory fetches every run, and a "17 providers" count for sixteen
+    # publishers. The site still reads SICK, through the aggregator.
+    #
+    # This also retires the host-canonicalisation idea, which would have renamed
+    # every parts key at once and given the shrink guard a one-run blind spot
+    # across all seventeen providers to fix one duplicate.
+    #
+    # RECORDED DISSENT, because it is a fair point: deleting a deliberate config
+    # line moves a chosen provider onto the aggregator path, which no scorecard
+    # has assessed. That is an argument for reviewing the aggregator-discovered
+    # providers, not for keeping a duplicate.
     # Not listed by any aggregator we read, found by probing .well-known. Both
     # are high-volume CNAs in their own right.
     "https://www.cisco.com/.well-known/csaf/provider-metadata.json",              # Cisco PSIRT
@@ -1813,39 +1829,41 @@ CSAF_MAX_DIRS = 12
 # the number, and not a degradation.
 CSAF_PROVIDER_BUDGET_S = 300
 
-# Where each provider got to.
+# What each provider has seen, and where it got to.
 #
-# OFF BY DEFAULT SINCE 2026-08-29, HOURS AFTER IT SHIPPED, because it caused a
-# silent shrink on the live site. Read this before turning it back on.
+# WHY THIS EXISTS: the reader was stateless and re-fetched every provider's whole
+# catalogue every six hours, so something had to cap it. Measured on SUSE
+# 2026-08-29: 83,111 in-window advisories, of which SIX changed in 24 hours and
+# ZERO in 6. Re-reading 83,105 unchanged documents to find six is the problem a
+# cap was papering over.
 #
-# The cursor caches the READ POSITION. It does not cache the RESULT, and this
-# pipeline needs the result. `gather` builds the reference set from what each
-# adapter RETURNS ON THIS RUN, so a provider that correctly reads nothing
-# because it is caught up also contributes nothing, and every id whose only
-# evidence was that provider drops off the site.
+# THREE THINGS PER PROVIDER, and the third is the one that matters most:
 #
-# Measured on the run of 2026-08-29 22:21Z, the second run after the cursor
-# landed and the first able to restore its cache: twelve of seventeen providers
-# reported "+0 new (0 in scope)", which was true and correct, and the published
-# list fell 1,769 -> 1,760 while the CSAF publisher facet went from five
-# publishers to two. All eight CISA rows disappeared, along with SUSE's and
-# Schneider's, and CERT-Bund's fell 112 -> 59. /status published
-# "csaf:www.cisa.gov  OK  0 ids  caught up across all 1,833 advisories", which
-# is an accurate sentence about a provider whose rows had just been erased.
+#   newest_read   everything at or below this has been read at least once
+#   oldest_read   ... down to here. The window between them is CONTIGUOUS.
+#   refs          every CVE reference this provider has EVER given us.
 #
-# That is the silent-shrink signature this whole adapter exists to prevent,
-# introduced by the change that removed the cap to stop losing rows.
+# `refs` is not an optimisation, it is a correctness requirement, and leaving it
+# out shipped a silent shrink to the live site on 2026-08-29. `gather` builds the
+# reference set from what each adapter RETURNS on the current run and keeps no
+# memory of its own, so a provider that correctly reads nothing because it is
+# caught up also contributes nothing. Within one run of the cache restoring,
+# twelve of seventeen providers reported "+0 new (0 in scope)", every word true,
+# and the list fell 1,769 -> 1,760 while all eight CISA rows, SUSE's and
+# Schneider's vanished and CERT-Bund's fell 112 -> 59. /status published
+# "csaf:www.cisa.gov  OK  0 ids  caught up across all 1,833 advisories", an
+# accurate sentence about a provider whose rows had just been erased.
 #
-# TO FINISH IT: the state has to carry the per-provider REFERENCES, not just two
-# timestamps, and a caught-up provider must replay them without re-fetching.
-# That is roughly 22,000 ids at a few hundred bytes each, which is the same
-# order as data/ghsa_repos_state.json already in the cache. The read marks and
-# the plan are correct and tested and should be kept as they are.
+# So: FETCHING is incremental, RETURNING never is. A provider emits everything it
+# knows on every run whether it fetched anything or not, and `refs` is pruned to
+# the year window so it cannot grow without bound as that window rolls.
 #
-# Until then `incremental=False` re-reads each provider every run, bounded by
-# CSAF_PROVIDER_BUDGET_S. That is not a regression from before the cursor: the
-# count cap is still gone, and the cold runs it produces read 10,838 and 21,810
-# ids where the old cap yielded 4,416.
+# Fresh advisories are read oldest-first and backfill newest-first, so both marks
+# advance contiguously and a budget stop truncates the walk rather than leaving a
+# hole. Nothing is skipped, only deferred, and /status says how far behind each
+# provider still is.
+#
+# Same shape as data/ghsa_repos_state.json, cached by deploy.yml.
 #
 # THIS IS WHAT MAKES THE CAPS UNNECESSARY, and it is the answer to "why is there
 # a time box at all". There was a time box because the reader was stateless: it
@@ -2062,7 +2080,7 @@ def _expand_csaf_providers(providers, aggregators, max_providers):
 def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
               cap_per_provider=None, max_providers=40, workers=8,
               per_provider_budget_s=CSAF_PROVIDER_BUDGET_S,
-              state_path=None, incremental=False):
+              state_path=None, incremental=True):
     """Generic CSAF/ROLIE ingester: unlocks vendor/enterprise/ICS CNAs. Expands
     aggregators into providers, then for each provider: metadata -> ROLIE feed(s)
     -> recent advisory docs -> CVEs in scope.
@@ -2251,7 +2269,22 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                                  "product": "", "description": (v.get("title") or doc.get("title") or "")[:400]})
             return rows
 
-        n0, read, done_n = len(out), 0, 0
+        n0, fetched_n, done_n = len(out), 0, 0
+        # THE STATE CARRIES THE REFERENCES, NOT JUST THE POSITION, and that is
+        # the whole difference between this and the version that shrank the site.
+        #
+        # `gather` builds the reference set from what each adapter RETURNS on the
+        # current run. It keeps no memory of its own. So a cursor that remembers
+        # only where it got to makes a caught-up provider return nothing, and
+        # every id whose only evidence was that provider drops off the site.
+        # That shipped on 2026-08-29 and took CISA, SUSE and Schneider off the
+        # list within one run, each reporting "0 ids in scope, caught up", every
+        # word of it true.
+        #
+        # So a provider accumulates what it has seen, and returns ALL of it every
+        # run whether it fetched anything or not. Fetching is incremental;
+        # returning never is.
+        known = dict(st.get("refs") or {})
         # `None` means the budget stopped us before the fetch; `[]` means we read
         # the advisory and it carried no in-scope CVE. Collapsing the two would
         # advance the read marks over documents nobody looked at, which is the
@@ -2270,14 +2303,29 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                         st["newest_read"] = ts
                     if not st.get("oldest_read") or ts < st["oldest_read"]:
                         st["oldest_read"] = ts
-                read += len(rows)
+                fetched_n += len(rows)
                 for r in rows:
-                    if r["cve_id"] not in seen:
-                        seen.add(r["cve_id"])
-                        out.append(r)
+                    known[r["cve_id"]] = [r["source_ref"], r["public_date"],
+                                          r["description"]]
+        # PRUNED TO THE WINDOW, so the state cannot grow without bound as the
+        # year window rolls. An id that leaves the window leaves the state.
+        known = {k: v for k, v in known.items() if _year(k) in years}
+
+        # Emitted from what the provider KNOWS, not from what it just fetched.
+        # The cross-provider `seen` dedupe still applies here, so a shared id is
+        # still credited once, but each provider carries its own copy and a
+        # provider losing a race no longer loses the id from its own state.
+        for cid, ref in sorted(known.items()):
+            if cid not in seen:
+                seen.add(cid)
+                out.append({"cve_id": cid, "source": "csaf", "source_ref": ref[0],
+                            "public_date": ref[1], "product": "",
+                            "description": ref[2]})
+        read = len(known)
         gained = len(out) - n0
         unread = max(0, len(entries) - done_n)
         if incremental:
+            st["refs"] = known
             st["listed"] = listed
             st["behind"] = unread
             state[host] = st
@@ -2345,16 +2393,16 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             # did it. The log had it; no page did.
             over_budget.append(f"{host} {spent:.0f}s")
             record_feed(f"csaf:{host}", CAPPED,
-                        f"{read} ids in scope, {gained} new; read {done_n:,} "
-                        f"advisories then stopped after {spent:.0f}s, over this "
-                        f"provider's {per_provider_budget_s}s share of the run; "
+                        f"{read} ids in scope; read {done_n:,} advisories then "
+                        f"stopped after {spent:.0f}s, over this provider's "
+                        f"{per_provider_budget_s}s share of the run; "
                         f"{unread:,} still to read on later runs", rows=read)
         elif cap_cut > 0:
             capped_reads.append(f"{host} {len(entries)}/{planned:,} advisories")
             record_feed(f"csaf:{host}", CAPPED,
-                        f"{read} ids in scope, {gained} new; read the newest "
-                        f"{len(entries)} of {planned:,} advisories this run "
-                        f"planned to read", rows=read)
+                        f"{read} ids in scope; read the newest {len(entries)} "
+                        f"of {planned:,} advisories this run planned to read",
+                        rows=read)
         else:
             # SAY WHICH KIND OF WORK THIS WAS. "12 ids in scope" is the same
             # sentence whether the provider is fully caught up and had nothing
@@ -2362,15 +2410,32 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
             # Those are opposite states and a reader has to be able to tell.
             if incremental and unread:
                 record_feed(f"csaf:{host}", CAPPED,
-                            f"{read} ids in scope, {gained} new; read "
-                            f"{done_n:,} of {listed:,} advisories "
-                            f"({n_fresh:,} new, {n_older:,} older); "
-                            f"{unread:,} still to read on later runs", rows=read)
+                            f"{read} ids in scope; read {done_n:,} of "
+                            f"{listed:,} advisories ({n_fresh:,} new, "
+                            f"{n_older:,} older); {unread:,} still to read on "
+                            f"later runs", rows=read)
             else:
+                # THE PINNED-FALLBACK DISCLOSURE LIVES HERE NOW. It used to be a
+                # vendor name in the parent string, and moving the naming to the
+                # parts would have dropped it entirely. "Pinned config that does
+                # not announce itself is how a stale URL rots unnoticed" is the
+                # reason it exists, and that reason is unchanged.
+                via = (" via pinned feeds, its canonical metadata refused us"
+                       if host in _csaf_hosts_plain(fell_back) else "")
                 record_feed(f"csaf:{host}", OK,
-                            f"{read} ids in scope, {gained} new; caught up "
-                            f"across all {listed:,} advisories this provider "
-                            f"lists", rows=read)
+                            f"{read} ids in scope; caught up across all "
+                            f"{listed:,} advisories this provider lists{via}",
+                            rows=read)
+        # `gained` IS NOT PUBLISHED ANYWHERE, and the reason is twelve lines up:
+        # it is measured against a `seen` set shared across every provider in the
+        # run, so it depends on the ORDER providers are visited. The health
+        # strings published it anyway and contradicted themselves in adjacent
+        # rows on the live page: `sick.com` "114 ids in scope, 102 new" above
+        # `www.sick.com` "114 ids in scope, 0 new", the same publisher reached
+        # twice through a 301, the same 114 ids, two different claims about how
+        # many were new. It keeps its stderr line, where a build log reader can
+        # see the ordering effect for what it is.
+        #
         # `read`, not `gained`. A provider contributing nothing is not an error
         # and is not nothing, but `gained` measures against a `seen` set shared
         # across every provider in the run, so a provider whose advisories an
@@ -2484,6 +2549,12 @@ def _csaf_directory_count(meta):
                 if d.get("directory_url")})
 
 
+def _csaf_hosts_plain(entries):
+    """`fell_back` holds bare hosts, unlike `unreachable` which holds
+    "host (error detail)". Separate reader so neither format has two."""
+    return set(entries or ())
+
+
 def _csaf_hosts(entries):
     """Bare hosts from `unreachable`, whose entries are "host (error detail)".
 
@@ -2495,74 +2566,54 @@ def _csaf_hosts(entries):
 
 def _record_csaf_health(providers, unreachable, empty, capped_dirs, fell_back,
                         rows, capped_reads=(), over_budget=(), behind=()):
-    """One health record for the fan-out adapter, derived from its providers.
+    """One health record for the fan-out adapter, as COUNTS.
 
-    Ordered worst-first, because a single status has to mean the worst thing that
-    happened: a provider that could not be reached at all is a bigger claim than
-    a provider that was capped, and a cap is a bigger claim than a provider that
-    genuinely had nothing to say.
+    THE VENDOR NAMES ARE GONE FROM HERE, deliberately, and the parts records are
+    now the only place a provider is named.
+
+    This used to assemble five accumulator lists of hostnames into one string,
+    truncated at six and eight names. Three things were wrong with it, and the
+    parts table on the same page fixed all three by existing:
+
+    IT PUBLISHED FALSE CLAIMS ABOUT NAMED VENDORS. The parent said "no advisories
+    in scope: www.huawei.com, www.innomic.com" while those same hosts' own parts
+    said "ok, 0 ids in scope". Two renderings of one fact on one page, and only
+    the string version was wrong.
+
+    THE DENOMINATOR CERTIFIED ITSELF. `n = len(providers)` with numerator
+    `n - len(unreachable)` publishes `n/n` on any run where nothing was
+    unreachable, which is most runs, and the 17 counted one publisher twice
+    because sick.com and www.sick.com are the same host after a 301.
+
+    IT WAS THE WIDEST CELL ON /status, wide enough to force the overflow-wrap
+    rule that stopped the table pushing the page sideways, and it was the route
+    by which vendor names reached `limitations` through `health_summary`.
+
+    Counts only. A reader who wants to know WHICH provider looks at the rows
+    underneath, where the claim is per provider and cannot disagree with itself.
     """
     n = len(providers)
-    bits = [f"{n - len(unreachable)}/{n} providers read", f"{rows} ids"]
-    if unreachable:
-        bits.append(f"unreachable: {', '.join(sorted(unreachable)[:6])}")
-    if fell_back:
-        # Named on every run it fires, and deliberately NOT a degradation: the
-        # advisories were all read, by a route the provider itself publishes.
-        # Calling a complete read a degradation is how a banner becomes noise;
-        # saying nothing is how a pinned URL rots unnoticed. So: say it, plainly,
-        # and let the status reflect the data, which is whole.
-        bits.append(f"read via pinned feeds: {', '.join(sorted(fell_back)[:6])}")
-    if capped_dirs:
-        bits.append(f"capped: {', '.join(sorted(capped_dirs)[:6])}")
-    if capped_reads:
-        # Named separately from `capped_dirs`, because they are different losses
-        # and collapsing them would let the larger one hide behind the smaller.
-        # A capped directory is a distribution we declined to consult; a capped
-        # read is an advisory we listed and cut. Six providers hit the second on
-        # 2026-08-28 and none hit the first.
-        bits.append(f"advisory cap hit on {len(capped_reads)} of "
-                    f"{len(providers)} providers, newest only: "
-                    f"{', '.join(sorted(capped_reads)[:6])}")
-    if over_budget:
-        bits.append(f"stopped on time budget: {', '.join(sorted(over_budget)[:6])}")
-    if behind:
-        # A BACKLOG, NOT A LOSS, and the wording has to carry that. The old cap
-        # discarded 144,281 advisories every run and they were never coming back.
-        # These are queued: each run reads more of them and this number falls.
-        bits.append(f"still catching up: {', '.join(sorted(behind)[:6])}")
-    if empty:
-        bits.append(f"no advisories in scope: {', '.join(sorted(empty)[:8])}")
-    detail = "; ".join(bits)
+    bits = [f"{n} providers", f"{rows} ids"]
+    for label, items in (("unreachable", unreachable), ("read via pinned feeds", fell_back),
+                         ("directory cap", capped_dirs), ("advisory cap", capped_reads),
+                         ("stopped on time budget", over_budget),
+                         ("still catching up", behind),
+                         ("no advisories in scope", empty)):
+        if items:
+            bits.append(f"{len(items)} {label}")
+    detail = "; ".join(bits) + "; see the provider rows below"
     if unreachable and not rows:
         # Nothing was read from anywhere. That is an outage, not a limit.
         record_feed("csaf", FAILED, detail, rows=rows)
     elif unreachable or capped_dirs or capped_reads or over_budget or behind:
-        # CAPPED, NOT TRUNCATED, and the distinction decides whether the site
-        # wears a banner.
-        #
-        # `degraded_state` folds TRUNCATED into "this run is incomplete" and
-        # deliberately does not fold CAPPED, because a standing limit fires on
-        # every run by design: "A warning that is always on is not a warning, it
-        # is furniture, and it teaches a reader to ignore the banner on the day
-        # it means something."
-        #
-        # An unreachable CSAF provider is a standing limit. Cisco's WAF returns
-        # 403 to a non-browser agent on every single run, and this was written as
-        # TRUNCATED first, which would have put "This run is incomplete ... not
-        # comparable to the previous run" on every page of every run from the
-        # moment it merged. Caught by simulating the live provider set before
-        # merging rather than by reading the banner on the published site.
-        #
-        # It is still NAMED and still published as a limitation, so the loss is
-        # visible; it is just not called a degradation. A provider that was
-        # working and stops is caught by `compare_magnitudes`, which compares
-        # this feed's row count to its own previous run and IS a degradation.
-        # That is the mechanism for "worse than usual", and it already exists.
+        # CAPPED, NOT TRUNCATED. `degraded_state` folds TRUNCATED into "this run
+        # is incomplete" and deliberately does not fold CAPPED, because a
+        # standing limit fires on every run by design: "A warning that is always
+        # on is not a warning, it is furniture, and it teaches a reader to ignore
+        # the banner on the day it means something."
         record_feed("csaf", CAPPED, detail, rows=rows)
     else:
         record_feed("csaf", OK, detail, rows=rows)
-
 
 def feed_mozilla(years):
     """Mozilla Foundation Security Advisories (Firefox/Thunderbird) from the FSA git

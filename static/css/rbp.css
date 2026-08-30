@@ -196,9 +196,15 @@ td.unattributed { color: var(--rbp-text-muted); font-style: italic; }
 /* ---- fan-out feed sub-rows (/status) ----------------------------------- */
 /*
    `csaf` is one row in the feed table and seventeen providers underneath it.
-   The sub-rows are subordinate, not separate: same columns, same alignment, so
-   a reader compares a provider's IDs-read against its parent's by looking
-   straight up the column.
+   The sub-rows are subordinate, not separate: same alignment, same column for
+   IDs read.
+
+   They do NOT sum to the parent and the CSS used to tell readers to compare
+   them as though they did. Providers overlap: the same advisory can be carried
+   by an aggregator and by its publisher, and the parent dedupes while the rows
+   do not. On the run that prompted this the sub-rows totalled 6,793 against a
+   parent of 2,992. That claim is now made in the page's own copy instead of in
+   a comment nobody reads.
 
    Indent AND a muted label, because indent alone is invisible once the table
    scrolls sideways on a narrow viewport, which is exactly where these rows are

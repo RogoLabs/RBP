@@ -346,9 +346,7 @@ def summary(rows, date=SNAPSHOT_DATE):
                                                   "advisories this provider lists "
                                                   "in the window"),
                                        "ok": False, "truncated": True,
-                                       "capped": True,
-                                       "rows_published": None,
-                                       "rows_only": None}}},
+                                       "capped": True}}},
                   }},
         "coverage": {"total_cnas": 539, "cnas_effective": 117,
                      "cnas_sighted": 152, "cnas_own_channel": 2,

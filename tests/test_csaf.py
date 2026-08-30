@@ -341,3 +341,18 @@ def test_feed_csaf_actually_dates_its_rows_that_way(monkeypatch):
         f"the adapter dated a late-added id {by['CVE-2026-6071']}, which is the "
         "advisory's v1 date and overstates its age by 560 days")
     assert by["CVE-2024-11155"] == "2024-12-10", by
+
+
+def test_no_provider_is_configured_twice_under_two_hostnames():
+    """D10. `https://sick.com/...` was configured here while the BSI aggregator
+    supplies `https://www.sick.com/...`, and `_expand_csaf_providers` dedupes on
+    the exact URL string, so the same publisher held two provider slots.
+
+    It cost two rows on a public page with contradictory numbers, 120 duplicate
+    advisory fetches every run, and a "17 providers" count for sixteen
+    publishers. Asserted on the property rather than on SICK, so the next
+    duplicate is caught too."""
+    hosts = [u.split("/")[2].lower() for u in feeds.CSAF_PROVIDERS]
+    bare = [h[4:] if h.startswith("www.") else h for h in hosts]
+    assert len(bare) == len(set(bare)), (
+        f"the same publisher is configured under two hostnames: {sorted(hosts)}")

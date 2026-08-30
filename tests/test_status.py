@@ -510,24 +510,6 @@ def test_the_page_says_the_cap_is_this_sites_limit_and_not_the_providers(capped_
         "the page does not say the count is a floor for exactly this reason")
 
 
-def test_an_unmeasured_provider_contribution_renders_as_a_dash_not_a_blank(capped_build):
-    """`rows_published` is null on every part, because `rows_by_source` reads the
-    `sources` string on a published row and that string names the FEED, never the
-    provider inside it. Null must reach the reader as "not measured".
-
-    It did not. In Jinja `p.rows_published is not none` is TRUE for a MISSING key,
-    so the cell took the measured branch and `commafy` rendered Undefined as an
-    empty string. Verified against a real build on 2026-08-28: blank, not a dash.
-    A blank in a numeric column reads as zero, which is the opposite claim."""
-    table = _feed_table(capped_build)
-    abb = re.search(r"csaf:psirt\.abb\.com.*?</tr>", table, re.S).group(0)
-    cells = re.findall(r'<td class="num">(.*?)</td>', abb, re.S)
-    assert len(cells) == 3, cells
-    assert cells[0].strip() == "77", cells
-    assert cells[1].strip() == "&mdash;", f"unmeasured rendered as {cells[1]!r}"
-    assert cells[2].strip() == "&mdash;", f"unmeasured rendered as {cells[2]!r}"
-
-
 def test_a_measured_zero_is_still_a_zero_and_not_a_dash(capped_build):
     """The other direction, and the reason the dash cannot simply be "falsy".
 
@@ -541,24 +523,26 @@ def test_a_measured_zero_is_still_a_zero_and_not_a_dash(capped_build):
     assert cells[2].strip() == "4", cells
 
 
-def test_a_part_that_predates_the_contribution_keys_still_renders_a_dash(capped_build):
-    """THE ABSENT KEY, WHICH IS THE REAL LEGACY STATE AND NOT THE NULL ONE.
+def test_a_provider_sub_row_has_no_column_it_can_never_fill(capped_build):
+    """D7. `rows_published` and `rows_only` are permanently null for a part:
+    `rows_by_source` reads the `sources` string on a published row and that
+    string names the FEED, never the provider inside it.
 
-    Every part recorded before 2026-08-28 carries no `rows_published` at all.
-    `p.rows_published` yields Jinja's Undefined for it, `Undefined is not none`
-    is TRUE, so the cell took the measured branch and `commafy` returned the
-    Undefined unchanged, which renders as nothing. A blank in a numeric column
-    beside real numbers reads as zero.
+    They rendered as bare em dashes in a numeric column, under a paragraph
+    ending "a feed can return tens of thousands of IDs while accounting for none
+    of the list", so the available reading was "none". A screen reader announced
+    nothing at all: one punctuation character with no text alternative, which a
+    legend would not have reached either.
 
-    `.get()` collapses absent and null into the one state they both mean. The
-    first mutation pass on this file missed it, because every part in the
-    fixture set the key explicitly and no fixture produced the state the
-    assertion is about."""
+    Replaces two earlier tests that asserted the same branch on two shapes
+    `.get()` collapses into one."""
     table = _feed_table(capped_build)
-    legacy = re.search(r"csaf:legacy\.example.*?</tr>", table, re.S).group(0)
-    cells = re.findall(r'<td class="num">(.*?)</td>', legacy, re.S)
-    assert len(cells) == 3, cells
-    assert cells[0].strip() == "5", cells
-    assert cells[1].strip() == "&mdash;", (
-        f"an absent contribution rendered as {cells[1]!r}, which reads as zero")
-    assert cells[2].strip() == "&mdash;", f"an absent contribution rendered as {cells[2]!r}"
+    sub = re.search(r"csaf:psirt\.abb\.com.*?</tr>", table, re.S).group(0)
+    assert "&mdash;" not in sub, f"a sub-row still renders a bare dash: {sub}"
+    assert len(re.findall(r'<td class="num">', sub)) == 1, (
+        "a sub-row still carries a column it can never fill")
+    assert 'colspan="3"' in sub, "the note column does not span the deleted cells"
+
+    parent = re.search(r'<td class="mono">csaf</td>.*?</tr>', table, re.S).group(0)
+    assert len(re.findall(r'<td class="num">', parent)) == 3, (
+        "the parent feed row lost columns that are real for a feed")

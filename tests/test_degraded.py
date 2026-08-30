@@ -817,7 +817,10 @@ def test_csaf_reports_a_provider_it_could_not_reach(monkeypatch):
     # FAILED, because this fixture has one provider and it could not be read, so
     # the adapter returned nothing at all.
     assert h and h["status"] == feeds.FAILED, h
-    assert "unreachable" in h["detail"] and "vendor.example" in h["detail"]
+    assert "1 unreachable" in h["detail"], h["detail"]
+    # The NAME is on the provider's own row now, where it cannot
+    # contradict the parts table printed beside it.
+    assert "unreachable" in feeds.FEED_HEALTH["csaf:vendor.example"]["detail"]
 
 
 def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
@@ -838,7 +841,7 @@ def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
                               empty=[], capped_dirs=[], fell_back=[], rows=3190)
     h = feeds.FEED_HEALTH["csaf"]
     assert h["status"] == feeds.CAPPED, h
-    assert "www.cisco.com" in h["detail"], "the loss is not named"
+    assert "1 unreachable" in h["detail"], h["detail"]
     failures, truncated, _n, capped = feeds.health_summary()
     assert capped and not truncated and not failures
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
@@ -867,11 +870,18 @@ def _csaf_fixture(monkeypatch, n_dirs, advisories_per_dir):
     readable advisories carrying one in-scope CVE."""
     meta = {"distributions": [
         {"directory_url": f"https://v.example/csaf/adv{n}/en"} for n in range(n_dirs)]}
-    doc = {"document": {"publisher": {"name": "V Corp"}, "tracking": {"id": "V-1"}},
-           "vulnerabilities": [{"cve": "CVE-2026-0001", "title": "t"}]}
-
+    # ONE CVE PER ADVISORY, derived from the URL. Every advisory used to carry
+    # the same id, so "N ids in scope" and "N advisories read" were the same
+    # number in every fixture and no assertion could tell them apart. They are
+    # different claims and the health line makes the first one.
     def fake_get(url, timeout=None, retries=3, headers=None):
-        return (meta if url.endswith("pm.json") else doc), 200, {}
+        if url.endswith("pm.json"):
+            return meta, 200, {}
+        n = url.rsplit("/a", 1)[1].split(".")[0]
+        return ({"document": {"publisher": {"name": "V Corp"},
+                              "tracking": {"id": f"V-{n}"}},
+                 "vulnerabilities": [{"cve": f"CVE-2026-{10000 + int(n)}",
+                                      "title": "t"}]}, 200, {})
 
     monkeypatch.setattr(feeds, "_get", fake_get)
     monkeypatch.setattr(
@@ -889,7 +899,7 @@ def test_csaf_reports_a_provider_whose_directories_were_capped(monkeypatch):
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
     h = feeds.FEED_HEALTH.get("csaf")
     assert h and h["status"] == feeds.CAPPED, h
-    assert f"{feeds.CSAF_MAX_DIRS}/40 directories" in h["detail"]
+    assert "1 directory cap" in h["detail"], h["detail"]
 
 
 def test_a_cap_over_empty_directories_is_not_published_as_a_loss(monkeypatch):
@@ -907,9 +917,9 @@ def test_a_cap_over_empty_directories_is_not_published_as_a_loss(monkeypatch):
     _csaf_fixture(monkeypatch, n_dirs=40, advisories_per_dir=0)
     feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",), aggregators=())
     h = feeds.FEED_HEALTH.get("csaf")
-    assert "capped" not in h["detail"], (
+    assert "directory cap" not in h["detail"], (
         f"a cap over directories that hold nothing is not a loss: {h['detail']}")
-    assert "no advisories in scope: v.example" in h["detail"]
+    assert "1 no advisories in scope" in h["detail"], h["detail"]
     assert h["status"] == feeds.OK, h
 
 
@@ -924,7 +934,8 @@ def test_csaf_names_providers_that_yielded_nothing(monkeypatch):
     feeds.feed_csaf({2026}, providers=("https://quiet.example/pm.json",),
                     aggregators=())
     h = feeds.FEED_HEALTH.get("csaf")
-    assert h and "no advisories in scope: quiet.example" in h["detail"]
+    assert h and "1 no advisories in scope" in h["detail"]
+    assert feeds.FEED_HEALTH["csaf:quiet.example"]["rows"] == 0
     assert h["status"] == feeds.OK, (
         "a provider with nothing to say is not an incomplete read; overstating "
         "that is how a banner becomes furniture")
@@ -996,7 +1007,8 @@ def test_cisa_is_read_through_its_pinned_feeds_when_the_canonical_host_403s(
     h = feeds.FEED_HEALTH["csaf"]
     assert "unreachable" not in h["detail"], (
         f"a provider we read in full was reported as lost: {h['detail']}")
-    assert "read via pinned feeds: www.cisa.gov" in h["detail"], (
+    assert "1 read via pinned feeds" in h["detail"], h["detail"]
+    assert "via pinned feeds" in feeds.FEED_HEALTH["csaf:www.cisa.gov"]["detail"], (
         "pinned config that does not announce itself is how a stale URL rots "
         "unnoticed")
     assert h["status"] == feeds.OK, (
@@ -1042,7 +1054,8 @@ def test_a_provider_with_no_pinned_fallback_is_still_reported_unreachable(
     feeds.feed_csaf({2026}, providers=("https://nofallback.example/pm.json",),
                     aggregators=())
     h = feeds.FEED_HEALTH["csaf"]
-    assert "unreachable" in h["detail"] and "nofallback.example" in h["detail"]
+    assert "1 unreachable" in h["detail"], h["detail"]
+    assert "unreachable" in feeds.FEED_HEALTH["csaf:nofallback.example"]["detail"]
     assert h["status"] == feeds.FAILED, h
 
 
@@ -1604,9 +1617,8 @@ def test_csaf_reports_a_provider_whose_advisories_were_capped(monkeypatch):
 
     h = feeds.FEED_HEALTH.get("csaf")
     assert h["status"] == feeds.CAPPED, h
-    assert "advisory cap" in h["detail"], (
-        f"the aggregate does not name the advisory cap: {h['detail']}")
-    assert "v.example 120/200 advisories" in h["detail"], h["detail"]
+    assert "1 advisory cap" in h["detail"], (
+        f"the aggregate does not count the advisory cap: {h['detail']}")
 
 
 def test_the_advisory_cap_does_not_put_the_site_in_a_degraded_state(monkeypatch):
@@ -1674,7 +1686,8 @@ def test_a_provider_with_nothing_in_the_window_is_not_called_capped(monkeypatch)
     assert part["status"] == feeds.OK, part
     h = feeds.FEED_HEALTH.get("csaf")
     assert "advisory cap" not in h["detail"], h["detail"]
-    assert "no advisories in scope: v.example" in h["detail"]
+    assert "1 no advisories in scope" in h["detail"]
+    assert feeds.FEED_HEALTH["csaf:v.example"]["rows"] == 0
 
 
 def test_the_two_caps_are_reported_as_two_different_losses(monkeypatch):
@@ -1689,8 +1702,8 @@ def test_the_two_caps_are_reported_as_two_different_losses(monkeypatch):
                     aggregators=(), cap_per_provider=120)
 
     detail = feeds.FEED_HEALTH["csaf"]["detail"]
-    assert f"capped: v.example {feeds.CSAF_MAX_DIRS}/40 directories" in detail, detail
-    assert "advisory cap hit on 1 of 1 providers" in detail, detail
+    assert "1 directory cap" in detail, detail
+    assert "1 advisory cap" in detail, detail
 
 
 def test_the_listing_is_read_uncapped_so_the_cut_can_be_counted(monkeypatch):
@@ -1757,7 +1770,8 @@ def test_a_provider_that_stalls_the_run_is_stopped_and_named(monkeypatch):
     assert part["status"] == feeds.CAPPED, part
     assert "over this provider's" in part["detail"], part["detail"]
     h = feeds.FEED_HEALTH["csaf"]
-    assert "stopped on time budget: slow.example" in h["detail"], h["detail"]
+    assert "1 stopped on time budget" in h["detail"], h["detail"]
+    assert "over this provider's" in feeds.FEED_HEALTH["csaf:slow.example"]["detail"]
     assert h["status"] == feeds.CAPPED, h
 
 
@@ -1997,7 +2011,7 @@ def test_the_run_says_how_far_behind_a_provider_still_is(tmp_path, monkeypatch):
 
     part = feeds.FEED_HEALTH["csaf:v.example"]
     assert "still to read on later runs" in part["detail"], part["detail"]
-    assert "still catching up: v.example" in feeds.FEED_HEALTH["csaf"]["detail"]
+    assert "1 still catching up" in feeds.FEED_HEALTH["csaf"]["detail"]
     assert json.load(open(st))["v.example"]["behind"] > 0
 
 
@@ -2099,15 +2113,9 @@ def test_a_genuinely_empty_provider_is_still_named(tmp_path, monkeypatch):
     feeds.reset_health()
     feeds.feed_csaf({2026}, providers=("https://quiet.example/pm.json",),
                     aggregators=(), state_path=str(st), incremental=True)
-    assert "no advisories in scope: quiet.example" in feeds.FEED_HEALTH["csaf"]["detail"]
+    assert "1 no advisories in scope" in feeds.FEED_HEALTH["csaf"]["detail"]
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "KNOWN BROKEN, and this marker is the record. The cursor caches the read "
-    "position and not the result, so a caught-up provider returns nothing and "
-    "its rows leave the site. `incremental` defaults to False because of it. "
-    "strict=True: fixing the cursor makes this XPASS and fails the suite, which "
-    "is the prompt to delete the marker rather than quietly leave it."))
 def test_a_caught_up_provider_still_returns_its_rows(tmp_path, monkeypatch):
     """THE SILENT SHRINK THE CURSOR CAUSED, and the reason it is off by default.
 
@@ -2128,9 +2136,11 @@ def test_a_caught_up_provider_still_returns_its_rows(tmp_path, monkeypatch):
     was FETCHED; none asserted what was RETURNED, so a change that fetched
     nothing and returned nothing passed all of them.
 
-    It fails today, which is why `incremental` defaults to False. Turning the
-    cursor back on means making this pass by carrying the references in the
-    state, not by deleting the assertion."""
+It failed for one day, during which `incremental` defaulted to False. It
+    passes now because the state carries the REFERENCES rather than two
+    timestamps, so a caught-up provider replays what it knows instead of
+    returning nothing. The xfail(strict=True) marker that recorded the bug is
+    gone, which is what strict is for."""
     st = tmp_path / "s.json"
     _csaf_dated(monkeypatch, 12)
     feeds.reset_health()
@@ -2160,3 +2170,31 @@ def test_the_default_read_returns_everything_every_run(tmp_path, monkeypatch):
                                aggregators=())
         assert len(rows) == 12, (
             f"the adapter returned {len(rows)} of 12 known ids on a repeat run")
+
+
+def test_the_state_drops_ids_that_leave_the_year_window(tmp_path, monkeypatch):
+    """The refs cache is unbounded without this, and the window rolls every
+    January. An id read in 2024 would sit in the state forever, be replayed on
+    every run, and re-enter the published list a year after the feeds stopped
+    considering it in scope.
+
+    That is the same class of defect as the cursor bug it sits next to: state
+    that outlives the thing it describes. Removing the prune left the suite
+    green, so nothing was asserting the state had a floor as well as a ceiling."""
+    st = tmp_path / "s.json"
+    _csaf_dated(monkeypatch, 6)          # ids are CVE-2026-1000+
+    feeds.reset_health()
+    rows = feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                           aggregators=(), state_path=str(st), incremental=True)
+    assert len(rows) == 6
+    assert len(json.load(open(st))["v.example"]["refs"]) == 6
+
+    # the window rolls past them
+    feeds.reset_health()
+    rows = feeds.feed_csaf({2027}, providers=("https://v.example/pm.json",),
+                           aggregators=(), state_path=str(st), incremental=True)
+    assert rows == [], (
+        f"{len(rows)} ids from outside the year window were replayed out of the "
+        "state; the cache has no floor and will grow forever")
+    assert json.load(open(st))["v.example"]["refs"] == {}, (
+        "out-of-window ids are still held in the state")

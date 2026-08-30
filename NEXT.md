@@ -45,12 +45,13 @@ number nobody is measuring.
 `CSAF_PROVIDER_BUDGET_S` rather than by a number of advisories, and `/status`
 publishes what each one returned.
 
-**The read cursor is BUILT AND SWITCHED OFF.** `incremental=False`. It caches
-the read position but not the result, and this pipeline needs the result: a
-caught-up provider correctly returns nothing and every id whose only evidence
-was that provider drops off the site. It shipped, shrank the live list, and was
-turned off the same day. See "What is open" below. Do not turn it on without
-reading that entry.
+**CSAF is read incrementally.** Each provider keeps two read marks and every
+reference it has seen in `data/csaf_state.json`, cached across runs by
+`deploy.yml`. Fetching is incremental; RETURNING NEVER IS. A provider emits
+everything it knows on every run whether it fetched anything or not, because
+`gather` keeps no memory of its own and a provider that returns nothing removes
+its rows from the site. `CSAF_PROVIDER_BUDGET_S` bounds how fast a backlog
+drains, not what the site can see.
 
 ---
 
@@ -76,54 +77,26 @@ reader-facing item remains:
 - **F1.** The front page promises a correction route that
   `.well-known/security.txt` denies on the same origin.
 
+D5, D6, D7 and D10 are done. D9 is deliberately NOT done: the panel sequences it
+behind F8, because the tests it would delete are today the only executable
+statement that a CSAF cap keeps the newest of anything.
+
 The panel's own balance was 21 removals against 7 additions. Prefer the DELETE
 list when in doubt; this project's documented failure mode is accreting guards
 and caveats around a list and its links.
 
-### 3. Finish the CSAF read cursor, or delete it
-
-`incremental=False` in `rbp/feeds.py`. The marks, the plan and the budget are
-correct and tested. What is missing is that **the state carries two timestamps
-and not the references**, and `gather` builds the reference set from what each
-adapter returns on the current run, so a provider that reads nothing contributes
-nothing.
-
-Measured live, 2026-08-29 22:21Z, the first run able to restore the cursor
-cache: twelve of seventeen providers reported "+0 new (0 in scope)", every word
-true, and the list fell 1,769 to 1,760 while the CSAF publisher facet went from
-five publishers to two. All eight CISA rows vanished. `/status` published
-`csaf:www.cisa.gov  OK  0 ids  caught up across all 1,833 advisories`, an
-accurate sentence about a provider whose rows had just been erased. That is the
-silent shrink this adapter exists to prevent, introduced by the change that
-removed the cap to stop losing rows.
-
-To finish it, the per-provider state has to hold the references it has seen and
-replay them for a caught-up provider. Roughly 22,000 ids at a few hundred bytes,
-the same order as `data/ghsa_repos_state.json` already in the Actions cache.
-
-`test_a_caught_up_provider_still_returns_its_rows` is the property that was
-missing, and is marked `xfail(strict=True)`. Every other cursor test asserted
-what was FETCHED; none asserted what was RETURNED, which is how a change that
-fetched nothing and returned nothing passed all of them. Fixing the cursor makes
-that test XPASS and fails the suite, which is the prompt to remove the marker.
-
-Deleting the cursor is a legitimate answer. Without it every run re-reads each
-provider inside the time budget, which is what happens today and is already far
-better than the old cap: cold runs read 10,838 and 21,810 ids where the cap
-yielded 4,416.
-
-### 4. FEEDS.md section 3's three remaining guards
+### 3. FEEDS.md section 3's three remaining guards
 
 Per-feed shrink baselines surviving a profile change; a failure budget expressed
 as a fraction rather than a count; `gather` parallelised while preserving
 per-feed health recording exactly.
 
-### 5. Rehearse the withhold lever end to end
+### 4. Rehearse the withhold lever end to end
 
 `RBP_WITHHOLD` drops rows from every published artefact and is tested, but has
 never been exercised against a real run.
 
-### 6. Loose threads from the uncapping
+### 5. Loose threads from the uncapping
 
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.

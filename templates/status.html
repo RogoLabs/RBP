@@ -346,13 +346,29 @@
             {% elif p.status == 'truncated' %}<span class="chip chip-late">Truncated</span>
             {% else %}<span class="chip chip-must">Failed</span>{% endif %}
           </td>
+          {# TWO CELLS DELETED, NOT BLANKED, and the note column takes their space.
+
+             `rows_published` and `rows_only` are permanently null for a part.
+             `rows_by_source` reads the `sources` string on a published row and
+             that string names the FEED, never the provider inside it, so no part
+             can ever be found in it. Deriving the publisher facet from `refs`
+             rather than putting it in `sources` makes that permanent rather than
+             temporary.
+
+             They rendered as 34 bare em dashes, in a numeric column, directly
+             under a paragraph ending "a feed can return tens of thousands of IDs
+             while accounting for none of the list". The available reading was
+             "none". Worse for a screen reader, which announces nothing at all:
+             the cell's entire content was one punctuation character with no text
+             alternative, so a legend would not have reached that reader either.
+
+             A column that can never hold a number for these rows is not a column
+             they belong in. `merge_contribution` still writes the explicit null,
+             which the Data Consumer defended and which guards a Jinja
+             missing-key footgun that has already cost one live bug. #}
           {% set p_rows = p.get('rows') %}
-          {% set p_pub = p.get('rows_published') %}
-          {% set p_only = p.get('rows_only') %}
           <td class="num">{% if p_rows is not none %}{{ p_rows | commafy }}{% else %}not recorded{% endif %}</td>
-          <td class="num">{% if p_pub is not none %}{{ p_pub | commafy }}{% else %}&mdash;{% endif %}</td>
-          <td class="num">{% if p_only is not none %}{{ p_only | commafy }}{% else %}&mdash;{% endif %}</td>
-          <td class="text-muted">{{ p.detail or '' }}</td>
+          <td class="text-muted" colspan="3">{{ p.detail or '' }}</td>
         </tr>
         {% endfor %}
         {% endfor %}
