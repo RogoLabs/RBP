@@ -403,6 +403,33 @@ jobs:
             python -m rbp.publish gate --site site
           fi
 
+      # THE ARTEFACT HAS TO HOLD UP, and until 2026-08-30 nothing checked
+      # that it did.
+      #
+      # Three regressions reached the live site on 2026-08-29 and 08-30, each a
+      # variant of "state that claims to know something it does not". The
+      # offline suite passed on all three. Every one was obvious in the
+      # published artefact within seconds, and two of them ran with CISA showing
+      # 3 rows instead of 13 while cisagov/CSAF#466 was open and linking to
+      # exactly those rows.
+      #
+      # Detection was never the gap. `feeds.compare_magnitudes` fired on the
+      # first one and printed DEGRADED to stdout. Nothing acted on it: no step
+      # failed, the site published, and by the next run the shrunken value was
+      # the baseline, so the guard went quiet. A finding that reaches only
+      # stdout is a finding nobody reads.
+      #
+      # AFTER the upload and AFTER staging, deliberately, and on the same
+      # reasoning the launch gate states: "Fail LOUD, separately from the
+      # publication." Failing dark on the publication itself is worse than
+      # serving a questionable count with a red build beside it, because a
+      # blocked publication means the site silently keeps serving something
+      # older with nothing to say so.
+      #
+      # Runs on a dry run too: a rehearsal that cannot fail proves nothing.
+      - name: Verify the artefact that was just published
+        run: python -m rbp.verify --site site --snapshots snapshots
+
       - name: Persist durable state
         if: ${{ vars.RBP_PAUSE != '1' && inputs.dry_run != true }}
         run: |

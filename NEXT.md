@@ -151,6 +151,15 @@ closed to the pre-launch page.
 **PLAN.md predates the pivot in places** and documents pages that no longer
 exist. Trust `git log` and the code over it.
 
+**A green build is not a correct site.** Three regressions reached the live site
+on 2026-08-29 and 08-30, each a variant of "state that claims to know something
+it does not", and the offline suite passed on all three. Every one was obvious in
+the published artefact within seconds. `python -m rbp.verify` runs as a deploy
+step after the upload and fails the build on a finding; `tests/test_verify.py`
+replays all three. Detection was never the gap: `compare_magnitudes` fired on the
+first one and printed DEGRADED to stdout, nothing acted on it, and by the next
+run the shrunken value was the baseline so it went quiet.
+
 **A number written into a document is a number nobody is measuring.** This file
 had nineteen of them and all nineteen went stale in two days. The review panel's
 context block had the same problem and produced findings against a site that no

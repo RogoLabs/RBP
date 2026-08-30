@@ -278,3 +278,26 @@ def test_every_imported_package_is_declared_in_a_requirements_file():
         "these are imported by the suite and named in no requirements file, so "
         "they work here and fail on a clean runner as a COLLECTION error, which "
         f"stops the publish rather than one test: {undeclared}")
+
+
+def test_the_workflow_verifies_the_artefact_it_just_published():
+    """Three regressions reached the live site on 2026-08-29 and 08-30 and the
+    offline suite passed on all three. `compare_magnitudes` detected the first
+    and printed DEGRADED to stdout; nothing failed, so nothing stopped.
+
+    A finding that reaches only stdout is a finding nobody reads, so the check
+    has to be a STEP, and the step has to be able to fail."""
+    wf = pathlib.Path(".github/workflows/deploy.yml").read_text()
+    assert "python -m rbp.verify" in wf, (
+        "nothing checks the artefact that was just published")
+
+
+def test_the_verify_step_runs_after_the_upload_not_before_it():
+    """"Fail LOUD, separately from the publication" is this workflow's stated
+    rule for the launch gate, and it applies here for the same reason: a check
+    that BLOCKS publication means the site silently keeps serving something
+    older, with nothing anywhere saying so. A red build beside a questionable
+    count is the better failure."""
+    wf = pathlib.Path(".github/workflows/deploy.yml").read_text()
+    assert wf.index("upload-pages-artifact") < wf.index("python -m rbp.verify"), (
+        "the artefact check gates the publication instead of reporting on it")
