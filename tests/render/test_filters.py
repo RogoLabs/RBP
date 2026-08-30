@@ -388,3 +388,66 @@ def test_a_chip_names_the_publisher_not_the_file_format(page, server):
         f"no chip names the publisher the advisory states: {sorted(labels)}")
     assert "CSAF Advisory" not in labels, (
         "the chip still names the serialisation rather than the publisher")
+
+
+def test_the_feed_list_stays_alphabetical_and_the_publishers_group(page, server):
+    """SORTING, and the first version got it backwards.
+
+    Every CSAF entry was sorted to the TOP of the control and the grouping was
+    faked with two figure spaces. Three things went wrong at once: the
+    alphabetical feed list started halfway down, so a reader looking for Debian
+    met five CSAF publishers first; "Red Hat Product Security" sat at the top
+    while "Red Hat" sat near the bottom with nothing saying they are different
+    feeds; and the indent was invisible to a screen reader, which was read a flat
+    list of sixteen peers.
+
+    An <optgroup> is what this is for, and this control already uses one for the
+    age bounds."""
+    page.goto(f"{server}/?age=any")
+    top = page.eval_on_selector_all(
+        "#src > option", "els => els.map(e => e.textContent.trim())")
+    # the ungrouped options, minus the "Any Source" placeholder, are alphabetical
+    feeds_only = [t for t in top if t and t != "Any Source"]
+    assert feeds_only == sorted(feeds_only), (
+        f"the feed list is not in alphabetical order: {feeds_only}")
+
+    groups = page.eval_on_selector_all("#src optgroup", "els => els.map(e => e.label)")
+    assert "CSAF Publishers" in groups, (
+        f"the publishers are not in a group of their own: {groups}")
+
+    grouped = page.eval_on_selector_all(
+        "#src optgroup[label='CSAF Publishers'] option",
+        "els => els.map(e => e.textContent.trim())")
+    assert len(grouped) >= 2, grouped
+    assert grouped == sorted(grouped), (
+        f"the publishers are not in alphabetical order: {grouped}")
+    assert not any(g.startswith(" ") for g in grouped), (
+        "a publisher label still carries the faked figure-space indent")
+
+
+def test_a_publisher_name_is_not_cut_mid_word(page, server):
+    """The longest real publisher name is "Bundesamt fur Sicherheit in der
+    Informationstechnik" at 50 characters, and the 44-char cap cut it to
+    "Bundesamt fur Sicherheit in der Informati...".
+
+    That cap exists because an unknown slug arrives from the QUERY STRING and
+    could be five thousand characters. These names come from the advisory
+    documents and are bounded by them, so inside the group the cap is longer."""
+    page.goto(f"{server}/?age=any")
+    grouped = page.eval_on_selector_all(
+        "#src optgroup[label='CSAF Publishers'] option",
+        "els => els.map(e => e.textContent.trim())")
+    for label in grouped:
+        assert len(label) <= 56, f"{label!r} exceeds the group's cap"
+    # The fixture publishes under CERT-Bund's real 50-character name precisely so
+    # this can be asserted: at the old 44 it came back ending in an ellipsis.
+    assert any(len(g) > 44 for g in grouped), (
+        "no fixture publisher name is long enough to be truncated, so this test "
+        "cannot see the cap at all")
+    assert not any(g.endswith("\u2026") for g in grouped), (
+        f"a publisher name is still being cut mid-word: {grouped}")
+    # and the control still refuses an unbounded label from the URL
+    page.goto(f"{server}/?age=any&src=csaf:" + "z" * 500)
+    opts = page.eval_on_selector_all("#src option", "els => els.map(e => e.textContent)")
+    assert all(len(o) <= 60 for o in opts), (
+        "a value from the query string rendered an unbounded option label")

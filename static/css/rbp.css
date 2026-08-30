@@ -791,7 +791,19 @@ body.locked{overflow:hidden}
   border-radius:6px;background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit}
 .cmd-lab{font-size:.78rem;color:var(--rbp-text-muted);display:flex;align-items:center;gap:6px}
 .cmd-lab select{padding:7px 9px;border:1px solid var(--color-border);border-radius:6px;
-  background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit;font-size:.82rem}
+  background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit;font-size:.82rem;
+  /* A <select> SIZES ITSELF TO ITS WIDEST OPTION, and that is a page-layout
+     decision taken by whatever string happens to be in the data.
+     CERT-Bund's CSAF documents state a 50-character publisher name, and putting
+     it in the list pushed the command bar past the viewport: 208px of
+     horizontal page overflow at 320px, 153px at 375px, measured.
+     The option-label cap was quietly doing this job, which is why raising it
+     from 44 broke reflow. That made the cap serve two unrelated purposes at
+     once, so widening the labels meant widening the page.
+     Bounded here instead, where it belongs, and it also hardens the hostile
+     case: a src value from the query string can no longer stretch the bar
+     however long it is. WCAG 1.4.10. */
+  max-width:min(22rem, 60vw);text-overflow:ellipsis}
 .linkbtn{background:none;border:none;color:var(--rbp-link);cursor:pointer;
   padding:6px 2px;font:inherit;text-decoration:underline;text-underline-offset:3px}
 

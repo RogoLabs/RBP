@@ -307,10 +307,11 @@
   // string, and `?src=` followed by five thousand characters would otherwise
   // render a five-thousand-character option and take the command bar with it. The
   // VALUE is kept whole, so the filter still means exactly what the URL said.
-  function addOption(sel, value, label) {
+  function addOption(sel, value, label, cap) {
     var o = document.createElement("option");
+    var lim = cap || 44;
     o.value = value;
-    o.textContent = label.length > 44 ? label.slice(0, 43) + "\u2026" : label;
+    o.textContent = label.length > lim ? label.slice(0, lim - 1) + "\u2026" : label;
     sel.appendChild(o);
     return o;
   }
@@ -322,20 +323,42 @@
     (r.sources || "").split(",").forEach(function (s) { if (s) { seen[s] = 1; } });
     r._csaf.forEach(function (sl) { seen["csaf:" + sl] = 1; });
   });
-  // `csaf` itself stays in the list and stays FIRST among its own entries: it is
-  // the roll-up, every ?src=csaf link already shared keeps meaning what it said,
-  // and a reader who wants "everything read over CSAF" can still ask for it.
-  Object.keys(seen).sort(function (a, b) {
-    var ac = a.indexOf("csaf") === 0, bc = b.indexOf("csaf") === 0;
-    if (ac !== bc) { return ac ? -1 : 1; }
-    if (a === "csaf") { return -1; }
-    if (b === "csaf") { return 1; }
-    return feedName(a).localeCompare(feedName(b));
-  }).forEach(function (s) {
-    addOption(els.src, s, s.indexOf("csaf:") === 0
-      ? "\u2007\u2007" + feedName(s)          // indented under the roll-up
-      : feedName(s));
-  });
+  // AN OPTGROUP, WHICH IS WHAT THIS IS FOR, and this control already uses one
+  // for the age bounds ("At Least" / "Under") twenty lines up.
+  //
+  // The first version sorted every csaf entry to the TOP of the list and faked
+  // the grouping with two figure spaces, which got three things wrong at once:
+  // the alphabetical list started at "Alpine" halfway down, so a reader looking
+  // for Debian met five CSAF publishers first; "Red Hat Product Security" sat at
+  // the top while "Red Hat" sat near the bottom with nothing saying they are
+  // different feeds; and the indent was invisible to a screen reader, which read
+  // a flat list of sixteen peers.
+  //
+  // An optgroup is native, announced as a group, visually distinct without
+  // inventing whitespace, and it leaves the feed list in plain alphabetical
+  // order where it belongs.
+  var srcNames = Object.keys(seen).filter(function (s) {
+    return s.indexOf("csaf:") !== 0;
+  }).sort(function (a, b) { return feedName(a).localeCompare(feedName(b)); });
+  var pubs = Object.keys(seen).filter(function (s) {
+    return s.indexOf("csaf:") === 0;
+  }).sort(function (a, b) { return feedName(a).localeCompare(feedName(b)); });
+
+  srcNames.forEach(function (s) { addOption(els.src, s, feedName(s)); });
+
+  if (pubs.length) {
+    var g = document.createElement("optgroup");
+    // The group label carries the transport, so each option can be just the
+    // publisher's own name rather than repeating "CSAF" six times.
+    g.label = "CSAF Publishers";
+    els.src.appendChild(g);
+    // A longer cap inside the group. The 44 exists because an unknown slug
+    // arrives from the QUERY STRING and could be five thousand characters; these
+    // names come from the advisory documents, are bounded by them, and the
+    // longest real one ("Bundesamt fur Sicherheit in der Informationstechnik")
+    // was being cut mid-word at 44.
+    pubs.forEach(function (s) { addOption(g, s, feedName(s), 56); });
+  }
 
   // A LINK MEANS WHAT IT SAYS, and for a feed that had gone quiet it meant the
   // opposite.

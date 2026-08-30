@@ -94,11 +94,26 @@ _LONG_REF = "osv:Packagist:codingms/additional-tca-with-a-deliberately-long-suff
 # derived from them.
 _CSAF_PUB_A = "CISA"
 _CSAF_PUB_B = "Siemens ProductCERT"
+# THE LONG ONE, AND IT IS NOT INVENTED. This is verbatim what CERT-Bund's CSAF
+# documents state as their publisher name, at 50 characters, and it is the
+# largest CSAF publisher this site reads.
+#
+# Both other names here are short, so no fixture could produce a label long
+# enough to be truncated and the option-label cap was untestable: reverting it
+# to the 44 that cut this name mid-word left the whole suite green.
+_CSAF_PUB_C = "Bundesamt fur Sicherheit in der Informationstechnik"
+
+_CSAF_PUBS = (_CSAF_PUB_A, _CSAF_PUB_B, _CSAF_PUB_C)
 
 
 def _csaf_ref(n):
-    pub = _CSAF_PUB_A if n % 2 == 0 else _CSAF_PUB_B
-    tag = "ICSA-26-100-0" if n % 2 == 0 else "SSA-99000"
+    # `n // 3`, NOT `n % 3`. The row builder only attaches a CSAF ref when
+    # `n % 3 == 0`, so indexing the publishers by `n % 3` selected element 0
+    # every time and the whole fixture published under one name, which is the
+    # exact state the two-publisher rule below exists to prevent.
+    i = (n // 3) % len(_CSAF_PUBS)
+    pub = _CSAF_PUBS[i]
+    tag = ("ICSA-26-100-0", "SSA-99000", "WID-SEC-W-2026-0")[i]
     return (f"csaf:{pub}\t{tag}{n}\t"
             f"https://example.invalid/csaf/{n}.json")
 
