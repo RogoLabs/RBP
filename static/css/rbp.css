@@ -33,45 +33,9 @@
    confidence tier. */
 
 /* ---- the lead number ---------------------------------------------------- */
-.lead-count {
-  font-size: clamp(3rem, 11vw, 6.5rem);
-  font-weight: 700;
-  line-height: 0.95;
-  letter-spacing: -0.04em;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-text-primary);
-  display: block;
-}
-.lead-unit {
-  font-size: clamp(1rem, 2.4vw, 1.35rem);
-  font-weight: 500;
-  /* The project's AA-corrected token, not the inherited one. This sentence
-     defines what the lead number counts and it measured 3.95 over the page
-     header, so the most-read sentence on the site was below AA. */
-  color: var(--rbp-text-secondary);
-  max-width: 46ch;
-  margin: var(--spacing-sm) 0 0;
-}
-.lead-sub {
-  margin-top: var(--spacing-lg);
-  padding-top: var(--spacing-md);
-  border-top: 1px solid var(--color-border);
-  color: var(--rbp-text-secondary);
-  max-width: 62ch;
-}
 
 /* Redaction. The one visual flourish on the site, used only for the literal
    API value, never decoratively. */
-.redacted {
-  background: var(--color-text-primary);
-  color: var(--color-bg-content);
-  padding: 0.05em 0.45em;
-  border-radius: 3px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.9em;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
 
 /* ---- chips ------------------------------------------------------------- */
 .chip {
@@ -137,6 +101,24 @@
 [data-theme="dark"] .chip-late   { color: #f0c25a; }
 [data-theme="dark"] .chip-corrob { color: #4ade80; }
 [data-theme="dark"] .chip-none   { background: #262a36; color: #b6bcc7; }
+
+/* WHY `table.rbp` IS STILL HERE, though no page emits it.
+   
+   Its one emitter is method.html's misses table, behind `{% if grader.misses %}`,
+   and the grader has no misses, so the whole component renders nowhere: not on a
+   built page, not on the live site. Round 9's review said to delete it.
+   
+   It is not a pile of dead lines. `rbp.breakpoints.card_layout_boundary()` DERIVES
+   the render sweep's card-mode breakpoint by parsing `table.rbp thead { display:
+   none }` out of this file, `tests/render/_measure.py` reads the same rule to tell
+   which layout a table is in, and five a11y tests assert its focus ring, its
+   header fill and its per-cell labels directly against this source.
+   
+   Removing it is a subsystem change with its own blast radius, not a deletion.
+   Two attempts at it in one sitting each broke the dark-theme contrast rule two
+   sections down, because that rule shares one body across three selector lines
+   and only the last carries the brace. Left standing deliberately, with the
+   reason recorded, rather than half-removed. */
 
 /* ---- tables ------------------------------------------------------------ */
 /* A BOUNDED scrollport, so `position: sticky` on the header actually has
@@ -257,11 +239,6 @@ table.table-sm td.mono { overflow-wrap: anywhere; }
   color: var(--color-text-secondary);
   font-weight: 600;
 }
-.result-count {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8rem;
-  color: var(--color-text-secondary);
-}
 
 /* ---- caveat block ------------------------------------------------------ */
 .caveat {
@@ -276,13 +253,6 @@ table.table-sm td.mono { overflow-wrap: anywhere; }
 
 /* ---- histogram --------------------------------------------------------- */
 .histo { display: flex; align-items: flex-end; gap: 2px; height: 5rem; margin: var(--spacing-md) 0 0; }
-.histo-bar { flex: 1; background: var(--color-primary); border-radius: 2px 2px 0 0; min-height: 2px; opacity: 0.85; }
-.histo-labels { display: flex; gap: 2px; margin-top: 0.3rem; }
-.histo-labels span {
-  flex: 1; text-align: center; font-size: 0.65rem;
-  color: var(--color-text-muted);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-}
 
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .small { font-size: 0.85rem; }
@@ -341,7 +311,6 @@ blockquote p:last-child { margin-bottom: 0; }
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 [data-theme="dark"] .metric-value { color: var(--color-accent); }
-[data-theme="dark"] .histo-bar { background: var(--color-accent); }
 
 /* The ported sheet carries an UNSCOPED `tbody tr:nth-child(2n)` with a
    hardcoded rgba(248,249,250,.5) fill and no dark override, so it striped every
@@ -369,37 +338,9 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
    under it. Every one of these lived three clicks away or in a sibling file while
    the count itself was the whole product. Deliberately plain and small: it is
    context, not a second headline competing with the first. */
-.bound-strip {
-  list-style: none;
-  margin: var(--spacing-sm) 0 0;
-  padding: 0;
-  max-width: 62ch;
-  font-size: 0.88rem;
-  color: var(--color-text-secondary);
-}
-.bound-strip li {
-  padding: 0.2rem 0 0.2rem 0.9rem;
-  position: relative;
-}
-.bound-strip li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.72em;
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
-  background: var(--color-text-secondary);
-  opacity: 0.55;
-}
 
 /* A tile's denominator. Four tiles previously carried four different unstated
    bases, and a reader takes them all as shares of the headline. */
-.metric-base {
-  font-weight: 400;
-  opacity: 0.75;
-  font-size: 0.92em;
-}
 
 /* ==========================================================================
    Accessibility (review item 17)
@@ -502,7 +443,6 @@ table.rbp td.unattributed { color: var(--rbp-text-muted); }
 table.rbp a { color: var(--rbp-link); }
 .qualifier, .result-count, .filters label,
 .page-header p.text-muted, .text-muted { color: var(--rbp-text-secondary); }
-.metric-base { color: var(--rbp-text-muted); opacity: 1; }
 
 table.rbp thead th {
   position: sticky;
@@ -625,7 +565,6 @@ table.rbp caption {
     display: block;
   }
   table.rbp td.desc { min-width: 0; }
-  .lead-count { word-break: break-word; }
 }
 
 /* PRINT stripped every hedge. The inherited print block forces
@@ -658,14 +597,6 @@ table.rbp caption {
    thing and sits above it small: the page that will be ranked and linked most had
    no h1 at all and an outline starting at H2. Not visually-hidden, because a
    heading a sighted reader cannot see is its own problem. */
-h1.visually-quiet {
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--rbp-text-muted);
-  margin: 0 0 var(--spacing-sm);
-}
 
 
 /* ---- narrow viewports: nothing may scroll the PAGE sideways ------------- */
@@ -759,14 +690,12 @@ a.src { border-color: var(--rbp-link); color: var(--rbp-link); }
 a.src:hover, a.src:focus-visible { background: var(--rbp-link); color: var(--color-bg-content); }
 /* A feed with no per-ID page is still a place the ID is showing up. Shown, and
    visibly not a link, rather than dropped. */
-span.src-nolink { color: var(--rbp-text-muted); border-style: dashed; }
 .desc .pkg { font-family: var(--font-mono, monospace); font-size: 0.85em; opacity: 0.85; }
 
 /* THE MEASURE. Body prose ran at 140-146 characters per line against a 45-75
    readable band, on every page, because only .lead-unit had a max-width. One
    rule, applied where prose actually is. */
 .page-header p, .card-body > p, .lead-plain, .caveat p { max-width: 68ch; }
-.lead-plain { font-size: 1.1rem; }
 
 /* ==========================================================================
    THE LIST PAGE. One route: a command bar, the rows, and a slide-over panel.

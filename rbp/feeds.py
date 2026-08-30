@@ -2254,28 +2254,14 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                 entries, st.get("newest_read") or "", st.get("oldest_read") or "")
         else:
             entries, n_fresh, n_older = sorted(entries, reverse=True), listed, 0
-        # BEFORE THE CUT, because after it the number is gone. This is the whole
-        # point of reading the directories uncapped: `listed` is what the provider
-        # published in the window and `len(entries)` is what we agreed to read,
-        # and until 2026-08-28 the difference between them was applied here and
-        # reported nowhere.
+        # BEFORE THE CUT, because after it the number is gone, and that is the
+        # only part of this that does not go stale: a flat cap is invisible to a
+        # guard that only ever asks whether a number went DOWN, so the loss has
+        # to be measured here or it cannot be reported at all.
         #
-        # Measured live on the configured providers that day, in-scope advisories
-        # against a cap of 120:
-        #
-        #   suse.com                     83,091     0.1%
-        #   security.access.redhat.com   37,317     0.3%
-        #   wid.cert-bund.de             21,358     0.6%
-        #   cisa.gov                      2,243     5.3%
-        #   cisco.com                       535    22.4%
-        #   cert-portal.siemens.com         457    26.3%
-        #
-        # Every one of those six published `status: ok`. 144,281 advisories went
-        # unread with nothing on any page saying so, and no existing guard could
-        # see it: `compare_magnitudes` only ever asks whether a number went DOWN,
-        # and a hard cap holds it perfectly flat. That is the same signature as
-        # `mozilla` frozen at exactly 607 for six consecutive runs, arriving in
-        # the one shape the guard is structurally blind to.
+        # The six-provider table that used to sit here was a one-day measurement
+        # against a cap that no longer exists, restated verbatim in NEXT.md and
+        # in the commit that removed the cap. Those are dated; a comment is not.
         # `planned` is what the cursor decided to read; `entries` after this
         # slice is what a count cap (if a caller set one) allows.
         #
