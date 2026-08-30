@@ -267,6 +267,29 @@
   // means exactly what it says, and the default never overrides a reader's choice.
   var DEFAULT_AGE = "90-";
 
+  // DID THE READER CHOOSE AN AGE, or did they just arrive?
+  //
+  // THE BUG THIS FIXES, and it is the likeliest way a reader bounces off this
+  // site. Land on `/`, paste a CVE ID that has been public for more than 90
+  // days, and the page said "Nothing matches" for a row that IS in the list,
+  // because the 90-day default was still being applied alongside the search.
+  // `writeUrl` then serialised `?q=CVE-...&age=90-`, baking the wrong answer
+  // into a URL the reader might send to someone else. The offered remedy made
+  // it worse: "Clear Filters" blanked the search box too, and the advice read
+  // "Try a different term", which is exactly wrong for someone holding one id.
+  //
+  // Someone arriving from a link with one id in hand is the case that has to
+  // work. A shared `?q=...` link was already fine, because any parameter at all
+  // suppresses the default; only the live typing path was broken.
+  //
+  // So the default is a BROWSING default, never a searching one. The first
+  // keystroke in the search box clears it, visibly, so the control always shows
+  // what is actually being applied rather than a bound that is being ignored.
+  // Clearing the search box brings the curated view back, and the moment the
+  // reader touches the age control themselves it becomes theirs and nothing
+  // here overrides it again.
+  var ageChosen = false;
+
   // "90+" -> at least 90 days. "30-" -> under 30 days. "" -> no bound.
   //
   // A bare "90" is read as "90+" so that ?minage=90 links, which is what this
@@ -566,6 +589,7 @@
         // empty value writes a URL with no parameters, which is the one the
         // default applies to.
         els.age.value = "any";
+        ageChosen = true;      // an explicit "show me everything" is a choice
         render(); writeUrl(true); $("n").focus ? null : null;
       });
     } else {
@@ -573,19 +597,51 @@
     }
 
     if (!filtered.length) {
+      // AN ABSENCE HERE IS NOT A STATEMENT THAT THE ID IS PUBLISHED, and for a
+      // reader who arrived holding one id that is the only thing worth saying.
+      //
+      // "Try a different term" is advice for someone browsing. Someone who
+      // pasted CVE-2025-12345 does not have a different term, and the sentence
+      // reads as "this id is fine", which this site cannot know: it reads a
+      // minority of CNAs and every count on it is a floor.
+      var typed = els.q.value.trim();
+      var looksLikeCve = /^CVE-\d{4}-\d{4,}$/i.test(typed);
+      var body;
+      if (looksLikeCve) {
+        body = "<p>This site lists reserved CVE IDs that appear in the public " +
+          "advisory feeds it reads, which are a minority of all CNAs. " +
+          "<b>Not finding " + esc(typed.toUpperCase()) + " here does not mean it " +
+          "has been published</b>, only that no feed read by this site " +
+          "references it while it is reserved.</p>" +
+          '<p><a href="https://cveawg.mitre.org/api/cve-id/' + esc(typed.toUpperCase()) +
+          '" rel="noopener">Check its state directly</a> against the CVE ' +
+          "Services reservation endpoint, which is authoritative for any ID.</p>";
+      } else {
+        body = "<p>" + ROWS.length.toLocaleString() + " rows are being tracked. " +
+          "Try a different term, or widen a filter.</p>";
+      }
       $("list").innerHTML =
         '<div class="empty"><b>Nothing matches ' + esc(describeFilters()) + ".</b>" +
-        "<p>" + ROWS.length.toLocaleString() + " rows are being tracked. " +
-        "Try a different term, or widen a filter.</p>" +
-        '<button type="button" class="morebtn" id="clear">Clear Filters</button></div>';
+        body +
+        '<button type="button" class="morebtn" id="clear">' +
+        (typed ? "Search All Rows" : "Clear Filters") + "</button></div>";
       $("clear").addEventListener("click", function () {
+        // KEEPS THE SEARCH TERM. Blanking it was the worst part of this state:
+        // the one control the reader had deliberately filled was the one thing
+        // the remedy threw away, so the button that promised to help lost their
+        // id and left them at the unfiltered list.
+        //
         // Derived from `els`, not a typed list: the typed version still cleared
         // `minage` after that control was renamed, so "Clear filters" left the
         // age filter set and the empty state on screen.
-        Object.keys(els).forEach(function (k) { els[k].value = ""; });
+        Object.keys(els).forEach(function (k) {
+          if (k !== "q") { els[k].value = ""; }
+        });
         // `age` has no empty option any more, so clearing it to "" would leave
-        // the select showing nothing. "any" is the explicit everything state.
+        // the select showing nothing. "any" is the explicit everything state,
+        // and it is a choice the reader just made by pressing this.
         els.age.value = "any";
+        ageChosen = true;
         render(); writeUrl(); els.q.focus();
       });
       $("more").hidden = true;
@@ -631,7 +687,14 @@
   // modal, and putting it there makes Back close it instead of leaving.
   function writeUrl(push) {
     var p = new URLSearchParams();
-    Object.keys(els).forEach(function (k) { if (els[k].value) { p.set(k, els[k].value); } });
+    Object.keys(els).forEach(function (k) {
+      // An age nobody chose is not part of the view they are looking at, so it
+      // does not go in the link. Writing it produced `?q=CVE-x&age=90-`, a URL
+      // that says "this reader asked for the last 90 days" about a reader who
+      // typed a CVE id.
+      if (k === "age" && !ageChosen) { return; }
+      if (els[k].value) { p.set(k, els[k].value); }
+    });
     var s = p.toString(), url = s ? "?" + s : location.pathname;
     if (push) { history.pushState(null, "", url); } else { history.replaceState(null, "", url); }
   }
@@ -641,6 +704,9 @@
     // view someone sent them, so the default applies. Any parameter at all, even
     // one this control does not read, means they are looking at something chosen.
     if (!location.search) { els.age.value = DEFAULT_AGE; }
+    // A view someone sent, or a legacy ?minage= link, is a chosen age and must
+    // survive every rule below.
+    if (p.get("age") !== null || p.get("minage") !== null) { ageChosen = true; }
     // Through FROM_URL, never straight onto the element: a select silently
     // discards a value it has no option for. See setSrc.
     Object.keys(els).forEach(function (k) {
@@ -657,9 +723,19 @@
     }
   }
 
-  els.q.addEventListener("input", function () { render(); writeUrl(false); });
+  els.q.addEventListener("input", function () {
+    // The browsing default steps aside for a search and comes back when the
+    // search is cleared. Only while the reader has not set an age themselves.
+    if (!ageChosen) {
+      els.age.value = els.q.value.trim() ? "any" : DEFAULT_AGE;
+    }
+    render(); writeUrl(false);
+  });
   els.src.addEventListener("change", function () { render(); writeUrl(true); });
-  els.age.addEventListener("change", function () { render(); writeUrl(true); });
+  els.age.addEventListener("change", function () {
+    ageChosen = true;          // theirs now; nothing above touches it again
+    render(); writeUrl(true);
+  });
   window.addEventListener("popstate", function () { readUrl(); render(); });
   $("more").addEventListener("click", function () {
     shown += PAGE; render(false);

@@ -321,17 +321,46 @@ def test_the_scorecard_names_the_baseline_it_was_measured_against():
     assert card["baseline"]["scored_at"] == "2026-08-24T00:00:00+00:00"
 
 
-def test_the_scorecard_uses_the_same_window_the_gate_is_measured_on():
-    """cli.run gathers {this year, last year} and measures coverage over three.
-    The gate IS the coverage figure, so a scorecard on the narrower window would
-    be marginal to a different denominator, which is one more estimate wearing a
-    measurement's clothes."""
+def test_the_feeds_read_every_year_the_coverage_figure_is_measured_over():
+    """THE GAP THIS CLOSES, and the previous version of this test pinned it open.
+
+    `cli.run` gathered {this year, last year} and measured coverage over three
+    years, so the site reported reach across 2024-2026 while reading advisories
+    only from 2025-2026. Every 2024 CNA counted as covered was measured against
+    ids the pipeline could not surface, and the launch gate sat on top of that.
+
+    The old test asserted the literal string `recent_years=(cyr - 2, cyr - 1,
+    cyr)` was present in cli.run's source, which kept feedlab in step with the
+    inconsistency rather than removing it.
+
+    Now there is one definition and this asserts the property instead: whatever
+    window coverage measures, the feeds read the same one."""
+    import datetime as _dt
+    from rbp import coverage
+    y = _dt.date.today().year
+    assert feedlab.coverage_years() == coverage.window(y)
+    assert coverage.window(2026) == (2024, 2025, 2026)
+    assert len(coverage.window(2026)) == coverage.WINDOW_YEARS
+    # A YEAR THAT IS NOT THIS ONE, because the assertions above cannot tell a
+    # derived window from a hardcoded (2024, 2025, 2026) while the current year
+    # is 2026. Replacing feedlab's body with that literal left them all green.
+    # Confirmed by mutation on 2026-08-30.
+    assert feedlab.coverage_years("2031-04-01") == (2029, 2030, 2031)
+    assert feedlab.coverage_years("2024-12-31") == (2022, 2023, 2024)
+
+
+def test_cli_gathers_the_same_years_it_measures_coverage_over():
+    """The seam, asserted on behaviour rather than on source text. `cmd_run`
+    derives both from `coverage.window`, so a change to one cannot silently
+    leave the other behind."""
     import inspect
-    from rbp import cli
+    from rbp import cli, coverage
     src = inspect.getsource(cli.cmd_run)
-    assert "recent_years=(cyr - 2, cyr - 1, cyr)" in src, (
-        "cli.run's coverage window changed; feedlab.coverage_years must follow it")
-    assert feedlab.coverage_years("2026-08-24") == (2024, 2025, 2026)
+    assert "coverage.window(cyr)" in src, (
+        "cli.run no longer derives its coverage window from the shared definition")
+    assert "_coverage.window(int(today[:4]))" in src, (
+        "cli.run no longer derives its FEED window from the shared definition")
+    assert coverage.window(2026) == (2024, 2025, 2026)
 
 
 def test_only_published_cves_in_the_window_can_credit_a_cna():

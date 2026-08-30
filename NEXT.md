@@ -56,29 +56,23 @@ reading that entry.
 
 ## What is open
 
-### 1. The year window. A scope decision, and it is Jerry's.
+### 1. Whether three years back is far enough
 
-`--years` defaults to the current year and the previous one, so runs use
-`[2025, 2026]`. An uncapped sweep of all seventeen CSAF providers on 2026-08-29
-found 422 reserved, publicly referenced IDs the site does not have. **104 of
-them are 2024-numbered and the window excludes them permanently**, including
-every one over 700 days: `CVE-2024-31884` at 971 days, `CVE-2024-0234` at 968,
-and a long CERT-Bund tail in the 860 to 960 range. The site's oldest visible row
-is 572 days.
+`coverage.WINDOW_YEARS = 3` is now the single definition, read by the feed
+gather, by the coverage figure and by feedlab. They had drifted: feeds read two
+years while coverage measured three, so every 2024 CNA counted as covered was
+measured against ids the pipeline could not surface.
 
-Widening to 2024 is a one-flag change and roughly doubles the age ceiling the
-site can show. It also enlarges every feed's fetch, so measure it against the
-job budget first. Not done, deliberately.
+Going further back is a judgement about relevance, not cost. Widening from two
+to three was measured at debian +1.0s and alas +0.0s, because these feeds
+download in bulk and filter locally.
 
 ### 2. The review panel's list, `docs/reviews/REVIEW-round9.md`
 
 24 FIX items and 12 DELETE items, ranked, with the refuted items recorded
-separately so they are not silently lost. Two are reader-facing today:
+separately so they are not silently lost. F2, the blocker, is fixed. One
+reader-facing item remains:
 
-- **F2, blocker.** Land on `/`, paste a CVE ID public for more than 90 days, and
-  the page says "Nothing matches", because `DEFAULT_AGE = "90-"` is applied
-  alongside the text filter. That is exactly what happens when someone follows a
-  link from an outreach email holding one ID.
 - **F1.** The front page promises a correction route that
   `.well-known/security.txt` denies on the same origin.
 

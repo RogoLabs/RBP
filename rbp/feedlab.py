@@ -138,13 +138,16 @@ def _corpus_maps(corpus_df):
     return assigner, state, published
 
 
-# The coverage window, which is WIDER than the feed-gather window. `cli.run`
-# gathers {this year, last year} and measures coverage over three years, and the
-# gate is the coverage figure, so the scorecard has to use the coverage window or
-# its "marginal CNA" is marginal to a different denominator than the gate's.
+# The window, from the one place that defines it.
+#
+# This used to compute `(y - 2, y - 1, y)` itself, with a comment explaining that
+# it was WIDER than the feed-gather window because `cli.run` gathered two years
+# and measured coverage over three. That gap is closed: both now read
+# coverage.WINDOW_YEARS, so a scorecard's "marginal CNA" is marginal to exactly
+# the denominator the gate uses and to exactly the years the feeds read.
 def coverage_years(today=None):
-    y = int((today or dt.date.today().isoformat())[:4])
-    return (y - 2, y - 1, y)
+    from . import coverage as _coverage
+    return _coverage.window(int((today or dt.date.today().isoformat())[:4]))
 
 
 def _cve_year(cid):

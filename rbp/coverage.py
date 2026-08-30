@@ -24,6 +24,36 @@ from __future__ import annotations
 # longer runs.
 MIN_SIGHTINGS = 3
 
+# How many years back the site looks, feeds and coverage alike.
+#
+# ONE DEFINITION, BECAUSE THEY HAD DRIFTED. `cli.run` defaulted the FEED window
+# to two years (this year and last) while passing coverage a THREE year window,
+# `(cyr - 2, cyr - 1, cyr)`. So the site measured its reach over 2024-2026 and
+# read advisories only from 2025-2026: every 2024 CNA counted as covered was
+# measured against ids the pipeline could not surface, and the launch gate sat
+# on top of that.
+#
+# The cost of closing it is small and was measured rather than assumed on
+# 2026-08-30: debian 18,152 -> 23,470 ids for +1.0s, alas 11,942 -> 16,294 for
+# +0.0s. These feeds download in bulk and filter locally, so a wider window is
+# more parsing, not more fetching.
+#
+# What it buys is the oldest evidence the site has. An uncapped sweep of the
+# CSAF providers on 2026-08-29 found 422 reserved, publicly referenced ids the
+# site did not hold, of which 104 were 2024-numbered and permanently outside the
+# feed window, including every one over 700 days: CVE-2024-31884 at 971 days and
+# CVE-2024-0234 at 968, against a then-oldest visible row of 572.
+#
+# Widening further is a judgement about relevance rather than cost. Three years
+# is what coverage already claimed, so this makes the site honest about the
+# window it was already reporting.
+WINDOW_YEARS = 3
+
+
+def window(today_year):
+    """The year window, newest first. One caller in cli.run for both purposes."""
+    return tuple(range(today_year - WINDOW_YEARS + 1, today_year + 1))
+
 
 def _year(cid):
     try:

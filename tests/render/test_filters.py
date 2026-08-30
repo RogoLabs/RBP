@@ -451,3 +451,98 @@ def test_a_publisher_name_is_not_cut_mid_word(page, server):
     opts = page.eval_on_selector_all("#src option", "els => els.map(e => e.textContent)")
     assert all(len(o) <= 60 for o in opts), (
         "a value from the query string rendered an unbounded option label")
+
+
+# --------------------------------------------------------------------------
+# F2: a reader who arrives holding one CVE ID
+# --------------------------------------------------------------------------
+
+def _oldest_id(page, server):
+    page.goto(f"{server}/?age=any")
+    return page.evaluate(
+        "JSON.parse(document.getElementById('rows').textContent)"
+        ".slice().sort((a,b)=>(b.days_public||0)-(a.days_public||0))[0].cve_id")
+
+
+def test_searching_an_old_id_from_the_front_door_finds_it(page, server):
+    """THE BUG, and it is the likeliest way a reader bounces off this site.
+
+    Land on `/`, paste a CVE ID public for more than 90 days, and the page said
+    "Nothing matches" for a row that IS in the list, because DEFAULT_AGE was
+    still applied alongside the search. Someone following a link from an
+    outreach email or from cisagov/CSAF#466 holds exactly one id and does
+    exactly this.
+
+    Typed rather than navigated: a shared `?q=` link already worked, because any
+    parameter suppresses the default. Only the live typing path was broken, so
+    only typing can see it."""
+    target = _oldest_id(page, server)
+    page.goto(f"{server}/")                      # the front door, default applied
+    page.fill("#q", target)
+    page.wait_for_timeout(120)
+    rows = page.eval_on_selector_all("#list .rbprow", "els => els.length")
+    assert rows >= 1, (
+        f"typing {target} at the front door found nothing, though it is in the "
+        "published data; the 90-day browsing default is being applied to a search")
+
+
+def test_the_url_a_search_produces_does_not_carry_an_age_nobody_chose(page, server):
+    """`?q=CVE-x&age=90-` bakes the wrong answer into a link the reader may send
+    on. An age nobody picked is not part of the view they are looking at."""
+    target = _oldest_id(page, server)
+    page.goto(f"{server}/")
+    page.fill("#q", target)
+    page.wait_for_timeout(120)
+    assert "age=" not in page.evaluate("location.search"), (
+        f"a typed search serialised an unchosen age: {page.evaluate('location.search')}")
+
+
+def test_an_age_the_reader_picked_survives_typing(page, server):
+    """The complement. The default steps aside for a search; a choice does not."""
+    page.goto(f"{server}/?age=365%2B")
+    page.fill("#q", "CVE")
+    page.wait_for_timeout(120)
+    assert page.eval_on_selector("#age", "e => e.value") == "365+", (
+        "a deliberately chosen age bound was overridden by typing")
+    assert "age=365" in page.evaluate("location.search")
+
+
+def test_the_empty_state_does_not_imply_an_unlisted_id_is_published(page, server):
+    """A site that reads a minority of CNAs cannot tell a reader their id is
+    fine, and "Try a different term" reads as exactly that to someone holding
+    one. Absence here is a fact about this site's feeds."""
+    page.goto(f"{server}/?age=any&q=CVE-1999-0001")
+    page.wait_for_selector(".empty")
+    text = page.eval_on_selector(".empty", "e => e.textContent")
+    assert "does not mean it has been published" in text, text
+    assert "Try a different term" not in text, (
+        "the empty state still offers browsing advice to a reader holding one id")
+
+
+def test_the_remedy_does_not_throw_away_the_search_term(page, server):
+    """The one control the reader deliberately filled was the one thing the
+    remedy blanked, so the button that promised to help lost their id."""
+    page.goto(f"{server}/?age=any&q=CVE-1999-0001")
+    page.wait_for_selector(".empty")
+    assert page.eval_on_selector(".empty .morebtn", "e => e.textContent.trim()") \
+        == "Search All Rows"
+    page.click(".empty .morebtn")
+    page.wait_for_timeout(120)
+    assert page.eval_on_selector("#q", "e => e.value") == "CVE-1999-0001", (
+        "pressing the remedy discarded the reader's search term")
+
+
+def test_an_age_picked_with_the_control_also_survives_typing(page, server):
+    """The sibling test sets the age from the URL, which marks it chosen in
+    `readUrl`. That leaves the CHANGE-listener path untested, and flipping its
+    `ageChosen = true` to false left the suite green. Confirmed by mutation.
+
+    Using the control is how most readers pick an age, so it is the path that
+    matters most."""
+    page.goto(f"{server}/")
+    page.select_option("#age", "365+")
+    page.wait_for_timeout(120)
+    page.fill("#q", "CVE")
+    page.wait_for_timeout(120)
+    assert page.eval_on_selector("#age", "e => e.value") == "365+", (
+        "an age chosen with the control was overridden by typing")

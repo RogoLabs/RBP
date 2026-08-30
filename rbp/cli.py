@@ -304,8 +304,12 @@ def cmd_run(args):
     today = args.today or dt.date.today().isoformat()
     # The single flag, read once. site.py owns it; nothing here defines a second.
     NAMING = site.NAMING_ENABLED
+    # ONE WINDOW, used for the feeds AND for coverage. They were two years and
+    # three years respectively, so the site measured reach over a year it never
+    # read. See coverage.WINDOW_YEARS.
+    from . import coverage as _coverage
     years = ({int(y) for y in args.years.split(",")} if args.years
-             else {int(today[:4]), int(today[:4]) - 1})
+             else set(_coverage.window(int(today[:4]))))
     src_str = args.sources or PROFILES.get(args.profile, PROFILES["weekly"])
     requested = [s.strip() for s in src_str.split(",") if s.strip()]
     sources = [s for s in requested if s in feeds.ADAPTERS]
@@ -413,7 +417,7 @@ def cmd_run(args):
     # cannot credit a CNA as observable. Read from the committed verdicts; an
     # unreadable file excludes nothing and says so in `coverage.corroborating_feeds`.
     from . import feedlab as _feedlab
-    cov = coverage.compute(corpus, refs, recent_years=(cyr - 2, cyr - 1, cyr),
+    cov = coverage.compute(corpus, refs, recent_years=coverage.window(cyr),
                            sources=sources, own_channels=clock.OWNER_FEEDS,
                            corroborating=_feedlab.corroborating_feeds())
     cov["profile"] = args.profile if not args.sources else "custom"
