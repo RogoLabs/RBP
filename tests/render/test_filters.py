@@ -583,7 +583,7 @@ def test_a_long_publisher_name_is_shortened_and_the_name_is_not_lost(page, serve
 
     # A PUBLISHER WITH NO ABBREVIATION RENDERS WHOLE. Nothing here is a bound on
     # what a publisher may be called; only the names in the table shorten.
-    assert any(len(l) > 15 and l != "BSI" for l in labels), (
+    assert any(len(lbl) > 15 and lbl != "BSI" for lbl in labels), (
         f"every publisher label is short, so this cannot see the difference "
         f"between a shortened label and a truncated one: {labels}")
 
