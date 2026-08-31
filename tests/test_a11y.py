@@ -128,6 +128,28 @@ def test_the_sticky_header_can_actually_stick():
     assert "overflow: auto" in body or "overflow:auto" in body
 
 
+def _handler_body(src, eid):
+    """The body of the click handler bound to `#eid`, by brace matching.
+
+    Regex to the opening brace of the callback and count from there. A lazy regex
+    stops at the first `}` inside, which for both delegating handlers here is an
+    early-return `if`.
+    """
+    m = re.search(rf'\$\("{re.escape(eid)}"\)\.addEventListener\("click",[^{{]*\{{', src)
+    if not m:
+        return ""
+    depth, i = 0, m.end() - 1
+    while i < len(src):
+        if src[i] == "{":
+            depth += 1
+        elif src[i] == "}":
+            depth -= 1
+            if depth == 0:
+                return src[m.end():i]
+        i += 1
+    return ""
+
+
 def test_every_click_handler_is_bound_to_something_focusable():
     """SC 2.1.1, level A, generalised from the defect that produced it.
 
@@ -172,9 +194,35 @@ def test_every_click_handler_is_bound_to_something_focusable():
             rf'<button[^>]*\bid="{re.escape(eid)}"'
             rf'|<\w+[^>]*\bid="{re.escape(eid)}"[^>]*\btabindex='
             rf'|<\w+[^>]*\btabindex=[^>]*\bid="{re.escape(eid)}"', src)
-        assert focusable, (
+        if focusable:
+            continue
+        # DELEGATION IS THE OTHER LEGITIMATE SHAPE, and the first version of this
+        # test could not tell it apart from the defect.
+        #
+        # The source inventory and the distribution bars are redrawn on every
+        # render, so binding per control would rebind a dozen buttons on every
+        # keystroke; the handler goes on the container instead. The container is
+        # not the control and has no business being focusable. What matters is
+        # that the thing the handler acts on is a real button.
+        #
+        # So a non-focusable target is allowed only when its handler resolves a
+        # control with .closest(), and the attribute it closes on is rendered on a
+        # <button>. That keeps the original rule -- every click target is
+        # keyboard-reachable -- while admitting the pattern, and it still fails if
+        # someone binds a handler to a div and acts on the div.
+        body = _handler_body(src, eid)
+        assert body, (
             f"a click handler is bound to #{eid}, which is not a <button> and "
             "declares no tabindex, so it is unreachable without a pointer")
+        sel = re.search(r'\.closest\(\s*"\[([\w-]+)\]"', body)
+        assert sel, (
+            f"the click handler on #{eid} does not delegate with .closest(), and "
+            f"#{eid} is not focusable, so whatever it acts on cannot be reached "
+            "without a pointer")
+        attr = sel.group(1)
+        assert re.search(rf'<button[^>]*{re.escape(attr)}=', src), (
+            f"the handler on #{eid} delegates to [{attr}], but nothing renders a "
+            f"<button> carrying {attr}, so the control it acts on is not a button")
 
     # And the rows open with the keyboard, which is why they are <details>/<summary>
     # rather than a div carrying a handler.
