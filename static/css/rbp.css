@@ -856,9 +856,19 @@ body.locked{overflow:hidden}
 /* ---- the control bar, sticky, directly above the rows ---- */
 .cmdbar{position:sticky;top:0;z-index:20;background:var(--color-bg-content);
   border-bottom:1px solid var(--color-border);margin-top:22px}
-.cmd-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0}
+/* THE WIDEST CONTROL ON THE PAGE HAD THE TIGHTEST INSIDE.
+
+   12px of inner padding is right for a chip. On a field 990px wide it puts the
+   placeholder, and then every character typed into it, hard against the frame at
+   the left end, and any text long enough to reach the right end does the same
+   there. This is the one control on the page a reader looks at while typing.
+
+   The gap to the age control widens with it, because the field's right end was
+   14px from the word "Public" and at this width that reads as the two controls
+   touching. */
+.cmd-in{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:10px 0}
 .cmd-grow{flex:1 1 240px;min-width:180px}
-.cmd-grow input{width:100%;padding:8px 12px;border:1px solid var(--color-border);
+.cmd-grow input{width:100%;padding:8px 16px;border:1px solid var(--color-border);
   border-radius:6px;background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit}
 .cmd-lab{font-size:.78rem;color:var(--rbp-text-muted);display:flex;align-items:center;gap:6px}
 .cmd-lab select{padding:7px 9px;border:1px solid var(--color-border);border-radius:6px;
@@ -1100,13 +1110,19 @@ a.chip:hover,a.chip:focus-visible{background:var(--rbp-link);color:var(--color-b
 /* A feed with no per-ID page is still a place the ID is showing up. Shown, and
    visibly not a link, rather than dropped. */
 span.chip.nolink{border-style:dashed;border-color:var(--color-border);color:var(--rbp-text-muted)}
-/* A CHIP HAS TO BE ABLE TO BREAK, because one of them is a sentence.
+/* A CHIP HAS TO BE ABLE TO BREAK, because one of them can be a sentence.
 
-   The chips carry the CSAF publisher name now, and the longest real one is
+   The chips carry the CSAF publisher name now, and the longest real one was
    "Bundesamt fur Sicherheit in der Informationstechnik": 424px of nowrap text
    inside a flex row, which is wider than a 320px viewport and cannot wrap, so it
    set the minimum content width of the whole row and pushed the PAGE sideways by
    128px at 320 and 73px at 375. WCAG 1.4.10.
+
+   That one is drawn as "BSI" since 2026-08-31 (see PUB_SHORT in
+   templates/list.html), which is a shorter label rather than a bound: the table
+   holds the names this page knows an abbreviation for, and a publisher that is
+   not in it renders whole. So this stays, and it is what catches the next long
+   name on the run it first appears.
 
    It did not show while the rows were cards, because `.rbprow` was
    `overflow:hidden` and quietly clipped the name instead. That is the worse of

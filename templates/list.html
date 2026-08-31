@@ -257,6 +257,37 @@
   // would file eight CISA advisories under GitHub.
   var CSAF_PUB = {};          // slug -> the publisher's own name
 
+  // A PUBLISHER NAME THAT IS A SENTENCE, SHOWN AS THE NAME THAT PUBLISHER
+  // ANSWERS TO.
+  //
+  // "Bundesamt fur Sicherheit in der Informationstechnik" is 51 characters and
+  // the largest CSAF publisher this site reads, so it is on the facet control
+  // AND on a chip inside hundreds of rows. At that length it is not a label: it
+  // is wider than a 320px viewport, it forced the ellipsis machinery in
+  // `.srcname` and the wrapping machinery in `.chip`, and on a row it crowds out
+  // the CVE ID, which is the thing the row is about.
+  //
+  // NOT A RENAME. The name the advisory states is what the site filters and
+  // links on, it stays in `CSAF_PUB`, it is still what a screen reader is read
+  // and it is on the control as a `title`. Only the visible label shortens, to
+  // the abbreviation the office publishes under itself (bsi.bund.de).
+  //
+  // MATCHED ON THE NAME, NOT THE SLUG, deliberately. The slug is the name with
+  // every run of non-alphanumerics replaced and then cut at 40 characters, so an
+  // umlaut and its ASCII spelling derive two different slugs:
+  // `bundesamt-f-r-sicherheit-in-der-informat` from the name the documents state
+  // and `bundesamt-fur-sicherheit-in-der-informat` from the folded form. A
+  // slug-keyed table silently misses whichever of the two it was not written
+  // against, which is a label regression nothing would catch.
+  //
+  // DELIBERATELY SHORT, and everything not in it renders whole. "Red Hat Product
+  // Security" is not shortened to "Red Hat": there is a `redhat` FEED chip one
+  // row above it, and the nesting exists to say those are a publisher and a feed
+  // rather than two feeds.
+  var PUB_SHORT = [
+    {re: /^bundesamt f(u|\u00fc|ue)r sicherheit\b/i, short: "BSI"}
+  ];
+
   function csafSlugs(r) {
     var out = [], parts = (r.refs || "").split(";");
     for (var i = 0; i < parts.length; i++) {
@@ -464,6 +495,19 @@
     return Object.prototype.hasOwnProperty.call(NAMES, v) ? NAMES[v] : v;
   }
 
+  // THE VISIBLE LABEL. `feedName` stays the full name, because that is what the
+  // aria-labels, the empty-state sentence and the per-feed dates read, and a
+  // reader who is only told "BSI" out of context has been told less than nothing.
+  function feedShort(v) {
+    var full = feedName(v);
+    if (String(v).indexOf("csaf:") === 0) {
+      for (var i = 0; i < PUB_SHORT.length; i++) {
+        if (PUB_SHORT[i].re.test(full)) { return PUB_SHORT[i].short; }
+      }
+    }
+    return full;
+  }
+
   function hasOption(sel, v) {
     for (var i = 0; i < sel.options.length; i++) {
       if (sel.options[i].value === v) { return true; }
@@ -531,7 +575,9 @@
     // reason plus one more: the first version sorted the CSAF publishers to the
     // top, so a reader looking for Debian met five publishers first and the feed
     // list started halfway down.
-    var byName = function (a, b) { return feedName(a.v).localeCompare(feedName(b.v)); };
+    // ON THE VISIBLE LABEL, not the full name: this is a control a reader scans,
+    // and an order they cannot see is not an order.
+    var byName = function (a, b) { return feedShort(a.v).localeCompare(feedShort(b.v)); };
     var all = srcSlugs().map(function (s) { return {v: s, n: c.feeds[s] || 0}; }).sort(byName);
     var pubsAll = Object.keys(c.pubs).map(function (k) { return {v: k, n: c.pubs[k]}; }).sort(byName);
     // A publisher a URL named but that has no rows in this view still needs its
@@ -563,13 +609,20 @@
     var pubs = pubsAll.filter(keep);
 
     function chip(v, n, label) {
-      var on = cur === v;
+      var on = cur === v, full = feedName(v);
+      // WHEN THE LABEL IS NOT THE NAME, THE NAME IS STILL ON THE CONTROL. A
+      // reader who does not know the abbreviation has to be able to get the
+      // publisher from the chip itself, and a screen reader is read the name
+      // rather than three initials.
+      var named = full === label ? "" :
+        ' title="' + esc(full) + '" aria-label="' + esc(full + ", " + num(n) + " IDs") + '"';
       // The name in its own element rather than as a bare text node beside the
       // count: it is the part the label cap applies to, and a test that has to
       // strip " 1,173" off the end before it can measure the name is a test that
       // silently stops measuring when the count format changes.
       return '<button type="button" class="srcchip' + (n ? "" : " zero") +
-        '" data-src="' + esc(v) + '" aria-pressed="' + (on ? "true" : "false") + '">' +
+        '" data-src="' + esc(v) + '"' + named + ' aria-pressed="' +
+        (on ? "true" : "false") + '">' +
         '<span class="srcname">' +
         esc(cap(label, v.indexOf("csaf:") === 0 ? 56 : 44)) + "</span>" +
         ' <u>' + num(n) + "</u></button>";
@@ -582,7 +635,7 @@
       '<button type="button" class="srcchip all" data-src="" aria-pressed="' +
       (cur ? "false" : "true") + '"><span class="srcname">All sources</span> <u>' +
       num(c.total) + "</u></button>" +
-      feeds.map(function (f) { return chip(f.v, f.n, feedName(f.v)); }).join("") +
+      feeds.map(function (f) { return chip(f.v, f.n, feedShort(f.v)); }).join("") +
       "</div>";
     if (pubs.length) {
       // NESTED, because the publishers are inside `csaf` rather than beside it.
@@ -598,7 +651,7 @@
       // one, so they cannot drift.
       html += '<div class="srcrow sub" role="group" aria-label="Within CSAF Advisory">' +
         '<span class="srclab">Within CSAF Advisory</span>' +
-        pubs.map(function (p) { return chip(p.v, p.n, feedName(p.v)); }).join("") + "</div>";
+        pubs.map(function (p) { return chip(p.v, p.n, feedShort(p.v)); }).join("") + "</div>";
     }
     grid.innerHTML = html;
 
@@ -715,14 +768,18 @@
     }
     if (!names.length) { return '<span class="chip nolink">Not Recorded</span>'; }
     return names.sort().map(function (k) {
-      var lab = esc(feedName(k));
+      // SHORT ON THE ROW, WHOLE IN THE LABEL. `chipLabel` reads `feedName`, so a
+      // screen reader is still read the publisher the advisory states; the title
+      // puts the same name a hover away from a sighted reader.
+      var full = feedName(k), short = feedShort(k), lab = esc(short);
+      var titled = full === short ? "" : ' title="' + esc(full) + '"';
       // A derived csaf facet has no key of its own in source_urls; the advisory
       // link lives under the transport it arrived on.
       if (!urls[k] && k.indexOf("csaf:") === 0) { urls = Object.assign({}, urls); urls[k] = urls.csaf; }
       return urls[k]
-        ? '<a class="chip" href="' + esc(urls[k]) + '" rel="noopener" aria-label="' +
-          chipLabel(k, r.cve_id) + '">' + lab + "</a>"
-        : '<span class="chip nolink">' + lab + "</span>";
+        ? '<a class="chip"' + titled + ' href="' + esc(urls[k]) +
+          '" rel="noopener" aria-label="' + chipLabel(k, r.cve_id) + '">' + lab + "</a>"
+        : '<span class="chip nolink"' + titled + ">" + lab + "</span>";
     }).join("");
   }
 
