@@ -1,0 +1,82 @@
+{
+ "baseline": {
+  "effective_n": 141,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "ghsa-repos",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu"
+  ],
+  "scored_at": "2026-08-28T00:43:40+00:00"
+ },
+ "bytes": 41749480,
+ "cnas_effective_alone": 85,
+ "cnas_new_effective": 6,
+ "cnas_new_effective_names": [
+  "ClickHouse",
+  "Gridware",
+  "SEC-VLab",
+  "Tcpdump",
+  "Toreon",
+  "naver"
+ ],
+ "cnas_reached": 117,
+ "disclosure": {
+  "dated_n": 15310,
+  "lead_examples": [
+   "CVE-2025-24528",
+   "CVE-2025-24531",
+   "CVE-2025-57833",
+   "CVE-2026-26081",
+   "CVE-2025-10256"
+  ],
+  "lead_max_days": 350,
+  "lead_median_days": 16,
+  "lead_n": 206,
+  "lead_pct": 1.35,
+  "mirror_n": 15104,
+  "undated_n": 1,
+  "unpublished_examples": [
+   "CVE-2025-13402",
+   "CVE-2025-26843",
+   "CVE-2025-30156",
+   "CVE-2025-55662",
+   "CVE-2025-59490"
+  ],
+  "unpublished_n": 189
+ },
+ "feed": "ubuntu-osv",
+ "health": {
+  "capped": false,
+  "detail": "15500 ids from 42MB; skipped 290 withdrawn record(s)",
+  "ok": true,
+  "rows": 15500,
+  "status": "ok",
+  "truncated": false
+ },
+ "ids": 15500,
+ "ids_new": 461,
+ "scored_at": "2026-08-31T15:38:38+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 15500,
+  "min": 15500,
+  "swing_pct": 0.0
+ },
+ "verdict": "detecting",
+ "verdict_reason": "6 marginal CNA(s) and 206 lead / 189 unpublished references",
+ "wall_seconds": 33.7,
+ "years": [
+  2025,
+  2026
+ ]
+}

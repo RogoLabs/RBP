@@ -242,6 +242,23 @@ def self_disclosed(row):
 _ORIGIN_KIND = {
     "debian": "tracker", "ubuntu": "tracker", "alpine": "tracker",
     "arch": "tracker",
+    # TRACKER, and the OSV in the name is why this needs saying: `osv` two lines
+    # down is an ADVISORY and this is not, so the map looks inconsistent until you
+    # know what each feed reads.
+    #
+    # `osv` reads OSV.dev's language ecosystems, whose records ARE published
+    # advisories (GHSA, PYSEC, RUSTSEC) that happen to be served in OSV format.
+    # `ubuntu-osv` reads Canonical's `osv/cve/` directory, which Canonical's own
+    # documentation describes as mirroring "the per-vulnerability information
+    # available in the Ubuntu Security Tracker ... even if security updates aren't
+    # yet available". A tracker entry in a different serialization is still a
+    # tracker entry. The advisories in that tarball are the `osv/usn/` records and
+    # `feed_ubuntu_osv` does not read them.
+    #
+    # It is the shared format that makes this a trap: a reader pattern-matching on
+    # the slug would classify it beside `osv`, and that would start a 72-hour
+    # MUST clock on a row whose only evidence is that Ubuntu is aware of the id.
+    "ubuntu-osv": "tracker",
     # A published advisory with its own identifier and release date.
     "ghsa": "advisory", "msrc": "advisory", "mozilla": "advisory",
     "csaf": "advisory", "redhat": "advisory", "alas": "advisory",

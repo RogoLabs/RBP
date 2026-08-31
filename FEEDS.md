@@ -564,6 +564,97 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > harness rather than against it. **Every remaining figure in Tier 2 and Tier 3 is a
 > probe, not an adapter measurement.**
 
+> ### MERGED 2026-08-31. `ubuntu-osv`, because the publisher asked us to read it.
+>
+> The pre-announcement outreach of 2026-08-28 told the Ubuntu Security Team what this
+> site reads and disclosed the 200-page cap on `cves.json`. Shafayat replied: use the
+> OSV data feed instead of the web API, "which can be subject to change", because it
+> is a "more stable interface" and "should also help with the completeness/page-cap
+> issue you mentioned".
+>
+> That is the publisher answering the exact defect the site already wore on
+> `/method`, so it was measured the same day rather than filed.
+>
+> | | ids | marginal CNAs | lead refs | unpublished now | cost |
+> |---|---:|---:|---:|---:|---|
+> | `ubuntu` (`cves.json`) | 3,994 | 3 | 20 | 102 | 1,070s, 355 MB, **5.2% of records read** |
+> | `ubuntu-osv` (this) | 15,500 | **6** | **206** | **189** | **34s, 42 MB, whole window** |
+>
+> Verdict **detecting**, both admissibility tests cleared, scorecard at
+> `feedlab/ubuntu-osv.json`. Stability 0.0% swing over two fetches.
+>
+> **The cost column is the headline and the cap is the reason.** `_ubuntu_reach`
+> exists to say on every run that the tracker walk reads 4,000 of 76,753 records and
+> reaches back 33 days against a window that opens 2025-01-01. This feed has no cap
+> at all, because `osv/cve/` is sharded by year: the adapter selects `osv/cve/2025/`
+> and `osv/cve/2026/` and the reach question stops existing. 42 MB replaces a
+> 200-request walk against a host that was returning 503 to every `/security/`
+> path on the afternoon this was written, while `security-metadata.canonical.com`
+> served the whole tarball in 2.8 seconds.
+>
+> **AND THEN THE ENDPOINT PROVED THE POINT WHILE THE MERGE WAS BEING WRITTEN.**
+>
+> The baseline rebuild for this merge ran on the afternoon of 2026-08-31, and every
+> `ubuntu.com/security/` path was answering 503, then timing out, for over an hour.
+> Both Ubuntu feeds were in that one gather:
+>
+> ```
+> [ubuntu]      80 rows, 750.2s, 31 MB   truncated: HTTP 504 at offset 80
+> [ubuntu-osv]  15500 rows, 34.0s, 42 MB
+> ```
+>
+> **The tracker returned 2% of its usual 3,994 rows after spending 750 seconds to
+> find that out. The tarball returned all 15,500 in 34 seconds from a different
+> host.** `compare_magnitudes` would have reported this correctly (a 98% drop) and
+> the run would have gone degraded, which is the guard working; what the guard
+> cannot do is get the rows back. On that run, `ubuntu-osv` is the only reason
+> Ubuntu coverage exists at all.
+>
+> So the case for this feed is not only reach and cost. It is that the two sources
+> sit behind different infrastructure, and this project has now watched the more
+> expensive one fail on the same day its publisher recommended the other. That is
+> a second, independent reason to keep both rather than to pick one, and it argues
+> the opposite way from the cost argument in the open question below.
+>
+> **Two traps, both of which this document has already been caught by once.**
+>
+> 1. **It is the GIT trap again.** Ubuntu's OSV records leave `aliases` **empty** and
+>    carry the CVE id in `upstream` (verified 400/400 on a 2026 sample). So the
+>    one-line change that looks like the whole job, adding `Ubuntu` to `feed_osv`'s
+>    ecosystem tuple, returns **zero rows**, because `feed_osv` reads `aliases`. Same
+>    shape as the GIT row above, caught this time by reading the publisher's
+>    documented example before writing the config rather than after.
+> 2. **It is not a superset, so it is not a replacement.** 1,273 of the tracker's
+>    3,994 ids (**31.9%**) have no OSV record at all, because OSV covers supported
+>    releases and the tracker triages every CVE it sees. Those 1,273 carry 39 RBP
+>    candidates. A straight swap would have dropped rows while every count on the
+>    page went up, which is the silent shrink this repository has already shipped
+>    twice.
+>
+> **The open question, and it is a gate question rather than a rows question.** All 39
+> of those RBP candidates are already sighted by another merged feed, so what the
+> tracker uniquely contributes is *sightings*, and sightings feed `cnas_effective`,
+> which is the launch gate. Whether 1,070s and 355 MB is worth that is answered by
+> `feedlab audit` against a baseline containing both feeds, not by argument. **Both
+> feeds run until it is answered.** Do not delete `feed_ubuntu` on the strength of
+> the table above.
+>
+> **And the tracker carries a second thing the feed table does not show.**
+> `resolve_dates_ubuntu` dates held-back rows by name against `cves.json?q=`, which
+> is the tracker's endpoint and not Canonical's tarball. Measured 2026-08-31, 1,215
+> referenced ids had no date from any merged feed and `ubuntu-osv` now dates **1,085
+> of them (89%)**, which is a large and free improvement to a pass that had a 600s
+> budget. The remaining **130** are still reachable only by name, so removing
+> `ubuntu` from the profile deletes that resolver along with the walk. Cost that in
+> too, or the decision gets made against the wrong number.
+>
+> A third source exists and was rejected: OSV.dev's own `Ubuntu/all.zip` is **653 MB**
+> against Canonical's 42 MB and was stamped four days older on the day both were
+> fetched. The same lag is why `report._u` links `ubuntu-osv` rows to
+> `ubuntu.com/security/<id>` rather than to the `osv.dev` record the adapter actually
+> parsed: this feed can hold a record before osv.dev does, and the newest rows are
+> exactly the RBP rows.
+
 **Tier 0 and Tier 1 together, measured through the adapters:** **+20 CNAs**, taking the
 roster share from 21.7% to about 25.4% and the reachable share from 31.5% to about 37%.
 

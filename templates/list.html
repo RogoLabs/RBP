@@ -222,8 +222,16 @@
   "use strict";
   var ROWS = JSON.parse(document.getElementById("rows").textContent);
   var CONFIGURED = JSON.parse(document.getElementById("feeds").textContent) || [];
+  // An unmapped slug falls through `feedName` to the slug itself, so a feed
+  // missing from here renders as "ubuntu-osv" among "Ubuntu" and "Red Hat".
+  //
+  // "Ubuntu (OSV)" rather than "Ubuntu OSV" so the alphabetical sort puts it
+  // directly under "Ubuntu", which is where a reader looking for either will
+  // look. They are one publisher read through two interfaces, and the control
+  // should say that rather than imply two publishers.
   var NAMES = {osv:"OSV", ghsa:"GitHub", redhat:"Red Hat", debian:"Debian",
-               ubuntu:"Ubuntu", alpine:"Alpine", alas:"Amazon Linux",
+               ubuntu:"Ubuntu", "ubuntu-osv":"Ubuntu (OSV)",
+               alpine:"Alpine", alas:"Amazon Linux",
                msrc:"Microsoft", mozilla:"Mozilla", arch:"Arch",
                csaf:"CSAF Advisory", samsung:"Samsung",
                "ghsa-repos":"GitHub Repo Advisory"};
