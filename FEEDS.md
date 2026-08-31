@@ -616,6 +616,17 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > a second, independent reason to keep both rather than to pick one, and it argues
 > the opposite way from the cost argument in the open question below.
 >
+> **AND THE COST ARGUMENT IS WEAKER THAN THE TABLE ABOVE SAYS.** The endpoint came
+> back the same evening and the rebuild that had cost 750s of failure completed in
+> **93.1 seconds for 3,968 rows**, against the 1,070s recorded on 2026-08-27. Both
+> are real; `feed_ubuntu`'s own docstring already says cold page latency on this
+> endpoint ranges 1.25s to 30s, and this is that variance at feed scale. So the
+> honest reading is that the walk costs somewhere between 1.5 and 18 minutes
+> depending on the endpoint's mood, and **1,070s is the bad case rather than the
+> price.** The REACH argument is untouched by this and is the one that matters:
+> 5.2% of records and 33 days is a property of the 200-page cap, not of the
+> weather.
+>
 > **Two traps, both of which this document has already been caught by once.**
 >
 > 1. **It is the GIT trap again.** Ubuntu's OSV records leave `aliases` **empty** and
@@ -634,7 +645,7 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > **The open question, and it is a gate question rather than a rows question.** All 39
 > of those RBP candidates are already sighted by another merged feed, so what the
 > tracker uniquely contributes is *sightings*, and sightings feed `cnas_effective`,
-> which is the launch gate. Whether 1,070s and 355 MB is worth that is answered by
+> which is the launch gate. Whether 93s to 1,070s and 355 MB is worth that is answered by
 > `feedlab audit` against a baseline containing both feeds, not by argument. **Both
 > feeds run until it is answered.** Do not delete `feed_ubuntu` on the strength of
 > the table above.
