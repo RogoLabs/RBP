@@ -110,6 +110,47 @@ never been exercised against a real run.
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.
 
+### 6. `ubuntu-osv` landed with two things unfinished, both blocked on one host
+
+`feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
+recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
+measurement in `FEEDS.md` under "MERGED 2026-08-31". Two follow-ups, and they are
+blocked on the same thing:
+
+**a. DONE, and the false start is worth reading before you rebuild a baseline
+again.** The first attempt ran while `ubuntu.com/security/` was answering 503 and
+then timing out, and produced `[ubuntu] 80 rows, 750.2s` against its usual 3,994.
+Committing that would have made every future candidate look better than it is, in
+exactly the direction `test_the_recorded_baseline_describes_the_profile_that_
+actually_runs` warns about, so it was thrown away and the good 13-feed baseline
+kept. The endpoint recovered the same evening and the rebuild landed:
+**14 feeds, 45,895 ids, 183 effective roster CNAs, `[ubuntu] 3968 rows`.**
+
+**Check the endpoint before you start, and read the per-feed lines in the log
+rather than the exit status.** The bad run exited 0. It cost 25 minutes to find
+out, and only the `[ubuntu] 80 rows` line said so.
+
+One local artefact survives it. `data/feedlab/ubuntu.fetches.json` (gitignored
+working state, not in any diff) holds **80 then 3,968**, so `stability` reports a
+~98% swing for `ubuntu`. Both fetches are real and the file is being kept for that
+reason, but the 80 is an outage rather than variation, so do not read that swing
+as a shrink baseline. `ubuntu-osv` beside it has three fetches at 15,500 and a
+0.0% swing.
+
+**b. STILL OPEN. Run `python -m rbp.feedlab audit`, which is now cheap because the
+baseline is fresh, and answer whether `feed_ubuntu` is still worth its cost.**
+That cost is not one number: 1,070s on 2026-08-27 and 93.1s on 2026-08-31, for
+3,994 and 3,968 rows. Price the bad case, not the good one, and note that the
+audit rewrites all fourteen scorecards, so it wants its own commit. `ubuntu-osv` reaches 15,500 ids to the tracker's
+3,994 and beats it on every scorecard axis, but it is **not a superset**: 31.9% of
+the tracker's ids have no OSV record. All the RBP candidates in that 31.9% are
+already sighted elsewhere, so the tracker's remaining contribution is *sightings*,
+which feed `cnas_effective`, which is the gate. The audit is the only thing that
+can price that. Two things push the other way and must be costed in: the tracker's
+endpoint is what `resolve_dates_ubuntu` queries by name (130 rows still depend on
+it), and on 2026-08-31 the two feeds demonstrably failed independently. **Do not
+delete `feed_ubuntu` before the audit.**
+
 ---
 
 ## Settled, so they are not re-opened by accident

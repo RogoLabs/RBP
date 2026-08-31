@@ -15,6 +15,7 @@ import re
 import socket
 import subprocess
 import sys
+import tarfile
 import threading
 import time
 import zipfile
@@ -382,6 +383,89 @@ def _stream_zip(url):
         except OSError:
             pass
         raise
+
+
+# A 234x compression ratio is not a hypothetical. Measured 2026-08-31, Canonical's
+# `osv-all.tar.xz` is 41.7 MB on the wire and 9.77 GB decompressed across 64,756
+# members, because every OSV record carries the full `versions` list for every
+# affected Ubuntu release. `MAX_ARCHIVE_BYTES` guards the DOWNLOAD and would not
+# have noticed: 41.7 MB passes it with two decimal orders to spare.
+#
+# So the ceiling that matters here is on decompressed bytes, and it is the reason
+# this helper exists instead of a second call to `_stream_zip`. The in-window
+# read is 4.77 GB of that 9.77 (2025 at 1.70 and 2026 at 3.07), so 8 GB leaves
+# 68% headroom over the measured cost while still stopping an archive that has
+# decided to be infinite. It is a REFUSAL, not a truncation, for the same reason
+# the zip ceiling is: half an archive read as a whole one is the silent shrink.
+MAX_UNPACKED_BYTES = 8_000_000_000
+
+
+def _stream_tar_xz(url, want, stats):
+    """Download a tar.xz and yield (name, bytes) for members `want` selects.
+
+    STREAMED IN ONE SEQUENTIAL PASS (`r|xz`), which is what `want` is for. The
+    tarfile module can seek inside an xz archive, but only by decompressing from
+    the start every time, so random access over 64,756 members is quadratic and a
+    filter applied by the CALLER after the fact would have to hold or re-read
+    9.77 GB. `want(name)` is applied before any member body is read, so the 49,000
+    out-of-window records cost their decompression and nothing else.
+
+    Yields rather than returning a list because the list is the 4.77 GB.
+
+    `stats["bytes"]` is set as soon as the download completes, BEFORE the first
+    member is yielded, rather than being carried on each yielded tuple. A caller
+    whose `want` matched nothing still spent the 42 MB, and a health line reading
+    "0 ids from 0MB" would have hidden the one failure mode this shape has: a
+    `want` prefix that stopped matching because the publisher reorganised the
+    tarball. That reads as an empty archive instead of as a broken filter.
+    """
+    import tempfile
+    total = 0
+    tmp = tempfile.NamedTemporaryFile(suffix=".tar.xz", delete=False)
+    try:
+        with _OPENER.open(urllib.request.Request(url, headers=UA), timeout=300) as r:
+            while True:
+                chunk = r.read(_CHUNK)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_ARCHIVE_BYTES:
+                    raise RuntimeError(
+                        f"archive exceeded {MAX_ARCHIVE_BYTES:,} byte ceiling; "
+                        "refusing to truncate it into an invalid tarball")
+                tmp.write(chunk)
+        tmp.close()
+        FETCH_BYTES["total"] += total
+        stats["bytes"] = total
+        unpacked = 0
+        with tarfile.open(tmp.name, "r|xz") as tf:
+            for m in tf:
+                if not m.isfile() or not want(m.name):
+                    continue
+                unpacked += m.size
+                if unpacked > MAX_UNPACKED_BYTES:
+                    raise RuntimeError(
+                        f"decompressed {unpacked:,} bytes, past the "
+                        f"{MAX_UNPACKED_BYTES:,} ceiling; refusing to read a "
+                        "partial archive as a whole one")
+                f = tf.extractfile(m)
+                if f is None:
+                    continue
+                yield m.name, f.read()
+    finally:
+        # CLOSED as well as unlinked. A download that raised partway never
+        # reached the `tmp.close()` above, and unlinking an open file leaves the
+        # handle (and its blocks) until the object is collected. Harmless once;
+        # this runs on a six-hour cadence in a process that reads thirteen other
+        # feeds after it.
+        try:
+            tmp.close()
+        except OSError:
+            pass
+        try:
+            os.unlink(tmp.name)
+        except OSError:
+            pass
 
 
 def _public_ips(host):
@@ -982,6 +1066,139 @@ def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
         status = OK
     record_feed("ubuntu:dates", status, detail, rows=len(found))
     return found
+
+
+UBUNTU_OSV_URL = "https://security-metadata.canonical.com/osv/osv-all.tar.xz"
+
+
+# THE FEED CANONICAL ASKED US TO READ INSTEAD, and the measurements that say yes.
+#
+# Shafayat of the Ubuntu Security Team, replying 2026-08-31 to the pre-announcement
+# outreach: rather than `cves.json`, "which can be subject to change", use the OSV
+# data feed, a "more stable interface" that "should also help with the
+# completeness/page-cap issue you mentioned". The page cap was disclosed to them in
+# the outreach mail, so this is the publisher answering the exact defect the site
+# was already wearing on /method.
+#
+# WHY IT IS A LARGE WIN, measured 2026-08-31 against the 2026-08-27 baseline:
+#
+#                            ids     RBP candidates   lead refs   cost
+#   ubuntu   (cves.json)   3,994          102            20       1,070s, 5.2% read
+#   ubuntu-osv (this)     15,790          191           222       ~25s, whole window
+#
+# The cost line is the headline. `_ubuntu_reach` exists to say, honestly and on
+# every run, that the tracker reads 4,000 of 76,753 records and reaches back 33
+# days against a window that opens 2025-01-01. This feed has NO cap, because
+# `osv/cve/` is sharded by year: `want` selects `osv/cve/2025/` and
+# `osv/cve/2026/` and the reach question stops existing. That is the whole reason
+# a 42 MB download beats a 200-page walk, and it is why there is no
+# `_ubuntu_osv_reach` below.
+#
+# THE TRAP, and it is the GIT trap again. Ubuntu's OSV records leave `aliases`
+# EMPTY and carry the CVE id in `upstream` (verified 400/400 on a 2026 sample,
+# 2026-08-31). So the one-line change that looks like the whole job here, adding
+# "Ubuntu" to `feed_osv`'s ecosystem tuple, returns ZERO rows: `feed_osv` reads
+# `aliases`. That is precisely how the GIT ecosystem was banked at +18 CNAs from a
+# full-text probe and delivered +0 from the adapter. Same shape, caught this time
+# by reading the publisher's documented example before writing the config.
+#
+# `id` is `UBUNTU-<CVE>` and matched `upstream` on all 400, so the id is a
+# cross-check rather than a second source.
+#
+# WHY THIS DOES NOT DELETE `feed_ubuntu`, which was the assumption going in and
+# the measurement refused it. 1,273 of the tracker's 3,994 ids (31.9%) have NO OSV
+# record at all, because OSV covers supported releases and the tracker triages
+# every CVE it sees. Those 1,273 carry 39 RBP candidates. So OSV is not a superset
+# and a straight swap would have quietly dropped rows while every count on the
+# page went up.
+#
+# What the measurement DID find is that all 39 are already sighted by another
+# merged feed, so the tracker's unique contribution is sightings rather than rows,
+# and sightings feed `cnas_effective`, which is the launch gate. That makes the
+# tracker's 1,070s a gate question and not a rows question, and it is answered by
+# `feedlab audit` rather than here. Both feeds run until it is answered.
+def feed_ubuntu_osv(years):
+    """Canonical's own OSV publication of the Ubuntu CVE records, whole window.
+
+    One 42 MB tarball, year-sharded, so there is no pagination, no page cap, no
+    wall-clock budget and no reach caveat. See the block comment above for the
+    measurements and for why `feed_ubuntu` stays.
+
+    WITHDRAWN RECORDS ARE SKIPPED. 290 of the 15,790 in-window records carry a
+    `withdrawn` timestamp (1.8%, 2026-08-31), which is Ubuntu retracting the
+    record. A retracted reference is not a reference, and counting one would put
+    an id on a page whose own publisher has withdrawn it. The count goes in the
+    health detail rather than being dropped silently, because a number that moves
+    for a reason nobody recorded is the thing this module is most careful about.
+    """
+    want_dirs = tuple(f"osv/cve/{y}/" for y in sorted(years))
+
+    def want(name):
+        return name.startswith(want_dirs) and name.endswith(".json")
+
+    out, seen, withdrawn, stats = [], set(), 0, {"bytes": 0}
+    try:
+        for _name, raw in _stream_tar_xz(UBUNTU_OSV_URL, want, stats):
+            try:
+                rec = json.loads(raw)
+            except Exception:
+                continue
+            if rec.get("withdrawn"):
+                withdrawn += 1
+                continue
+            rid = rec.get("id", "")
+            # `upstream`, NOT `aliases`. See the block comment above.
+            cves = [a for a in (rec.get("upstream") or [])
+                    if a.startswith("CVE-") and _year(a) in years]
+            aff = rec.get("affected") or []
+            pkg = ""
+            if aff:
+                pkg = ((aff[0].get("package") or {}).get("name") or "")[:120]
+            pub = _d(rec.get("published"))
+            desc = (rec.get("details") or "")[:400]
+            for cid in cves:
+                if cid in seen:
+                    continue
+                seen.add(cid)
+                out.append({"cve_id": cid, "source": "ubuntu-osv",
+                            "source_ref": rid or cid, "public_date": pub,
+                            "product": pkg, "description": desc})
+    # Broad on purpose: keep the partial results. See feed_ubuntu.
+    #
+    # TWO STATES, and the split is the one `record_feed` was given four states
+    # for. Unlike the tracker walk this feed has no configured cap for a short
+    # read to hide behind, so:
+    #
+    #   nothing read    FAILED. The host is unreachable or the tarball is not a
+    #                   tarball. There is no partial result to defend.
+    #   something read  TRUNCATED, which degrades the run. A stream that died
+    #                   halfway through 2026 returns a plausible number of
+    #                   plausible rows, and that is precisely the shape a silent
+    #                   shrink takes.
+    #
+    # Neither is CAPPED. CAPPED means a limit this project configured and
+    # discloses, and the whole point of this adapter is that it has none.
+    except Exception as e:
+        print(f"  [ubuntu-osv] stream stopped: {e}", file=sys.stderr)
+        record_feed("ubuntu-osv", FAILED if not out else TRUNCATED,
+                    f"stream stopped after {len(out)} ids: {str(e)[:100]}",
+                    rows=len(out))
+        return out
+
+    detail = f"{len(out)} ids from {stats['bytes'] / 1e6:.0f}MB"
+    if withdrawn:
+        detail += f"; skipped {withdrawn} withdrawn record(s)"
+    # A read that downloaded the tarball and matched nothing is NOT ok. `want`
+    # is a path prefix against a layout the publisher controls, so this is the
+    # one place a reorganised tarball turns into a silently empty feed.
+    if not out:
+        record_feed("ubuntu-osv", FAILED,
+                    f"{stats['bytes']:,} bytes read and no member matched "
+                    f"{', '.join(want_dirs)}; the tarball layout may have changed",
+                    rows=0)
+        return out
+    record_feed("ubuntu-osv", OK, detail, rows=len(out))
+    return out
 
 
 def feed_debian(years):
@@ -1786,6 +2003,7 @@ CSAF_MAX_DIRS = 12
 #   measured cold run, 45s budget:  10,838 ids in 332s, 13 of 17 caught up
 #   at 300s the four large providers read ~6.7x that each, and csaf costs
 #   4 x 300s + ~60s for the other thirteen = ~21 min
+#   `ubuntu-osv` joined on 2026-08-31 and adds ~35s to that ~60s, measured
 #   the rest of the pipeline measured 31.3 min on the 2026-08-29 build
 #   total ~52 min, which is why timeout-minutes goes 45 -> 60 in deploy.yml
 #
@@ -2799,7 +3017,8 @@ ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
-            "arch": feed_arch, "samsung": feed_samsung}
+            "arch": feed_arch, "samsung": feed_samsung,
+            "ubuntu-osv": feed_ubuntu_osv}
 
 
 def gather(sources, years):

@@ -522,27 +522,71 @@ def test_the_feed_list_stays_alphabetical_and_the_publishers_group(page, server)
         "a publisher label still carries the faked figure-space indent")
 
 
-def test_a_publisher_name_is_not_cut_mid_word(page, server):
-    """The longest real publisher name is "Bundesamt fur Sicherheit in der
-    Informationstechnik" at 50 characters, and the 44-char cap cut it to
-    "Bundesamt fur Sicherheit in der Informati...".
+def test_a_long_publisher_name_is_shortened_and_the_name_is_not_lost(page, server):
+    """"Bundesamt fur Sicherheit in der Informationstechnik" is 51 characters,
+    and it is the label on a facet control AND on a chip inside hundreds of rows.
 
-    That cap exists because an unknown slug arrives from the QUERY STRING and
-    could be five thousand characters. These names come from the advisory
-    documents and are bounded by them, so a publisher gets a longer cap."""
+    It was cut mid-word at the old 44-character cap, and at the 56 that replaced
+    it, it was still a sentence sitting where a label goes: wider than a 320px
+    viewport, and on a row it crowds out the CVE ID the row is about. It is drawn
+    as "BSI" now, which the office publishes under itself.
+
+    THAT IS A LABEL, NOT A RENAME, and this asserts both halves. The name the
+    advisory states has to still be on the control for a reader who does not know
+    the abbreviation, and it has to still be what a screen reader is read.
+
+    The cap stays and is still asserted here: PUB_SHORT holds the names this page
+    knows an abbreviation for, so a publisher that is not in it renders whole and
+    the next long one arrives unshortened."""
     page.goto(f"{server}/?age=any")
-    grouped = page.eval_on_selector_all(
-        "#srcgrid .srcrow.sub .srcchip .srcname",
-        "els => els.map(e => e.textContent.trim())")
-    for label in grouped:
+    pubs = page.eval_on_selector_all(
+        "#srcgrid .srcrow.sub .srcchip",
+        "els => els.map(e => ({label: e.querySelector('.srcname').textContent.trim(),"
+        " src: e.getAttribute('data-src'),"
+        " title: e.getAttribute('title'), aria: e.getAttribute('aria-label')}))")
+    labels = [p["label"] for p in pubs]
+    for label in labels:
         assert len(label) <= 56, f"{label!r} exceeds the publisher cap"
-    # The fixture publishes under CERT-Bund's real 50-character name precisely so
-    # this can be asserted: at the old 44 it came back ending in an ellipsis.
-    assert any(len(g) > 44 for g in grouped), (
-        "no fixture publisher name is long enough to be truncated, so this test "
-        "cannot see the cap at all")
-    assert not any(g.endswith("\u2026") for g in grouped), (
-        f"a publisher name is still being cut mid-word: {grouped}")
+    assert not any(g.endswith("\u2026") for g in labels), (
+        f"a publisher name is still being cut mid-word: {labels}")
+
+    # THE FIXTURE PUBLISHES UNDER CERT-BUND'S REAL NAME precisely so this can be
+    # asserted. It spells it "fur" rather than with the umlaut, which is the point
+    # of matching on the name rather than on the slug: the two spellings derive
+    # two different slugs and a slug-keyed table would miss one of them.
+    short = [p for p in pubs if p["label"] == "BSI"]
+    assert short, (
+        f"the 51-character publisher name is not being shortened: {labels}. "
+        "Either PUB_SHORT no longer matches it or the fixture no longer carries a "
+        "name long enough for this test to see anything")
+    bsi = short[0]
+    assert bsi["title"] and len(bsi["title"]) > 44, (
+        f"the shortened chip carries {bsi['title']!r} as its title; a reader who "
+        "does not know the abbreviation cannot get the publisher from the control")
+    assert "Sicherheit" in bsi["aria"], (
+        f"a screen reader is read {bsi['aria']!r} rather than the name the "
+        "advisory states")
+
+    # THE NAME IS ON THE ROW TOO, and the row is where it did the most damage.
+    page.goto(f"{server}/?age=any&src={bsi['src']}")
+    page.wait_for_selector("#list .rbprow")
+    chips = page.eval_on_selector_all(
+        "#list .rbprow .where .chip",
+        "els => els.map(e => ({t: e.textContent.trim(), title: e.getAttribute('title'),"
+        " aria: e.getAttribute('aria-label')}))")
+    named = [c for c in chips if c["t"] == "BSI"]
+    assert named, f"no row chip carries the short label: {[c['t'] for c in chips]}"
+    assert "Sicherheit" in (named[0]["title"] or ""), (
+        f"the row chip drops the publisher name entirely: {named[0]}")
+    assert "Sicherheit" in (named[0]["aria"] or ""), (
+        f"the row link announces {named[0]['aria']!r} rather than the publisher")
+
+    # A PUBLISHER WITH NO ABBREVIATION RENDERS WHOLE. Nothing here is a bound on
+    # what a publisher may be called; only the names in the table shorten.
+    assert any(len(lbl) > 15 and lbl != "BSI" for lbl in labels), (
+        f"every publisher label is short, so this cannot see the difference "
+        f"between a shortened label and a truncated one: {labels}")
+
     # and the control still refuses an unbounded label from the URL
     page.goto(f"{server}/?age=any&src=csaf:" + "z" * 500)
     names = page.eval_on_selector_all(

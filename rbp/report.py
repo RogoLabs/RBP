@@ -92,6 +92,23 @@ def _derive_meta(row):
                     if ref.startswith("SMR-") else "")
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
+        if s == "ubuntu-osv":
+            # THE PUBLISHER'S PAGE, NOT THE RECORD WE PARSED, and the choice is
+            # about which one is alive.
+            #
+            # refs carry "ubuntu-osv:UBUNTU-CVE-<id>", so `https://osv.dev/
+            # vulnerability/<that>` was the obvious link: the exact record this
+            # feed read. Rejected on a measurement. OSV.dev's own Ubuntu mirror
+            # (`Ubuntu/all.zip`) was stamped 2026-08-27 while Canonical's tarball
+            # was stamped 2026-08-31, so this feed can hold a record four days
+            # before osv.dev does, and the newest rows are exactly the RBP rows.
+            # A link that 404s on the freshest evidence is the dead chip F3 was
+            # about, with a delay fuse on it.
+            #
+            # ubuntu.com/security/<cid> is where the record is generated FROM, so
+            # it cannot lag it. Same address `ubuntu` uses, which is correct: the
+            # two feeds read one dataset through two doors.
+            return f"https://ubuntu.com/security/{cid}"
         if s == "csaf":
             # The advisory itself. Before this there was no csaf branch, so every
             # CSAF row took the last-resort cve.org/CVERecord URL, which renders

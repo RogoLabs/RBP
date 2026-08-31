@@ -37,8 +37,15 @@ from . import (cvelist, feeds, classify, report, coverage,
 # csaf 3,401 ids in 135.8s for +12 (ABB, CERTVDE, CyberDanube, PTC, Rockwell,
 # SICK_AG, TPLink, fortinet, jci, palo_alto, schneider, siemens). 142 seconds
 # against a 9-minute warm run and a 15-minute target.
-_WEEKLY = ("alas,ubuntu,debian,ghsa,ghsa-repos,redhat,alpine,osv,mozilla,arch,"
-           "csaf,msrc,samsung")
+#
+# `ubuntu-osv` added 2026-08-31, on Canonical's own recommendation and on
+# `feedlab/ubuntu-osv.json`: 15,500 ids for 6 new effective CNAs (ClickHouse,
+# Gridware, SEC-VLab, Tcpdump, Toreon, naver), 206 lead references and 189
+# currently-unpublished ids, in 34s and 42 MB. Verdict DETECTING. It sits BESIDE
+# `ubuntu` rather than replacing it; the block comment on `feed_ubuntu_osv` has
+# the 31.9% non-overlap that is the reason.
+_WEEKLY = ("alas,ubuntu,ubuntu-osv,debian,ghsa,ghsa-repos,redhat,alpine,osv,"
+           "mozilla,arch,csaf,msrc,samsung")
 PROFILES = {
     "weekly": _WEEKLY,
     # ONE STRING, REFERENCED TWICE, not two identical literals.
@@ -394,6 +401,23 @@ def cmd_run(args):
     # Gated on `ubuntu` being a configured source. A profile that does not read
     # Ubuntu must not reach Ubuntu, or /status names a feed set the run did not
     # keep to.
+    #
+    # `ubuntu-osv` MADE THIS PASS MOSTLY UNNECESSARY WITHOUT REPLACING IT, and
+    # both halves of that matter.
+    #
+    # Measured 2026-08-31 against the 13-feed baseline: 1,215 referenced ids had
+    # no date from any merged feed, and `ubuntu-osv` carries a date for 1,085 of
+    # them (89%). Those arrive as a normal feed date, `public_date_origin: feed`,
+    # before this block runs, so the population it queries by name should fall by
+    # roughly nine tenths and with it the 600s budget's exposure to an endpoint
+    # that answered 503 to every request for the whole afternoon this was written.
+    #
+    # It does NOT replace the pass, and the gate is still `ubuntu`, correctly:
+    # the resolver asks `cves.json?q=`, which is the tracker's endpoint and not
+    # Canonical's tarball. So dropping `ubuntu` from the profile, which FEEDS.md
+    # leaves open pending a `feedlab audit`, also silently deletes the last 130.
+    # That is a second cost of that decision and it is not visible from the feed
+    # table, which is why it is written down here.
     for r in backlog:
         r["public_date_origin"] = "feed" if r.get("public_date") else "none"
     undated_rows = [r for r in backlog if not r.get("public_date")]
@@ -686,7 +710,7 @@ def build_parser():
                    # choice that had not existed for five days and offered an
                    # operator a lever that does nothing.
                    help="source set. 'weekly' and 'deep' are currently the SAME "
-                        "thirteen feeds: csaf and msrc moved into weekly when the "
+                        "fourteen feeds: csaf and msrc moved into weekly when the "
                         "gate started being measured on the profile the cron runs. "
                         "'deep' is retained as a name for a future heavy source.")
     r.add_argument("--sources", default="",
