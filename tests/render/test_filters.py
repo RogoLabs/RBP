@@ -508,7 +508,7 @@ def test_the_feed_list_stays_alphabetical_and_the_publishers_group(page, server)
 
     label = page.eval_on_selector_all(
         "#srcgrid [role='group']", "els => els.map(e => e.getAttribute('aria-label'))")
-    assert label and any(l and "CSAF" in l for l in label), (
+    assert label and any(lab and "CSAF" in lab for lab in label), (
         f"the publishers are not in a named group: {label}. An indent is invisible "
         "to a screen reader, which is the defect the optgroup existed to fix")
 
