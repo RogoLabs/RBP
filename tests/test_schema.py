@@ -84,9 +84,19 @@ def test_the_audit_fields_are_in_the_shareable_contract():
     a reader check the rule call instead of taking it on trust."""
     # owner_method was in this list: it distinguished a plausibility-checked
     # name from an unchecked one, which only matters when a name is published.
-    for field in ("refs", "hours_public", "ecosystem",
-                  "own_feed_date", "earliest_other_date"):
+    #
+    # `own_feed_date` and `earliest_other_date` were in it too, on the reasoning
+    # that they are "the entire input to the rule call". They were declared in
+    # FIELDS and written by NOTHING: absent from every row of every snapshot,
+    # emitted as empty cells by `csv.DictWriter`. A contract entry for a value
+    # no code produces is worse than no entry, because a consumer builds against
+    # it and waits for it to fill. Removed at schema 4.
+    for field in ("refs", "hours_public", "ecosystem"):
         assert field in schema.COLUMNS, field
+    for gone in ("own_feed_date", "earliest_other_date"):
+        assert gone not in schema.COLUMNS, (
+            f"{gone} is back in the contract; nothing writes it")
+        assert gone not in schema.FIELDS, gone
 
 
 # --------------------------------------------------------------------------
@@ -168,7 +178,10 @@ def test_the_csv_carries_no_owner_column_at_all(built):
     for field in site.NAME_FIELDS:
         assert field not in rows[0], field
     for r in rows:
-        assert r["owner_nameable"] == "False", r["cve_id"]
+        # `false`, lowercase: the CSV encodes booleans the way every other
+        # consumer of this site's data spells them, since F4. This test asserted
+        # Python's `False`, which is what the file used to contain.
+        assert r["owner_nameable"] == "false", r["cve_id"]
 
 
 def test_assert_consistent_no_longer_special_cases_the_placeholder():
@@ -376,3 +389,87 @@ def test_the_archive_is_judged_by_the_rules_that_applied_when_it_was_written(tmp
     # is the leak, not the feature.
     assert "goneaway" not in body, (
         "the dated archive republished a name the current build strips")
+
+
+def test_the_published_csv_actually_parses(built_site):
+    """F4. `csv.DictWriter` calls `str()` on what it is handed, so `source_urls`
+    reached the file as a Python `repr` with single quotes and `json.loads`
+    raised on row one. `rbp.csv.meta.json` declared that column's type as
+    `object`, called it "This is the evidence", and said nothing about how an
+    object is spelled in a cell, so the declared type and the encoding never
+    contradicted each other.
+
+    Six to nine further columns rendered Python's True/False rather than the
+    true/false everything else about this site publishes."""
+    import csv as _csv
+    import json as _json
+
+    path = built_site / "data" / "rbp.csv"
+    rows = list(_csv.DictReader(path.open(encoding="utf-8")))
+    assert rows, "the published CSV has no rows"
+
+    meta = _json.loads((built_site / "data" / "rbp.csv.meta.json").read_text())
+    assert "csv_encoding" in meta, (
+        "the sidecar declares types without saying how they are written")
+
+    obj_cols = [c for c, f in meta["fields"].items()
+                if f.get("type") in ("object", "array") and c in rows[0]]
+    assert obj_cols, "no object column in the CSV to check"
+    for r in rows[:50]:
+        for c in obj_cols:
+            if r[c]:
+                _json.loads(r[c])          # raises if it is a repr again
+
+    bool_cols = [c for c, f in meta["fields"].items()
+                 if f.get("type") == "bool" and c in rows[0]]
+    for r in rows[:50]:
+        for c in bool_cols:
+            assert r[c] in ("", "true", "false"), (
+                f"{c} is {r[c]!r}; the CSV publishes Python booleans")
+
+
+# The published column set, pinned to the version that publishes it.
+#
+# Removing a column WITHOUT bumping SCHEMA_VERSION left the whole suite green,
+# which is the one thing that constant exists to prevent. Its own docstring says
+# "Bump on ANY published key rename, removal, or meaning change", and nothing
+# enforced it: schema 4 removed five columns and 926 tests passed either way.
+#
+# A consumer pinned to a major version and reading by position is the party this
+# protects. They cannot detect a silent removal; the version is the only signal
+# they get.
+#
+# To change the contract: edit both. That is the point, not an inconvenience.
+_V4_COLUMNS = (
+    "cve_id", "state", "days_public", "hours_public", "public_date",
+    "public_date_origin", "clock_known", "rule", "rule_strength",
+    "rule_certainty", "rule_basis", "self_disclosed", "owner_nameable",
+    "veto_evaluated", "clock_origin", "advisory_date",
+    "advisory_days_public", "sources", "feed_count", "refs", "source_urls",
+    "package", "ecosystem", "description", "state_verified_this_run",
+)
+
+
+def test_removing_a_published_column_bumps_the_schema_version():
+    """SCHEMA_VERSION says "Bump on ANY published key rename, removal, or
+    meaning change" and nothing enforced it. Schema 4 removed five columns and
+    the suite passed identically with the constant left at 3.
+
+    A consumer pinned to a major version and reading by position cannot detect a
+    silent removal. The version is the only signal they get, so it has to move
+    when the columns do."""
+    assert schema.SCHEMA_VERSION == 4, (
+        "SCHEMA_VERSION changed; update _V4_COLUMNS to the new set and rename it, "
+        "so the pin travels with the contract rather than being deleted")
+    assert tuple(schema.COLUMNS) == _V4_COLUMNS, (
+        "the published column set changed without a SCHEMA_VERSION bump.\n"
+        f"  added:   {sorted(set(schema.COLUMNS) - set(_V4_COLUMNS))}\n"
+        f"  removed: {sorted(set(_V4_COLUMNS) - set(schema.COLUMNS))}")
+
+
+def test_every_published_column_is_documented_and_nothing_else_is():
+    """The other direction. A FIELDS entry for a column that does not exist is
+    how `own_feed_date` and `earliest_other_date` survived: declared, described
+    as "the entire input to the rule call", and written by nothing."""
+    undocumented = [c for c in schema.COLUMNS if c not in schema.FIELDS]
+    assert not undocumented, f"published but undocumented: {undocumented}"

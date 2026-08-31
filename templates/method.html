@@ -91,12 +91,10 @@
         tracker record is created when the tracker ingests the ID, not when anybody
         disclosed anything.
         <br><br>
-        So <span class="mono">past_expectation</span> is computed only from
-        <strong>advisory</strong> sources, and every tracker-only row reads false
-        regardless of age. Before this split it was true on <strong>522 of 522</strong>
-        published rows, and a claim asserted on every single row does no discriminating work while reading as a much stronger claim than the data supports.
-        <span class="mono">days_public</span> is unchanged on those rows: "referenced for
-        N days" is true of a tracker entry, and only "N days late" is not.
+        So the published <span class="mono">clock_origin</span> says which kind of
+        source dated each row, and <span class="mono">days_public</span> is unchanged
+        either way: "referenced for N days" is true of a tracker entry, and only
+        "N days late" is not.
       </p>
     </div>
     <p>

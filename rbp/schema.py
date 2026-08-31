@@ -106,7 +106,27 @@ def source_dirty():
 # recomputed, because `sources` and `refs` still ship in full on every row; what is
 # gone is this site publishing its own answer. Positional readers of rbp.csv must
 # fail loudly rather than read `refs` where they expected `indep_sources`.
-SCHEMA_VERSION = 3
+# v4, 2026-08-30: the cull. Removed `advisory_url` (D1), `vendor` (D3),
+# `past_expectation`, `own_feed_date` and `earliest_other_date` (D2), and the
+# CSV now encodes objects as JSON and booleans as lowercase (F4).
+#
+# `advisory_url` picked ONE link by a precedence tuple published nowhere, fell
+# back to a cve.org URL that renders nothing for a reserved id, and no template
+# read it. `source_urls` is strictly more and now parses.
+#
+# `vendor` was a pure function of `sources` on the same row. `past_expectation`
+# was exactly `clock_origin == "advisory"` across all 1,691 rows of the
+# 2026-08-27 archive, zero exceptions. `own_feed_date` and `earliest_other_date`
+# were declared here and written by nothing.
+#
+# The rule columns are KEPT and re-documented as constant under v1 rather than
+# cut, because cutting them means schema 5 re-adds them the day NAMING_ENABLED
+# flips: two breaks for a consumer instead of one.
+#
+# A positional reader of rbp.csv must fail loudly rather than read `source_urls`
+# where it expected `advisory_url`, which is the entire reason this constant
+# exists.
+SCHEMA_VERSION = 4
 
 # --------------------------------------------------------------------------
 # Writing an artefact. One implementation.
@@ -140,6 +160,37 @@ def write_json(path, obj, indent=1):
     """
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(obj, fh, indent=indent)
+
+
+def csv_cell(v):
+    """How a non-string value is written into a CSV cell. ONE definition.
+
+    `csv.DictWriter` calls `str()` on whatever it is handed, so a dict reached
+    the file as its Python `repr`:
+
+        source_urls  "{'osv': 'https://osv.dev/list?q=CVE-2025-0094'}"
+
+    Single quotes, so `json.loads` raises on row one, on the column
+    `rbp.csv.meta.json` declares as type `object` and calls "This is the
+    evidence". Booleans rendered as Python's `True`/`False` rather than the
+    `true`/`false` every other artefact this site publishes uses.
+
+    HERE RATHER THAN AT A WRITER, because there are two: `site.py` writes
+    `rbp.csv` for the site and `report.py` writes `backlog.csv` into the
+    snapshot. Fixing the first and not the second left the two files disagreeing
+    about how a boolean is spelled, which is exactly the shape of the defect the
+    comment at report.py's writer already records for the owner strip.
+    """
+    if isinstance(v, bool):
+        return "true" if v else "false"
+    if isinstance(v, (dict, list)):
+        return json.dumps(v, sort_keys=True)
+    return "" if v is None else v
+
+
+def csv_row(row):
+    """A row with every value encoded for CSV."""
+    return {k: csv_cell(v) for k, v in row.items()}
 
 
 def write_text(path, text):
@@ -243,10 +294,10 @@ COLUMNS = [
     "cve_id", "state",
     # the clock
     "days_public", "hours_public", "public_date", "public_date_origin",
-    "clock_known", "past_expectation",
+    "clock_known",
     # the rule call, and its inputs
     "rule", "rule_strength", "rule_certainty", "rule_basis",
-    "self_disclosed", "own_feed_date", "earliest_other_date",
+    "self_disclosed",
     # attribution: ONE field, and it is always False under v1.
     #
     # `owner`, `owner_tier`, `owner_method` and `owner_contested` were here.
@@ -261,9 +312,9 @@ COLUMNS = [
     "clock_origin", "advisory_date", "advisory_days_public",
     # provenance
     "sources", "feed_count", "refs",
-    "advisory_url", "source_urls",
+    "source_urls",
     # what it is
-    "vendor", "package", "ecosystem", "description",
+    "package", "ecosystem", "description",
     # run integrity
     "state_verified_this_run",
 ]
@@ -298,30 +349,25 @@ FIELDS = {
     "clock_known": ("boolean", "never absent",
                     "false when no feed supplied a date, in which case the row "
                     "cannot be aged at any threshold."),
-    "past_expectation": ("boolean", "never absent",
-                         "days_public exceeds the 72-hour expectation. Descriptive."),
     "rule": ("string", "never absent",
-             "4.5.1.6 (SHOULD, third party disclosed) or 4.5.1.4 (MUST, the CNA "
-             "itself disclosed)."),
-    "rule_strength": ("string", "never absent", "MUST or SHOULD, matching `rule`."),
+             "CONSTANT '4.5.1.6' under v1, and this says so rather than listing "
+             "an alternative no code path can reach. 4.5.1.4 needs an owner, "
+             "v1 attributes nothing, so every row is the SHOULD reading. Kept "
+             "rather than cut because it returns the day NAMING_ENABLED flips, "
+             "and cutting it now would mean two breaks for a consumer."),
+    "rule_strength": ("string", "never absent",
+                      "CONSTANT 'SHOULD' under v1, matching `rule`."),
     "rule_certainty": ("string", "never absent",
-                       "'candidate' where the disclosure ordering was measurable, "
-                       "'unmeasurable' where it was not. An unmeasurable row is "
-                       "filed under the WEAKER rule by default, so a 4.5.1.6 row "
-                       "is not evidence that a third party disclosed first."),
+                       "CONSTANT 'unmeasurable' under v1: the disclosure "
+                       "ordering needs an owner. An unmeasurable row is filed "
+                       "under the WEAKER rule, so it is not evidence that a "
+                       "third party disclosed first."),
     "rule_basis": ("string", "never absent",
-                   "'inferred-owner' or 'unattributed': which of the two the rule "
-                   "call rests on."),
+                   "CONSTANT 'unattributed' under v1: the rule call rests on no "
+                   "owner because there is none."),
     "self_disclosed": ("boolean", "never absent",
-                       "The owning CNA's own advisory feed carried it. The only "
-                       "route to a 4.5.1.4 reading."),
-    "own_feed_date": ("date|null", "null",
-                      "Earliest date from the inferred owner's OWN feed. Published "
-                      "as a scalar so the rule call is checkable without parsing "
-                      "nested JSON."),
-    "earliest_other_date": ("date|null", "null",
-                            "Earliest date from any other feed. With own_feed_date, "
-                            "these two are the entire input to the rule call."),
+                       "CONSTANT false under v1. The only route to a 4.5.1.4 "
+                       "reading, and that reading is unreachable here."),
     "owner_nameable": ("boolean", "never absent",
                        "ALWAYS false in v1: this site publishes no attribution. "
                        "The one field to branch on. `owner`, `owner_tier`, "
@@ -358,9 +404,6 @@ FIELDS = {
     "feed_count": ("integer", "never absent", "Number of feeds, including mirrors."),
     "refs": ("string", '""',
              "Semicolon-joined per-feed references. Truncated at 250 characters."),
-    "advisory_url": ("string", "never absent",
-                     "A place to look the ID up. Always populated."),
-    "vendor": ("string", '""', "Defender-recognisable vendor, where derivable."),
     "package": ("string", '""', "Affected package, where derivable. Often empty."),
     "ecosystem": ("string", '""', "Package ecosystem, where derivable."),
     "description": ("string", '""',

@@ -77,9 +77,20 @@ reader-facing item remains:
 - **F1.** The front page promises a correction route that
   `.well-known/security.txt` denies on the same origin.
 
-D5, D6, D7 and D10 are done. D9 is deliberately NOT done: the panel sequences it
-behind F8, because the tests it would delete are today the only executable
-statement that a CSAF cap keeps the newest of anything.
+Done: D1, D2, D3, D5, D6, D7, D10, D11, D12, and the F3/F4 prerequisites.
+`SCHEMA_VERSION` is 4 and `tests/test_schema.py` now pins the column set to the
+version, so removing a column without bumping fails the suite.
+
+NOT done, with reasons:
+
+- **D9**, the dead `cap` parameter, is sequenced behind **F8**. The tests it
+  deletes are today the only executable statement that a CSAF cap keeps the
+  newest of anything; three panellists mutated `entries.sort(reverse=True)` to
+  `entries.sort()` and the suite stayed green.
+- **D11's `table.rbp` removal.** The component renders nowhere, but
+  `rbp.breakpoints.card_layout_boundary()` parses `table.rbp thead { display:
+  none }` out of the stylesheet to derive the render sweep's breakpoint, and
+  five a11y tests assert against it. It is a subsystem change, not a deletion.
 
 The panel's own balance was 21 removals against 7 additions. Prefer the DELETE
 list when in doubt; this project's documented failure mode is accreting guards

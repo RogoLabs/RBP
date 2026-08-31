@@ -1289,13 +1289,26 @@ def _write_data(out, ctx):
         os.path.join(d, "rbp.csv.meta.json"),
         {"schema_version": _schema.SCHEMA_VERSION,
          "columns": _schema.COLUMNS,
+         # HOW A NON-STRING TYPE IS SPELLED IN A CELL. Declaring a column's type
+         # as `object` without saying how an object is written is the gap that
+         # let a Python `repr` sit in that column unnoticed: the declared type
+         # was right and the encoding was unstated, so nothing contradicted
+         # anything.
+         "csv_encoding": {
+             "object": "JSON, keys sorted. json.loads() on the cell.",
+             "array": "JSON, keys sorted. json.loads() on the cell.",
+             "bool": "the strings true and false, lowercase.",
+             "null": "the empty cell.",
+         },
          "fields": {k: {"type": t, "absent": a, "meaning": m}
                     for k, (t, a, m) in _schema.FIELDS.items()}})
 
+    # Encoded through the one definition in schema.csv_cell, which
+    # report.build's snapshot CSV also uses. See the note there.
     buf = io.StringIO()
     w = csv.DictWriter(buf, fieldnames=CSV_COLS, extrasaction="ignore")
     w.writeheader()
-    w.writerows(ctx["rows"])
+    w.writerows(_schema.csv_row(r) for r in ctx["rows"])
     _schema.write_text(os.path.join(d, "rbp.csv"), buf.getvalue())
 
     # THE DATED ARCHIVE (Part 2 condition 7).

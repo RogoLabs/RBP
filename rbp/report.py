@@ -22,16 +22,23 @@ def _trunc(s, n):
     return (cut[:sp] if sp > n * 0.6 else cut).rstrip() + "…"
 
 
-# Which downstream feed maps to which enterprise/OS vendor a defender would recognize.
-_SRC_VENDOR = {"msrc": "Microsoft", "mozilla": "Mozilla", "alas": "Amazon Linux",
-               "redhat": "Red Hat", "ubuntu": "Ubuntu", "debian": "Debian",
-               "alpine": "Alpine", "arch": "Arch Linux"}
+# `vendor` AND `_SRC_VENDOR` ARE GONE, and this note is what is left of them.
+#
+# The column was a pure function of `sources`, which is published on the same
+# row: walk a fixed list, take a display name for the first matching slug. Its
+# entire value set was five distro names, it was non-empty on 179 of 1,691 rows,
+# no template rendered it, and it was not in the filter, so the docstring claim
+# that it existed "so a defender can filter by software" named the one thing it
+# could not do. The map also carried an `arch` entry the loop never consulted.
+#
+# `ecosystem` is deliberately KEPT. It is real feed data rather than a
+# restatement of another column, and it is searchable.
 
 
 def _derive_meta(row):
-    """Pull affected package, ecosystem, a defender-recognizable vendor, and a real
-    advisory URL out of the feed refs, so a defender can filter by software and open
-    the source page. advisory_url is always populated."""
+    """Pull the affected package, its ecosystem, and one advisory URL per feed
+    out of the refs, so a reader can see what software is affected and open every
+    advisory the id appears in."""
     cid = row["cve_id"]
     pkg = eco = ""
     refs = [r for r in row.get("refs", "").split(";") if r]
@@ -43,12 +50,6 @@ def _derive_meta(row):
         elif parts[0] in ("debian", "alpine", "redhat") and len(parts) >= 2:
             pkg = pkg or parts[1]
     srcs = [s for s in row.get("sources", "").split(",") if s]
-    # vendor: prefer an enterprise/self-disclosure source, else the first mapped distro
-    vendor = ""
-    for s in ("msrc", "mozilla", "redhat", "alas", "ubuntu", "debian", "alpine"):
-        if s in srcs:
-            vendor = _SRC_VENDOR[s]
-            break
     # advisory URL: one per source, always populated (enterprise sources included)
     def _u(s):
         if s == "redhat":
@@ -77,6 +78,18 @@ def _derive_meta(row):
             parts = ref.split("\t")
             return (f"https://github.com/{parts[0]}/security/advisories/{parts[1]}"
                     if len(parts) > 1 and parts[0] and parts[1] else "")
+        if s == "samsung":
+            # F3. `samsung` was the only adapter with rows and no branch here,
+            # so 65 of 1,691 rows on the 2026-08-27 snapshot carried
+            # `source_urls == {}` and rendered as a bare id, a title, and a dead
+            # chip. refs carry "samsung:SMR-<Mon>-<Year>".
+            #
+            # Samsung publishes one bulletin per month at a single address
+            # rather than a page per id, so the link is the bulletin. That is
+            # the advisory the id actually appeared in.
+            ref = next((r.split(":", 1)[1] for r in refs if r.startswith("samsung:")), "")
+            return ("https://security.samsungmobile.com/securityUpdate.smsb"
+                    if ref.startswith("SMR-") else "")
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
         if s == "csaf":
@@ -88,27 +101,25 @@ def _derive_meta(row):
             parts = ref.split("\t")
             return parts[2] if len(parts) > 2 and parts[2].startswith("http") else ""
         return ""
-    url = ""
-    for s in ("redhat", "ubuntu", "debian", "alas", "alpine", "msrc", "mozilla",
-              # Ahead of ghsa: for a row carried by both, the repo's own advisory
-              # page is the same advisory at the publisher's address rather than
-              # at the database's.
-              "ghsa-repos", "ghsa", "osv", "csaf"):
-        if s in srcs and _u(s):
-            url = _u(s)
-            break
-    if not url:   # last-resort: never leave a row without a place to look it up
-        url = f"https://www.cve.org/CVERecord?id={cid}"
-
-    # EVERY place this ID is showing up, not just the first one.
+    # `advisory_url` AND ITS cve.org FALLBACK ARE GONE.
     #
-    # The loop above picks a single `advisory_url` by source precedence and
-    # throws the rest away, which made "where is this showing up" a question the
-    # published data could not answer: a row seen in OSV, Red Hat and Debian
-    # rendered one link and a comma-joined list of names. That list is the whole
-    # claim the site makes. An ID being referenced in three independent public
-    # advisories while unpublished IS the finding, and it was being shown as a
-    # string.
+    # The fallback assigned `https://www.cve.org/CVERecord?id=<id>` when no feed
+    # supplied a page, twelve lines above a comment saying cve.org "is
+    # deliberately NOT a fallback here. For a RESERVED id it renders nothing, so
+    # a link to it is worse than no link: it looks like evidence and disproves
+    # itself." The published contract carried both claims at once: the sidecar
+    # said under `source_urls` that cve.org is never used as a fallback, and
+    # under `advisory_url` that it is "Always populated".
+    #
+    # The field also picked ONE link by a precedence tuple published nowhere and
+    # threw the rest away, and no template ever read it: `grep -rn advisory_url
+    # templates/` returns nothing. A row with no URL already renders an honest
+    # dashed non-link chip.
+    #
+    # `source_urls` is what survives, and it is strictly more: every place the id
+    # is showing up rather than the first one a hidden tuple preferred. Now that
+    # the CSV is parseable (F4), a consumer picks their own link out of it.
+    # EVERY place this ID is showing up, not just the first one.
     #
     # cve.org is deliberately NOT a fallback here. For a RESERVED id it renders
     # nothing, so a link to it is worse than no link: it looks like evidence and
@@ -118,7 +129,7 @@ def _derive_meta(row):
         u = _u(s)
         if u:
             source_urls[s] = u
-    return pkg, eco, vendor, url, source_urls
+    return pkg, eco, source_urls
 
 
 # How long an ID must be provably public before it is reportable, in days.
@@ -327,8 +338,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     sdir = os.path.join(snap_root, today)
     os.makedirs(sdir, exist_ok=True)
     for r in backlog:
-        (r["package"], r["ecosystem"], r["vendor"], r["advisory_url"],
-         r["source_urls"]) = _derive_meta(r)
+        (r["package"], r["ecosystem"], r["source_urls"]) = _derive_meta(r)
 
     # An owner may be NAMED only at/above the confidence gate AND corroborated by that
     # CNA's own feed (never a bare product-map guess). Applied to EVERY shared surface -
@@ -351,7 +361,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     def _publishable(r, **over):
         out = {k: v for k, v in r.items() if k not in _INTERNAL}
         out["description"] = _clean_description(r.get("description"),
-                                                r.get("package") or r.get("vendor"))
+                                                r.get("package"))
         pm = r.get("product_map_owner")
         out["owner_contested"] = bool(
             pm and r.get("owner") and not clock._same_name(pm, r["owner"]))
@@ -400,7 +410,13 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
         # owner_nameable=True. Same shape as the per-CNA JSON endpoints: a second
         # writer for the same rows is where the guard does not reach.
         from . import site as _site_csv
-        w.writerows(_site_csv._denamed([_gated(r) for r in reportable],
+        # Encoded through schema.csv_cell, the same definition site.py's rbp.csv
+        # uses. This writer is the second one, and the comment above already
+        # records what happens when the two drift: an owner strip applied to one
+        # and not the other. The encoding is exactly that shape, so it is shared
+        # rather than repeated.
+        w.writerows(schema.csv_row(r) for r in
+                    _site_csv._denamed([_gated(r) for r in reportable],
                                        "backlog.csv"))
     # Suppressed rows are excluded from the ungated audit file too.
     #

@@ -373,12 +373,11 @@ def test_a_repo_advisory_row_links_to_the_repo_and_not_to_the_database():
     RESERVED id, so the site would publish a row whose only evidence link
     disproved it. That exact defect already shipped once, for CSAF."""
     from rbp import report
-    _pkg, _eco, _vendor, url, source_urls = report._derive_meta({
+    _pkg, _eco, source_urls = report._derive_meta({
         "cve_id": "CVE-2026-12521", "sources": "ghsa-repos",
         "refs": "ghsa-repos:zephyrproject-rtos/zephyr\tGHSA-g5v9-xmfp-7gxm"})
     want = ("https://github.com/zephyrproject-rtos/zephyr"
             "/security/advisories/GHSA-g5v9-xmfp-7gxm")
-    assert url == want, url
     assert source_urls == {"ghsa-repos": want}, source_urls
 
 
@@ -388,12 +387,16 @@ def test_the_repo_advisory_link_wins_over_the_database_link():
     precedence. Both still appear in source_urls, which is the field that answers
     "where is this showing up"."""
     from rbp import report
-    _pkg, _eco, _vendor, url, source_urls = report._derive_meta({
+    _pkg, _eco, source_urls = report._derive_meta({
         "cve_id": "CVE-2026-12521", "sources": "ghsa,ghsa-repos",
         "refs": ("ghsa:GHSA-g5v9-xmfp-7gxm;"
                  "ghsa-repos:zephyrproject-rtos/zephyr\tGHSA-g5v9-xmfp-7gxm")})
-    assert "zephyrproject-rtos/zephyr" in url, url
+    # The precedence tuple that preferred the repo link over the database one
+    # is gone with `advisory_url` (D1): a consumer now picks from source_urls
+    # themselves rather than from a ranking published nowhere. What still has to
+    # be true is that BOTH links are offered and the repo one points at the repo.
     assert set(source_urls) == {"ghsa", "ghsa-repos"}
+    assert "zephyrproject-rtos/zephyr" in source_urls["ghsa-repos"]
 
 
 def test_a_repo_advisory_ref_without_its_repo_yields_no_link():
@@ -401,11 +404,14 @@ def test_a_repo_advisory_ref_without_its_repo_yields_no_link():
     lost its repo half must produce NO url rather than a malformed github.com
     path, because the last-resort branch is then correct to fire."""
     from rbp import report
-    _pkg, _eco, _vendor, url, source_urls = report._derive_meta({
+    _pkg, _eco, source_urls = report._derive_meta({
         "cve_id": "CVE-2026-12521", "sources": "ghsa-repos",
         "refs": "ghsa-repos:GHSA-g5v9-xmfp-7gxm"})
+    # No link, and nothing invented in its place. The cve.org last-resort that
+    # used to fire here is gone with `advisory_url` (D1): it rendered nothing for
+    # a reserved id, so it looked like evidence and disproved the row. An empty
+    # `source_urls` renders an honest dashed non-link chip.
     assert source_urls == {}, source_urls
-    assert url == "https://www.cve.org/CVERecord?id=CVE-2026-12521"
 
 
 # --------------------------------------------------------------------------

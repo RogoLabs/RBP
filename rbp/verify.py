@@ -127,14 +127,18 @@ def check(site_dir, snapshots_dir=None):
     #    Asserted as a RATIO that must not get worse rather than as zero: 63 of
     #    1,870 rows are samsung-only and have no per-id page today, which is a
     #    known gap with its own review item. This catches the gap SPREADING.
-    dead = [r for r in rows if "cve.org/CVERecord" in (r.get("advisory_url") or "")]
+    # `advisory_url` is gone with D1; `source_urls` is the evidence now, and a
+    # row with none of it is a row a reader cannot check. That is the property
+    # this was really asserting: the cve.org fallback was only ever the SHAPE
+    # the absence took.
+    dead = [r for r in rows if not (r.get("source_urls") or {})]
     # A RATIO WITH A SMALL FLOOR. Absolute counts do not travel: an artefact of
     # 50 rows and one of 50,000 need the same rule. The floor only keeps a
     # three-row test fixture from tripping it.
     if len(dead) > 10 and len(dead) > len(rows) * 0.10:
         problems.append(
-            f"{len(dead)} of {len(rows)} rows link only to cve.org, which renders "
-            "nothing for a reserved id; the row's own evidence disproves it")
+            f"{len(dead)} of {len(rows)} rows carry no advisory link at all, so "
+            "a reader cannot check them")
 
     # 3. IDS LOOK LIKE IDS.
     malformed = [r.get("cve_id") for r in rows if not _CVE_RE.match(r.get("cve_id") or "")]

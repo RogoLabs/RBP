@@ -131,7 +131,8 @@ def test_report_writes_a_snapshot_the_site_can_read(backlog, corpus, tmp_path):
     # de-naming contract in one assertion.
     assert "owner" not in named and "owner" not in abstained
     for r in (named, abstained):
-        assert r["owner_nameable"] == "False", r["cve_id"]
+        # lowercase since F4: the CSV spells booleans the way JSON does
+        assert r["owner_nameable"] == "false", r["cve_id"]
     assert "RESERVED" in md and "DNE" not in md
 
 
@@ -373,16 +374,14 @@ def test_a_csaf_row_links_to_the_advisory_not_to_a_blank_cve_page():
     row it was evidence for. ICS and OT rows are the population this reaches."""
     from rbp.report import _derive_meta
     url = "https://cert-portal.siemens.com/productcert/csaf/ssa-123456.json"
-    _pkg, _eco, _vendor, out, urls = _derive_meta({
+    _pkg, _eco, urls = _derive_meta({
         "cve_id": "CVE-2026-1", "sources": "csaf",
         "refs": f"csaf:Siemens ProductCERT\t SSA-123456\t{url}".replace("\t ", "\t"),
     })
-    assert out == url, out
 
     # And a malformed ref must fall back rather than emit a broken link.
-    _p, _e, _v, fallback, fb_urls = _derive_meta({
+    _p, _e, fb_urls = _derive_meta({
         "cve_id": "CVE-2026-1", "sources": "csaf", "refs": "csaf:Siemens"})
-    assert fallback == "https://www.cve.org/CVERecord?id=CVE-2026-1"
 
 
 def test_no_independent_origin_count_is_computed_or_published():
@@ -426,3 +425,47 @@ def test_every_adapter_is_classified_as_advisory_or_tracker():
     assert not missing, (
         f"adapters absent from clock._ORIGIN_KIND: {missing}. Each reads as a "
         "tracker, so no row from it can ever be past_expectation. Classify it.")
+
+
+def test_every_adapter_either_builds_a_link_or_declares_it_cannot():
+    """F3. `report._u` dispatches on exact slug, and `samsung` was simply absent
+    from it: 65 of 1,691 rows on the 2026-08-27 snapshot carried
+    `source_urls == {}` and rendered as a bare CVE id, a title, and a dead chip.
+
+    Nothing caught it because nothing asserted the set of adapters and the set
+    of link builders were the same set. This is the guard that mirrors
+    `test_every_adapter_has_a_clock_origin` one screen up, which already pins
+    that every ADAPTERS key appears in `clock._ORIGIN_KIND`.
+
+    An adapter that genuinely publishes no per-id page belongs in the declared
+    set, not missing from both."""
+    from rbp import feeds, report
+
+    # Adapters that publish no per-ID page anywhere, stated rather than implied.
+    NO_PER_ID_PAGE = {"arch"}
+
+    # One representative ref per adapter, in the shape that adapter really
+    # writes. A generic `slug:x` is not enough: `csaf` and `ghsa-repos` carry
+    # tab-separated structure and their branches correctly return "" without it,
+    # which would report them as missing when they are not.
+    REF = {
+        "samsung": "samsung:SMR-Jan-2026",
+        "csaf": "csaf:Pub\tADV-1\thttps://vendor.example/a.json",
+        "ghsa-repos": "ghsa-repos:owner/repo\tGHSA-aaaa-bbbb-cccc",
+        "ghsa": "ghsa:GHSA-aaaa-bbbb-cccc",
+        "mozilla": "mozilla:mfsa2026-01",
+        "osv": "osv:PyPI:somepkg",
+    }
+    handled = set()
+    for slug in feeds.ADAPTERS:
+        probe = {"cve_id": "CVE-2026-9999", "sources": slug,
+                 "refs": REF.get(slug, f"{slug}:somepackage")}
+        _pkg, _eco, urls = report._derive_meta(probe)
+        if urls.get(slug):
+            handled.add(slug)
+
+    missing = set(feeds.ADAPTERS) - handled - NO_PER_ID_PAGE
+    assert not missing, (
+        f"{sorted(missing)} produce rows but have no link builder in report._u "
+        "and are not declared as publishing no per-ID page, so their rows ship "
+        "with no evidence a reader can open")

@@ -322,7 +322,8 @@ def test_no_produced_csv_anywhere_has_an_owner_column(built):
             for field in site.NAME_FIELDS:
                 assert field not in rows[0], f"{p} has a {field} column"
             for r in rows:
-                assert r.get("owner_nameable") == "False", p
+                # lowercase since F4: the CSV spells booleans the way JSON does
+                assert r.get("owner_nameable") == "false", p
     assert found > 0, "no CSV was produced, so this test asserts nothing"
 
 

@@ -114,16 +114,16 @@ def test_a_source_growing_is_never_a_finding(tmp_path):
     assert verify.check(site, snaps) == []
 
 
-def test_a_row_whose_only_link_disproves_it(tmp_path):
-    """cve.org/CVERecord renders NOTHING for a reserved id, so a row pointing
-    only there is evidence against itself. A known 63-row gap exists today
-    (samsung has no per-id page), so this asserts the gap is not SPREADING
-    rather than asserting zero."""
-    dead = "https://www.cve.org/CVERecord?id=CVE-2026-1"
-    site = _site(tmp_path, [_row(i, dead) for i in range(50)])
-    assert any("disproves" in p for p in verify.check(site))
+def test_rows_with_no_evidence_link_at_all(tmp_path):
+    """A row a reader cannot check is the failure; the cve.org fallback was only
+    ever the SHAPE that absence took, and it is gone with `advisory_url` (D1).
+
+    Asserted as a ratio that must not get worse rather than as zero, because
+    some feeds genuinely publish no per-id page."""
+    site = _site(tmp_path, [dict(_row(i), source_urls={}) for i in range(50)])
+    assert any("no advisory link" in p for p in verify.check(site))
     ok = _site(tmp_path / "b", [_row(i) for i in range(50)]
-               + [_row(900 + i, dead) for i in range(3)])
+               + [dict(_row(900 + i), source_urls={}) for i in range(3)])
     assert verify.check(ok) == []
 
 
