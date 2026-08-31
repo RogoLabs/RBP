@@ -79,7 +79,7 @@ No server, no database, no runtime API calls. Every page is a file.
 | `templates/`, `static/` | the rendered pages, their CSS and the self-hosted font. `_about-copy.html` is the holding-page prose, wrapped by `about.html` for the site route and `holding.html` for the pre-launch front door. `static/fonts/` carries Inter and its licence: the site makes no third-party request |
 | `tools/` | authoring scripts run by hand, output committed. Not on the publish path |
 | `tests/` | the offline suite; `tests/render/` needs a browser |
-| `rbp/verify.py` | invariants on the built artefact, run as a deploy step after the upload. Fails the build on a finding; never blocks a publication |
+| `rbp/verify.py` | invariants on the built artefact, run as a deploy step after the upload. Fails the build on a finding, which skips the deploy: Pages keeps serving the previous artefact. A shortfall the run already recorded as a failure or a truncation publishes instead, with `degraded: true` |
 | `feedlab/` | per-feed scorecards, committed as evidence (see `FEEDS.md`) |
 | `.github/workflows/` | `ci.yml` on the commit path, `deploy.yml` on the publish path |
 | `PLAN.md` | the design record and the launch gate |

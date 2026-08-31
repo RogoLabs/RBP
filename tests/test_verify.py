@@ -17,10 +17,10 @@ import json
 from rbp import verify
 
 
-def _site(tmp_path, rows):
+def _site(tmp_path, rows, degraded=False):
     d = tmp_path / "site" / "data"
     d.mkdir(parents=True, exist_ok=True)
-    (d / "rbp.json").write_text(json.dumps({"rows": rows}))
+    (d / "rbp.json").write_text(json.dumps({"rows": rows, "degraded": degraded}))
     return str(tmp_path / "site")
 
 
@@ -188,3 +188,115 @@ def test_a_small_source_going_dark_is_still_a_finding(tmp_path):
     _snap(tmp_path, "2026-08-30", 1790,
           {"csaf": {"rows": 19800, "parts": {"psirt.kunbus.com": {"rows": 0}}}})
     assert any("kunbus" in p and "goes dark" in p for p in verify.check(site, snaps))
+
+
+# --------------------------------------------------------------------------
+# a shortfall the run already accounted for
+#
+# 2026-08-31: Ubuntu's API returned 504 then 503 at the fifth page on two
+# consecutive runs. The feed recorded TRUNCATED with the HTTP error in its
+# detail, this module failed the build anyway, and because `deploy` is
+# `needs: build` the site published nothing either time. One feed of thirteen
+# having a bad afternoon stopped the whole site.
+# --------------------------------------------------------------------------
+
+def _shortfall(tmp_path, status=None, detail=None, degraded=False):
+    """Ubuntu's 2026-08-31 shape: 3,996 ids at its best, 80 now."""
+    site = _site(tmp_path, [_row(i) for i in range(50)], degraded=degraded)
+    _snap(tmp_path, "2026-08-30", 100, {"ubuntu": {"rows": 3996}})
+    now = {"ubuntu": {"rows": 80}}
+    if status:
+        now["ubuntu"]["status"] = status
+        now["ubuntu"]["detail"] = detail
+    snaps = _snap(tmp_path, "2026-08-31", 95, now)
+    return site, snaps
+
+
+def test_the_status_literals_are_the_ones_feeds_actually_writes():
+    """Typed here rather than imported, because this module is a deploy step and
+    imports nothing that opens a socket. That trade is only safe while something
+    checks the two agree."""
+    from rbp import feeds
+    assert verify.EXPLAINS_A_SHORTFALL == (feeds.FAILED, feeds.TRUNCATED)
+    assert feeds.CAPPED not in verify.EXPLAINS_A_SHORTFALL
+    assert feeds.OK not in verify.EXPLAINS_A_SHORTFALL
+
+
+def test_a_shortfall_behind_a_recorded_truncation_publishes(tmp_path):
+    """The reported case. It is disclosed, so it is weather, not a silent shrink,
+    and publishing it beats publishing nothing."""
+    site, snaps = _shortfall(tmp_path, "truncated",
+                             "stopped at offset 80: HTTP Error 503", degraded=True)
+    problems, notes = verify.review(site, snaps)
+    assert problems == [], problems
+    assert any("ubuntu" in n and "503" in n for n in notes), notes
+
+
+def test_a_shortfall_behind_a_recorded_failure_publishes(tmp_path):
+    site, snaps = _shortfall(tmp_path, "failed", "HTTP Error 500", degraded=True)
+    assert verify.check(site, snaps) == []
+
+
+def test_an_accounted_shortfall_that_the_artefact_does_not_disclose_fails(tmp_path):
+    """THE HALF THAT REPLACES THE BUILD FAILURE. Without it this change would be a
+    straight loss: a short count would publish with nothing on the site or in the
+    JSON marking the run as worse than usual."""
+    site, snaps = _shortfall(tmp_path, "truncated", "HTTP Error 503", degraded=False)
+    problems = verify.check(site, snaps)
+    assert any("degraded=false" in p and "ubuntu" in p for p in problems), problems
+
+
+def test_a_cap_does_not_excuse_a_shortfall(tmp_path):
+    """A configured page cap fires on every run by design, ubuntu's and ghsa's
+    both do, so the high-water mark this compares against was itself recorded with
+    the cap firing. Letting a cap excuse a shortfall excuses every shortfall on
+    those two feeds forever. `cli.degraded_state` draws the same line."""
+    site, snaps = _shortfall(tmp_path, "capped", "hit page cap (200)", degraded=True)
+    assert any("ubuntu" in p and "down" in p for p in verify.check(site, snaps))
+
+
+def test_a_feed_that_shrank_while_reporting_itself_healthy_still_fails(tmp_path):
+    """The silent shrink, which is the whole reason this module exists. A status
+    of `ok` beside a 98% shortfall is the signature of all three 2026-08
+    regressions."""
+    site, snaps = _shortfall(tmp_path, "ok", "3,996 ids", degraded=True)
+    assert any("ubuntu" in p and "down" in p for p in verify.check(site, snaps))
+
+
+def test_a_shortfall_with_no_status_at_all_still_fails(tmp_path):
+    """A snapshot written before statuses were recorded, or a feed that never
+    reported one. Absence of evidence is not an account of the shortfall."""
+    site, snaps = _shortfall(tmp_path, None, degraded=True)
+    assert any("ubuntu" in p for p in verify.check(site, snaps))
+
+
+def test_a_provider_inherits_its_parents_recorded_failure(tmp_path):
+    """A csaf provider that returned nothing because the csaf fetch as a whole
+    failed is explained by that failure. Asking only the child calls it a silent
+    shrink and blocks the publication for a reason the run already gave."""
+    site = _site(tmp_path, [_row(i) for i in range(50)], degraded=True)
+    _snap(tmp_path, "2026-08-30", 100,
+          {"csaf": {"rows": 20000, "parts": {"www.cisa.gov": {"rows": 4467}}}})
+    snaps = _snap(tmp_path, "2026-08-31", 95,
+                  {"csaf": {"rows": 300, "status": "failed", "detail": "HTTP 500",
+                            "parts": {"www.cisa.gov": {"rows": 0}}}})
+    assert verify.check(site, snaps) == []
+
+
+def test_the_failure_message_names_what_actually_happens_next(tmp_path, capsys):
+    """It used to read "The site is already serving this", on the reasoning that
+    verify runs after the upload. It does, but `deploy` is `needs: build` with no
+    `if:`, so failing here skips the deploy and Pages keeps serving the previous
+    artefact. An operator who believed that line went looking for bad data on a
+    site that had not changed, and did not learn that publication had stopped.
+
+    Asserted on the message because it is the only thing an operator reads at
+    3am, and it was wrong for as long as it existed.
+    """
+    site, snaps = _shortfall(tmp_path, None, degraded=True)
+    assert verify.main(["--site", site, "--snapshots", snaps]) == 1
+    out = capsys.readouterr().out
+    assert "already serving" not in out, (
+        "the failure message still claims the site is serving this artefact; the "
+        "deploy is skipped, so it is not")
+    assert "deploy is skipped" in out and "previous" in out, out
