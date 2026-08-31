@@ -86,6 +86,35 @@ MIN_ABSOLUTE_LOSS = 100
 # said they were caught up.
 _CVE_RE = re.compile(r"^CVE-\d{4}-\d{4,}$")
 
+# THE STATUSES THAT EXPLAIN A SHORTFALL, and the one that does not.
+#
+# The shortfall check below has always said, in its own comment, "without failing
+# or truncating". It never read a status, so it did not mean it: on 2026-08-31
+# Ubuntu's API returned 503 and 504 at the fifth page on two consecutive runs,
+# the feed correctly recorded TRUNCATED with the HTTP error in its detail, and
+# this module failed the build anyway. `deploy` is `needs: build`, so the site
+# published nothing for either run. One of thirteen feeds having a bad afternoon
+# froze the whole site, which is the outcome the comment on the verify step in
+# deploy.yml says the ordering was chosen to avoid.
+#
+# A shortfall the run has already accounted for is not the silent shrink this
+# module exists to catch. It is weather, it is disclosed, and the right response
+# is to publish it with `degraded: true` beside it rather than to publish
+# nothing. What still fails the build is a shortfall with NOTHING behind it,
+# because that is the signature of all three 2026-08 regressions: a feed that
+# returned almost nothing while reporting itself perfectly healthy.
+#
+# CAPPED IS DELIBERATELY NOT HERE. A configured page cap fires on every single
+# run by design -- ubuntu's and ghsa's both do -- so the high-water mark this
+# check compares against was itself recorded with the cap firing. Letting a cap
+# excuse a shortfall would excuse every shortfall on those two feeds forever.
+# `cli.degraded_state` draws the same line for the same reason.
+#
+# The literals are checked against `feeds.OK` and friends in tests/test_verify.py
+# rather than imported: this module is a deploy step and imports nothing that
+# opens a socket.
+EXPLAINS_A_SHORTFALL = ("failed", "truncated")
+
 
 def _rows(site_dir):
     """The rows as published, read from the artefact rather than from memory."""
@@ -112,15 +141,58 @@ def _feed_rows(summary):
     return out
 
 
+def _feed_status(summary):
+    """{feed or provider: (status, detail)}, flattened the same way as _feed_rows.
+
+    A provider INHERITS its parent's status when it records none of its own. A
+    csaf provider that returned nothing because the csaf fetch as a whole failed
+    is explained by that failure, and asking only the child would call it a
+    silent shrink.
+    """
+    out = {}
+    for name, h in ((summary.get("feeds") or {}).get("detail") or {}).items():
+        if not isinstance(h, dict):
+            continue
+        parent = (h.get("status"), h.get("detail"))
+        out[name] = parent
+        for child, c in (h.get("parts") or {}).items():
+            if isinstance(c, dict):
+                out[f"{name}:{child}"] = (c.get("status") or parent[0],
+                                          c.get("detail") or parent[1])
+    return out
+
+
+def _artefact(site_dir):
+    """The published rbp.json as a dict, or {} if it is a bare list of rows."""
+    p = os.path.join(site_dir, "data", "rbp.json")
+    with open(p, encoding="utf-8") as fh:
+        d = json.load(fh)
+    return d if isinstance(d, dict) else {}
+
+
 def check(site_dir, snapshots_dir=None):
-    """Every reason this artefact should raise an alarm. Empty means clean."""
-    problems = []
+    """The findings that should FAIL THE BUILD. Empty means clean.
+
+    Kept as the narrow question because it is the one the exit code answers.
+    `review()` is the same pass with the disclosed shortfalls returned as well.
+    """
+    return review(site_dir, snapshots_dir)[0]
+
+
+def review(site_dir, snapshots_dir=None):
+    """`(problems, notes)`.
+
+    `problems` fail the build. `notes` are shortfalls this run has already
+    accounted for: real, worth printing, and not a reason to publish nothing.
+    See EXPLAINS_A_SHORTFALL.
+    """
+    problems, notes = [], []
     rows = _rows(site_dir)
 
     # 1. IT PUBLISHED SOMETHING. A zero-row artefact is a legitimate state only
     #    immediately after an epoch reset, which this site is not doing.
     if not rows:
-        return ["the published artefact holds no rows at all"]
+        return ["the published artefact holds no rows at all"], notes
 
     # 2. EVERY ROW'S EVIDENCE OPENS. `cve.org/CVERecord` renders NOTHING for a
     #    reserved id, so a row whose only link points there disproves itself.
@@ -146,12 +218,12 @@ def check(site_dir, snapshots_dir=None):
         problems.append(f"{len(malformed)} malformed CVE ids, first {malformed[0]!r}")
 
     if not snapshots_dir:
-        return problems
+        return problems, notes
 
     snaps = sorted(d for d in glob.glob(os.path.join(snapshots_dir, "*"))
                    if os.path.isdir(d) and os.path.exists(os.path.join(d, "summary.json")))
     if len(snaps) < 2:
-        return problems
+        return problems, notes
 
     now, prev = _summary(snaps[-1]), _summary(snaps[-2])
 
@@ -187,20 +259,46 @@ def check(site_dir, snapshots_dir=None):
                     best[k] = v
         except (OSError, ValueError):
             continue
+    now_status = _feed_status(now)
+    accounted = []
     for name, high in sorted(best.items()):
         cur = now_f.get(name)
         if not isinstance(high, int) or high <= 0:
             continue
         if cur == 0:
-            problems.append(
-                f"{name} returned {high:,} ids at its best and 0 now; a source "
-                "that goes dark takes every row it alone evidenced with it")
+            finding = (f"{name} returned {high:,} ids at its best and 0 now; a source "
+                       "that goes dark takes every row it alone evidenced with it")
         elif (isinstance(cur, int) and cur < high * (1 - MAX_ROW_DROP)
               and high - cur >= MIN_ABSOLUTE_LOSS):
-            problems.append(
-                f"{name} returned {high:,} ids at its best and {cur:,} now "
-                f"({round(100 * (high - cur) / high)}% down)")
-    return problems
+            finding = (f"{name} returned {high:,} ids at its best and {cur:,} now "
+                       f"({round(100 * (high - cur) / high)}% down)")
+        else:
+            continue
+        # DID THE RUN ALREADY SAY WHY? A shortfall behind a recorded failure or
+        # truncation is weather the run has accounted for; one behind a status of
+        # `ok` is the silent shrink, and that still fails.
+        status, why = now_status.get(name) or (None, None)
+        if status in EXPLAINS_A_SHORTFALL:
+            accounted.append(name)
+            notes.append(f"{finding} -- {status}: {why or 'no detail recorded'}")
+        else:
+            problems.append(finding)
+
+    # ...AND THE ARTEFACT HAS TO SAY SO. This is the half that replaces the build
+    # failure, and without it the change would be a straight loss: a shortfall
+    # would publish with nothing on the site or in the JSON to mark the run as
+    # worse than usual, which is precisely the state `degraded` exists to name.
+    #
+    # `cli.degraded_state` already sets it from the same failed/truncated lists,
+    # so this asserts the two agree rather than recomputing the verdict. If they
+    # ever stop agreeing, the artefact is the one that is wrong.
+    if accounted and not _artefact(site_dir).get("degraded"):
+        problems.append(
+            f"{len(accounted)} source(s) fell short behind a recorded failure "
+            f"({', '.join(sorted(accounted))}) and the artefact still publishes "
+            "degraded=false, so a reader is given a short count with nothing "
+            "saying the run was worse than usual")
+    return problems, notes
 
 
 def main(argv=None):
@@ -211,14 +309,26 @@ def main(argv=None):
     ap.add_argument("--snapshots", default="snapshots")
     args = ap.parse_args(argv)
 
-    problems = check(args.site, args.snapshots)
+    problems, notes = review(args.site, args.snapshots)
+    # Printed whether or not anything failed: a shortfall the run accounted for
+    # is still a shortfall, and the build log is where it is read.
+    for n in notes:
+        print(f"verify: accounted-for shortfall, published as degraded: {n}")
     if not problems:
         print(f"verify: {len(_rows(args.site)):,} rows, no findings")
         return 0
     print("VERIFY FAILED, the artefact that was just published does not hold up:")
     for p in problems:
         print(f"  - {p}")
-    print("\nThe site is already serving this. Read the diff before the next run.")
+    # WHAT ACTUALLY HAPPENS NEXT, which this line used to get wrong. It read "The
+    # site is already serving this", on the reasoning that verify runs after the
+    # upload. It does, but `deploy` is `needs: build` with no `if:`, so failing
+    # here fails the build and the deploy is SKIPPED: Pages keeps serving the
+    # previous good artefact and nothing new reaches a reader. An operator who
+    # believed this line went looking for bad data on a site that had not
+    # changed, and did not know publication had stopped.
+    print("\nThe deploy is skipped, so the site keeps serving the previous "
+          "artefact and stops getting fresher. Read the diff before the next run.")
     return 1
 
 
