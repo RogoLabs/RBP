@@ -698,95 +698,219 @@ a.src:hover, a.src:focus-visible { background: var(--rbp-link); color: var(--col
 .page-header p, .card-body > p, .lead-plain, .caveat p { max-width: 68ch; }
 
 /* ==========================================================================
-   THE LIST PAGE. One route: a command bar, the rows, and a slide-over panel.
+   THE LIST PAGE. The lead, the source inventory, a sticky control bar, and the
+   rows under their group headings.
+
    Built on the EXISTING tokens rather than a new palette, so the themes and the
-   computed contrast tests in tests/test_a11y.py keep applying unchanged.
+   computed contrast tests in tests/test_a11y.py keep applying unchanged. That is
+   a real constraint on the look and it is deliberate: tests/test_a11y.py
+   DISCOVERS the selectors it measures out of this file, so a hand-picked colour
+   introduced here is measured on the next run whether or not anyone remembered
+   to add it to a list. Anything that wants a new colour has to be solved against
+   every surface it lands on first.
    ========================================================================== */
 
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;
   clip:rect(0 0 0 0);white-space:nowrap;border:0}
 body.locked{overflow:hidden}
 
-/* ---- the command bar: the only persistent chrome ---- */
-.cmdbar{position:sticky;top:0;z-index:20;background:var(--color-bg-content);
-  border-bottom:1px solid var(--color-border)}
-.cmd-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;
-  max-width:1080px;margin:0 auto;padding:12px 20px}
-/* h1.cmd-count, not div: the count IS the front page's heading. Margin and
-   font-size are reset because a bare h1 would otherwise inherit the document
-   scale and push the sticky bar taller than the rows it sits above. */
-.cmd-count{display:flex;align-items:baseline;gap:9px;flex:0 0 auto;
-  margin:0;font-size:1rem;font-weight:400}
-.cmd-count b{font-size:1.7rem;font-weight:600;letter-spacing:-.02em;
-  font-variant-numeric:tabular-nums;line-height:1}
+/* ---- the lead: the count at full scale, the distribution beside it ---- */
+/* The count was 1.7rem inside the sticky bar, between a search box and two
+   selects. It is the whole product of the site and it was set smaller than the
+   nav. Two columns rather than one so the shape of the data sits at the same
+   altitude as the number it describes: they are one claim and its evidence, and
+   stacking them puts a screen between them. */
+.lead{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:14px 56px;align-items:start;padding:26px 0 4px}
+.lead-eyebrow{font-size:.7rem;letter-spacing:.19em;text-transform:uppercase;
+  color:var(--rbp-text-muted);margin:0 0 10px}
+/* h1.cmd-count, not div: the count IS the front page's heading. It keeps the
+   class name because tests/test_copy.py reads `<h1 class="cmd-count">` to check
+   that the headline and og:description carry the same count expression. */
+.cmd-count{display:block;margin:0;font-weight:400;font-size:1rem}
+.cmd-count b{display:block;font-size:clamp(3.4rem,9vw,6.4rem);font-weight:650;
+  letter-spacing:-.045em;line-height:.88;font-variant-numeric:tabular-nums;
+  color:var(--color-text-primary)}
 .cmd-count b.dim{opacity:.45}
-.cmd-count span{color:var(--rbp-text-muted);font-size:.8rem;max-width:19ch;line-height:1.25}
+.cmd-count span{display:block;margin-top:12px;font-size:1.12rem;line-height:1.35;
+  max-width:22ch;color:var(--color-text-primary)}
+.lead-floor{margin:16px 0 0;font-size:.85rem;line-height:1.55;max-width:44ch;
+  color:var(--rbp-text-secondary)}
+.lead-floor b{color:var(--color-text-primary)}
+
+/* ---- the distribution: the legend for the list ---- */
+.dist{margin:0;border-top:2px solid var(--color-text-primary);padding-top:14px}
+.dist-cap{display:flex;flex-wrap:wrap;justify-content:space-between;
+  align-items:center;gap:8px 16px;margin-bottom:14px}
+.dist-lab{display:flex;align-items:center;gap:8px;font-size:.82rem;
+  color:var(--rbp-text-secondary)}
+.dist-lab select{font:inherit;font-size:.86rem;font-weight:600;
+  color:var(--color-text-primary);background:var(--color-bg-content);
+  border:1px solid var(--color-border);border-radius:6px;padding:5px 9px;cursor:pointer;
+  /* A <select> sizes itself to its widest option, and these are page-layout
+     decisions taken by the longest label. Bounded so the caption cannot push the
+     lead sideways at 320px. WCAG 1.4.10. */
+  max-width:min(20rem,62vw)}
+.dist-sub{font-size:.72rem;color:var(--rbp-text-muted);
+  font-variant-numeric:tabular-nums}
+.distbars{display:flex;flex-direction:column;gap:7px}
+/* One series, one hue: length carries the magnitude and every bar is labelled
+   with its own count, so there is nothing a legend would disambiguate. Each bar
+   is also the control that filters to it, which is the affordance the chart
+   earns once it is the legend for the list. */
+.distbar{display:grid;grid-template-columns:minmax(0,9.5rem) 1fr 3.4rem;
+  gap:12px;align-items:center;width:100%;
+  background:none;border:0;border-radius:5px;padding:3px 5px;margin:0 -5px;
+  font:inherit;text-align:left;cursor:pointer;min-height:0}
+/* WRAPS, does not ellipsise. The excluded buckets carry "not in view" after the
+   name, and at 9.5rem that came back as "6 to 12 months NOT IN ..." on the one
+   row whose whole job is to say what is being held back. A marker that is itself
+   truncated is worse than no marker. */
+.distbar > span{font-size:.78rem;color:var(--rbp-text-secondary);line-height:1.25;
+  overflow-wrap:anywhere}
+.distbar > i{height:14px;border-radius:3px;background:var(--color-bg-secondary);display:block}
+.distbar > i > b{display:block;height:100%;border-radius:3px;
+  background:var(--rbp-age);min-width:3px}
+.distbar > u{text-decoration:none;font-size:.78rem;text-align:right;
+  color:var(--color-text-primary);font-variant-numeric:tabular-nums}
+.distbar:hover{background:var(--color-bg-secondary)}
+.distbar[aria-pressed="true"] > span{color:var(--color-text-primary);font-weight:600}
+/* THE BUCKETS THE AGE BOUND IS HOLDING BACK, drawn at their true height and
+   marked. The default view hides 400 rows including the oldest, which the notice
+   above the list states in words; this is the same fact as a shape, so a reader
+   sees how much is being held back rather than reading that some is. Marked with
+   a label as well as opacity: a state carried only by opacity is not a state. */
+.distbar.out > i > b{opacity:.4}
+.distbar.out > span,.distbar.out > u{color:var(--rbp-text-muted)}
+.distbar.out em{display:block;font-style:normal;font-size:.66rem;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--rbp-text-muted)}
+
+/* ---- the source inventory ---- */
+/* EVERY CONFIGURED FEED, not every feed with rows. This was a <select> built
+   from the slugs in today's rows: the two quiet feeds of thirteen had no entry
+   at all, and nothing on the page said how many feeds there are, so a reader
+   could not tell whether what they were looking at was all of them. */
+.seenin{margin:26px 0 0;padding:16px 0 0;border-top:1px solid var(--color-border)}
+.seenin-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;
+  margin-bottom:11px}
+.seenin h2{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--rbp-text-muted);margin:0;font-weight:600}
+.seenin-note{margin:0;font-size:.76rem;color:var(--rbp-text-muted)}
+.srcrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.srcrow.sub{margin-top:9px;padding-left:14px;border-left:2px solid var(--color-border)}
+.srclab{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--rbp-text-muted);margin-right:4px}
+.srcchip{font:inherit;font-size:.8rem;background:var(--color-bg-content);
+  color:var(--rbp-text-secondary);border:1px solid var(--color-border);
+  border-radius:999px;padding:5px 12px;cursor:pointer;min-height:0;
+  white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.srcchip u{text-decoration:none;margin-left:6px;color:var(--rbp-text-muted);
+  font-variant-numeric:tabular-nums}
+.srcchip:hover{border-color:var(--rbp-link);color:var(--color-text-primary)}
+/* THE SELECTED STATE IS A BORDER AND A MARK, NOT A FILL.
+
+   It was a blue fill with the label reversed out of it, which reads well and
+   cannot be verified: tests/test_a11y.py composites a rule's OWN background, so
+   the chip itself measured fine while the count nested inside it declared a
+   colour with no background of its own and was measured against the page
+   surfaces instead of the fill it actually lands on. White on white, passing.
+   Setting it to `inherit` only moved the problem: an inherited colour is
+   Unmeasurable to the harness, and the one skip it permits is named.
+
+   Keeping every colour on a surface the harness already knows about means the
+   ratios stay solved rather than argued about. The check mark carries the state
+   as well as the border does, so the selection is not colour alone either. */
+.srcchip[aria-pressed="true"]{border-color:var(--rbp-link);border-width:2px;
+  padding:4px 11px;background:var(--color-bg-secondary);
+  color:var(--rbp-link);font-weight:600}
+.srcchip[aria-pressed="true"]::before{content:"\2713\00a0"}
+.srcchip[aria-pressed="true"] u{color:var(--rbp-link)}
+/* A FEED THAT RETURNED NOTHING IS STILL A FEED THAT WAS READ, so it is listed at
+   zero rather than dropped. Recessive, because it is not a route to any rows,
+   but still a control: choosing it gives an honest empty view, which is what the
+   old select could not do -- it had no option for a quiet feed, so `?src=mozilla`
+   fell through to every row. */
+.srcchip.zero{border-style:dashed;color:var(--rbp-text-muted)}
+
+/* ---- the control bar, sticky, directly above the rows ---- */
+.cmdbar{position:sticky;top:0;z-index:20;background:var(--color-bg-content);
+  border-bottom:1px solid var(--color-border);margin-top:22px}
+.cmd-in{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 0}
 .cmd-grow{flex:1 1 240px;min-width:180px}
 .cmd-grow input{width:100%;padding:8px 12px;border:1px solid var(--color-border);
   border-radius:6px;background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit}
 .cmd-lab{font-size:.78rem;color:var(--rbp-text-muted);display:flex;align-items:center;gap:6px}
 .cmd-lab select{padding:7px 9px;border:1px solid var(--color-border);border-radius:6px;
   background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit;font-size:.82rem;
-  /* A <select> SIZES ITSELF TO ITS WIDEST OPTION, and that is a page-layout
-     decision taken by whatever string happens to be in the data.
-     CERT-Bund's CSAF documents state a 50-character publisher name, and putting
-     it in the list pushed the command bar past the viewport: 208px of
-     horizontal page overflow at 320px, 153px at 375px, measured.
-     The option-label cap was quietly doing this job, which is why raising it
-     from 44 broke reflow. That made the cap serve two unrelated purposes at
-     once, so widening the labels meant widening the page.
-     Bounded here instead, where it belongs, and it also hardens the hostile
-     case: a src value from the query string can no longer stretch the bar
-     however long it is. WCAG 1.4.10. */
   max-width:min(22rem, 60vw);text-overflow:ellipsis}
 .linkbtn{background:none;border:none;color:var(--rbp-link);cursor:pointer;
   padding:6px 2px;font:inherit;text-decoration:underline;text-underline-offset:3px}
 
-
 /* ---- rows ---- */
 /* The default-view notice. Quiet, but not muted to the point of being skipped:
    it carries the total the reader arrived expecting and the control that gets
-   them the rest of the rows. Sits between the hedge and the first row, which is
-   the only place it travels with a copy of the list. */
+   them the rest of the rows. */
 .viewnote{margin:14px 0 -4px;font-size:.82rem;color:var(--rbp-text-secondary);
   line-height:1.45}
 .viewnote b{color:var(--color-text-primary);font-variant-numeric:tabular-nums}
 /* AN INLINE CONTROL MUST NOT INFLATE THE LINE IT SITS IN.
-   
+
    style.css gives every `button` `min-height:44px` below 768px, which is right
    for the controls it was written for: they are all flex or block items. A button
    sitting INLINE at the end of a sentence is not, and a 44px inline-block in a
    19.7px line box makes that line box 44px, so the sentence renders with a
    visibly wider gap above its last line than between any of the others.
-   
-   Measured on the hedge, which carried the first such button and has since been
-   removed; "Show all" in the view notice is the same shape and inherits both the
-   defect and the fix. The touch target is restored as a ::before overlay that
-   grows OUTSIDE the line box: 24px clears WCAG 2.2 AA (2.5.8) where the 44px AAA
-   target is what an inline context cannot have. */
-.viewnote .linkbtn{min-height:0;min-width:0;padding:0 2px;line-height:inherit;
-  position:relative}
-.viewnote .linkbtn::before{content:"";position:absolute;inset:-3px -7px}
-.rbplist{display:flex;flex-direction:column;gap:8px;margin:18px 0 10px}
-.rbprow{background:var(--color-bg-content);border:1px solid var(--color-border);
-  border-radius:8px;overflow:hidden}
+
+   The touch target is restored as a ::before overlay that grows OUTSIDE the line
+   box: 24px clears WCAG 2.2 AA (2.5.8) where the 44px AAA target is what an
+   inline context cannot have. */
+.viewnote .linkbtn,.lead-floor .linkbtn{min-height:0;min-width:0;padding:0 2px;
+  line-height:inherit;position:relative}
+.viewnote .linkbtn::before,.lead-floor .linkbtn::before{content:"";position:absolute;inset:-3px -7px}
+
+/* THE GROUP HEADING. Emitted wherever the group key changes in the sorted slice,
+   so it is a property of the order rather than a second structure that can
+   disagree with it.
+
+   A REAL <h2>, not a styled div. The page outline is otherwise a flat run of
+   2,037 rows with no landmarks in it, and the headings are the one thing that
+   makes the list navigable by a screen reader's heading list. The count is the
+   group's size in the FILTERED set rather than the number drawn so far, because
+   the list is windowed and a heading reporting 100 for a group of 1,358 is worse
+   than no heading. */
+.grouphead{display:flex;align-items:center;gap:14px;margin:26px 0 8px;
+  font-size:.92rem;font-weight:600;letter-spacing:-.005em;
+  color:var(--color-text-primary)}
+.grouphead:first-child{margin-top:14px}
+.grouphead span{white-space:nowrap}
+.grouphead i{flex:1;height:1px;background:var(--color-border)}
+.grouphead u{text-decoration:none;font-size:.74rem;font-weight:400;
+  color:var(--rbp-text-muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.rbplist{display:flex;flex-direction:column;gap:0;margin:0 0 10px}
+/* NO CARD, NO RAIL. Every row was an identical bordered box, so a 970-day row
+   and a 7-day row looked the same; the one cue that varied was a 12px strip at
+   the card edge, 8px on a phone. Rows are separated by a hairline and the wait
+   is the largest thing in them, so the list reads as a record rather than as a
+   feed of cards. */
+.rbprow{border-top:1px solid var(--color-border)}
+.rbprow:last-child{border-bottom:1px solid var(--color-border)}
 .rbprow > summary{list-style:none;cursor:pointer;display:grid;
-  grid-template-columns:12px 1fr auto 34px;align-items:stretch}
+  grid-template-columns:1fr auto 24px;align-items:center;gap:0 22px;
+  padding:13px 4px}
 .rbprow > summary::-webkit-details-marker{display:none}
-/* THE DISCLOSURE AFFORDANCE, and there was none at all.
-   
-   The two rules above remove the native marker, and nothing replaced it: a row
-   looked like a static card, `cursor:pointer` was the only hint, and it needs a
-   mouse already on the row to be seen at all. Everything behind the interaction
-   is the evidence -- the per-feed first-seen dates and the "open advisory" links
-   -- so on the primary page of a site built to be cited, the citations sat behind
-   a control a reader had no way to know existed.
-   
-   Drawn from two borders as a ::after on the summary itself, which is a grid
-   container, so the chevron is a fourth grid item and neither the row markup nor
-   the JS that builds it changes. It is decorative: <details> already exposes its
-   own open/closed state to assistive technology, so an aria-label here would be
-   a second, redundant announcement. */
+.rbprow > summary:hover{background:var(--color-bg-hover)}
+/* THE DISCLOSURE AFFORDANCE, and there was none at all before it was drawn here.
+
+   Removing the native marker and replacing it with nothing left a row that
+   looked static, with `cursor:pointer` as the only hint, which needs a mouse
+   already on the row to be seen. Everything behind the interaction is the
+   evidence -- the per-feed first-seen dates and the "open advisory" links -- so
+   on the primary page of a site built to be cited, the citations sat behind a
+   control a reader had no way to know existed.
+
+   It is decorative: <details> already exposes its own open/closed state to
+   assistive technology, so an aria-label here would be a second announcement. */
 .rbprow > summary::after{
   content:"";align-self:center;justify-self:center;
   width:7px;height:7px;margin-top:-3px;
@@ -798,36 +922,33 @@ body.locked{overflow:hidden}
 .rbprow > summary:hover::after,
 .rbprow > summary:focus-visible::after{border-color:var(--rbp-link)}
 /* A rotation is the one thing on this page that moves, so it is also the one
-   thing that has to respect the setting. There was no reduced-motion guard
-   anywhere in this stylesheet before. */
+   thing that has to respect the setting. */
 @media (prefers-reduced-motion:reduce){
   .rbprow > summary::after{transition:none}
 }
-/* THE AGE RAIL. Days public as height, so the oldest rows read without anyone
-   parsing a number. Honest structure: the list is sorted by age, so position
-   already carries this. Semantic colour, never the link accent. */
-.rail{background:var(--color-bg-secondary);position:relative}
-.rail i{position:absolute;bottom:0;left:0;right:0;background:var(--rbp-age);display:block}
-.rowbody{padding:12px 16px;min-width:0}
-.idline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.cve{font-weight:600;font-size:.98rem}
-.pkg{font-size:.78rem;color:var(--rbp-text-muted);background:var(--color-bg-secondary);
-  border:1px solid var(--color-border);border-radius:4px;padding:1px 6px}
-.rdesc{color:var(--rbp-text-secondary);font-size:.87rem;margin-top:4px;display:block;max-width:74ch}
-.agebox{padding:12px 16px;display:flex;flex-direction:column;justify-content:center;
-  gap:1px;border-left:1px solid var(--color-border);text-align:right}
-.agenum{font-size:1.15rem;font-weight:600;color:var(--rbp-age);
-  font-variant-numeric:tabular-nums;line-height:1}
-.agelab{font-size:.66rem;text-transform:uppercase;letter-spacing:.08em;color:var(--rbp-text-muted)}
-.rbprow .detail{border-top:1px solid var(--color-border);background:var(--color-bg-secondary);
-  padding:12px 16px 14px 28px}
+.rowbody{min-width:0}
+.idline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.cve{font-weight:600;font-size:.96rem;letter-spacing:-.01em}
+.pkg{font-size:.76rem;color:var(--rbp-text-muted)}
+.rdesc{color:var(--rbp-text-secondary);font-size:.9rem;line-height:1.45;
+  margin-top:5px;display:block;max-width:74ch}
+/* THE WAIT, as the largest thing in the row after the identifier. Semantic
+   colour, never the link accent: --rbp-age is solved for AA on every surface
+   this lands on, which --color-warning (#ffc107, 1.37:1 on white) is not. */
+.agebox{display:flex;flex-direction:column;align-items:flex-end;gap:2px;
+  text-align:right;white-space:nowrap}
+.agenum{font-size:1.45rem;font-weight:650;color:var(--rbp-age);
+  font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-.02em}
+.agelab{font-size:.64rem;text-transform:uppercase;letter-spacing:.08em;color:var(--rbp-text-muted)}
+.rbprow .detail{border-top:1px solid var(--color-border-light);
+  background:var(--color-bg-secondary);padding:12px 16px 14px}
 .seen{font-size:.7rem;color:var(--rbp-text-muted);text-transform:uppercase;
   letter-spacing:.08em;margin:0 0 6px}
 .dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:.84rem;margin:0}
 .dl dt{color:var(--rbp-text-muted)}
 .dl dd{margin:0}
 
-.more-wrap{display:flex;justify-content:center;margin:4px 0 56px}
+.more-wrap{display:flex;justify-content:center;margin:18px 0 56px}
 .morebtn{border:1px solid var(--color-border);background:var(--color-bg-content);
   color:var(--rbp-link);border-radius:6px;padding:8px 18px;font:inherit;cursor:pointer}
 .morebtn:hover,.morebtn:focus-visible{border-color:var(--rbp-link)}
@@ -835,10 +956,9 @@ body.locked{overflow:hidden}
    `overflow-wrap: anywhere` was declared for `.mono, code, pre` and only inside
    the 768px media query, and nothing covered this box at all: 400 unbroken
    characters typed into the filter scrolled the document sideways by 2,466px at
-   1280 wide, and 80 characters did it at 375. Measured on 2026-08-28. No link is
-   needed to reach it, only a pasted package name or a token, and the reader is
-   already looking at "nothing matches" when the page starts scrolling.
-   Inherited, so the `b` and the `p` inside are covered by the one declaration. */
+   1280 wide, and 80 characters did it at 375. No link is needed to reach it,
+   only a pasted package name, and the reader is already looking at "nothing
+   matches" when the page starts scrolling. */
 .empty{padding:44px 20px;text-align:center;color:var(--rbp-text-muted);
   overflow-wrap:anywhere;
   background:var(--color-bg-content);border:1px solid var(--color-border);border-radius:8px}
@@ -893,32 +1013,35 @@ body.locked{overflow:hidden}
   border:1px solid var(--color-border);border-radius:6px;padding:4px 11px;
   cursor:pointer;color:var(--rbp-text-muted);font:inherit;font-size:.82rem}
 
+@media (max-width:900px){
+  /* The lead stacks. The distribution is the evidence for the number above it,
+     so it stays directly beneath rather than moving below the controls. */
+  .lead{grid-template-columns:1fr;gap:22px}
+  .dist{border-top-width:1px}
+}
+
 @media (max-width:640px){
-  /* Three columns, not two: the chevron keeps a lane of its own at the end of
-     the first row, and the age box takes the whole width beneath. Without the
-     explicit placement the chevron auto-flowed into the second row and landed
-     beside "days public". */
-  .rbprow > summary{grid-template-columns:8px 1fr 30px}
-  .rowbody{grid-column:2}
-  .rbprow > summary::after{grid-column:3;grid-row:1}
-  .rail{grid-row:1 / -1}
-  .agebox{grid-column:2 / span 2;border-left:none;
-    border-top:1px solid var(--color-border);
-    flex-direction:row;align-items:baseline;gap:7px;text-align:left}
-  /* THE UNIT STACKS, IT DOES NOT DISAPPEAR.
-     
-     This was `.cmd-count span{display:none}`, which took "reserved, public,
-     unpublished" out of the layout AND out of the accessibility tree, so below
-     640px the page's only h1 was the bare string "1,691". No unit, no subject,
-     on the viewport where most shared links are opened and to every screen
-     reader on a phone.
-     
-     It was hidden to keep the command bar one line, and the answer is to let the
-     heading wrap instead: `flex-wrap` plus a full-width span puts the words under
-     the number, which costs one line and keeps the heading a sentence. */
-  .cmd-count{flex-wrap:wrap;align-items:baseline;gap:0 9px}
-  .cmd-count span{flex:1 0 100%;max-width:none;font-size:.78rem;
-    margin-top:2px;line-height:1.3}
+  /* Two columns, not three: the chevron keeps a lane of its own at the end of
+     the first row and the wait takes the width beneath it. Without the explicit
+     placement the chevron auto-flowed into the second row and landed beside the
+     days count. */
+  .rbprow > summary{grid-template-columns:1fr 24px;gap:0 12px}
+  .rowbody{grid-column:1}
+  .rbprow > summary::after{grid-column:2;grid-row:1}
+  .agebox{grid-column:1 / span 2;flex-direction:row;align-items:baseline;
+    gap:7px;text-align:left;margin-top:9px}
+  .agenum{font-size:1.15rem}
+  /* THE UNIT STAYS IN THE LAYOUT AND IN THE ACCESSIBILITY TREE.
+
+     This was `.cmd-count span{display:none}` when the count lived in the command
+     bar, which took "reserved, public, unpublished" out of both, so below 640px
+     the page's only h1 was the bare string "1,691": no unit, no subject, on the
+     viewport where most shared links are opened and to every screen reader on a
+     phone. The count is its own block now and the unit sits under it at every
+     width, so there is nothing left to hide; the size is the only thing that
+     moves. */
+  .cmd-count span{font-size:1rem;max-width:none}
+  .distbar{grid-template-columns:minmax(0,7.5rem) 1fr 3rem;gap:9px}
   .cmd-grow{flex:1 1 100%}
   .panel{padding:20px 18px 48px}
 }
@@ -935,6 +1058,26 @@ a.chip:hover,a.chip:focus-visible{background:var(--rbp-link);color:var(--color-b
 /* A feed with no per-ID page is still a place the ID is showing up. Shown, and
    visibly not a link, rather than dropped. */
 span.chip.nolink{border-style:dashed;border-color:var(--color-border);color:var(--rbp-text-muted)}
+/* A CHIP HAS TO BE ABLE TO BREAK, because one of them is a sentence.
+
+   The chips carry the CSAF publisher name now, and the longest real one is
+   "Bundesamt fur Sicherheit in der Informationstechnik": 424px of nowrap text
+   inside a flex row, which is wider than a 320px viewport and cannot wrap, so it
+   set the minimum content width of the whole row and pushed the PAGE sideways by
+   128px at 320 and 73px at 375. WCAG 1.4.10.
+
+   It did not show while the rows were cards, because `.rbprow` was
+   `overflow:hidden` and quietly clipped the name instead. That is the worse of
+   the two failures and it was invisible: the reader lost the publisher's name
+   with nothing to say it had been cut. Wrapping keeps the name.
+
+   Scoped to the evidence chips rather than applied to `.chip` generally: the
+   certainty chips on /method and /policy are single uppercase words that should
+   never break, and `.where` is the only place a chip holds a publisher name. */
+.where{min-width:0}
+@media (max-width:768px){
+  .where a.chip,.where span.chip{white-space:normal;overflow-wrap:anywhere}
+}
 
 
 /* A card that holds nothing but prose.

@@ -49,9 +49,26 @@ def _shipped_feed_slugs(site_dir):
 
 
 def _state(pg):
-    return pg.evaluate("""() => {
+    """Everything the assertions below read, in one round trip.
+
+    `src` IS NO LONGER A SELECT. It is a hidden input holding the chosen slug,
+    with the visible controls drawn as buttons from the CONFIGURED feed list, so
+    there is no `selectedIndex` and no `selectedOptions` to read. That is the
+    point of the change: a select silently discards a value it has no option for,
+    which is how `?src=mozilla` came to render every row, and a hidden input
+    cannot discard anything.
+
+    So the equivalents are read off the buttons: `srcChips` is every control the
+    reader can see, `srcOn` is the one that reports itself pressed, and `srcZero`
+    is the set drawn as contributing nothing.
+    """
+    return pg.evaluate(r"""() => {
       const src = document.getElementById('src'), age = document.getElementById('age');
       const empty = document.querySelector('.empty');
+      const chips = [...document.querySelectorAll('#srcgrid [data-src]')];
+      const on = chips.find(c => c.getAttribute('aria-pressed') === 'true');
+      const label = el => (el.querySelector('.srcname') || el)
+                          .textContent.replace(/\s+/g, ' ').trim();
       return {
         url: location.search,
         shown: +document.getElementById('n').textContent.replace(/,/g, ''),
@@ -59,8 +76,19 @@ def _state(pg):
         total: JSON.parse(document.getElementById('rows').textContent).length,
         days: [...document.querySelectorAll('.agenum')].map(e => +e.textContent),
         src: src.value,
-        srcIndex: src.selectedIndex,
-        srcLabel: src.selectedOptions[0] ? src.selectedOptions[0].textContent : null,
+        srcOn: on ? on.getAttribute('data-src') : null,
+        srcLabel: on ? label(on) : null,
+        srcChips: chips.map(c => c.getAttribute('data-src')),
+        srcLabels: chips.map(label),
+        srcZero: chips.filter(c => c.classList.contains('zero'))
+                      .map(c => c.getAttribute('data-src')),
+        srcWidest: Math.max(0, ...chips.map(c => c.getBoundingClientRect().width)),
+        groups: [...document.querySelectorAll('.grouphead span')].map(e => e.textContent),
+        bars: [...document.querySelectorAll('.distbar')].map(b => ({
+          bucket: b.getAttribute('data-bucket'),
+          out: b.classList.contains('out'),
+          n: +b.querySelector('u').textContent.replace(/,/g, ''),
+        })),
         age: age.value,
         ageIndex: age.selectedIndex,
         emptyText: empty ? empty.innerText : null,
@@ -119,9 +147,9 @@ def test_a_link_to_a_feed_with_no_rows_shows_no_rows(page, server, site_dir):
         f"{st['total']}. A select silently discards a value it has no option for, "
         "so the filter stopped applying and a citation of a quiet feed became a "
         "link showing everything")
-    assert st["src"] == slug and st["srcIndex"] >= 0, (
+    assert st["src"] == slug and st["srcOn"] == slug, (
         f"the control does not carry {slug!r} (value={st['src']!r}, "
-        f"selectedIndex={st['srcIndex']}), so the page shows a filtered view with "
+        f"pressed={st['srcOn']!r}), so the page shows a filtered view with "
         "nothing on screen saying which filter")
     assert st["srcLabel"] and _display_name(site_dir, slug) in st["srcLabel"], (
         "the control does not name the feed the reader linked to: "
@@ -130,15 +158,18 @@ def test_a_link_to_a_feed_with_no_rows_shows_no_rows(page, server, site_dir):
     assert st["emptyText"], "zero rows and no empty state, so the page reads as broken"
 
 
-def test_the_option_for_an_absent_feed_is_marked_as_absent(page, server, site_dir):
-    """The dropdown is a list of the feeds behind today's rows.
+def test_the_control_for_an_absent_feed_is_marked_as_absent(page, server, site_dir):
+    """The inventory is a list of the feeds that were READ, not of the feeds with
+    rows, and the difference has to be visible.
 
-    An option added because a URL asked for it is not one of those, and offering
-    it unmarked beside the feeds that do have rows states something false about
-    the data in the one control a reader uses to explore it.
+    A feed that is configured, polled and contributing nothing is the normal state
+    of two of the thirteen. Listing it unmarked beside the feeds that did return
+    something states one false thing; leaving it out, which is what the old
+    <select> did, states a different false thing and is worse, because then
+    nothing on the page reveals that the feed was read at all.
 
-    The exact wording is not asserted, only that it differs from the plain display
-    name, so this does not break on a copy edit.
+    The marker is asserted structurally rather than by its wording, so a copy or
+    styling edit does not break this.
     """
     pg = page
     _goto(pg, server, "")
@@ -151,14 +182,15 @@ def test_the_option_for_an_absent_feed_is_marked_as_absent(page, server, site_di
     absent = sorted(_shipped_feed_slugs(site_dir) - set(present))
     assert absent, "the fixture no longer has a feed with no rows; see the test above"
 
-    _goto(pg, server, f"?src={absent[0]}&age=any")
-    plain = pg.evaluate("""(slug) => {
-      const o = [...document.getElementById('src').options].find(o => o.value === slug);
-      return o ? o.textContent : null;
-    }""", absent[0])
-    assert plain and plain != _display_name(site_dir, absent[0]), (
-        f"the option for {absent[0]!r} reads {plain!r}, the same as a feed with rows "
-        "would, so the dropdown presents a feed contributing nothing as one of today's")
+    st = _goto(pg, server, "?age=any")
+    assert absent[0] in st["srcChips"], (
+        f"{absent[0]!r} was read this run and returned nothing, and the inventory "
+        "does not list it at all, so the page cannot say the feed was read")
+    assert absent[0] in st["srcZero"], (
+        f"the control for {absent[0]!r} is not marked as contributing nothing, so a "
+        "feed that returned no rows reads as one of the feeds that did")
+    assert not (set(present) & set(st["srcZero"])), (
+        f"a feed WITH rows is marked as absent: {sorted(set(present) & set(st['srcZero']))}")
 
 
 def _display_name(site_dir, slug):
@@ -323,7 +355,7 @@ def test_the_csaf_publishers_are_offered_separately(page, server):
     """CSAF IS A TRANSPORT, NOT A PUBLISHER, and the control treated it as one.
 
     Measured on the live site 2026-08-29: 143 rows read over CSAF, from five
-    different publishers, all collapsed into one option reading "CSAF Advisory".
+    different publishers, all collapsed into one entry reading "CSAF Advisory".
     Every other entry in this control is already a named publisher, several of
     them certified CNAs; CSAF was the only feed whose publishers were hidden, and
     they were hidden by how the row was fetched rather than by any decision.
@@ -332,13 +364,13 @@ def test_the_csaf_publishers_are_offered_separately(page, server):
     advisories were on the site and there was no way to find them or to send
     anyone a link to them."""
     page.goto(f"{server}/?age=any")
-    opts = page.eval_on_selector_all(
-        "#src option", "els => els.map(e => e.value)")
-    facets = [o for o in opts if o.startswith("csaf:")]
+    vals = page.eval_on_selector_all(
+        "#srcgrid [data-src]", "els => els.map(e => e.getAttribute('data-src'))")
+    facets = [o for o in vals if o.startswith("csaf:")]
     assert len(facets) >= 2, (
         f"the control offers {facets} as CSAF publishers; with fewer than two it "
         "cannot be distinguished from the roll-up")
-    assert "csaf" in opts, "the csaf roll-up option was dropped"
+    assert "csaf" in vals, "the csaf roll-up was dropped"
 
 
 def test_a_publisher_link_selects_only_that_publishers_rows(page, server):
@@ -346,8 +378,8 @@ def test_a_publisher_link_selects_only_that_publishers_rows(page, server):
     rows whose advisory CISA published and no others."""
     page.goto(f"{server}/?age=any")
     facet = page.evaluate(
-        "[...document.querySelectorAll('#src option')].map(e=>e.value)"
-        ".filter(v=>v.indexOf('csaf:')===0)[0]")
+        "[...document.querySelectorAll('#srcgrid [data-src]')]"
+        ".map(e=>e.getAttribute('data-src')).filter(v=>v.indexOf('csaf:')===0)[0]")
     page.goto(f"{server}/?age=any&src={facet}")
     page.wait_for_selector("#list .rbprow")
     n_facet = page.eval_on_selector_all("#list .rbprow", "els => els.length")
@@ -401,27 +433,34 @@ def test_the_feed_list_stays_alphabetical_and_the_publishers_group(page, server)
     feeds; and the indent was invisible to a screen reader, which was read a flat
     list of sixteen peers.
 
-    An <optgroup> is what this is for, and this control already uses one for the
-    age bounds."""
+    The <optgroup> that fixed it is gone with the <select>, so the same three
+    properties are asserted against what replaced it: the feeds are alphabetical,
+    the publishers sit in a container that declares itself a group WITH A NAME,
+    and they are alphabetical inside it. `role="group"` plus `aria-label` is what
+    carries the grouping to a screen reader now; an indent alone would be exactly
+    the regression this test was written for.
+    """
     page.goto(f"{server}/?age=any")
     top = page.eval_on_selector_all(
-        "#src > option", "els => els.map(e => e.textContent.trim())")
-    # the ungrouped options, minus the "Any Source" placeholder, are alphabetical
-    feeds_only = [t for t in top if t and t != "Any Source"]
+        "#srcgrid .srcrow:not(.sub) .srcchip .srcname",
+        "els => els.map(e => e.textContent.trim())")
+    feeds_only = [t for t in top if t and t != "All sources"]
     assert feeds_only == sorted(feeds_only), (
         f"the feed list is not in alphabetical order: {feeds_only}")
 
-    groups = page.eval_on_selector_all("#src optgroup", "els => els.map(e => e.label)")
-    assert "CSAF Publishers" in groups, (
-        f"the publishers are not in a group of their own: {groups}")
+    label = page.eval_on_selector_all(
+        "#srcgrid [role='group']", "els => els.map(e => e.getAttribute('aria-label'))")
+    assert label and any(l and "CSAF" in l for l in label), (
+        f"the publishers are not in a named group: {label}. An indent is invisible "
+        "to a screen reader, which is the defect the optgroup existed to fix")
 
     grouped = page.eval_on_selector_all(
-        "#src optgroup[label='CSAF Publishers'] option",
+        "#srcgrid .srcrow.sub .srcchip .srcname",
         "els => els.map(e => e.textContent.trim())")
     assert len(grouped) >= 2, grouped
     assert grouped == sorted(grouped), (
         f"the publishers are not in alphabetical order: {grouped}")
-    assert not any(g.startswith(" ") for g in grouped), (
+    assert not any(g.startswith(" ") for g in grouped), (
         "a publisher label still carries the faked figure-space indent")
 
 
@@ -432,13 +471,13 @@ def test_a_publisher_name_is_not_cut_mid_word(page, server):
 
     That cap exists because an unknown slug arrives from the QUERY STRING and
     could be five thousand characters. These names come from the advisory
-    documents and are bounded by them, so inside the group the cap is longer."""
+    documents and are bounded by them, so a publisher gets a longer cap."""
     page.goto(f"{server}/?age=any")
     grouped = page.eval_on_selector_all(
-        "#src optgroup[label='CSAF Publishers'] option",
+        "#srcgrid .srcrow.sub .srcchip .srcname",
         "els => els.map(e => e.textContent.trim())")
     for label in grouped:
-        assert len(label) <= 56, f"{label!r} exceeds the group's cap"
+        assert len(label) <= 56, f"{label!r} exceeds the publisher cap"
     # The fixture publishes under CERT-Bund's real 50-character name precisely so
     # this can be asserted: at the old 44 it came back ending in an ellipsis.
     assert any(len(g) > 44 for g in grouped), (
@@ -448,9 +487,10 @@ def test_a_publisher_name_is_not_cut_mid_word(page, server):
         f"a publisher name is still being cut mid-word: {grouped}")
     # and the control still refuses an unbounded label from the URL
     page.goto(f"{server}/?age=any&src=csaf:" + "z" * 500)
-    opts = page.eval_on_selector_all("#src option", "els => els.map(e => e.textContent)")
-    assert all(len(o) <= 60 for o in opts), (
-        "a value from the query string rendered an unbounded option label")
+    names = page.eval_on_selector_all(
+        "#srcgrid .srcname", "els => els.map(e => e.textContent)")
+    assert all(len(o) <= 60 for o in names), (
+        "a value from the query string rendered an unbounded control label")
 
 
 # --------------------------------------------------------------------------

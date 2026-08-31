@@ -143,16 +143,45 @@ def test_every_control_reads_the_url_through_its_own_setter():
         "control's own options")
 
 
-def test_a_select_is_never_handed_a_value_it_might_not_have():
-    """Both setters ask before they assign.
+def test_a_value_from_the_url_can_never_be_silently_discarded():
+    """A control takes a value it does not offer, or it stops being linkable.
 
-    `src` is the reported case: its options are built from the slugs in today's
-    rows, so a feed contributing nothing has no option, and two of the thirteen
-    live feeds are in that state. `age` has fixed options, and `?age=45+` is still
-    a bound a reader can construct and the control does not offer.
+    THE REPORTED CASE WAS `src`, and it is now fixed by construction rather than
+    by a guard. Its options were built from the slugs in today's rows, so a feed
+    contributing nothing had no option, and assigning a <select> a value it has no
+    <option> for neither throws nor sticks: `value` reads back "" and the filter
+    stops applying, so `/?src=mozilla&age=any` rendered all 1,672 rows rather than
+    none. Two of thirteen live feeds were in that state.
+
+    `src` is a hidden input now, which cannot discard a value at all, and the
+    visible controls are drawn from the CONFIGURED feed list rather than from the
+    rows, so a quiet feed has a control whether or not it contributed anything.
+    What is asserted here is that it stays that way: a <select> would bring the
+    defect straight back.
+
+    `age` and `sort` are still selects and still need the guard. `age` because
+    `?age=45+` is a bound a reader can construct that the control does not offer;
+    `sort` because an unknown grouping is a typo rather than a view, so it falls
+    back to the default instead of being added.
     """
     src = _src()
-    for name in ("setSrc", "setAge"):
+
+    assert not re.search(r'<select[^>]*\bid="src"', src), (
+        "#src is a <select> again. A select silently discards a value it has no "
+        "option for, which is the whole defect: the filter stops applying and "
+        "every row renders for a URL that asked for one feed")
+    assert re.search(r'<input[^>]*\btype="hidden"[^>]*\bid="src"', src), (
+        "#src is no longer the hidden input that holds the chosen feed, so "
+        "whatever holds it now needs its own version of this test")
+
+    # The unknown slug still has to become a control the reader can see, or the
+    # filter is applied with nothing on the page saying so.
+    body = _function(src, "setSrc")
+    assert "extra.push" in body, (
+        "setSrc() no longer records a slug that is in neither the configured list "
+        "nor the rows, so a URL naming a retired feed filters invisibly")
+
+    for name in ("setAge", "setSort"):
         body = _function(src, name)
         assert "hasOption" in body, (
             f"{name}() assigns to a select without checking the option exists, so a "

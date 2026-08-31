@@ -82,11 +82,17 @@ def test_the_page_actually_has_the_stylesheet_applied(page, server):
     page.goto(f"{server}/{LIST_PAGE}", wait_until="load")
     applied = page.evaluate("""() => {
         const row = document.querySelector('.rbprow');
-        const rail = row && row.querySelector('.rail i');
+        // The wait, which is the one value in a row wearing a project-only token
+        // (--rbp-age). It replaced the age rail as the probe here when the rows
+        // stopped being cards: the rail was a 12px strip at the card edge and
+        // there is no card any more.
+        const age = row && row.querySelector('.agenum');
+        const bar = document.querySelector('.distbar i b');
         const chip = document.querySelector('.chip');
         return {
           hasRow: !!row,
-          railBg: rail ? getComputedStyle(rail).backgroundColor : null,
+          ageColor: age ? getComputedStyle(age).color : null,
+          barBg: bar ? getComputedStyle(bar).backgroundColor : null,
           chipRadius: chip ? getComputedStyle(chip).borderRadius : null,
         };
     }""")
@@ -94,9 +100,12 @@ def test_the_page_actually_has_the_stylesheet_applied(page, server):
     # Values only the project's own stylesheet produces. An unstyled page, a
     # wrong stylesheet, or a cascade that failed to reach the rows all read as a
     # failure here rather than as a page with no overflow.
-    assert applied["railBg"] not in (None, "rgba(0, 0, 0, 0)"), (
-        "the age rail has no background, so rbp.css is not in effect and every "
+    assert applied["ageColor"] not in (None, "", "rgb(0, 0, 0)"), (
+        "the wait carries no project colour, so rbp.css is not in effect and every "
         "layout measurement in this package is meaningless")
+    assert applied["barBg"] not in (None, "rgba(0, 0, 0, 0)"), (
+        "the distribution bars have no fill, so either rbp.css is not in effect or "
+        "render() never drew them")
     assert applied["chipRadius"] and applied["chipRadius"].startswith("999"), (
         "the source chips are unstyled")
 

@@ -3,34 +3,114 @@
 {% block og_title %}{{ summary.total | commafy }} reserved CVE IDs are public and unpublished{% endblock %}
 
 {% block content %}
-{# ONE ROUTE. The command bar and the list are the page; everything else is in
-   the panel. See templates/_panel.html. #}
-<div class="cmdbar">
-  <div class="cmd-in">
-    {# THE PAGE'S H1, and it has to be a real one.
+{# ONE ROUTE. The lead, the source inventory, the control bar and the list are
+   the page; everything else is in the panel. See templates/_panel.html. #}
 
-       The built front page had NO h1 at all after the pivot: the outline started
-       at the panel's h2, inside a hidden dialog, so the most-linked page on the
-       site had no heading a reader or a crawler could see.
-       tests/test_a11y.py had a test for exactly this and it was pointed at the
-       deleted dashboard template, so it passed throughout.
+{# THE LEAD. The count at full scale with the distribution beside it.
 
-       The heading is the count and its unit, because that is what the page is,
-       and it is the same markup the command bar already rendered rather than a
-       banner added above the list: the pivot removed 650 words before the first
-       CVE and this must not put them back. #}
+   The count used to render at 1.7rem inside the sticky control bar, between a
+   search box and two selects: the whole product of the site set smaller than any
+   heading on it. It is the h1 either way, so this is a size and placement change
+   rather than a structural one: the heading below keeps its `cmd-count` class,
+   and tests/test_copy.py still reads it here and asserts it carries the same
+   count expression as og:description. Written without the literal opening tag,
+   because tests/test_a11y.py counts occurrences of that tag in this file to
+   catch a second heading being added, and a mention inside a comment is
+   indistinguishable from one.
+
+   The distribution beside it answers the one question the old page could not:
+   whether 2,037 is mostly last month or mostly two years old. Every figure in it
+   was already computed and published in rbp.json and none of it was ever drawn. #}
+<section class="lead">
+  <div class="lead-say">
+    <p class="lead-eyebrow">Reserved but Public &middot; {{ snapshot_date }}</p>
     <h1 class="cmd-count">
       <b id="n" class="mono">{{ summary.total | commafy }}</b>
       <span>reserved, public, unpublished</span>
     </h1>
+    {# THE FLOOR, BACK ABOVE THE ROWS. The standing hedge was removed on
+       2026-08-27 and NEXT.md records the cost: a reader who copies the rows
+       carries them with no qualification. This is the same claim in the same
+       place, in the lead rather than as a bordered caveat, so it travels with a
+       copy again without reinstating 650 words before the first CVE. #}
+    <p class="lead-floor">
+      A floor, not a total. Only configured feeds are read, and they reach
+      <b>{{ summary.coverage.pct_effective if summary.coverage and summary.coverage.get('pct_effective') is not none else 'a minority of' }}%</b>
+      of CNAs. This site names no CNA.
+      <button type="button" class="linkbtn" id="panel-open"
+              aria-expanded="false" aria-controls="panel">How the count is built</button>
+    </p>
+  </div>
+
+  {# THE CHART IS THE LEGEND FOR THE LIST, which is why the grouping control sits
+     on it rather than in the control bar below: it is the thing the control
+     visibly changes. Change the grouping and the bars and the headings in the
+     list move together, so a heading can never describe an order the rows are
+     not in. #}
+  <figure class="dist">
+    <figcaption class="dist-cap">
+      <label class="dist-lab" for="sort">Grouped by
+        <select id="sort" aria-label="Group and sort the list by">
+          <option value="wait-desc">Longest public first</option>
+          <option value="wait-asc">Shortest public first</option>
+          <option value="srcs">Sources, most first</option>
+          <option value="id">CVE ID</option>
+        </select>
+      </label>
+      <span class="dist-sub" id="distsub"></span>
+    </figcaption>
+    {# Drawn by render(). One series, one hue: length carries the magnitude and
+       every bar is labelled with its own count, so there is nothing a legend
+       would disambiguate. #}
+    <div class="distbars" id="bars"></div>
+  </figure>
+</section>
+
+{# THE SOURCE INVENTORY, COMPLETE, and it has to be complete.
+
+   This was a <select> built from the slugs in today's rows, which had two
+   consequences. A feed that returned nothing had no option at all, so the two
+   quiet feeds of thirteen were invisible unless a URL happened to name one; and
+   nothing on the page ever said how many feeds there are, so a reader could not
+   tell whether the list they were looking at was all of them.
+
+   The configured list is server-rendered from `summary.feeds.requested`, which
+   is the same field /status reads, so a feed that contributes nothing this run
+   is still listed, at zero, and is still selectable. Choosing it gives an honest
+   empty view rather than the every-row view the select used to fall back to.
+
+   The counts are computed in the browser from the rows, because they change with
+   the search and the age bound and a server-rendered number would be wrong the
+   moment either is touched.
+
+   IT IS ALSO THE FLOOR CAVEAT, MADE CONCRETE. "Only configured feeds are read"
+   is a sentence; this is the list of them with what each one contributed. #}
+<section class="seenin">
+  <div class="seenin-head">
+    <h2>Seen in</h2>
+    <p class="seenin-note" id="seennote"></p>
+  </div>
+  {# NOT A <select>, and that is the point.
+     A select silently discards a value it has no option for: `value` reads back
+     "" and the filter stops applying, so `?src=mozilla` rendered every row. A
+     hidden input cannot discard anything, so the entire class of defect is gone
+     rather than guarded. The visible controls are real buttons with aria-pressed,
+     which is also the first time this filter has been operable by keyboard
+     without opening a dropdown. #}
+  <input type="hidden" id="src" value="">
+  <div class="srcgrid" id="srcgrid"></div>
+</section>
+
+{# THE CONTROL BAR, sticky, directly above the rows where it is useful. It keeps
+   the `cmdbar` class: tests/test_site.py reads it as the marker that the list
+   page rather than the holding page is on the front door. #}
+<div class="cmdbar">
+  <div class="cmd-in">
     <div class="cmd-grow">
       <input type="search" id="q" autocomplete="off"
              placeholder="Filter by CVE ID, package or advisory text"
              aria-label="Filter rows by CVE ID, package or advisory text">
     </div>
-    <label class="cmd-lab" for="src">Seen In
-      <select id="src" aria-label="Filter by source"><option value="">Any Source</option></select>
-    </label>
     {# BOTH DIRECTIONS. "90+ days" answers "what has been sitting the longest";
        "under 90 days" answers "what has appeared lately", and until 2026-08-27
        only the first question could be asked here.
@@ -41,12 +121,13 @@
        having to trust it. 365+ stays because "public for over a year" is the
        claim people quote.
 
-       The direction is in the option text, not only the optgroup label: a
-       collapsed select shows the option alone, and "90 days" without a direction
-       is ambiguous where "under 90 days" is not. #}
+       KEPT AS A SELECT even though the distribution bars now set it too. The
+       bars cover the five bucket bounds; this covers every bound a URL can
+       carry, including the arbitrary `?age=45+` that no bar corresponds to, and
+       it is the control that is reachable when the grouping is not by age. #}
     <label class="cmd-lab" for="age">Public
       <select id="age" aria-label="Filter by how long the ID has been public">
-        {# "any" rather than "", because the front page now DEFAULTS to a filtered
+        {# "any" rather than "", because the front page DEFAULTS to a filtered
            view and "show me everything" therefore has to be a state a URL can
            carry. With an empty value, clearing the filter produced a URL with no
            parameters, which is exactly the URL the default applies to, so a
@@ -64,8 +145,6 @@
         </optgroup>
       </select>
     </label>
-    <button type="button" class="linkbtn" id="panel-open"
-            aria-expanded="false" aria-controls="panel">What is this?</button>
   </div>
 </div>
 
@@ -76,12 +155,7 @@
    id="main". Three separate defects in one tag: a <main> may not descend from
    another <main>; the id was duplicated, so `#main` was ambiguous and the skip
    link's target was whichever the parser reached first; and a screen reader was
-   offered two main landmarks on a page that has one. style.css also gives `main`
-   a min-height and vertical padding, so the front page was paying both twice.
-
-   The children sit directly in base.html's <main> instead. Nothing else needed
-   the wrapper: no CSS selector targeted it, and tests/render/test_focus.py asks
-   `closest('main')`, which resolves to the outer one either way. #}
+   offered two main landmarks on a page that has one. #}
   <p class="sr-only" id="listnote" role="status" aria-live="polite"></p>
   {# THE LAUNCH-DAY ZERO STATE, and it is not the same thing as the JS empty
      state below.
@@ -89,17 +163,7 @@
      `.empty` inside render() means "your filter matched nothing" and is a
      property of what the reader typed. THIS means the snapshot itself has no
      reportable rows, which is the EXPECTED state on the morning an epoch is set:
-     counting restarts and nothing has aged past the buffer yet. PLAN.md item 6
-     sequences it deliberately, design the zero state, publish the archive, then
-     set the epoch, because an unexplained zero on launch day reads as a broken
-     site rather than as a clean slate working.
-
-     It was on the old dashboard and the pivot dropped it. The test that guarded
-     it kept passing, because it read templates/index.html after that template
-     stopped being rendered. Server-side rather than in the JS, because with zero
-     rows there is nothing for the JS to have an opinion about, and because a
-     reader with JS off must still get the explanation. Not styled as a warning:
-     empty is not a fault. #}
+     counting restarts and nothing has aged past the buffer yet. #}
   {% if not summary.total %}
   <div class="empty-state">
     <strong>No reportable rows in this snapshot.</strong><br>
@@ -120,27 +184,6 @@
     {% endif %}
   </div>
   {% endif %}
-  {# THE HEDGE IS GONE, removed 2026-08-27 on Jerry's call.
-
-     It read "A floor, not a total. Only configured feeds are read, so rows exist
-     that this site cannot see. It does not say which CNA reserved any of these
-     IDs." and sat directly above the first row, where it had been deliberately
-     placed: it was a <caption> on the old table, so the qualifier travelled with
-     a copy, a print or a screen-reader pass of the list.
-
-     THE COST, and it is real. A reader who selects the rows and pastes them into
-     a ticket now carries the rows and none of the qualification. Both claims are
-     still made, in the panel one click away, on /method in full, and in
-     `data/rbp.json`, but none of those travels with a copy the way this did.
-
-     NEXT.md's decision to drop the degraded banner listed this hedge as one of
-     four standing disclosures and leaned on it. That entry is corrected rather
-     than left to be discovered, and the remaining three still hold: /status,
-     `degraded` in rbp.json, and the staleness banner.
-
-     tests/test_a11y.py asserted it was present AND before the rows, so removing
-     it is a deliberate act rather than a drift. That test now asserts the
-     absence, for the same reason. #}
   {# Filled by render() when the age filter is hiding rows. Empty and invisible
      otherwise, so a reader who has chosen their own view is not told about a
      default they are not using. #}
@@ -149,18 +192,9 @@
 
      The rows are rendered from the JSON island below by the script at the foot of
      this file, so `#list` is empty in the served markup: zero CVE IDs appear in
-     the HTML. With scripts off the page was a command bar and a blank space, and
+     the HTML. With scripts off the page was a control bar and a blank space, and
      the server-rendered empty state above only fires when the snapshot itself has
-     no rows, which is a different condition.
-
-     That reaches reader modes, text browsers, archivers and any crawler that does
-     not execute scripts. It does not reach link unfurlers, which read the meta
-     tags and never needed the rows.
-
-     The CSV and JSON are the answer rather than a server-rendered table: they are
-     already built, already linked from the panel, and carry every row rather than
-     the first hundred. What this cannot fix is that no individual CVE ID has a URL
-     on this site, which is a v2 conversation and is recorded in the review. #}
+     no rows, which is a different condition. #}
   <noscript>
     <div class="empty-state">
       <strong>This list is drawn in the browser, and scripts are switched off.</strong><br>
@@ -178,22 +212,26 @@
 {% include "_panel.html" %}
 <div class="scrim" id="scrim" hidden></div>
 
+{# THE CONFIGURED FEEDS, from the same field /status reads. Server-rendered
+   because the browser cannot know about a feed that returned nothing: the rows
+   are the only other evidence on the page and a quiet feed leaves none. #}
+<script id="feeds" type="application/json">{{ (summary.get('feeds') or {}).get('requested', []) | tojson }}</script>
 <script id="rows" type="application/json">{{ rows | tojson }}</script>
 <script>
 (function () {
   "use strict";
   var ROWS = JSON.parse(document.getElementById("rows").textContent);
+  var CONFIGURED = JSON.parse(document.getElementById("feeds").textContent) || [];
   var NAMES = {osv:"OSV", ghsa:"GitHub", redhat:"Red Hat", debian:"Debian",
                ubuntu:"Ubuntu", alpine:"Alpine", alas:"Amazon Linux",
                msrc:"Microsoft", mozilla:"Mozilla", arch:"Arch",
                csaf:"CSAF Advisory", samsung:"Samsung",
                "ghsa-repos":"GitHub Repo Advisory"};
-  var MAXDAYS = ROWS.reduce(function (m, r) { return Math.max(m, r.days_public || 0); }, 1);
 
   // CSAF IS A TRANSPORT, NOT A PUBLISHER, and the control treated it as one.
   //
-  // `sources` says `csaf` for every row read over CSAF, so 143 rows from five
-  // different publishers collapsed into one option reading "CSAF Advisory".
+  // `sources` says `csaf` for every row read over CSAF, so rows from six
+  // different publishers collapsed into one entry reading "CSAF Advisory".
   // Every other entry in this control is already a named publisher (Red Hat,
   // Debian, Microsoft, Amazon Linux), several of which are certified CNAs; CSAF
   // was the only feed whose publishers were hidden, and they were hidden by how
@@ -203,10 +241,7 @@
   // provider in `sources` means a schema break plus ten separate breakages
   // downstream: `origin_kind` reads an unmapped slug as a tracker and silently
   // stops the 72-hour clock, `feed_count` changes meaning, `refs` is already cut
-  // at 250 characters, and `?src=csaf` links already shared stop matching. None
-  // of that is necessary. `refs` ALREADY carries the publisher the document
-  // states about itself, on every row, so the facet is a read rather than a
-  // migration.
+  // at 250 characters, and `?src=csaf` links already shared stop matching.
   //
   // The publisher NAME, not the URL host. CISA 403s the build runners, so its
   // advisories are fetched through the pinned feeds it publishes on GitHub and
@@ -245,8 +280,97 @@
       return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
     });
   }
+  function num(n) { return n.toLocaleString(); }
 
-  var els = {q: $("q"), src: $("src"), age: $("age")};
+  var els = {q: $("q"), src: $("src"), age: $("age"), sort: $("sort")};
+
+  // THE GROUPING TABLE. Every sort names its own grouping, and the bars, the
+  // headings in the list and the row order all read from the same entry here.
+  //
+  // EVERY DIMENSION HAS A GROUPING, deliberately, so there is no ragged
+  // "ungrouped" state to design around and no heading that can disagree with the
+  // order beneath it. Sorting by CVE ID looked like the exception until the
+  // identifier turned out to carry its own year, which is a real grouping and
+  // answers how far back the reserved IDs run.
+  //
+  // TWO DIMENSIONS ARE DELIBERATELY ABSENT. Ecosystem, because roughly four
+  // fifths of rows have none, so one group would hold almost everything and the
+  // bars would say nothing. Source, because a row can sit in five feeds at once
+  // and would have to appear in five groups; it is the filter above instead.
+  var WAITNAMES = {"365": "Over a year", "180": "6 to 12 months",
+                   "90": "3 to 6 months", "30": "1 to 3 months",
+                   "0": "Under 30 days"};
+
+  function waitKey(r) {
+    var d = r.days_public || 0;
+    return d >= 365 ? "365" : d >= 180 ? "180" : d >= 90 ? "90" : d >= 30 ? "30" : "0";
+  }
+  function waitSub(rows) {
+    if (!rows.length) { return ""; }
+    var d = rows.map(function (r) { return r.days_public || 0; })
+                .sort(function (a, b) { return a - b; });
+    return "median " + d[Math.floor(d.length / 2)] + "d · longest " + d[d.length - 1] + "d";
+  }
+  // The bucket bounds, so a bar sets the age control to EXACTLY the view it
+  // describes. These are the same boundaries the age options use, which is what
+  // lets a reader check that a bar's count and the filtered count agree, and
+  // they only agree because these are bands rather than the nearest single
+  // bound: see ageBound.
+  var WAITBOUND = {"365": "365+", "180": "180-365", "90": "90-180",
+                   "30": "30-90", "0": "30-"};
+
+  var DIMS = {
+    "wait-desc": {
+      order: ["365", "180", "90", "30", "0"], names: WAITNAMES, keyOf: waitKey, sub: waitSub,
+      cmp: function (a, b) {
+        return (b.days_public || 0) - (a.days_public || 0) || a.cve_id.localeCompare(b.cve_id);
+      }
+    },
+    "wait-asc": {
+      order: ["0", "30", "90", "180", "365"], names: WAITNAMES, keyOf: waitKey, sub: waitSub,
+      cmp: function (a, b) {
+        return (a.days_public || 0) - (b.days_public || 0) || a.cve_id.localeCompare(b.cve_id);
+      }
+    },
+    "srcs": {
+      order: ["4", "3", "2", "1"],
+      names: {"4": "Seen in 4 or more feeds", "3": "Seen in 3 feeds",
+              "2": "Seen in 2 feeds", "1": "Seen in 1 feed"},
+      keyOf: function (r) { return String(Math.min(4, Math.max(1, feedsOf(r).length))); },
+      cmp: function (a, b) {
+        return feedsOf(b).length - feedsOf(a).length ||
+               (b.days_public || 0) - (a.days_public || 0);
+      },
+      sub: function (rows) {
+        var m = rows.filter(function (r) { return feedsOf(r).length > 1; }).length;
+        return num(m) + " of " + num(rows.length) + " in more than one feed";
+      }
+    },
+    "id": {
+      // Years are discovered rather than declared: the corpus reaches further
+      // back every time an older reservation surfaces, and a typed list of years
+      // is the kind that is right on the day it is typed.
+      order: null,
+      names: {},
+      keyOf: function (r) { return String(r.cve_id).split("-")[1] || "other"; },
+      cmp: function (a, b) {
+        return a.cve_id.localeCompare(b.cve_id, undefined, {numeric: true});
+      },
+      sub: function (rows) {
+        var ys = {};
+        rows.forEach(function (r) { ys[String(r.cve_id).split("-")[1]] = 1; });
+        var k = Object.keys(ys).sort();
+        return k.length ? "spanning " + k[0] + " to " + k[k.length - 1] : "";
+      }
+    }
+  };
+  var DEFAULT_SORT = "wait-desc";
+
+  function feedsOf(r) { return (r.sources || "").split(",").filter(Boolean); }
+  function dim() {
+    return Object.prototype.hasOwnProperty.call(DIMS, els.sort.value)
+      ? DIMS[els.sort.value] : DIMS[DEFAULT_SORT];
+  }
 
   // THE FRONT PAGE OPENS ON THE LAST 90 DAYS, and it did not.
   //
@@ -259,52 +383,65 @@
   // THE COST, STATED: the rows this hides are the oldest, which are the strongest
   // evidence the site has. That is not a side effect, it is the mechanism -- the
   // Android block is at the top BECAUSE it is oldest, so any filter that clears
-  // the first screen is a filter that hides the oldest rows. So the default is
-  // announced on the page, in one line above the list, with the full count and a
-  // control that turns it off; it is not a silent omission.
+  // the first screen is a filter that hides the oldest rows.
   //
-  // Applied ONLY when the URL carries no parameters at all. A shared link always
-  // means exactly what it says, and the default never overrides a reader's choice.
+  // WHAT CHANGED WITH THE DISTRIBUTION: the default is no longer only announced
+  // in a line of prose. The bars are drawn over the rows the age bound excludes
+  // as well as the ones it admits, and the excluded ones are marked as excluded,
+  // so the shape of what is being held back is on the page rather than described
+  // by it. Clicking one clears the bound to reach those rows.
   var DEFAULT_AGE = "90-";
 
   // DID THE READER CHOOSE AN AGE, or did they just arrive?
   //
-  // THE BUG THIS FIXES, and it is the likeliest way a reader bounces off this
-  // site. Land on `/`, paste a CVE ID that has been public for more than 90
-  // days, and the page said "Nothing matches" for a row that IS in the list,
-  // because the 90-day default was still being applied alongside the search.
-  // `writeUrl` then serialised `?q=CVE-...&age=90-`, baking the wrong answer
-  // into a URL the reader might send to someone else. The offered remedy made
-  // it worse: "Clear Filters" blanked the search box too, and the advice read
-  // "Try a different term", which is exactly wrong for someone holding one id.
-  //
-  // Someone arriving from a link with one id in hand is the case that has to
-  // work. A shared `?q=...` link was already fine, because any parameter at all
-  // suppresses the default; only the live typing path was broken.
-  //
-  // So the default is a BROWSING default, never a searching one. The first
-  // keystroke in the search box clears it, visibly, so the control always shows
-  // what is actually being applied rather than a bound that is being ignored.
-  // Clearing the search box brings the curated view back, and the moment the
-  // reader touches the age control themselves it becomes theirs and nothing
-  // here overrides it again.
+  // Land on `/`, paste a CVE ID that has been public for more than 90 days, and
+  // the page said "Nothing matches" for a row that IS in the list, because the
+  // 90-day default was still being applied alongside the search. So the default
+  // is a BROWSING default, never a searching one. The first keystroke in the
+  // search box clears it, visibly, and the moment the reader touches the age
+  // control themselves it becomes theirs and nothing here overrides it again.
   var ageChosen = false;
 
-  // "90+" -> at least 90 days. "30-" -> under 30 days. "" -> no bound.
+  // "90+" -> at least 90 days. "30-" -> under 30 days. "180-365" -> the band
+  // between them. "" -> no bound.
   //
   // A bare "90" is read as "90+" so that ?minage=90 links, which is what this
   // control emitted before 2026-08-27, keep resolving to the view they described.
-  // See readUrl for the parameter alias.
   //
   // The bounds are deliberately inclusive-min and exclusive-max, so "90+ days"
   // and "under 90 days" partition the rows exactly: no row satisfies both and no
   // row satisfies neither. A reader who checks that the two counts sum to the
   // total should find that they do.
+  //
+  // THE BAND FORM EXISTS BECAUSE THE BARS NEEDED IT. A distribution bar is a
+  // band, and with only single bounds to express it, clicking "6 to 12 months"
+  // set `age=180-` and returned everything under 180 days: three buckets, 148
+  // rows, under a bar labelled 77. A control that answers a different question
+  // from the one its label asks is worse than one that does nothing, so the
+  // vocabulary grew rather than the click being approximated. It reads the same
+  // way round as the others: min inclusive, max exclusive.
   function ageBound(v) {
+    var band = /^([0-9]+)-([0-9]+)$/.exec(v || "");
+    if (band) {
+      var lo = parseInt(band[1], 10), hi = parseInt(band[2], 10);
+      return lo < hi ? {min: lo, max: hi} : null;
+    }
     var m = /^([0-9]+)([+-])?$/.exec(v || "");
     if (!m) { return null; }
     var n = parseInt(m[1], 10);
     return m[2] === "-" ? {max: n} : {min: n};
+  }
+
+  // The label a bound reads as, in one place: setAge builds an option from it and
+  // describeFilters puts it in the empty state, and the two used to phrase the
+  // same bound differently.
+  function ageLabel(b) {
+    if (b.min !== undefined && b.max !== undefined) { return b.min + " to " + b.max + " Days"; }
+    return b.max !== undefined ? "Under " + b.max + " Days" : b.min + "+ Days";
+  }
+  function ageValue(b) {
+    if (b.min !== undefined && b.max !== undefined) { return b.min + "-" + b.max; }
+    return b.max !== undefined ? b.max + "-" : b.min + "+";
   }
 
   // hasOwnProperty rather than truthiness. NAMES is a plain object, so
@@ -328,92 +465,133 @@
 
   // The label is bounded because for an unknown value it comes from the query
   // string, and `?src=` followed by five thousand characters would otherwise
-  // render a five-thousand-character option and take the command bar with it. The
+  // render a five-thousand-character control and take the layout with it. The
   // VALUE is kept whole, so the filter still means exactly what the URL said.
-  function addOption(sel, value, label, cap) {
-    var o = document.createElement("option");
-    var lim = cap || 44;
-    o.value = value;
-    o.textContent = label.length > lim ? label.slice(0, lim - 1) + "\u2026" : label;
-    sel.appendChild(o);
-    return o;
+  function cap(label, lim) {
+    lim = lim || 44;
+    return label.length > lim ? label.slice(0, lim - 1) + "…" : label;
   }
 
-  // THE SOURCE OPTIONS ARE TODAY'S FEEDS, which is the whole reason setSrc below
-  // exists: this list changes with the data, and a URL does not.
-  var seen = {};
-  ROWS.forEach(function (r) {
-    (r.sources || "").split(",").forEach(function (s) { if (s) { seen[s] = 1; } });
-    r._csaf.forEach(function (sl) { seen["csaf:" + sl] = 1; });
-  });
-  // AN OPTGROUP, WHICH IS WHAT THIS IS FOR, and this control already uses one
-  // for the age bounds ("At Least" / "Under") twenty lines up.
+  // THE SOURCE INVENTORY IS THE CONFIGURED FEEDS, not the feeds in today's rows,
+  // and that is the whole change.
   //
-  // The first version sorted every csaf entry to the TOP of the list and faked
-  // the grouping with two figure spaces, which got three things wrong at once:
-  // the alphabetical list started at "Alpine" halfway down, so a reader looking
-  // for Debian met five CSAF publishers first; "Red Hat Product Security" sat at
-  // the top while "Red Hat" sat near the bottom with nothing saying they are
-  // different feeds; and the indent was invisible to a screen reader, which read
-  // a flat list of sixteen peers.
+  // Built from `summary.feeds.requested`, unioned with anything the rows mention
+  // and with whatever slug a URL asks for. So a feed that returned nothing is
+  // listed at zero rather than missing, and the page can state how many feeds
+  // there are, which is the question a truncated control cannot answer.
   //
-  // An optgroup is native, announced as a group, visually distinct without
-  // inventing whitespace, and it leaves the feed list in plain alphabetical
-  // order where it belongs.
-  var srcNames = Object.keys(seen).filter(function (s) {
-    return s.indexOf("csaf:") !== 0;
-  }).sort(function (a, b) { return feedName(a).localeCompare(feedName(b)); });
-  var pubs = Object.keys(seen).filter(function (s) {
-    return s.indexOf("csaf:") === 0;
-  }).sort(function (a, b) { return feedName(a).localeCompare(feedName(b)); });
+  // `extra` holds slugs that are in neither list: a URL naming a feed that has
+  // been retired, or a typo. It still gets a control and still filters, because a
+  // citation of a feed that later goes quiet must keep meaning what it said
+  // rather than silently becoming "show everything".
+  var extra = [];
 
-  srcNames.forEach(function (s) { addOption(els.src, s, feedName(s)); });
+  function srcCounts() {
+    // Counted against the search and the age bound but NOT against the source
+    // filter itself: a facet that counted itself would read 2,037 beside the
+    // chosen feed and 0 beside every other one, which is a count of the filter
+    // rather than of the data.
+    var base = ROWS.filter(function (r) { return matches(r, {src: false}); });
+    var out = {csaf: 0}, pubs = {};
+    base.forEach(function (r) {
+      feedsOf(r).forEach(function (s) { out[s] = (out[s] || 0) + 1; });
+      r._csaf.forEach(function (sl) { pubs["csaf:" + sl] = (pubs["csaf:" + sl] || 0) + 1; });
+    });
+    return {feeds: out, pubs: pubs, total: base.length};
+  }
 
-  if (pubs.length) {
-    var g = document.createElement("optgroup");
-    // The group label carries the transport, so each option can be just the
-    // publisher's own name rather than repeating "CSAF" six times.
-    g.label = "CSAF Publishers";
-    els.src.appendChild(g);
-    // A longer cap inside the group. The 44 exists because an unknown slug
-    // arrives from the QUERY STRING and could be five thousand characters; these
-    // names come from the advisory documents, are bounded by them, and the
-    // longest real one ("Bundesamt fur Sicherheit in der Informationstechnik")
-    // was being cut mid-word at 44.
-    pubs.forEach(function (s) { addOption(g, s, feedName(s), 56); });
+  function srcSlugs() {
+    var seen = {}, out = [];
+    CONFIGURED.forEach(function (s) { if (s && !seen[s]) { seen[s] = 1; out.push(s); } });
+    ROWS.forEach(function (r) {
+      feedsOf(r).forEach(function (s) { if (!seen[s]) { seen[s] = 1; out.push(s); } });
+    });
+    extra.forEach(function (s) { if (!seen[s]) { seen[s] = 1; out.push(s); } });
+    return out;
+  }
+
+  function renderSources() {
+    var c = srcCounts(), grid = $("srcgrid"), cur = els.src.value;
+    // ALPHABETICAL BY DISPLAY NAME, not by contribution.
+    //
+    // Sorting by count reads well as a chart and badly as a control: this is
+    // the thing a reader uses to find their own distribution, and finding
+    // "Ubuntu" among thirteen chips ordered by volume is a scan where
+    // alphabetical is a jump. The magnitude is not lost, it is on every chip.
+    //
+    // It is also the order the select this replaces settled on, for the same
+    // reason plus one more: the first version sorted the CSAF publishers to the
+    // top, so a reader looking for Debian met five publishers first and the feed
+    // list started halfway down.
+    var byName = function (a, b) { return feedName(a.v).localeCompare(feedName(b.v)); };
+    var feeds = srcSlugs().map(function (s) { return {v: s, n: c.feeds[s] || 0}; }).sort(byName);
+    var pubs = Object.keys(c.pubs).map(function (k) { return {v: k, n: c.pubs[k]}; }).sort(byName);
+    // A publisher a URL named but that has no rows in this view still needs its
+    // control, for the same reason a quiet feed does.
+    extra.forEach(function (s) {
+      if (s.indexOf("csaf:") === 0 && !Object.prototype.hasOwnProperty.call(c.pubs, s)) {
+        pubs.push({v: s, n: 0});
+      }
+    });
+
+    function chip(v, n, label) {
+      var on = cur === v;
+      // The name in its own element rather than as a bare text node beside the
+      // count: it is the part the label cap applies to, and a test that has to
+      // strip " 1,173" off the end before it can measure the name is a test that
+      // silently stops measuring when the count format changes.
+      return '<button type="button" class="srcchip' + (n ? "" : " zero") +
+        '" data-src="' + esc(v) + '" aria-pressed="' + (on ? "true" : "false") + '">' +
+        '<span class="srcname">' +
+        esc(cap(label, v.indexOf("csaf:") === 0 ? 56 : 44)) + "</span>" +
+        ' <u>' + num(n) + "</u></button>";
+    }
+
+    var html = '<div class="srcrow">' +
+      '<button type="button" class="srcchip all" data-src="" aria-pressed="' +
+      (cur ? "false" : "true") + '">All sources <u>' + num(c.total) + "</u></button>" +
+      feeds.map(function (f) { return chip(f.v, f.n, feedName(f.v)); }).join("") +
+      "</div>";
+    if (pubs.length) {
+      // NESTED, because the publishers are inside `csaf` rather than beside it.
+      // The first version of this control sorted them into the same flat list,
+      // where "Red Hat Product Security" sat next to "Red Hat" with nothing
+      // saying they are a publisher and a feed rather than two feeds.
+      // role="group" WITH A LABEL, not just an indent and a caption.
+      //
+      // The <optgroup> this replaces was announced as a group; a styled div is
+      // not, so a screen reader would be read a flat run of nineteen peers with
+      // "Red Hat Product Security" sitting beside "Red Hat" and nothing saying
+      // one is a publisher inside the other. The visible label is the accessible
+      // one, so they cannot drift.
+      html += '<div class="srcrow sub" role="group" aria-label="Within CSAF Advisory">' +
+        '<span class="srclab">Within CSAF Advisory</span>' +
+        pubs.map(function (p) { return chip(p.v, p.n, feedName(p.v)); }).join("") + "</div>";
+    }
+    grid.innerHTML = html;
+
+    var quiet = feeds.filter(function (f) { return !f.n; }).length;
+    $("seennote").textContent = num(CONFIGURED.length || feeds.length) +
+      " feeds configured, " + num(feeds.length - quiet) + " returned rows in this view" +
+      (pubs.length ? ", and " + num(pubs.length) + " CSAF publishers underneath" : "") + ".";
   }
 
   // A LINK MEANS WHAT IT SAYS, and for a feed that had gone quiet it meant the
   // opposite.
   //
-  // Assigning a <select> a value it has no <option> for neither throws nor sticks:
-  // `value` reads back "" and `selectedIndex` is -1. So a src slug with no option
-  // left the filter empty and `matches()` stopped applying it, and the page
-  // rendered EVERY row for a URL that asked for one feed.
-  //
-  // Measured in a browser on 2026-08-28 rather than reasoned about: 60 of 60 rows
-  // in the render fixture here, and all 1,672 of 1,672 on the live page in the
-  // review that reported it. `mozilla` and `arch` have contributed zero rows since
-  // they merged, which is round 7's B4 finding and is why /status reads `62 / 0 / 0`
-  // for arch, so this was the behaviour for both of them and no chip anywhere on
-  // the page could reveal it.
-  //
-  // It inverts the one promise this control makes. A view here is meant to be
-  // citable, and a citation of a feed that later goes quiet turned into a link
-  // showing everything, which is the worst available reading of that link.
-  //
-  // So an unknown slug gets an option of its own and keeps filtering. For a feed
-  // with no rows that is a zero-result view, which is the true answer, and the
-  // empty state names the feed and offers a way out of it.
+  // The select this replaces silently discarded a value it had no option for:
+  // `value` read back "" and `matches` stopped applying the filter, so
+  // `/?src=mozilla&age=any` rendered all 1,672 rows rather than none. A hidden
+  // input cannot discard a value, so the defect is structurally gone rather than
+  // guarded; what is left is making sure the reader can SEE the filter that is
+  // applied, which is what `extra` does.
   function setSrc(v) {
-    if (v && !hasOption(els.src, v)) {
-      // Marked, because the select is a list of the feeds behind today's rows and
-      // this one is not one of them. Unmarked, the dropdown offers "Mozilla"
-      // alongside ten feeds that do have rows as though it were another of them.
-      //
-      // It stays in the list once added: it names a feed a reader linked to, and
-      // choosing it again gives the same honest zero.
-      addOption(els.src, v, feedName(v) + " (0 rows)");
+    if (v && extra.indexOf(v) < 0 && CONFIGURED.indexOf(v) < 0) {
+      var known = ROWS.some(function (r) {
+        return v.indexOf("csaf:") === 0 ? r._csaf.indexOf(v.slice(5)) > -1
+                                        : feedsOf(r).indexOf(v) > -1;
+      });
+      if (!known) { extra.push(v); }
     }
     els.src.value = v;
   }
@@ -424,23 +602,28 @@
   // here can go quiet. What a URL can still carry is a bound the control does not
   // offer: `?age=45+` is a perfectly good view someone can construct by hand, and
   // it too silently rendered everything. It gets an option and filters.
-  //
-  // A value that parses as no bound at all ("", "soon") falls back to the explicit
-  // everything state rather than to a blank select. Blank filters nothing while
-  // looking like it might be filtering something, which is the same lie in a
-  // smaller font.
   function setAge(v) {
     if (v && hasOption(els.age, v)) { els.age.value = v; return; }
     var b = ageBound(v);
     if (!b) { els.age.value = "any"; return; }
     // Canonical, so a bare "90" resolves to the "90+" option the control already
     // has rather than adding a second one that reads identically to it.
-    var canon = b.max !== undefined ? b.max + "-" : b.min + "+";
+    var canon = ageValue(b);
     if (!hasOption(els.age, canon)) {
-      addOption(els.age, canon, b.max !== undefined ? "Under " + b.max + " Days"
-                                                    : b.min + "+ Days");
+      var o = document.createElement("option");
+      o.value = canon;
+      o.textContent = ageLabel(b);
+      els.age.appendChild(o);
     }
     els.age.value = canon;
+  }
+
+  // A grouping the control does not offer is not a view, it is a typo, so it
+  // falls back rather than being added: unlike a feed slug or an age bound,
+  // `?sort=` names a behaviour of this page and there is nothing outside the
+  // page that could give an unknown value a meaning.
+  function setSort(v) {
+    els.sort.value = hasOption(els.sort, v) ? v : DEFAULT_SORT;
   }
 
   // HOW EACH CONTROL TAKES A VALUE FROM THE URL, keyed on `els` and iterated from
@@ -450,7 +633,8 @@
   var FROM_URL = {
     q: function (v) { els.q.value = v; },
     src: setSrc,
-    age: setAge
+    age: setAge,
+    sort: setSort
   };
   Object.keys(els).forEach(function (k) {
     if (!FROM_URL[k]) { throw new Error("control " + k + " has no URL reader"); }
@@ -462,16 +646,10 @@
   // because the CVE ID is two lines above it. Out of that context it is useless:
   // a screen reader's link list read "OSV" 44 times and "open advisory" more than
   // that, each pointing somewhere different, with nothing to tell them apart.
-  //
-  // aria-label rather than visible text, because the row already shows the id and
-  // repeating it in the chip would be noise for a sighted reader. The label leads
-  // with the feed so the list still sorts and skims the way the visible one does.
   function chipLabel(feed, cve) {
     // Two of the display names already END in "Advisory" ("CSAF Advisory",
     // "GitHub Repo Advisory"), so the naive concatenation announced "CSAF
-    // Advisory advisory for CVE-2026-1" to a screen reader. Pre-existing, and
-    // only visible once the names were title-cased and the doubling stopped
-    // reading as a lower-case noun.
+    // Advisory advisory for CVE-2026-1" to a screen reader.
     var name = feedName(feed);
     var tail = /advisory$/i.test(name) ? " for " : " advisory for ";
     return esc(name + tail + cve);
@@ -479,7 +657,7 @@
 
   function chips(r) {
     var urls = r.source_urls || {};
-    var names = (r.sources || "").split(",").filter(Boolean);
+    var names = feedsOf(r);
     Object.keys(urls).forEach(function (k) {
       if (names.indexOf(k) === -1) { names.push(k); }
     });
@@ -490,7 +668,7 @@
     // AFTER the source_urls union, not before. Doing it first left `csaf` out of
     // `names` and the union promptly put it back from `source_urls`, so the row
     // rendered BOTH "CISA" and "CSAF Advisory" and the swap looked like an
-    // addition. Caught by the mutation pass on the chip test.
+    // addition.
     if (r._csaf.length) {
       names = names.filter(function (n) { return n !== "csaf"; })
                    .concat(r._csaf.map(function (sl) { return "csaf:" + sl; }));
@@ -521,9 +699,7 @@
   }
 
   function rowHtml(r) {
-    var h = Math.max(6, Math.round(100 * (r.days_public || 0) / MAXDAYS));
     return '<details class="rbprow"><summary class="rowhead">' +
-      '<span class="rail" aria-hidden="true"><i style="height:' + h + '%"></i></span>' +
       '<span class="rowbody"><span class="idline">' +
         '<span class="cve mono">' + esc(r.cve_id) + "</span>" +
         (r.package ? '<span class="pkg mono">' + esc(r.package) + "</span>" : "") +
@@ -536,10 +712,22 @@
       "</summary><div class=\"detail\">" + detail(r) + "</div></details>";
   }
 
-  function matches(r) {
+  // ONE FILTER, WITH TWO FACETS THAT CAN BE SWITCHED OFF, rather than three
+  // near-identical copies of it. The inventory counts have to ignore the source
+  // filter and the distribution bars have to ignore the age bound, and the first
+  // version of this file expressed those as two more functions that each repeated
+  // the search clause. Three copies of a predicate is three places for a filter to
+  // stop agreeing with the count beside it.
+  //
+  // `opts.src` false: count a row against everything EXCEPT the source filter, so
+  // the inventory shows what each feed would give rather than what the current
+  // selection gives.
+  // `opts.age` false: ignore the age bound, so the bars can draw the rows the
+  // default view is holding back.
+  function matches(r, opts) {
     var q = els.q.value.trim().toLowerCase(),
-        s = els.src.value,
-        a = ageBound(els.age.value);
+        s = (opts && opts.src === false) ? "" : els.src.value,
+        a = (opts && opts.age === false) ? null : ageBound(els.age.value);
     if (a) {
       var d = r.days_public || 0;
       if (a.min !== undefined && d < a.min) { return false; }
@@ -550,7 +738,7 @@
       // roll-up and keeps matching every row read over CSAF.
       if (s.indexOf("csaf:") === 0) {
         if (r._csaf.indexOf(s.slice(5)) < 0) { return false; }
-      } else if ((r.sources || "").split(",").indexOf(s) < 0) { return false; }
+      } else if (feedsOf(r).indexOf(s) < 0) { return false; }
     }
     if (q) {
       var hay = (r.cve_id + " " + (r.package || "") + " " + (r.description || "") +
@@ -560,29 +748,79 @@
     return true;
   }
 
+  // THE BARS ARE DRAWN OVER THE AGE BOUND, NOT INSIDE IT.
+  //
+  // Everything else on the page counts rows that pass every filter. These count
+  // rows that pass the search and the source filter and IGNORE the age bound,
+  // because the whole point of the default view is that it is hiding something
+  // and the reader is entitled to see how much. A bar the bound excludes is drawn
+  // at its true height and marked as excluded; clicking it clears the bound to
+  // exactly that bucket.
+  //
+  // Only for the wait dimensions. Grouping by sources or by year has no relation
+  // to the age bound, so there is nothing to mark and the bars simply follow the
+  // filtered rows like everything else.
+  function renderDist(rowsInView) {
+    var d = dim(), byAge = els.sort.value.indexOf("wait") === 0;
+    // For the wait dimensions the bars ignore the age bound; for the others they
+    // are the same rows the list is drawn from.
+    var base = byAge
+      ? ROWS.filter(function (r) { return matches(r, {age: false}); })
+      : rowsInView;
+    var by = {};
+    base.forEach(function (r) {
+      var k = d.keyOf(r);
+      (by[k] || (by[k] = [])).push(r);
+    });
+    var keys = d.order ? d.order.slice() : Object.keys(by).sort();
+    var max = keys.reduce(function (m, k) { return Math.max(m, (by[k] || []).length); }, 0) || 1;
+    var a = ageBound(els.age.value);
+
+    $("bars").innerHTML = keys.map(function (k) {
+      var rows = by[k] || [], n = rows.length;
+      // Excluded means the age bound removes the whole bucket. Computed from a
+      // representative row rather than from the bucket's name, so the two cannot
+      // disagree when a bound like ?age=45+ cuts across a bucket.
+      var out = byAge && a && rows.length && !rows.some(function (r) {
+        var dd = r.days_public || 0;
+        return (a.min === undefined || dd >= a.min) && (a.max === undefined || dd < a.max);
+      });
+      var name = d.names[k] || k;
+      return '<button type="button" class="distbar' + (out ? " out" : "") +
+        '" data-bucket="' + esc(k) + '" aria-pressed="' +
+        (byAge && els.age.value === WAITBOUND[k] ? "true" : "false") + '">' +
+        '<span>' + esc(name) + (out ? ' <em>not in view</em>' : "") + "</span>" +
+        '<i><b style="width:' + (n / max * 100).toFixed(1) + '%"></b></i>' +
+        "<u>" + num(n) + "</u></button>";
+    }).join("");
+    $("distsub").textContent = d.sub(base);
+  }
+
   function render(reset) {
     if (reset !== false) { shown = PAGE; }
-    filtered = ROWS.filter(matches)
-      .sort(function (x, y) { return (y.days_public || 0) - (x.days_public || 0); });
+    var d = dim();
+    filtered = ROWS.filter(function (r) { return matches(r); }).sort(d.cmp);
     var slice = filtered.slice(0, shown);
-    $("n").textContent = filtered.length.toLocaleString();
+    $("n").textContent = num(filtered.length);
     $("n").classList.toggle("dim", filtered.length === 0);
+
+    renderSources();
+    renderDist(filtered);
 
     // THE NOTICE, and its whole job is that the total stays on the page.
     //
     // The h1 is the count of what is SHOWN, which is the design and is right: it
     // moves as the reader filters. But with a filter on by default, the first
-    // paint would otherwise show 1,605 on a page whose own link preview says
-    // 1,709, and the reader never asked for the difference. The number they
-    // arrived expecting has to be here, next to the control that explains it.
-    var note = $("viewnote"), hidden = ROWS.length - filtered.length;
+    // paint would otherwise show 1,637 on a page whose own link preview says
+    // 2,037, and the reader never asked for the difference.
+    var note = $("viewnote"), hiddenN = ROWS.length - filtered.length;
     if (els.age.value === DEFAULT_AGE && !els.q.value.trim() && !els.src.value
-        && hidden > 0) {
+        && hiddenN > 0) {
       note.innerHTML = "Showing the last 90 days. <b>" +
-        hidden.toLocaleString() + "</b> older row" + (hidden === 1 ? "" : "s") +
+        num(hiddenN) + "</b> older row" + (hiddenN === 1 ? "" : "s") +
         " are not in this view, including the oldest. " +
         '<button type="button" class="linkbtn" id="showall">Show All ' +
-        ROWS.length.toLocaleString() + "</button>";
+        num(ROWS.length) + "</button>";
       note.hidden = false;
       $("showall").addEventListener("click", function () {
         // "any" rather than "": this has to survive a reload and a paste, and an
@@ -590,7 +828,7 @@
         // default applies to.
         els.age.value = "any";
         ageChosen = true;      // an explicit "show me everything" is a choice
-        render(); writeUrl(true); $("n").focus ? null : null;
+        render(); writeUrl(true);
       });
     } else {
       note.hidden = true; note.innerHTML = "";
@@ -599,11 +837,6 @@
     if (!filtered.length) {
       // AN ABSENCE HERE IS NOT A STATEMENT THAT THE ID IS PUBLISHED, and for a
       // reader who arrived holding one id that is the only thing worth saying.
-      //
-      // "Try a different term" is advice for someone browsing. Someone who
-      // pasted CVE-2025-12345 does not have a different term, and the sentence
-      // reads as "this id is fine", which this site cannot know: it reads a
-      // minority of CNAs and every count on it is a floor.
       var typed = els.q.value.trim();
       var looksLikeCve = /^CVE-\d{4}-\d{4,}$/i.test(typed);
       var body;
@@ -617,7 +850,7 @@
           '" rel="noopener">Check its state directly</a> against the CVE ' +
           "Services reservation endpoint, which is authoritative for any ID.</p>";
       } else {
-        body = "<p>" + ROWS.length.toLocaleString() + " rows are being tracked. " +
+        body = "<p>" + num(ROWS.length) + " rows are being tracked. " +
           "Try a different term, or widen a filter.</p>";
       }
       $("list").innerHTML =
@@ -628,51 +861,74 @@
       $("clear").addEventListener("click", function () {
         // KEEPS THE SEARCH TERM. Blanking it was the worst part of this state:
         // the one control the reader had deliberately filled was the one thing
-        // the remedy threw away, so the button that promised to help lost their
-        // id and left them at the unfiltered list.
+        // the remedy threw away.
         //
         // Derived from `els`, not a typed list: the typed version still cleared
         // `minage` after that control was renamed, so "Clear filters" left the
         // age filter set and the empty state on screen.
         Object.keys(els).forEach(function (k) {
-          if (k !== "q") { els[k].value = ""; }
+          if (k !== "q" && k !== "sort") { els[k].value = ""; }
         });
-        // `age` has no empty option any more, so clearing it to "" would leave
-        // the select showing nothing. "any" is the explicit everything state,
-        // and it is a choice the reader just made by pressing this.
         els.age.value = "any";
         ageChosen = true;
         render(); writeUrl(); els.q.focus();
       });
       $("more").hidden = true;
     } else {
-      $("list").innerHTML = slice.map(rowHtml).join("");
+      // GROUPED IN ONE PASS OVER THE SORTED SLICE, so the headings are a property
+      // of the order rather than a second structure that can disagree with it.
+      // The rows are already in the dimension's order, so a heading is emitted
+      // wherever the group key changes and nowhere else.
+      var last = null, html = "";
+      slice.forEach(function (r) {
+        var k = d.keyOf(r);
+        if (k !== last) {
+          last = k;
+          // The count is the group's SIZE IN THE FILTERED SET, not the number
+          // rendered so far: a windowed list that headed each group with the
+          // number it happened to have drawn would report 100 for a group of
+          // 1,358 and the reader has no way to tell the difference.
+          var total = 0;
+          for (var i = 0; i < filtered.length; i++) {
+            if (d.keyOf(filtered[i]) === k) { total++; }
+          }
+          html += '<h2 class="grouphead"><span>' + esc(d.names[k] || k) +
+                  '</span><i></i><u>' + num(total) + (total === 1 ? " ID" : " IDs") +
+                  "</u></h2>";
+        }
+        html += rowHtml(r);
+      });
+      $("list").innerHTML = html;
       var left = filtered.length - slice.length;
       $("more").hidden = left <= 0;
       $("more").textContent = left > 0
-        ? "Show " + Math.min(PAGE, left).toLocaleString() + " More of " + left.toLocaleString()
+        ? "Show " + num(Math.min(PAGE, left)) + " More of " + num(left)
         : "";
     }
     // Announced, because a filter that changes the list without saying so is
-    // invisible to a screen reader.
-    $("listnote").textContent = filtered.length.toLocaleString() + " of " +
-      ROWS.length.toLocaleString() + " rows shown";
+    // invisible to a screen reader. The grouping is named too: it is the one
+    // thing about this page a sighted reader gets from the shape of it.
+    $("listnote").textContent = num(filtered.length) + " of " + num(ROWS.length) +
+      " rows shown, grouped by " +
+      els.sort.options[els.sort.selectedIndex].text.toLowerCase();
   }
 
-  // PLAIN TEXT, and the caller escapes it. Two of these three bits are read
-  // straight from the query string, and this string used to be concatenated into
+  // PLAIN TEXT, and the caller escapes it. Two of these bits are read straight
+  // from the query string, and this string used to be concatenated into
   // `innerHTML` raw: `?q=<img src=x onerror=...>` matched no rows, so the empty
-  // state rendered the tag and the handler ran. Measured on 2026-08-28. On a site
-  // whose entire product is a link other people are asked to trust, a URL that
-  // executes script under rbptracker.org is the most expensive defect on this page.
+  // state rendered the tag and the handler ran. On a site whose entire product is
+  // a link other people are asked to trust, a URL that executes script under
+  // rbptracker.org is the most expensive defect on this page.
   function describeFilters() {
     var bits = [];
-    if (els.q.value.trim()) { bits.push("\u201c" + els.q.value.trim() + "\u201d"); }
+    if (els.q.value.trim()) { bits.push("“" + els.q.value.trim() + "”"); }
     if (els.src.value) { bits.push("in " + feedName(els.src.value)); }
     var a = ageBound(els.age.value);
     if (a) {
-      bits.push(a.max !== undefined ? "public under " + a.max + " days"
-                                    : "public " + a.min + "+ days");
+      bits.push(a.min !== undefined && a.max !== undefined
+        ? "public " + a.min + " to " + a.max + " days"
+        : a.max !== undefined ? "public under " + a.max + " days"
+                              : "public " + a.min + "+ days");
     }
     return bits.join(" ") || "that filter";
   }
@@ -682,17 +938,18 @@
   // whole purpose is to be cited.
   //
   // replaceState while typing so the Back button is not filled with one entry
-  // per keystroke; pushState when a SELECT commits, so Back undoes a deliberate
+  // per keystroke; pushState when a control commits, so Back undoes a deliberate
   // choice. The panel is deliberately NOT in the URL: nobody links to an open
   // modal, and putting it there makes Back close it instead of leaving.
   function writeUrl(push) {
     var p = new URLSearchParams();
     Object.keys(els).forEach(function (k) {
       // An age nobody chose is not part of the view they are looking at, so it
-      // does not go in the link. Writing it produced `?q=CVE-x&age=90-`, a URL
-      // that says "this reader asked for the last 90 days" about a reader who
-      // typed a CVE id.
+      // does not go in the link. The same argument applies to the default
+      // grouping: `?sort=wait-desc` on every link would describe a choice nobody
+      // made, and it is the value the page uses when the parameter is absent.
       if (k === "age" && !ageChosen) { return; }
+      if (k === "sort" && els.sort.value === DEFAULT_SORT) { return; }
       if (els[k].value) { p.set(k, els[k].value); }
     });
     var s = p.toString(), url = s ? "?" + s : location.pathname;
@@ -707,8 +964,7 @@
     // A view someone sent, or a legacy ?minage= link, is a chosen age and must
     // survive every rule below.
     if (p.get("age") !== null || p.get("minage") !== null) { ageChosen = true; }
-    // Through FROM_URL, never straight onto the element: a select silently
-    // discards a value it has no option for. See setSrc.
+    // Through FROM_URL, never straight onto the element.
     Object.keys(els).forEach(function (k) {
       if (p.get(k) !== null) { FROM_URL[k](p.get(k)); }
     });
@@ -731,11 +987,43 @@
     }
     render(); writeUrl(false);
   });
-  els.src.addEventListener("change", function () { render(); writeUrl(true); });
   els.age.addEventListener("change", function () {
     ageChosen = true;          // theirs now; nothing above touches it again
     render(); writeUrl(true);
   });
+  els.sort.addEventListener("change", function () { render(); writeUrl(true); });
+
+  // The source inventory is redrawn on every render, so the handler is delegated
+  // rather than bound per chip: rebinding thirteen buttons on every keystroke is
+  // how a listener leak starts.
+  $("srcgrid").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-src]") : null;
+    if (!b) { return; }
+    // Clicking the chip that is already on clears the filter, so the control can
+    // be undone where it was set rather than only from "All sources".
+    var v = b.getAttribute("data-src");
+    setSrc(els.src.value === v ? "" : v);
+    render(); writeUrl(true);
+  });
+
+  // A BAR SETS THE AGE BOUND. The bars are the shape of the age filter, so
+  // clicking one is the same act as choosing its bound in the select, and it
+  // goes through the select so there is one path and one URL writer.
+  $("bars").addEventListener("click", function (e) {
+    var b = e.target.closest ? e.target.closest("[data-bucket]") : null;
+    if (!b || els.sort.value.indexOf("wait") !== 0) { return; }
+    var k = b.getAttribute("data-bucket");
+    var bound = Object.prototype.hasOwnProperty.call(WAITBOUND, k) ? WAITBOUND[k] : null;
+    if (!bound) { return; }
+    // A bucket is a band, and the select offers bounds rather than bands. "Over a
+    // year" is exactly `365+`; the others are the upper bound of the band, which
+    // is the closest view this control can express and is the one whose count the
+    // reader can check against the bar above it.
+    setAge(els.age.value === bound ? "any" : bound);
+    ageChosen = true;
+    render(); writeUrl(true);
+  });
+
   window.addEventListener("popstate", function () { readUrl(); render(); });
   $("more").addEventListener("click", function () {
     shown += PAGE; render(false);
@@ -753,21 +1041,16 @@
     // THE PANEL OPENS AT THE TOP, and it did not.
     //
     // It is its own scroll container and kept its position across opens, so a
-    // reader who read it through, closed it, and pressed "What is this?" again
-    // landed 2,627px down a 3,528px panel, in the middle of a policy argument,
-    // under a button that had just asked them a question. Measured, not guessed.
+    // reader who read it through, closed it, and pressed the opener again landed
+    // 2,627px down a 3,528px panel, in the middle of a policy argument.
     //
     // preventScroll matters as well as scrollTop. Focusing a tall element that is
     // its own scrollport makes the browser scroll it to bring the focused thing
-    // into view, and here the focused thing IS the scrollport, so Chrome scrolls
-    // to the bottom. Setting scrollTop without this gets undone by the focus call
-    // on the next line.
+    // into view, and here the focused thing IS the scrollport.
     if (open) { panel.scrollTop = 0; }
     if (open) { panel.focus({preventScroll: true}); } else { opener.focus(); }
   }
   opener.addEventListener("click", function () { setPanel(true); });
-  // The hedge's own "Why" opened this panel too and went with the hedge on
-  // 2026-08-27. The command bar's "What is this?" is the only opener now.
   $("panel-close").addEventListener("click", function () { setPanel(false); });
   scrim.addEventListener("click", function () { setPanel(false); });
 
@@ -776,10 +1059,7 @@
   // The panel declares role="dialog" aria-modal="true", which tells a screen
   // reader to hide the rest of the document, and nothing enforced the same thing
   // for the keyboard: Tab walked straight out of the dialog into the list behind
-  // the scrim, where the reader could focus and activate controls they cannot see
-  // and cannot reach the close button again without cycling the whole page. A
-  // dialog that announces itself as modal and is not is worse than one that never
-  // claimed to be, because assistive technology acts on the claim.
+  // the scrim, where the reader could focus and activate controls they cannot see.
   var FOCUSABLE = 'a[href], button:not([disabled]), input, select, textarea, ' +
                   '[tabindex]:not([tabindex="-1"])';
   document.addEventListener("keydown", function (e) {
@@ -789,8 +1069,6 @@
                   .filter(function (el) { return el.offsetParent !== null; });
     if (!items.length) { e.preventDefault(); panel.focus(); return; }
     var first = items[0], last = items[items.length - 1];
-    // The panel itself is tabindex="-1" and takes focus on open, so the first Tab
-    // lands inside without this; the wrap is for the two ends.
     if (e.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
       e.preventDefault(); last.focus();
     } else if (!e.shiftKey && document.activeElement === last) {
