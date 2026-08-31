@@ -1225,12 +1225,12 @@
   "cve_id": "CVE-2026-49275",
   "state": "RESERVED",
   "public_date": "2026-08-30",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "alpine,ghsa-repos",
+  "feed_count": 2,
   "dates": {
    "ghsa-repos": "2026-08-30"
   },
-  "refs": "ghsa-repos:Exiv2/exiv2\tGHSA-hxph-pv7w-8649",
+  "refs": "alpine:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-hxph-pv7w-8649",
   "description": "Exiv2/exiv2 repository advisory GHSA-hxph-pv7w-8649",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1247,9 +1247,10 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "package": "",
+  "package": "exiv2",
   "ecosystem": "",
   "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-49275",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-hxph-pv7w-8649"
   },
   "veto_evaluated": false,
@@ -1261,12 +1262,12 @@
   "cve_id": "CVE-2026-68547",
   "state": "RESERVED",
   "public_date": "2026-08-30",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "alpine,ghsa-repos",
+  "feed_count": 2,
   "dates": {
    "ghsa-repos": "2026-08-30"
   },
-  "refs": "ghsa-repos:Exiv2/exiv2\tGHSA-jcgh-p9v3-pw6j",
+  "refs": "alpine:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-jcgh-p9v3-pw6j",
   "description": "Exiv2/exiv2 repository advisory GHSA-jcgh-p9v3-pw6j",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1283,9 +1284,10 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "package": "",
+  "package": "exiv2",
   "ecosystem": "",
   "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-68547",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-jcgh-p9v3-pw6j"
   },
   "veto_evaluated": false,
@@ -1297,12 +1299,12 @@
   "cve_id": "CVE-2026-68546",
   "state": "RESERVED",
   "public_date": "2026-08-30",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "alpine,ghsa-repos",
+  "feed_count": 2,
   "dates": {
    "ghsa-repos": "2026-08-30"
   },
-  "refs": "ghsa-repos:Exiv2/exiv2\tGHSA-3695-mjv8-3r52",
+  "refs": "alpine:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-3695-mjv8-3r52",
   "description": "Exiv2/exiv2 repository advisory GHSA-3695-mjv8-3r52",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1319,9 +1321,10 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "package": "",
+  "package": "exiv2",
   "ecosystem": "",
   "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-68546",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-3695-mjv8-3r52"
   },
   "veto_evaluated": false,
