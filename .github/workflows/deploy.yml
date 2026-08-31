@@ -421,10 +421,30 @@ jobs:
       #
       # AFTER the upload and AFTER staging, deliberately, and on the same
       # reasoning the launch gate states: "Fail LOUD, separately from the
-      # publication." Failing dark on the publication itself is worse than
-      # serving a questionable count with a red build beside it, because a
-      # blocked publication means the site silently keeps serving something
-      # older with nothing to say so.
+      # publication."
+      #
+      # WHAT THAT ACTUALLY MEANS HERE, because this comment claimed the opposite
+      # until 2026-08-31. It used to argue that failing dark on the publication
+      # is worse than serving a questionable count with a red build beside it,
+      # "because a blocked publication means the site silently keeps serving
+      # something older with nothing to say so". The wiring has never done that:
+      # `deploy` is `needs: build` with no `if:`, so a finding here fails the
+      # build and SKIPS the deploy, exactly as the fire-drill comment further up
+      # this file describes. Two comments in one file, each correct about a
+      # different thing, and the operator-facing message in verify.py sided with
+      # the wrong one.
+      #
+      # The reasoning it rested on has also stopped applying: "nothing to say so"
+      # was true when it was written and is not now. The staleness banner is
+      # computed in the browser and fires at 12 and 24 hours precisely because a
+      # stopped pipeline cannot recompute anything server-side, so a site that
+      # stops getting fresher says so on its own.
+      #
+      # And the case that made this matter is no longer a failure at all: a
+      # shortfall the run already recorded as a failure or a truncation is
+      # published with `degraded: true` rather than blocked. See
+      # EXPLAINS_A_SHORTFALL in rbp/verify.py. What still blocks is a feed that
+      # shrank while reporting itself healthy, which is worth not publishing.
       #
       # Runs on a dry run too: a rehearsal that cannot fail proves nothing.
       - name: Verify the artefact that was just published
