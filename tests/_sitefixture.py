@@ -76,6 +76,21 @@ _LONG_DESC = ("A specially crafted request to the administrative interface allow
               "unauthenticated remote attacker to bypass the access-control check and "
               "read arbitrary files outside the configured document root, including "
               "credentials for downstream services.")
+
+# THE SHAPE OF THE MOST COMMON DESCRIPTION ON THE SITE, and the fixture had
+# nothing like it.
+#
+# `ghsa-repos` carries 1,173 of 2,037 live rows, and every one of its
+# descriptions reads "owner/repo repository advisory GHSA-xxxx-xxxx-xxxx": two
+# tokens with no break opportunity a browser will take on its own, the longer of
+# them 37 characters. The fixture's only description was ordinary prose, which
+# wraps at spaces at any width, so the reflow sweep measured a row that could not
+# fail and reported no horizontal scroll while the real page had 3px of it at
+# 320. Found by hand on live data.
+#
+# Verbatim from a live row rather than invented, so the length is the real one.
+_REPO_DESC = ("AcademySoftwareFoundation/OpenImageIO repository advisory "
+              "GHSA-8m8p-vhxc-jmjw")
 _LONG_SOURCES = "osv,ghsa,debian,ubuntu,alpine,redhat,alas,csaf,msrc,samsung"
 _LONG_REF = "osv:Packagist:codingms/additional-tca-with-a-deliberately-long-suffix"
 
@@ -154,7 +169,11 @@ def _row(n, public_date="2026-08-05", days=19):
             src: f"https://example.invalid/{src}/CVE-2025-{30000 + n}"
             for src in (_LONG_SOURCES if n % 3 == 0 else "osv,ghsa").split(",")},
         "refs": (_LONG_REF + ";" + _csaf_ref(n)) if n % 3 == 0 else _LONG_REF,
-        "description": _LONG_DESC if n % 2 == 0 else "Cross-Site Scripting (XSS)",
+        # Three shapes, not two: prose, a short title, and the unbreakable
+        # repository-advisory line that is the majority of the live corpus.
+        "description": (_LONG_DESC if n % 3 == 0
+                        else _REPO_DESC if n % 3 == 1
+                        else "Cross-Site Scripting (XSS)"),
         "veto_evaluated": False,
         "days_public": days + n,
         "clock_known": True,

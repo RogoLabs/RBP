@@ -325,6 +325,39 @@ def test_a_hostile_src_cannot_stretch_the_command_bar(page, server):
         "is as wide as whatever a link puts in the query string")
 
 
+@pytest.mark.parametrize("width", [320, 375])
+def test_a_source_label_at_its_cap_does_not_scroll_the_page_sideways(page, server, width):
+    """No control in the source inventory is wider than the viewport, at the
+    longest label the code will produce.
+
+    The labels are data: a feed's display name, or a CSAF publisher's own name out
+    of the advisory document, capped at 44 and 56 characters respectively. This
+    drives the cap from the URL rather than trusting the fixture to contain a name
+    long enough to reach it, and asserts the chip stays inside the viewport.
+
+    WHAT THIS DOES NOT CATCH, stated because the first version of it claimed
+    otherwise: the publisher-name defect that prompted it. That one was a clipped
+    COUNT, not a page overflow -- `overflow:hidden` on the button was already
+    stopping the name reaching the page scroll width, so no reflow assertion of
+    any kind could see it. The horizontal-scroll defect on the same page was the
+    row DESCRIPTION, and it is caught by the sweep in test_layout.py now that the
+    fixture carries a repository-advisory line, which is the shape of 1,173 of
+    2,037 live rows and was missing from it entirely.
+    """
+    pg = page
+    pg.set_viewport_size({"width": width, "height": 812})
+    # A csaf facet, so it takes the longer of the two label caps.
+    st = _goto(pg, server, "?age=any&src=csaf:" + "W" * 80)
+    assert st["srcOn"], "no control was drawn for the linked source, so nothing is measured"
+    assert st["srcWidest"] <= width, (
+        f"a source control is {st['srcWidest']:.0f}px wide in a {width}px viewport")
+    over = pg.evaluate(
+        "() => document.documentElement.scrollWidth - document.documentElement.clientWidth")
+    assert over <= 1, (
+        f"a source label at its cap scrolls the page sideways by {over}px at "
+        f"{width}px wide")
+
+
 @pytest.mark.parametrize("width,chars", [(1280, 400), (375, 80)])
 def test_a_long_filter_value_does_not_scroll_the_page_sideways(page, server, width, chars):
     """Reached by TYPING, which is why it is measured here rather than assumed

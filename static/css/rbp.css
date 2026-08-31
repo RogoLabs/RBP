@@ -732,8 +732,13 @@ body.locked{overflow:hidden}
   letter-spacing:-.045em;line-height:.88;font-variant-numeric:tabular-nums;
   color:var(--color-text-primary)}
 .cmd-count b.dim{opacity:.45}
+/* ONE LINE. The unit is the subject of the heading, and "reserved, public,
+   unpublished" broken after the second comma reads as a list that ran out of
+   room rather than as the phrase it is. It was wrapping because of a 22ch
+   measure inherited from when this sat inside the command bar and had a search
+   box beside it competing for the width; nothing is beside it now. */
 .cmd-count span{display:block;margin-top:12px;font-size:1.12rem;line-height:1.35;
-  max-width:22ch;color:var(--color-text-primary)}
+  white-space:nowrap;color:var(--color-text-primary)}
 .lead-floor{margin:16px 0 0;font-size:.85rem;line-height:1.55;max-width:44ch;
   color:var(--rbp-text-secondary)}
 .lead-floor b{color:var(--color-text-primary)}
@@ -800,11 +805,27 @@ body.locked{overflow:hidden}
 .srcrow.sub{margin-top:9px;padding-left:14px;border-left:2px solid var(--color-border)}
 .srclab{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
   color:var(--rbp-text-muted);margin-right:4px}
-.srcchip{font:inherit;font-size:.8rem;background:var(--color-bg-content);
+/* THE NAME SHRINKS, THE COUNT DOES NOT.
+
+   `overflow:hidden` on the button clips a long child but cannot ellipsise one:
+   text-overflow applies to a box's own inline content, and the name is a span.
+   So at 320px the 50-character publisher name laid out 315px wide inside a chip
+   capped at 264px and the button simply cut whatever came last, which is the
+   COUNT. "Bundesamt fur Sicherheit in der Informationstechnik" rendered with its
+   number missing, and a facet with no count is the one part of this control a
+   reader cannot reconstruct from anywhere else on the page.
+
+   A flex row with `min-width:0` on the name is what actually lets it shrink, and
+   moving the ellipsis onto the name means the part that gets cut is the part
+   that is still legible when cut. It does not fix a reflow: the button was
+   already clipping, so nothing here was reaching the page scroll width. */
+.srcchip{display:inline-flex;align-items:baseline;gap:6px;
+  font:inherit;font-size:.8rem;background:var(--color-bg-content);
   color:var(--rbp-text-secondary);border:1px solid var(--color-border);
   border-radius:999px;padding:5px 12px;cursor:pointer;min-height:0;
-  white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.srcchip u{text-decoration:none;margin-left:6px;color:var(--rbp-text-muted);
+  max-width:100%}
+.srcchip .srcname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srcchip u{flex:0 0 auto;text-decoration:none;color:var(--rbp-text-muted);
   font-variant-numeric:tabular-nums}
 .srcchip:hover{border-color:var(--rbp-link);color:var(--color-text-primary)}
 /* THE SELECTED STATE IS A BORDER AND A MARK, NOT A FILL.
@@ -928,10 +949,28 @@ body.locked{overflow:hidden}
 }
 .rowbody{min-width:0}
 .idline{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.cve{font-weight:600;font-size:.96rem;letter-spacing:-.01em}
-.pkg{font-size:.76rem;color:var(--rbp-text-muted)}
+.cve{font-weight:600;font-size:.96rem;letter-spacing:-.01em;overflow-wrap:anywhere}
+/* Package coordinates are the same shape as the descriptions below and worse:
+   `@ooples/token-optimizer-mcp` is one token, and an npm scope has no spaces in
+   it at all. */
+.pkg{font-size:.76rem;color:var(--rbp-text-muted);overflow-wrap:anywhere}
+/* BREAKS WHEN IT HAS TO, and it had nothing telling it to.
+
+   The most common description on this site is a `ghsa-repos` one, and its shape
+   is "AcademySoftwareFoundation/OpenImageIO repository advisory
+   GHSA-xxxx-xxxx-xxxx": two tokens with no break opportunity a browser will take
+   on its own, the longer of them 37 characters. That is 1,173 of 2,037 rows, not
+   an edge case. At 320px it set the row's minimum content width to 300px inside
+   a 236px column and pushed the PAGE sideways. WCAG 1.4.10.
+
+   It never showed while the rows were cards, because `.rbprow` was
+   `overflow:hidden` and clipped the description instead -- the same masking that
+   hid the publisher chip, found the same way. `anywhere` rather than
+   `break-word`, so ordinary prose still breaks at spaces and only an unbreakable
+   token is broken mid-token. */
 .rdesc{color:var(--rbp-text-secondary);font-size:.9rem;line-height:1.45;
-  margin-top:5px;display:block;max-width:74ch}
+  margin-top:5px;display:block;max-width:74ch;overflow-wrap:anywhere}
+
 /* THE WAIT, as the largest thing in the row after the identifier. Semantic
    colour, never the link accent: --rbp-age is solved for AA on every surface
    this lands on, which --color-warning (#ffc107, 1.37:1 on white) is not. */
@@ -1040,7 +1079,10 @@ body.locked{overflow:hidden}
      phone. The count is its own block now and the unit sits under it at every
      width, so there is nothing left to hide; the size is the only thing that
      moves. */
-  .cmd-count span{font-size:1rem;max-width:none}
+  /* Smaller so it still fits on one line: 29 characters at 1.12rem overflows a
+     320px viewport, and the whole point of the rule above is that this phrase
+     does not break. Measured, not guessed. */
+  .cmd-count span{font-size:.92rem}
   .distbar{grid-template-columns:minmax(0,7.5rem) 1fr 3rem;gap:9px}
   .cmd-grow{flex:1 1 100%}
   .panel{padding:20px 18px 48px}
