@@ -524,15 +524,35 @@
     // top, so a reader looking for Debian met five publishers first and the feed
     // list started halfway down.
     var byName = function (a, b) { return feedName(a.v).localeCompare(feedName(b.v)); };
-    var feeds = srcSlugs().map(function (s) { return {v: s, n: c.feeds[s] || 0}; }).sort(byName);
-    var pubs = Object.keys(c.pubs).map(function (k) { return {v: k, n: c.pubs[k]}; }).sort(byName);
+    var all = srcSlugs().map(function (s) { return {v: s, n: c.feeds[s] || 0}; }).sort(byName);
+    var pubsAll = Object.keys(c.pubs).map(function (k) { return {v: k, n: c.pubs[k]}; }).sort(byName);
     // A publisher a URL named but that has no rows in this view still needs its
-    // control, for the same reason a quiet feed does.
+    // control, for the same reason a quiet feed does. See `keep`.
     extra.forEach(function (s) {
       if (s.indexOf("csaf:") === 0 && !Object.prototype.hasOwnProperty.call(c.pubs, s)) {
-        pubs.push({v: s, n: 0});
+        pubsAll.push({v: s, n: 0});
       }
     });
+
+    // A CONTROL THAT LEADS NOWHERE IS NOT A CONTROL, so an entry with no rows in
+    // this view is not drawn. Two feeds of thirteen return nothing on a normal
+    // run, and a search narrows most of the rest to zero on almost any term, so
+    // an inventory that drew every one of them would be mostly dead chips a
+    // reader has to skip past to find the live ones.
+    //
+    // WITH ONE EXCEPTION, and it is the one that matters: the chip for the
+    // CURRENT selection is always drawn, at zero, marked. `?src=mozilla` names a
+    // feed that returns nothing, and the whole point of the change away from the
+    // <select> is that such a link filters honestly instead of falling through to
+    // every row. Hiding its chip would apply the filter with nothing on the page
+    // saying which filter, which is a different way to break the same promise.
+    //
+    // WHAT IS NOT LOST: how many feeds were read. That was the reason for drawing
+    // the quiet ones, and it belongs in a sentence rather than in a row of chips
+    // nobody can click. The note below carries it on every render.
+    function keep(x) { return x.n > 0 || x.v === cur; }
+    var feeds = all.filter(keep);
+    var pubs = pubsAll.filter(keep);
 
     function chip(v, n, label) {
       var on = cur === v;
@@ -548,8 +568,12 @@
     }
 
     var html = '<div class="srcrow">' +
+      // Same shape as every other chip, name element included: a control that is
+      // structurally different from its siblings is one every reader of this
+      // markup has to special-case, and the tests already had to.
       '<button type="button" class="srcchip all" data-src="" aria-pressed="' +
-      (cur ? "false" : "true") + '">All sources <u>' + num(c.total) + "</u></button>" +
+      (cur ? "false" : "true") + '"><span class="srcname">All sources</span> <u>' +
+      num(c.total) + "</u></button>" +
       feeds.map(function (f) { return chip(f.v, f.n, feedName(f.v)); }).join("") +
       "</div>";
     if (pubs.length) {
@@ -570,10 +594,18 @@
     }
     grid.innerHTML = html;
 
-    var quiet = feeds.filter(function (f) { return !f.n; }).length;
-    $("seennote").textContent = num(CONFIGURED.length || feeds.length) +
-      " feeds configured, " + num(feeds.length - quiet) + " returned rows in this view" +
-      (pubs.length ? ", and " + num(pubs.length) + " CSAF publishers underneath" : "") + ".";
+    // THE SENTENCE THAT ANSWERS "IS THIS ALL OF THEM", which is the question the
+    // old control could not answer at all: it listed only the feeds behind
+    // today's rows, so a reader had no way to tell a complete inventory from a
+    // partial one. Counted off `all`, not off what is drawn, so hiding the empty
+    // chips cannot quietly change what this claims.
+    var live = all.filter(function (f) { return f.n > 0; }).length;
+    var read = CONFIGURED.length || all.length;
+    $("seennote").textContent = num(live) + " of " + num(read) +
+      (read === 1 ? " configured feed has" : " configured feeds have") +
+      " rows in this view" +
+      (pubs.length ? ", and " + num(pubs.length) +
+        (pubs.length === 1 ? " CSAF publisher underneath" : " CSAF publishers underneath") : "") + ".";
   }
 
   // A LINK MEANS WHAT IT SAYS, and for a feed that had gone quiet it meant the
@@ -702,7 +734,14 @@
     return '<details class="rbprow"><summary class="rowhead">' +
       '<span class="rowbody"><span class="idline">' +
         '<span class="cve mono">' + esc(r.cve_id) + "</span>" +
-        (r.package ? '<span class="pkg mono">' + esc(r.package) + "</span>" : "") +
+        // NOT WHEN THE PACKAGE IS THE ID. `package` falls back to the CVE ID for
+        // a row whose advisory names no package, so 259 rows rendered
+        // "CVE-2024-0234  CVE-2024-0234" with the identifier printed twice. It
+        // was survivable when the package sat on its own line in a card; the
+        // package is directly beside the id now, which is where it reads as a
+        // mistake. Pre-existing, and visible on the live page today.
+        (r.package && r.package !== r.cve_id
+          ? '<span class="pkg mono">' + esc(r.package) + "</span>" : "") +
       "</span>" +
       (r.description ? '<span class="rdesc">' + esc(r.description) + "</span>" : "") +
       '<span class="where"><span class="wlab">Showing Up In</span>' + chips(r) + "</span>" +

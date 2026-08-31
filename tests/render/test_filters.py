@@ -158,18 +158,24 @@ def test_a_link_to_a_feed_with_no_rows_shows_no_rows(page, server, site_dir):
     assert st["emptyText"], "zero rows and no empty state, so the page reads as broken"
 
 
-def test_the_control_for_an_absent_feed_is_marked_as_absent(page, server, site_dir):
-    """The inventory is a list of the feeds that were READ, not of the feeds with
-    rows, and the difference has to be visible.
+def test_a_feed_with_no_rows_is_hidden_until_a_link_names_it(page, server, site_dir):
+    """Two rules that only make sense together.
 
-    A feed that is configured, polled and contributing nothing is the normal state
-    of two of the thirteen. Listing it unmarked beside the feeds that did return
-    something states one false thing; leaving it out, which is what the old
-    <select> did, states a different false thing and is worse, because then
-    nothing on the page reveals that the feed was read at all.
+    A control that leads nowhere is not a control: two feeds of thirteen return
+    nothing on a normal run, and a search narrows most of the rest to zero on
+    almost any term, so an inventory that drew all of them would be mostly dead
+    chips. They are not drawn.
 
-    The marker is asserted structurally rather than by its wording, so a copy or
-    styling edit does not break this.
+    THE EXCEPTION IS THE ONE THAT MATTERS. `?src=mozilla` names a feed that
+    returns nothing, and the point of moving off the <select> is that such a link
+    filters honestly instead of falling through to every row. If its chip were
+    hidden too, the page would apply a filter with nothing on screen saying which
+    filter, which breaks the same promise from the other end. So the chip for the
+    CURRENT selection is always drawn, at zero, and marked.
+
+    And the count of feeds that were READ has to survive the hiding, or the page
+    goes back to being unable to say whether the inventory is complete. It moves
+    into the note rather than into a row of chips nobody can click.
     """
     pg = page
     _goto(pg, server, "")
@@ -181,16 +187,35 @@ def test_the_control_for_an_absent_feed_is_marked_as_absent(page, server, site_d
     }""")
     absent = sorted(_shipped_feed_slugs(site_dir) - set(present))
     assert absent, "the fixture no longer has a feed with no rows; see the test above"
+    slug = absent[0]
 
     st = _goto(pg, server, "?age=any")
-    assert absent[0] in st["srcChips"], (
-        f"{absent[0]!r} was read this run and returned nothing, and the inventory "
-        "does not list it at all, so the page cannot say the feed was read")
-    assert absent[0] in st["srcZero"], (
-        f"the control for {absent[0]!r} is not marked as contributing nothing, so a "
-        "feed that returned no rows reads as one of the feeds that did")
-    assert not (set(present) & set(st["srcZero"])), (
-        f"a feed WITH rows is marked as absent: {sorted(set(present) & set(st['srcZero']))}")
+    assert slug not in st["srcChips"], (
+        f"{slug!r} has no rows and is still drawn as a control, so the inventory "
+        "offers a chip that can only lead to an empty page")
+    assert not st["srcZero"], (
+        f"controls drawn at zero with nothing selected: {st['srcZero']}")
+    assert set(present) <= set(st["srcChips"]), (
+        "a feed WITH rows is missing from the inventory: "
+        f"{sorted(set(present) - set(st['srcChips']))}")
+
+    # The note still says how many feeds were read, which is the disclosure the
+    # hidden chips used to carry.
+    note = pg.eval_on_selector("#seennote", "e => e.textContent")
+    assert re.search(r"\d+\s+of\s+\d+", note), (
+        f"the inventory no longer says how many of the configured feeds have rows: "
+        f"{note!r}. Without it nothing on the page distinguishes a complete "
+        "inventory from a truncated one, which is the defect the whole control "
+        "was rebuilt for")
+
+    # And a link to the quiet feed shows its control rather than filtering blind.
+    st = _goto(pg, server, f"?src={slug}&age=any")
+    assert st["rows"] == 0 and st["shown"] == 0, f"?src={slug} rendered rows"
+    assert slug in st["srcChips"] and st["srcOn"] == slug, (
+        f"a link to {slug!r} filters to nothing and draws no control for it, so "
+        "the page shows a filtered view with nothing saying which filter")
+    assert slug in st["srcZero"], (
+        f"the control for {slug!r} is not marked as contributing nothing")
 
 
 def _display_name(site_dir, slug):
