@@ -1991,7 +1991,7 @@ def _csaf_path_year_in_scope(path, years):
     return not segs or any(int(s) >= min(years) for s in segs)
 
 
-def _csaf_directory_entries(directory_url, years, cap=None):
+def _csaf_directory_entries(directory_url, years):
     """Recent advisory URLs from a CSAF *directory* distribution.
 
     The spec allows two distribution shapes and this adapter originally handled
@@ -2004,17 +2004,21 @@ def _csaf_directory_entries(directory_url, years, cap=None):
     meaningful. `index.txt` is the fallback, and carries no dates, so it is
     filtered on the year in the file path instead.
 
-    `cap` IS OPTIONAL, AND `feed_csaf` PASSES NONE. A per-directory cap applied
-    here is invisible to the caller: it returns 120 entries whether the provider
-    listed 120 or 83,091, so the one number needed to say how much of a provider
-    was read is destroyed before anything can report it. The whole listing has
-    already been downloaded and parsed by this point either way, so returning it
-    all costs a list rather than a fetch, and `feed_csaf` caps ONCE, where it
-    knows what it is cutting and can publish the cut.
+    THERE IS NO CAP HERE. This returns every in-scope entry the listing holds.
 
-    The cap is kept as a parameter because bounding a single pathological
-    directory is still a reasonable thing for another caller to ask for, and
-    because the tests that pin its behaviour are pinning real behaviour.
+    It used to take one, defaulted to None, and no production caller ever passed
+    it. The docstring justified keeping it on the grounds that "another caller"
+    might want it and that "the tests that pin its behaviour are pinning real
+    behaviour", which was circular: those tests were the only thing exercising
+    it. Deleted once `feed_csaf`'s own cap gained a test that drives it end to
+    end and asserts which advisories were actually requested.
+
+    A per-directory cap here would be invisible to the caller anyway: it returns
+    N entries whether the provider listed N or 83,091, so the one number needed
+    to say how much of a provider was read is destroyed before anything can
+    report it. The listing is downloaded and parsed either way, so returning all
+    of it costs a list rather than a fetch, and `feed_csaf` caps ONCE, where it
+    knows what it is cutting and publishes the cut.
 
     DO NOT reintroduce an early `break` here. This loop used to stop at the
     first out-of-window row, on the assumption that changes.csv is newest-first.
@@ -2045,10 +2049,10 @@ def _csaf_directory_entries(directory_url, years, cap=None):
                 continue
             out.append((ts, f"{base}/{path.lstrip('/')}"))
         if out:
-            # Newest first, then cap, so the cap keeps the most recent advisories
-            # whatever order the provider wrote the file in.
+            # Newest first whatever order the provider wrote the file in, so
+            # `feed_csaf`'s cap keeps the most recent when it cuts.
             out.sort(reverse=True)
-            return out if cap is None else out[:cap]
+            return out
     except Exception:
         pass
     try:
@@ -2060,8 +2064,12 @@ def _csaf_directory_entries(directory_url, years, cap=None):
     # No timestamps here, so select on the year segment of the path and take the
     # tail, which these listings order oldest-first.
     keep = [p for p in paths if any(seg in wanted for seg in p.split("/"))]
-    if cap is not None:
-        keep = keep[-cap:]
+    # UNDATED, and that matters once the caller sorts. index.txt carries no
+    # timestamps, so these tuples sort below every dated entry and would be cut
+    # first by a cap claiming to keep the newest. The listing order is the only
+    # recency signal there is here, and it is preserved rather than relied upon:
+    # no configured provider is index.txt-only today, and one that appeared
+    # would need its own handling rather than an implicit tail slice.
     return [("", f"{base}/{p.lstrip('/')}") for p in keep]
 
 

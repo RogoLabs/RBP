@@ -2278,3 +2278,86 @@ def test_an_unrecognised_state_version_is_discarded_entirely(tmp_path, monkeypat
         f"a state stamped with an old version was trusted and the provider "
         f"returned {len(rows)} of 9 ids")
     assert json.load(open(st))["_version"] == feeds.CSAF_STATE_VERSION
+
+
+# --------------------------------------------------------------------------
+# F8: "the newest N" is a claim the site publishes, so something has to check it
+# --------------------------------------------------------------------------
+
+def _csaf_spy(monkeypatch, n, day_start=1):
+    """A provider of `n` advisories on distinguishable dates, recording every
+    advisory URL `_get` is actually asked for.
+
+    THE FIXTURES COULD NOT SEE WHICH ONES WERE CHOSEN. `_csaf_fixture` returned
+    the same document for every URL, so "the newest 3" and "the oldest 3" were
+    indistinguishable to any assertion about the ROWS. Three panellists mutated
+    `entries.sort(reverse=True)` to `entries.sort()` and the whole offline suite
+    stayed green while the site would have published "read the newest 120 of
+    83,091 advisories" over the oldest 120.
+
+    So this records the REQUEST, not the result."""
+    meta = {"distributions": [{"directory_url": "https://v.example/csaf"}]}
+    asked = []
+
+    def fake_get(url, timeout=None, retries=3, headers=None):
+        if url.endswith("pm.json"):
+            return meta, 200, {}
+        asked.append(url)
+        i = int(url.rsplit("/a", 1)[1].split(".")[0])
+        return ({"document": {"publisher": {"name": "V"},
+                              "tracking": {"id": f"V-{i}",
+                                           "initial_release_date":
+                                               f"2026-01-{day_start + i:02d}T00:00:00Z"}},
+                 "vulnerabilities": [{"cve": f"CVE-2026-{2000 + i}", "title": "t"}]},
+                200, {})
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    monkeypatch.setattr(
+        feeds, "_csaf_directory_entries",
+        lambda durl, years, cap=None: [
+            (f"2026-01-{day_start + i:02d}T00:00:00Z", f"{durl}/a{i}.json")
+            for i in range(n)])
+    return asked
+
+
+@pytest.mark.parametrize("incremental", [True, False])
+def test_a_capped_read_asks_for_the_newest_advisories(monkeypatch, tmp_path,
+                                                      incremental):
+    """The site publishes "read the newest N of M" on /status and in the health
+    detail. Nothing anywhere asserted the word "newest" was true.
+
+    Ten advisories dated a day apart, a cap of three: the three requested must
+    be the three newest. Asserted on the argument list `_get` received, which is
+    the only formulation a fake cannot satisfy by accident.
+
+    BOTH PATHS, because there are two orderings and the first version of this
+    test only drove one. `feed_csaf` sorts inline when `incremental` is off and
+    delegates to `_csaf_plan` when it is on, which is the production default.
+    Reversing the plan's cold-start sort left the suite green because nothing
+    exercised it. Confirmed by mutation on 2026-08-31."""
+    feeds.reset_health()
+    asked = _csaf_spy(monkeypatch, 10)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), cap_per_provider=3,
+                    incremental=incremental,
+                    state_path=str(tmp_path / "s.json"))
+
+    got = sorted(int(u.rsplit("/a", 1)[1].split(".")[0]) for u in asked)
+    assert got == [7, 8, 9], (
+        f"a cap of 3 over advisories 0..9 fetched {got} (incremental="
+        f"{incremental}); the health line claims the newest and this run took "
+        "something else")
+
+
+def test_the_claim_and_the_read_cannot_disagree(monkeypatch):
+    """The other half: the number in the sentence has to be the number fetched.
+    "read the newest 3 of 10" beside four requests is a different lie from
+    reading the oldest, and neither had a test."""
+    feeds.reset_health()
+    asked = _csaf_spy(monkeypatch, 10)
+    feeds.feed_csaf({2026}, providers=("https://v.example/pm.json",),
+                    aggregators=(), cap_per_provider=3, incremental=False)
+
+    detail = feeds.FEED_HEALTH["csaf:v.example"]["detail"]
+    assert "3 of 10" in detail, detail
+    assert len(asked) == 3, f"the line says 3 and {len(asked)} advisories were read"

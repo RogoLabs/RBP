@@ -21,7 +21,7 @@ def test_changes_csv_is_parsed_and_resolved_to_absolute_urls(monkeypatch):
     csv = ('"2026/rhsa-2026_9848.json","2026-08-20T23:20:06+00:00"\n'
            '"2026/rhsa-2026_9097.json","2026-08-20T23:20:05+00:00"\n')
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    got = feeds._csaf_directory_entries("https://example.invalid/advisories/", {2026}, 50)
+    got = feeds._csaf_directory_entries("https://example.invalid/advisories/", {2026})
     assert got == [
         ("2026-08-20T23:20:06+00:00", "https://example.invalid/advisories/2026/rhsa-2026_9848.json"),
         ("2026-08-20T23:20:05+00:00", "https://example.invalid/advisories/2026/rhsa-2026_9097.json"),
@@ -43,7 +43,7 @@ def test_an_out_of_window_row_does_not_end_the_listing(monkeypatch):
            '"2019/c.json","2019-01-01T00:00:00Z"\n'
            '"2026/d.json","2026-01-01T00:00:00Z"\n')
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    got = feeds._csaf_directory_entries("https://x.invalid/d", {2025, 2026}, 50)
+    got = feeds._csaf_directory_entries("https://x.invalid/d", {2025, 2026})
     names = [u.rsplit("/", 1)[-1] for _, u in got]
     assert "c.json" not in names, "the 2019 row is out of window and must be dropped"
     assert set(names) == {"a.json", "b.json", "d.json"}, (
@@ -58,27 +58,35 @@ def test_an_oldest_first_listing_is_read_in_full(monkeypatch):
            '"2026/new.json","2026-08-25T08:12:01Z"\n'
            '"2014/ancient.json","2014-10-24T22:07:03Z"\n')
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    got = feeds._csaf_directory_entries("https://suse.invalid/csaf", {2025, 2026}, 50)
+    got = feeds._csaf_directory_entries("https://suse.invalid/csaf", {2025, 2026})
     names = [u.rsplit("/", 1)[-1] for _, u in got]
     assert names == ["new.json", "mid.json"], (
         "an ascending listing must still yield its recent rows, newest first")
 
 
-def test_the_cap_keeps_the_newest_whatever_order_the_file_is_in(monkeypatch):
-    """The cap is a recency cap. Against an ascending file the old code would
-    have kept the OLDEST rows, which is the worst of both worlds: a truncated
-    read that also throws away everything a reader came for."""
+def test_the_listing_comes_back_newest_first_whatever_order_the_file_is_in(monkeypatch):
+    """This asserted a CAP that no longer exists. The property underneath it
+    survives and is why `feed_csaf`'s cap can honestly say "the newest": the
+    listing must be ordered here, because the file is not.
+
+    SUSE's changes.csv is ascending and its last row is dated 2014, so neither
+    end can be trusted. Against an ascending file an unordered read hands the
+    caller the OLDEST entries to cut from, which is the worst of both worlds: a
+    truncated read that also throws away everything a reader came for.
+
+    The cap itself is now pinned end to end in
+    `test_a_capped_read_asks_for_the_newest_advisories`, which drives
+    `feed_csaf` and asserts which advisories `_get` was asked for. That is a
+    thing production does; a `cap=` argument no production caller passed was
+    not."""
     csv = "".join(f'"2026/a{i:02d}.json","2026-08-{i:02d}T00:00:00Z"\n'
                   for i in range(1, 20))          # ascending, oldest first
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    got = feeds._csaf_directory_entries("https://x.invalid/d", {2026}, 3)
-    assert [u.rsplit("/", 1)[-1] for _, u in got] == ["a19.json", "a18.json", "a17.json"]
-
-
-def test_cap_is_respected(monkeypatch):
-    csv = "".join(f'"2026/a{i}.json","2026-08-{i:02d}T00:00:00Z"\n' for i in range(1, 20))
-    monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    assert len(feeds._csaf_directory_entries("https://x.invalid/d", {2026}, 5)) == 5
+    got = feeds._csaf_directory_entries("https://x.invalid/d", {2026})
+    assert len(got) == 19, "the listing is no longer returned in full"
+    names = [u.rsplit("/", 1)[-1] for _, u in got]
+    assert names[:3] == ["a19.json", "a18.json", "a17.json"], names[:3]
+    assert names == sorted(names, reverse=True), "the listing is not newest-first"
 
 
 def test_malformed_rows_are_skipped(monkeypatch):
@@ -86,7 +94,7 @@ def test_malformed_rows_are_skipped(monkeypatch):
            '"2026/ok.json","2026-08-20T00:00:00Z"\n'
            '\n')
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    got = feeds._csaf_directory_entries("https://x.invalid/d", {2026}, 50)
+    got = feeds._csaf_directory_entries("https://x.invalid/d", {2026})
     assert len(got) == 1 and got[0][1].endswith("ok.json")
 
 
@@ -103,7 +111,7 @@ def test_a_revision_of_an_old_advisory_does_not_eat_the_cap(monkeypatch):
            '"2023/also-revised-today.json","2026-08-26T10:03:45Z"\n'
            '"2026/actually-new.json","2026-08-26T06:04:32Z"\n')
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    got = feeds._csaf_directory_entries("https://cisco.invalid/csaf", {2025, 2026}, 2)
+    got = feeds._csaf_directory_entries("https://cisco.invalid/csaf", {2025, 2026})
     names = [u.rsplit("/", 1)[-1] for _, u in got]
     assert names == ["actually-new.json"], (
         f"the cap was spent on revisions of out-of-window advisories: {names}")
@@ -115,7 +123,7 @@ def test_a_path_with_no_year_segment_is_kept(monkeypatch):
     csv = ('"advisories/vendor-sa-001.json","2026-08-26T00:00:00Z"\n'
            '"vendor-sa-002.json","2026-08-25T00:00:00Z"\n')
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: csv)
-    got = feeds._csaf_directory_entries("https://v.invalid/csaf", {2025, 2026}, 50)
+    got = feeds._csaf_directory_entries("https://v.invalid/csaf", {2025, 2026})
     assert len(got) == 2, "an undateable path was dropped rather than kept"
 
 
@@ -147,7 +155,7 @@ def test_index_txt_fallback_filters_on_the_path_year(monkeypatch):
         return "2015/old.json\n2026/new.json\n2025/alsonew.json\n"
 
     monkeypatch.setattr(feeds, "_get_text", fake)
-    got = feeds._csaf_directory_entries("https://x.invalid/d", {2025, 2026}, 50)
+    got = feeds._csaf_directory_entries("https://x.invalid/d", {2025, 2026})
     names = [u.rsplit("/", 1)[-1] for _, u in got]
     assert "old.json" not in names
     assert set(names) == {"new.json", "alsonew.json"}
@@ -158,7 +166,7 @@ def test_no_listing_at_all_returns_empty(monkeypatch):
     def fake(u, timeout=30):
         raise RuntimeError("404")
     monkeypatch.setattr(feeds, "_get_text", lambda u, timeout=30: fake(u))
-    assert feeds._csaf_directory_entries("https://x.invalid/d", {2026}, 50) == []
+    assert feeds._csaf_directory_entries("https://x.invalid/d", {2026}) == []
 
 
 # --------------------------------------------------------------------------
