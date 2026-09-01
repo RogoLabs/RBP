@@ -1850,6 +1850,7 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
             print(f"  [osv:{eco}] FAILED: {e}", file=sys.stderr)
             continue
         n0 = len(out)
+        found = set()
         for info in zf.infolist():
             name = info.filename
             if not name.endswith(".json") or info.file_size > 2_000_000:
@@ -1859,6 +1860,7 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
             except Exception:
                 continue
             cves = [a for a in (rec.get("aliases") or []) if a.startswith("CVE-") and _year(a) in years]
+            found.update(cves)
             if not cves:
                 continue
             aff = rec.get("affected") or []
@@ -1878,11 +1880,77 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
         except OSError:
             pass
         added = len(out) - n0
-        # rows= was never passed here, so every OSV part carried rows: null and
-        # compare_magnitudes could not compare it even after it learned to look.
-        record_feed(f"osv:{eco}", True, f"{added} ids from {nbytes / 1e6:.0f}MB",
-                    rows=added)
-        print(f"  [osv:{eco}] +{added}", file=sys.stderr)
+        # TWO NUMBERS, BECAUSE `added` CANNOT ANSWER "DID THIS ARCHIVE GIVE US
+        # ANYTHING", AND THAT IS THE QUESTION THE GUARD BELOW ASKS.
+        #
+        # `seen` is shared across the whole ecosystem loop, so `added` is what an
+        # ecosystem contributed THAT NO EARLIER ONE HAD: it is order-dependent and
+        # it understates every ecosystem after the first. Measured on the
+        # 2026-08-31 baseline, `osv:Pub` recorded **+1**, not because Pub holds one
+        # in-scope id but because npm, PyPI and Maven had already supplied almost
+        # all of them.
+        #
+        # So `added` is one id away from zero for a healthy ecosystem, and a guard
+        # keyed on it would fire on Pub every run while staying silent on the real
+        # failure. `found` is the ids this ecosystem's own archive contained,
+        # deduped within the ecosystem and independent of loop order, which is
+        # both the honest thing to compare and the thing that goes to zero when
+        # something is actually wrong.
+        #
+        # `rows=` MOVES FROM `added` TO `found` for the same reason: an
+        # order-dependent row count means reordering the tuple below would fire
+        # spurious `compare_magnitudes` drops on several parts with no change in
+        # any data. The transition is safe in one direction only, which is the
+        # right one: `found >= added` always, so every part's recorded count rises
+        # or holds, and `compare_magnitudes` only ever fires on a fall.
+        detail = f"{added} new of {len(found)} in-scope ids from {nbytes / 1e6:.0f}MB"
+        if not found:
+            # AN ARCHIVE THAT YIELDED NOTHING IS NOT A HEALTHY FEED PART, and
+            # until 2026-09-01 it recorded as `ok` with "0 ids".
+            #
+            # This is the third appearance of one bug in this file. `feed_osv`
+            # reads CVE ids from `aliases`, and that is the WRONG FIELD for an
+            # entire class of publisher. Measured 2026-09-01 across the five
+            # distro ecosystems with a dedicated feed here, in-scope CVE ids by
+            # field:
+            #
+            #                aliases   upstream   related
+            #   Red Hat            0      3,140         0
+            #   SUSE               0      6,833     6,833
+            #   Rocky Linux        0      2,120         3
+            #   AlmaLinux          0          0     2,116
+            #   Alpine             0        899         0
+            #
+            # ZERO through `aliases`, every one of them. `upstream` is a ratified
+            # OSV field (ossf/osv-schema#249, merged as PR #312) meaning an
+            # ASYMMETRIC reference: the CVE covers more than the distro record
+            # does, so `aliases`, which asserts equivalence, would be wrong for
+            # them to use. Canonical said in that thread they do not expect to
+            # move to `aliases`; SUSE and Red Hat agreed the field suits them.
+            # This is settled schema behaviour, not a quirk to wait out.
+            #
+            # It is why `feed_ubuntu_osv` reads `upstream` rather than being one
+            # line of config in the tuple below, and it is why FEEDS.md Tier 1's
+            # "+0 CNAs for every distro ecosystem" was an artefact: the adapter
+            # could not read a single id from any of them. Corrected measurement
+            # is in FEEDS.md under "MEASURED 2026-09-01"; the conclusion survives,
+            # so nothing here is merged on the strength of it.
+            #
+            # The guard, not the fix. Reading three fields buys 313 ids and 8 RBP
+            # candidates across eight ecosystems and 180 MB, which this project
+            # declines. What it must not do is decline SILENTLY, so a configured
+            # ecosystem that returns nothing is now loud, and the next one added
+            # cannot sit in the tuple reading zero and reporting health.
+            record_feed(f"osv:{eco}", FAILED,
+                        f"{nbytes / 1e6:.0f}MB read and no in-scope CVE id found; "
+                        "if this is a distro ecosystem its ids are in `upstream` "
+                        "or `related`, which this adapter does not read",
+                        rows=0)
+            print(f"  [osv:{eco}] FAILED: 0 in-scope ids from "
+                  f"{nbytes / 1e6:.0f}MB", file=sys.stderr)
+        else:
+            record_feed(f"osv:{eco}", True, detail, rows=len(found))
+            print(f"  [osv:{eco}] +{added} (of {len(found)} in scope)", file=sys.stderr)
     return out
 
 
