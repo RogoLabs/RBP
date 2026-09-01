@@ -65,6 +65,16 @@ def built(built_site):
     return built_site
 
 
+@pytest.fixture
+def built_launched(built_site_launched):
+    """The LAUNCHED build, where the dashboard is on the front door.
+
+    `built` is pre-launch, so `index.html` there is the holding page and carries
+    no panel at all. A panel assertion written against it passes vacuously.
+    """
+    return built_site_launched
+
+
 # --------------------------------------------------------------------------
 # contradictions between one page and another
 # --------------------------------------------------------------------------
@@ -243,6 +253,83 @@ def test_no_built_page_states_an_interval_as_a_completed_fact(built):
             assert phrase not in text, f"{page.name}: {phrase!r}"
 
 
+def test_no_page_offers_a_route_that_security_txt_denies(built, built_launched):
+    """F1 FROM docs/reviews/REVIEW-round9.md, and the reason it survived nine
+    rounds of review is that no single file was wrong.
+
+    The removal channel was retired on 2026-08-27. `security.txt` was rewritten
+    the same day and says so. The README grew a section titled "There is no
+    removal channel". What nobody re-read was the slide-over panel on the front
+    page, which went on describing "a request to remove a row", "the entire point
+    of having a correction route", "someone asking to be delisted" and "rows a
+    CNA had contested" until 2026-09-01.
+
+    Every one of those files was internally consistent. The contradiction only
+    existed BETWEEN them, on one origin, which is why this test reads the built
+    artefacts against each other rather than any one of them against a fixture.
+
+    Two directions, deliberately. If the channel is ever reinstated, the second
+    half fails and this test has to be rewritten as part of doing that: the guard
+    should not silently accept an unadvertised channel either.
+    """
+    wk = built / ".well-known" / "security.txt"
+    assert wk.exists(), "no security.txt was written; this test has lost its anchor"
+    txt = wk.read_text()
+
+    denies = "does not operate a removal channel" in txt
+    assert denies, (
+        "security.txt no longer denies a removal channel. If the channel is "
+        "back, the pages may promise it and this test needs rewriting rather "
+        "than deleting.")
+
+    # Phrases that INVITE a request. Not "removal" on its own: the panel and the
+    # README both legitimately explain that no channel exists, and a guard that
+    # banned the word would force the site to stop explaining itself.
+    invitations = [
+        "correction route",
+        "asking to be delisted",
+        "request to remove",
+        "requests to remove",
+        "had contested",
+        "email us",
+        "contact us to",
+    ]
+    # BOTH POSTURES. The panel this defect lived in renders on the dashboard,
+    # which is /overview.html pre-launch and / once launched, so a sweep over one
+    # build reads a different set of pages than the other.
+    seen = 0
+    for root in (built, built_launched):
+        for page in root.glob("*.html"):
+            text = _text(page).lower()
+            seen += 1
+            for phrase in invitations:
+                assert phrase not in text, (
+                    f"{page.name} offers {phrase!r} while security.txt on the "
+                    "same origin says the site does not operate a removal "
+                    "channel. A CNA who reads the page will look for an address "
+                    "that is not there.")
+    assert seen >= 8, f"only {seen} page(s) swept across both builds"
+
+
+def test_the_panel_states_the_archive_property_it_used_to_justify(built_launched):
+    """The paragraph F1 lived in was carrying a real promise, so the fix had to
+    keep it: a withheld row leaves the dated archive too.
+
+    Asserted because the obvious way to fix F1 is to delete the paragraph, and
+    that would take `stable_not_immutable` back to being a JSON key nobody has
+    been told about, which is the exact reason the prose was written.
+    """
+    page = _text(built_launched / "index.html").lower()
+    assert "stable, not immutable" in page, (
+        "the archive-mutability promise is gone from the front page")
+    assert "dated archive" in page or "archive" in page
+    # The mechanism, stated without inviting a request for it.
+    assert "withheld from every published artefact" in page or \
+           "withheld, it is withheld from every published artefact" in page, (
+        "the panel no longer says a withheld row leaves the archive, which is "
+        "the whole content of 'stable, not immutable'")
+
+
 # --------------------------------------------------------------------------
 # the framing assets must survive launch
 # --------------------------------------------------------------------------
@@ -413,6 +500,73 @@ def test_the_unfurl_and_the_heading_carry_the_same_count(built):
             f"{name} renders {sorted(count_keys)} while the h1 renders "
             f"{sorted(heading)}. A preview and the page it previews must not "
             "carry two different counts of the same thing.")
+
+
+def test_the_heading_count_is_never_rewritten_without_its_scope():
+    """THE HALF THE TEST ABOVE CANNOT SEE, and it shipped for that reason.
+
+    The test above reads the TEMPLATES and is satisfied: og:title, og:description
+    and the h1 all render `summary.total`. What the templates do not show is that
+    the h1's number is REWRITTEN in the browser on every render, and the page
+    opens on a 90-day window nobody asked for. So the served bytes agreed and the
+    rendered page did not: on 2026-09-01 the live front page painted **1,601**
+    under a preview that said **2,016**.
+
+    That is the same invariant the test above states in its own docstring, "a
+    reader must never be able to see two different counts of the same thing",
+    failing at runtime instead of at build.
+
+    The browser-backed version is
+    tests/render/test_filters.py::test_the_lead_names_the_total_whenever_the_default_window_hides_rows,
+    and it is stronger: it measures where the scope renders on a phone. It runs
+    on the COMMIT path only. This one gates the PUBLICATION, so the coupling is
+    asserted here as a source property too, weakly and cheaply: if the count is
+    written, the scope is written in the same function.
+    """
+    src = (TEMPLATES / "list.html").read_text()
+
+    # Every place the client rewrites the heading number.
+    writes = re.findall(r'\$\("n"\)\.textContent\s*=', src)
+    assert writes, (
+        "nothing in list.html writes $(\"n\").textContent any more. Either the "
+        "heading stopped being client-rendered, in which case this test and the "
+        "render sibling should go, or it is written under another name and both "
+        "are now blind.")
+
+    # The scope must be written in the same render pass. Asserted as proximity
+    # rather than as mere presence: a scope line written somewhere else in the
+    # file, on some other event, is how the two drift apart again.
+    m = re.search(r'\$\("n"\)\.textContent\s*=.*?\$\("leadwindow"\)', src, re.S)
+    assert m, (
+        'list.html rewrites the heading count without writing #leadwindow in '
+        "the same pass. The number would render with no statement of the window "
+        "it counts, which is what contradicted og:title on 2026-09-01.")
+    gap = m.group(0).count("\n")
+    assert gap < 25, (
+        f"the count and its scope are written {gap} lines apart. They were put "
+        "adjacent deliberately so they cannot drift; keep them that way or "
+        "delete this test with a reason.")
+
+    # And the total has to be what the scope names, not the filtered length.
+    #
+    # READ THE ASSIGNMENT, NOT THE SURROUNDING BLOCK. The first version of this
+    # matched the whole `if` and asserted "ROWS.length" appeared somewhere in it,
+    # which the line `hidden = ROWS.length - filtered.length` satisfies on its
+    # own: the mutation that made the scope name `filtered.length` passed. The
+    # assertion has to read the expression that becomes the sentence.
+    assign = re.search(r'scope\.textContent\s*=(.*?);', src, re.S)
+    assert assign, (
+        "nothing assigns scope.textContent; this test can no longer see what "
+        "the lead says")
+    expr = assign.group(1)
+    assert "ROWS.length" in expr, (
+        f"the lead scope is built from {expr.strip()[:120]!r}, which does not "
+        "name ROWS.length. The scope exists to give the reader the total the "
+        "link preview quoted.")
+    assert "filtered.length" not in expr, (
+        "the lead scope names the filtered count, which is the number the h1 "
+        "already shows. Restating it explains nothing and the reader still "
+        "cannot reconcile the page with the preview.")
 
     # And the figure that caused it must be absent from every template.
     #

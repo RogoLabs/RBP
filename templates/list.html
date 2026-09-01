@@ -28,6 +28,26 @@
       <b id="n" class="mono">{{ summary.total | commafy }}</b>
       <span>reserved, public, unpublished</span>
     </h1>
+    {# THE SCOPE OF THE NUMBER, BESIDE THE NUMBER.
+
+       The h1 is the count of what is SHOWN and moves as the reader filters,
+       which is the design and stays the design. The cost was measured on
+       2026-09-01: the page opens on a 90-day window nobody asked for, so first
+       paint read "1,601" while the og:title the reader had just clicked said
+       "2,016 reserved CVE IDs are public and unpublished". A 26% gap between the
+       claim that travelled and the page it opened.
+
+       `#viewnote` already said so, and on a 375x812 phone it sits at y=1213
+       against a 812px fold: a screen and a half below the number it qualifies.
+       The reader who screenshots the hero never scrolls that far.
+
+       So the scope is stated here, in the lead, and `#viewnote` keeps the ACTION
+       ("Show All") above the rows where the rows are. One statement each rather
+       than the same sentence twice.
+
+       Empty and hidden when nothing is hidden, so an unfiltered page carries no
+       qualifier it does not need. #}
+    <p class="lead-window" id="leadwindow" hidden></p>
     {# THE FLOOR, BACK ABOVE THE ROWS. The standing hedge was removed on
        2026-08-27 and NEXT.md records the cost: a reader who copies the rows
        carries them with no qualification. This is the same claim in the same
@@ -907,6 +927,20 @@
     var slice = filtered.slice(0, shown);
     $("n").textContent = num(filtered.length);
     $("n").classList.toggle("dim", filtered.length === 0);
+
+    // THE SCOPE, WRITTEN WHERE THE COUNT IS WRITTEN. Adjacent on purpose: the
+    // defect this repairs was a number with no scope beside it, and putting the
+    // two assignments one line apart is what stops them drifting again.
+    var scope = $("leadwindow"), hiddenCount = ROWS.length - filtered.length;
+    if (hiddenCount > 0) {
+      scope.textContent = (els.age.value === DEFAULT_AGE && !els.q.value.trim()
+                           && !els.src.value)
+        ? "The last 90 days, of " + num(ROWS.length) + " in total."
+        : "Filtered, from " + num(ROWS.length) + " in total.";
+      scope.hidden = false;
+    } else {
+      scope.textContent = ""; scope.hidden = true;
+    }
 
     renderSources();
     renderDist(filtered);

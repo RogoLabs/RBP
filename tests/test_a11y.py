@@ -276,6 +276,43 @@ def test_no_template_has_a_malformed_table_tag():
                 f"{tpl.name}: {opens} <{tag}> vs {closes} </{tag}>")
 
 
+def test_no_built_page_repeats_a_heading(built_site, built_site_launched):
+    """Two headings with the same text on one page is a copy-paste artefact.
+
+    `_panel.html` carried the literal line `<h2>The data</h2>  <h2>The data</h2>`
+    and shipped it, so the live front page rendered "The data" twice in a row
+    above one paragraph. No test looked: tests/test_a11y.py counts occurrences of
+    the h1 tag to catch a SECOND h1 being added, and nothing anywhere counted h2s
+    at all.
+
+    Asserted over both postures because the panel renders on the dashboard, which
+    is /overview.html pre-launch and / once launched.
+
+    Repeated heading text is also a real navigation defect and not only untidy: a
+    screen-reader user listing the headings on the page hears the same label twice
+    with no way to tell which section is which.
+    """
+    import collections
+    import html as _html
+    seen_pages = 0
+    for out in (built_site, built_site_launched):
+        for page in sorted(out.glob("*.html")):
+            body = re.sub(r"<script.*?</script>", "", page.read_text(), flags=re.S)
+            texts = [re.sub(r"\s+", " ",
+                            _html.unescape(re.sub(r"<[^>]+>", "", m))).strip()
+                     for m in re.findall(r"<h[1-6][^>]*>(.*?)</h[1-6]>", body, re.S)]
+            texts = [t for t in texts if t]
+            seen_pages += 1
+            dupes = [t for t, n in collections.Counter(texts).items() if n > 1]
+            assert not dupes, (
+                f"{page.name} renders {len(dupes)} repeated heading(s): {dupes}. "
+                "Two headings with one label give a screen reader no way to tell "
+                "the sections apart.")
+    assert seen_pages >= 8, (
+        f"only {seen_pages} page(s) checked across both builds; this test is "
+        "not reading the site it is about")
+
+
 def test_the_front_page_makes_its_two_qualifications_somewhere_reachable(built_site,
                                                                            built_site_launched):
     """INVERTED 2026-08-27. This asserted the hedge was BEFORE the rows.
