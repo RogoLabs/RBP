@@ -794,8 +794,37 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > which is how this sat unseen, so a configured ecosystem yielding nothing in scope is
 > now `FAILED` with the field named in the detail. `rows=` also moves from `added` to
 > the ids the archive *held*: `added` is order-dependent because `seen` is shared across
-> the loop, and `osv:Pub` recorded **+1** on the 2026-08-31 baseline for that reason
-> alone, one id from tripping any guard keyed on it. `tests/test_osv_fields.py`.
+> the loop and it understates every ecosystem after the first. `added` from the
+> 2026-08-31 baseline against `found` re-measured 2026-09-01: SwiftURL 16 credited of
+> 22 held, Hex 186 of 211, crates.io 366 of 384, GitHub Actions 20 of 23.
+> `tests/test_osv_fields.py`.
+>
+> ### CORRECTION, same day. The `osv:Pub` example was wrong, and it cost an ecosystem.
+>
+> The first version of this section said `osv:Pub` recorded **+1** because earlier
+> ecosystems had already supplied its ids, offered as the proof that `added` is
+> order-dependent. **Pub holds 1 in-scope id.** 13 records in the whole archive, one
+> aliasing an in-window CVE, `added` and `found` in agreement. The claim was wrong in
+> the direction that flattered the change, which is the direction to distrust.
+>
+> The property is still real and the numbers above are the honest version of it. But
+> re-measuring to fix a sentence turned up what the sentence had been hiding.
+>
+> **The new guard would have degraded the whole site on Pub's account.**
+> `health_summary` collects FAILED entries without filtering on the colon, so a failed
+> sub-fetch reaches `failures`, and `cli.degraded_state` marks the run degraded from
+> that list. Pub's single id ageing out of the window puts *"This run is incomplete"*
+> across every page, on behalf of a 13-record ecosystem. That is the furniture problem
+> `record_feed`'s four states exist to avoid, arrived at from a third direction.
+>
+> **So `Pub` is un-configured, 2026-09-01**, which is the rule this file already
+> applied to VSCode, CRAN, GSD and UVI at zero, applied one id later. Between losing
+> 1 id of 45,895 and arming that banner, the id loses. Reversible: wanting Pub back
+> means the guard needs a shape that can tell "too small to matter" from "could not be
+> read", which this one deliberately cannot.
+>
+> `test_a_failed_ecosystem_part_degrades_the_whole_run` pins the mechanism, because the
+> claim is about a function two modules from the guard.
 
 **Tier 0 and Tier 1 together, measured through the adapters:** **+20 CNAs**, taking the
 roster share from 21.7% to about 25.4% and the reachable share from 31.5% to about 37%.

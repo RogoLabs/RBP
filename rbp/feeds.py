@@ -1814,8 +1814,28 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
 # returned 0 in-scope ids for 2025-2026 on 2026-08-27, at 41KB combined. Recorded
 # here rather than merged-and-empty so the next person does not re-probe them,
 # and dated so revisiting is a decision rather than an oversight.
+#
+# `Pub` REMOVED 2026-09-01, and it is the same policy applied one id later.
+#
+# Pub holds **1** in-scope id: 13 records in the whole archive, one of them
+# aliasing an in-window CVE. It was configured when the rule above was written and
+# it sits one id from being the case that rule already decided.
+#
+# What forced the decision is the guard added below on the same day. A configured
+# ecosystem yielding nothing in scope now records FAILED, and `health_summary`
+# collects FAILED sub-entries into `failures` without filtering on the colon, so
+# `cli.degraded_state` would mark the whole run degraded. Pub's single id ageing
+# out of the window is therefore one id away from putting "This run is incomplete"
+# across every page of the site, on behalf of a 13-record ecosystem.
+#
+# That is precisely the furniture problem `record_feed`'s four states exist to
+# avoid, reached from a new direction: a warning that fires for a non-reason
+# trains a reader to ignore the banner that matters. Between losing 1 id of 45,895
+# and arming that, the id loses. Recorded, dated, and reversible: if Pub is ever
+# wanted back, the guard needs a shape that can tell "too small to matter" from
+# "could not be read", which this one deliberately cannot.
 def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
-                                "Maven", "Packagist", "NuGet", "Pub", "Hex",
+                                "Maven", "Packagist", "NuGet", "Hex",
                                 "Android",
                                 "GitHub Actions", "SwiftURL", "Hackage", "opam")):
     """OSV.dev bulk per-ecosystem dumps: language-ecosystem breadth. Each record's
@@ -1885,17 +1905,27 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
         #
         # `seen` is shared across the whole ecosystem loop, so `added` is what an
         # ecosystem contributed THAT NO EARLIER ONE HAD: it is order-dependent and
-        # it understates every ecosystem after the first. Measured on the
-        # 2026-08-31 baseline, `osv:Pub` recorded **+1**, not because Pub holds one
-        # in-scope id but because npm, PyPI and Maven had already supplied almost
-        # all of them.
+        # it understates every ecosystem after the first. Measured, `added` from the
+        # 2026-08-31 baseline against `found` re-measured 2026-09-01:
         #
-        # So `added` is one id away from zero for a healthy ecosystem, and a guard
-        # keyed on it would fire on Pub every run while staying silent on the real
-        # failure. `found` is the ids this ecosystem's own archive contained,
-        # deduped within the ecosystem and independent of loop order, which is
-        # both the honest thing to compare and the thing that goes to zero when
-        # something is actually wrong.
+        #   SwiftURL   16 credited of 22 held      Hex   186 of 211
+        #   crates.io  366 of 384                  NuGet 376 of 386
+        #   RubyGems   206 of 219                  GitHub Actions 20 of 23
+        #
+        # (A day apart, so a few of those ids are drift rather than dedup. SwiftURL
+        # at 27% understated in a 62-record archive is not drift.)
+        #
+        # `found` is the ids this ecosystem's own archive contained, deduped within
+        # the ecosystem and independent of loop order, which is both the honest
+        # thing to compare and the thing that goes to zero when something is
+        # actually wrong.
+        #
+        # A FIRST VERSION OF THIS COMMENT SAID `osv:Pub` RECORDED +1 BECAUSE
+        # EARLIER ECOSYSTEMS HAD SUPPLIED ITS IDS. That was wrong, and it was
+        # wrong in the direction that flatters this change. Pub holds **1**
+        # in-scope id, measured directly: 13 records in the whole archive, one of
+        # them aliasing an in-window CVE. `added` and `found` agree there. See the
+        # tuple below, where that measurement had a consequence.
         #
         # `rows=` MOVES FROM `added` TO `found` for the same reason: an
         # order-dependent row count means reordering the tuple below would fire
