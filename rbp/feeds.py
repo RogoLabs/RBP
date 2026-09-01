@@ -970,6 +970,26 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S,
 UBUNTU_RESOLVE_BUDGET_S = 600
 UBUNTU_RESOLVE_WORKERS = 4
 
+# HOW MANY LOOKUPS HAVE TO FAIL BEFORE "ALL OF THEM" MEANS UBUNTU IS DOWN,
+# expressed in waves of `workers` rather than as a number, because the number
+# that matters is how many times the endpoint was INDEPENDENTLY observed.
+#
+# `resolve_dates_ubuntu` runs `workers` lookups concurrently. At a population of
+# `workers` or fewer, every request is in flight at the same instant, so they
+# share fate: "all 3 failed" is one observation of the endpoint during one bad
+# second, not three. Failures on this host are bursty rather than independent,
+# which the caller's own comment says outright, so a temporally concentrated
+# sample is exactly the one that cannot tell a blip from an outage.
+#
+# THIS WAS LIVE ON 2026-09-01, three days after the branch was written against a
+# population of 82. `ubuntu-osv` drained the undated backlog to 3, all 3 lookups
+# failed, and the pass reported FAILED: the loudest state this module has,
+# reached on one second of evidence.
+#
+# Three waves, so the endpoint is observed over at least three separate round
+# trips before the pass is willing to call it down.
+UBUNTU_DATES_OUTAGE_WAVES = 3
+
 
 def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
                          workers=UBUNTU_RESOLVE_WORKERS, timeout=30):
@@ -1109,7 +1129,22 @@ def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
     # is no self-healing to appeal to, the pass learned nothing, and reporting
     # `ok, dated 0` would be the silent shrink wearing the excuse above as a
     # disguise. That one is loud.
-    if ids and errors == len(ids):
+    #
+    # AND IT NEEDS ENOUGH EVIDENCE TO SAY SO. See `UBUNTU_DATES_OUTAGE_WAVES`:
+    # under one wave of workers every request shares an instant, so "all failed"
+    # is one observation and not a verdict. Below the floor this falls through to
+    # the self-healing case above, which is the honest reading of it: the rows
+    # stay `undated` in `held_back.json` and the next run asks again, which is
+    # the same outcome a partial failure at a large population already gets, and
+    # `detail` still names the count out loud either way.
+    #
+    # NOTHING IS LOST BY BEING CAUTIOUS HERE, and this is the part that makes the
+    # floor safe rather than merely quieter. This pass is not the outage
+    # detector for this host. `feed_ubuntu` walks ubuntu.com on every single run
+    # and records its own health, so a real Ubuntu outage is caught there, by a
+    # feed whose rows ARE coverage, whatever this resolver concludes.
+    outage_floor = max(1, workers) * UBUNTU_DATES_OUTAGE_WAVES
+    if ids and errors == len(ids) and len(ids) >= outage_floor:
         status = FAILED
     elif unasked:
         status = CAPPED

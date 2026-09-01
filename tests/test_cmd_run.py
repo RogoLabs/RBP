@@ -312,3 +312,35 @@ def test_the_run_records_how_recent_each_feed_is(run):
             f"{name} publishes no dated-row count, so a feed that cannot be "
             "checked for freshness is indistinguishable from one that was not "
             "looked at")
+
+
+def test_health_recorded_after_the_fetches_still_reaches_the_degraded_flag(
+        run, monkeypatch):
+    """THE ORDERING, pinned by making the two reads disagree.
+
+    `health_summary` was read once, up beside the fetches, and that tuple was
+    carried down into both the published `failures` list and `degraded_state`.
+    But `resolve_dates_ubuntu` does not run until the backlog exists, hundreds
+    of lines later, so `ubuntu:dates` was recorded after the snapshot that
+    decides whether the run is degraded had already been taken.
+
+    Live on 2026-09-01: the artefact published `ubuntu:dates` with status
+    `failed` beside `degraded: false`, a contradiction the flag exists to make
+    impossible. A single-read implementation returns the clean first tuple here
+    and the run reports itself healthy.
+    """
+    reads = []
+
+    def _summary():
+        reads.append(1)
+        if len(reads) == 1:
+            return ([], [], 3, [])          # nothing has failed yet
+        return (["ubuntu:dates: 12 lookup(s) failed"], [], 3, [])
+
+    monkeypatch.setattr(feeds, "health_summary", _summary)
+    stats = json.loads((run() / "summary.json").read_text())
+    assert len(reads) >= 2, \
+        "health is read once, before the late passes have recorded anything"
+    assert stats["degraded"] is True, \
+        "a feed that failed after the early read did not degrade the run"
+    assert stats["feeds"]["failures"] == ["ubuntu:dates: 12 lookup(s) failed"]

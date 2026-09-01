@@ -607,6 +607,22 @@ def cmd_run(args):
     # different objects, and only one of them would carry the contribution
     # counts. Same class as every other two-writers-one-population bug in here.
     feed_detail = feeds.merge_contribution(feeds.health_detail(), reportable)
+    # RE-READ, BECAUSE THE FIRST READ WAS TAKEN BEFORE HALF THE RUN HAPPENED.
+    #
+    # `health_summary` was called once, up beside the fetches, and its result was
+    # carried all the way down here into the published `failures` list and into
+    # `degraded_state`. But `resolve_dates_ubuntu` does not run until after the
+    # backlog exists, several hundred lines later, so `ubuntu:dates` was recorded
+    # into FEED_HEALTH after the snapshot that decides whether the run is
+    # degraded had already been taken. Its health reached `detail`, which is
+    # rebuilt on the line above, and reached nothing else.
+    #
+    # Live on 2026-09-01: the artefact published `ubuntu:dates` with status
+    # `failed` beside `degraded: false`, which is a contradiction the flag exists
+    # to make impossible. Anything recorded after the early call was invisible to
+    # the flag, and the early call cannot simply move down because the DEGRADED
+    # line it prints belongs with the fetches in the log.
+    failures, truncated, attempts, capped = feeds.health_summary()
     stats["feeds"] = {"requested": sources, "failures": failures, "attempts": attempts,
                       "detail": feed_detail,
                       "truncated": [k for k, v in feed_detail.items()
