@@ -5172,9 +5172,6 @@
   "CVE-2026-64953": {
    "first_public": "2026-08-10"
   },
-  "CVE-2026-19032": {
-   "first_public": "2026-08-16"
-  },
   "CVE-2026-68497": {
    "first_public": "2026-08-16"
   },
@@ -7708,6 +7705,15 @@
    "first_public": "2026-06-21",
    "published": "2026-08-31",
    "days_to_publish": 71,
+   "closed_on": "2026-09-01"
+  },
+  {
+   "cve_id": "CVE-2026-19032",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-16",
+   "published": "2026-09-01",
+   "days_to_publish": 16,
    "closed_on": "2026-09-01"
   }
  ]
