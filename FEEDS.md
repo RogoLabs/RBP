@@ -650,6 +650,57 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > feeds run until it is answered.** Do not delete `feed_ubuntu` on the strength of
 > the table above.
 >
+> ### CANONICAL ANSWERED THE OPEN QUESTION, 2026-09-01, and it moved two numbers.
+>
+> The reply asked Shafayat whether the non-overlap was scope or a bug here. The answer:
+>
+> > OSV data doesn't contain anything for EOL Ubuntu releases. Only recently OSV folks
+> > added a way to properly do EOL [...] but even with that we wouldn't start publishing
+> > data for already EOL releases.
+>
+> So the gap is **deliberate scope**, and it will not close. ESM releases *are* in the
+> data (`Ubuntu:Pro:14.04:LTS` and `Ubuntu:Pro:16.04:LTS` both appear), so "EOL" here
+> means past ESM as well.
+>
+> **THE 31.9% WAS INFLATED AND THE FIGURE QUOTED TO THEM WAS WRONG.** It compared a
+> tracker fetch against a tarball snapshot taken 14 hours earlier, so it charged
+> snapshot lag to scope. On the 2026-08-31 evening baseline the same subtraction gives
+> **1,544 of 3,968, or 38.9%**, and the number moved purely because the tracker fetch
+> got newer while the tarball did not. Neither figure separates the two causes. **Do not
+> quote either as a scope measurement.**
+>
+> Verifying the split needs per-release status for a sample of the gap, and that needs
+> `cves.json?q=`, which returned 503 to 25 of 30 queries and timed out on the other 5.
+> **The one record that did come back is not an EOL case:** `CVE-2025-56798`, package
+> `lime`, reads `jammy DNE, noble needs-triage, resolute needs-triage`. Noble is 24.04
+> LTS, fully supported, and still absent from OSV. One sample refutes nothing, but it
+> suggests untriaged records are a second component alongside EOL. **Unresolved, and
+> blocked on the same endpoint as everything else here.**
+>
+> ### AND THE TARBALL IS THE STALER OF CANONICAL'S TWO OSV SOURCES.
+>
+> Measured 2026-09-01 12:09Z. `osv-all.tar.xz` was stamped **2026-08-31 05:41Z**, so
+> **30.5 hours old**, against docs that describe it as "updated whenever changes to the
+> vulnerability are made available". The `canonical/ubuntu-security-notices` git repo
+> ran `CI Convert CVE to OSV` at **09:39Z the same morning**, and does so roughly every
+> five to six hours.
+>
+> What the lag holds, measured by diffing `osv/cve` in that repo since the tarball's
+> timestamp: **609 files changed, 301 of them new records, 588 in the 2025-2026 window.
+> 293 new in-window ids, 202 of them unpublished or absent from the corpus.**
+>
+> **And zero of the 293 are unseen by the other thirteen feeds.** So the lag costs no
+> rows today, only sightings, which is the same answer the tracker's own 31.9% got and
+> for the same reason: this feed set is dense enough that no single Ubuntu source is
+> uniquely load-bearing for rows. It is still worth asking Canonical to regenerate the
+> tarball on the cadence the conversion already runs at, because "costs no rows" is a
+> property of the other thirteen feeds rather than of this one, and the newest records
+> are where RBP rows live.
+>
+> **Reading the git repo's delta instead of, or beside, the tarball is the obvious
+> follow-up and is NOT scoped here.** It needs its own measurement: 3 commits and a
+> file list is a handful of API calls, against 42 MB and 35s for the whole tarball.
+>
 > **And the tracker carries a second thing the feed table does not show.**
 > `resolve_dates_ubuntu` dates held-back rows by name against `cves.json?q=`, which
 > is the tracker's endpoint and not Canonical's tarball. Measured 2026-08-31, 1,215
@@ -665,6 +716,86 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > `ubuntu.com/security/<id>` rather than to the `osv.dev` record the adapter actually
 > parsed: this feed can hold a record before osv.dev does, and the newest rows are
 > exactly the RBP rows.
+
+> ### MEASURED 2026-09-01. The distro `+0` above was an artefact. The conclusion survives.
+>
+> Shafayat of the Ubuntu Security Team, replying to the `ubuntu-osv` merge, pointed at
+> **[ossf/osv-schema#249](https://github.com/ossf/osv-schema/issues/249)**. Reading it
+> invalidates the third row of the table above and vindicates its bottom line, which is
+> an uncomfortable combination and worth being precise about.
+>
+> **`upstream` is a ratified OSV field, not a Canonical quirk.** Issue 249 is closed,
+> merged as PR #312. It exists for an **asymmetric** reference: the CVE covers more than
+> the distro record does, so `aliases`, which asserts that two records affect a
+> component identically, would be *wrong* for a distro to use. Red Hat and SUSE both
+> said in the thread that the field suits them. Canonical said plainly they do not
+> expect to adopt `aliases`. This is settled behaviour to read, not a gap to wait out.
+>
+> **`feed_osv` reads `aliases`. Measured across the five distro ecosystems that also
+> have a dedicated feed here, in-scope CVE ids by field:**
+>
+> | ecosystem | via `aliases` | via `upstream` | via `related` |
+> |---|---:|---:|---:|
+> | Red Hat | **0** | 3,140 | 0 |
+> | SUSE | **0** | 6,833 | 6,833 |
+> | Rocky Linux | **0** | 2,120 | 3 |
+> | AlmaLinux | **0** | 0 | 2,116 |
+> | Alpine | **0** | 899 | 0 |
+>
+> **Zero, every one of them.** So "every distro ecosystem contributes ZERO new CNAs,
+> because the distros are exactly what the other nine feeds already read" was measured
+> through an adapter that could not read a single CVE id out of any of them. The stated
+> reason was never tested. This is the GIT trap for the **third** time in this document.
+>
+> **So it was measured properly, on the eight ecosystems with no dedicated feed here,
+> reading `aliases` + `upstream` + `related` against the 14-feed baseline:**
+>
+> | ecosystem | records | in-scope CVEs | via `aliases` | not in baseline | RBP candidates |
+> |---|---:|---:|---:|---:|---:|
+> | Chainguard | 43,737 | 6,221 | 0 | 27 | 32 |
+> | Wolfi | 24,005 | 5,008 | 0 | 7 | 24 |
+> | openEuler | 8,258 | 4,792 | 0 | 8 | 40 |
+> | Mageia | 6,133 | 3,898 | 0 | 11 | 30 |
+> | Azure Linux | 15,458 | 4,688 | 0 | 25 | 52 |
+> | Bitnami | 9,110 | 2,334 | **2,334** | 210 | 0 |
+> | MinimOS | 132,381 | 7,185 | 0 | 114 | 24 |
+> | Root | 19,596 | 6,270 | 0 | 1 | 6 |
+>
+> **Union: 313 ids not in the baseline, of which 8 are unpublished or absent from the
+> corpus.** For roughly 180 MB a run. The conclusion the broken measurement reached is
+> the conclusion a correct one reaches: **not merged.** The distros really are what the
+> other feeds already read, and now that is known rather than assumed.
+>
+> Three things fell out of doing it properly.
+>
+> **`Bitnami` is the exception that proves the field is the issue.** It is the one
+> ecosystem in the table using `aliases`, so it is fully readable today, and it
+> contributes 210 new ids and **zero** RBP candidates. A pure publication mirror. That
+> is a real measurement of a real feed rather than an artefact, and it is why Bitnami
+> should stay unmerged for a different reason from the other seven.
+>
+> **`GIT`'s `+0` is NOT an aliases artefact and the correction below stands.** Measured
+> the same day: 525 in-scope ids via `aliases`, **0 via `upstream`, 0 via `related`**.
+> The 31,366 the full-text probe found are CVE ids sitting in prose, not in any
+> structured reference field. Nothing to recover.
+>
+> **`Root` publishes a synthetic id.** `ROOT-APP-NPM-CVE-2026-0000` carries
+> `CVE-2026-0000` in `upstream`, summarised "CVE-2026-0000 in
+> react-leaflet-heatmap-layer - Patched by Root". Sequence 0000 is never assigned, and
+> it matches `^CVE-\d{4}-\d{4,}$`, so the shape guard in `verify` would pass it. What
+> stops it is `classify`: the reservation lookup 404s and the id resolves `NOT_FOUND`,
+> not `RESERVED`, so it can never become a row. **The guard works.** Worth recording
+> because a fabricated id that looks exactly like an RBP is the single worst thing this
+> site could publish, and the only thing between it and a page is one lookup.
+>
+> **What changed in the code is a guard, not the fix.** `feed_osv` still reads
+> `aliases` only, because 313 ids for 180 MB is a decline by this document's own
+> bandwidth standard. But it recorded `ok, 0 ids` for an archive it could not read,
+> which is how this sat unseen, so a configured ecosystem yielding nothing in scope is
+> now `FAILED` with the field named in the detail. `rows=` also moves from `added` to
+> the ids the archive *held*: `added` is order-dependent because `seen` is shared across
+> the loop, and `osv:Pub` recorded **+1** on the 2026-08-31 baseline for that reason
+> alone, one id from tripping any guard keyed on it. `tests/test_osv_fields.py`.
 
 **Tier 0 and Tier 1 together, measured through the adapters:** **+20 CNAs**, taking the
 roster share from 21.7% to about 25.4% and the reachable share from 31.5% to about 37%.

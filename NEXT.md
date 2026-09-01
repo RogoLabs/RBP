@@ -137,6 +137,20 @@ reason, but the 80 is an outage rather than variation, so do not read that swing
 as a shrink baseline. `ubuntu-osv` beside it has three fetches at 15,500 and a
 0.0% swing.
 
+**c. NEW, from Canonical's second reply, 2026-09-01.** Two things, both in FEEDS.md
+under "CANONICAL ANSWERED THE OPEN QUESTION". The 31.9% non-overlap figure quoted to
+them was inflated: it charged tarball snapshot lag to scope, and the same subtraction
+now gives 38.9% purely because the tracker fetch got newer. **Neither number is a
+scope measurement; do not quote either.** Separating scope from lag needs per-release
+status for a sample of the gap, which needs `cves.json?q=`, which was 503 on 25 of 30
+queries. Blocked on the same endpoint as everything else here.
+
+Second: `osv-all.tar.xz` was **30.5 hours stale** when checked, while
+`canonical/ubuntu-security-notices` runs its OSV conversion every five to six hours.
+The lag window held 293 new in-window ids and 202 RBP candidates, and **zero** of them
+unseen by the other thirteen feeds. So it costs sightings, not rows. Reading the git
+repo's delta beside the tarball is the obvious follow-up and is unscoped.
+
 **b. STILL OPEN. Run `python -m rbp.feedlab audit`, which is now cheap because the
 baseline is fresh, and answer whether `feed_ubuntu` is still worth its cost.**
 That cost is not one number: 1,070s on 2026-08-27 and 93.1s on 2026-08-31, for
