@@ -179,3 +179,52 @@ def test_the_provenance_field_is_published_and_documented():
     kind, absent, meaning = schema.FIELDS["public_date_origin"]
     assert absent == "never absent", "every row must say how it was dated"
     assert "lookup" in meaning and "feed" in meaning and "none" in meaning
+
+
+# --------------------------------------------------------------------------
+# what this pass's row count means
+#
+# 2026-08-31: `ubuntu-osv` landed, carried dates for most of the held-back rows
+# as ordinary feed dates, and the undated population this pass works over fell
+# from 82 to 3. It dated 0 of the 3, recorded `ok` with `rows: 0`, and both
+# shrink guards read that as a source going dark. The deploy stopped.
+# --------------------------------------------------------------------------
+
+def test_the_pass_records_itself_as_work_done_not_coverage(monkeypatch):
+    """`rows` here counts dates resolved, not ids this source evidences, so the
+    high-water comparison the shrink guards run is unsound on it in the same way
+    `verify` already documents for one other transition.
+
+    The asymmetry that makes it safe to exempt: this pass can only fail to
+    IMPROVE a row, never remove one. An id it does not date stays in
+    `held_back.json` as `undated`, exactly where it already was, and the next
+    run asks again."""
+    monkeypatch.setattr(feeds, "_get", _serve({
+        "CVE-2026-44235": [{"id": "CVE-2026-44235", "published": "2026-06-11T00:00:00"}],
+    }))
+    feeds.resolve_dates_ubuntu(["CVE-2026-44235"])
+    assert feeds.FEED_HEALTH["ubuntu:dates"]["counts_coverage"] is False
+
+
+def test_a_population_drained_to_nothing_still_records_the_mark():
+    """The end state, and the one that would otherwise have failed every future
+    build: once `ubuntu-osv` dates every held-back row there is nothing left to
+    ask for, and this returns early."""
+    assert feeds.resolve_dates_ubuntu([]) == {}
+    h = feeds.FEED_HEALTH["ubuntu:dates"]
+    assert h["rows"] == 0 and h["status"] == feeds.OK
+    assert h["counts_coverage"] is False
+
+
+def test_ubuntu_being_down_is_still_loud(monkeypatch):
+    """The mark turns off a comparison, not the pass's own judgement. If every
+    lookup fails there is no self-healing to appeal to and the run learned
+    nothing, which `verify` accounts for through the status instead."""
+    monkeypatch.setattr(feeds, "_get", _serve({
+        "CVE-2026-1": RuntimeError("HTTP Error 503"),
+        "CVE-2026-2": RuntimeError("HTTP Error 503"),
+    }))
+    feeds.resolve_dates_ubuntu(["CVE-2026-1", "CVE-2026-2"])
+    h = feeds.FEED_HEALTH["ubuntu:dates"]
+    assert h["status"] == feeds.FAILED
+    assert h["counts_coverage"] is False

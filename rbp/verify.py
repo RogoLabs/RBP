@@ -162,6 +162,31 @@ def _feed_status(summary):
     return out
 
 
+def _feed_marks(summary):
+    """{feed or provider: its raw health record}, flattened like `_feed_rows`.
+
+    For the two marks `feeds.record_feed` writes to qualify a zero:
+    `counts_coverage`, which says the entry's rows are work done rather than ids
+    evidenced, and `accounted`, which says the run already knows why this one is
+    zero.
+
+    NOT inherited from the parent, unlike status. A status is inherited because
+    a child that returned nothing because the whole fetch failed is explained by
+    that failure. These two are claims about one specific entry -- what its rows
+    measure, and why THIS run's zero is explained -- and a child that makes
+    neither claim is making neither.
+    """
+    out = {}
+    for name, h in ((summary.get("feeds") or {}).get("detail") or {}).items():
+        if not isinstance(h, dict):
+            continue
+        out[name] = h
+        for child, c in (h.get("parts") or {}).items():
+            if isinstance(c, dict):
+                out[f"{name}:{child}"] = c
+    return out
+
+
 def _artefact(site_dir):
     """The published rbp.json as a dict, or {} if it is a bare list of rows."""
     p = os.path.join(site_dir, "data", "rbp.json")
@@ -260,10 +285,21 @@ def review(site_dir, snapshots_dir=None):
         except (OSError, ValueError):
             continue
     now_status = _feed_status(now)
+    now_marks = _feed_marks(now)
     accounted = []
     for name, high in sorted(best.items()):
         cur = now_f.get(name)
         if not isinstance(high, int) or high <= 0:
+            continue
+        mark = now_marks.get(name) or {}
+        # NOT COVERAGE, NOT COMPARED. See `feeds.record_feed`. A resolver's rows
+        # count work done over a population another feed is draining, so its fall
+        # to zero is that drain working, and it can only ever fail to IMPROVE a
+        # row rather than remove one. Skipped outright rather than accounted for:
+        # accounting would demand the artefact publish `degraded: true`, and this
+        # is not a degradation in either direction. `ubuntu:dates` is the case,
+        # and it is a permanent state, not a bad afternoon.
+        if mark.get("counts_coverage") is False:
             continue
         if cur == 0:
             finding = (f"{name} returned {high:,} ids at its best and 0 now; a source "
@@ -277,8 +313,19 @@ def review(site_dir, snapshots_dir=None):
         # DID THE RUN ALREADY SAY WHY? A shortfall behind a recorded failure or
         # truncation is weather the run has accounted for; one behind a status of
         # `ok` is the silent shrink, and that still fails.
+        #
+        # An explicit `accounted` mark says the same thing in the cases where the
+        # status word cannot, because it is carrying a different job. An
+        # unreachable CSAF provider is recorded CAPPED so that Cisco's every-run
+        # 403 does not make `degraded` permanently true, which leaves it looking
+        # from here exactly like a configured page cap, which must never excuse a
+        # shortfall. The mark separates the two: a provider we could not reach
+        # explains its own zero, a cap we chose does not.
         status, why = now_status.get(name) or (None, None)
-        if status in EXPLAINS_A_SHORTFALL:
+        if mark.get("accounted"):
+            accounted.append(name)
+            notes.append(f"{finding} -- {mark['accounted']}")
+        elif status in EXPLAINS_A_SHORTFALL:
             accounted.append(name)
             notes.append(f"{finding} -- {status}: {why or 'no detail recorded'}")
         else:
