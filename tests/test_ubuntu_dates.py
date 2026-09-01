@@ -82,14 +82,26 @@ def test_a_partial_failure_is_counted_out_loud_but_does_not_degrade_the_run(monk
     assert "1 lookup(s) failed" in h["detail"], "and it is never invisible"
 
 
+def _all_failing(n):
+    """`n` ids whose every lookup raises, and the table that serves them."""
+    ids = [f"CVE-2026-{i:04d}" for i in range(n)]
+    return ids, _serve({i: RuntimeError("HTTP 503") for i in ids})
+
+
+def _floor(workers=feeds.UBUNTU_RESOLVE_WORKERS):
+    return max(1, workers) * feeds.UBUNTU_DATES_OUTAGE_WAVES
+
+
 def test_ubuntu_being_down_is_loud(monkeypatch):
     """The exception to the rule above, and the reason it is safe. With every
     lookup failing there is no self-healing to appeal to and the pass learned
-    nothing, so `ok, dated 0` would be a silent shrink wearing that excuse."""
-    monkeypatch.setattr(feeds, "_get", _serve({
-        "CVE-1": RuntimeError("HTTP 503"), "CVE-2": RuntimeError("HTTP 503"),
-    }))
-    assert feeds.resolve_dates_ubuntu(["CVE-1", "CVE-2"]) == {}
+    nothing, so `ok, dated 0` would be a silent shrink wearing that excuse.
+
+    Sized at the outage floor: below it, "every lookup failed" is one instant of
+    the endpoint rather than a verdict on it. See UBUNTU_DATES_OUTAGE_WAVES."""
+    ids, serve = _all_failing(_floor())
+    monkeypatch.setattr(feeds, "_get", serve)
+    assert feeds.resolve_dates_ubuntu(ids) == {}
     h = feeds.FEED_HEALTH["ubuntu:dates"]
     assert h["status"] == feeds.FAILED and h["ok"] is False
 
@@ -100,7 +112,11 @@ def test_a_404_is_an_error_not_an_undated_row(monkeypatch):
     'no date' would turn a retired path into a silently undated backlog."""
     monkeypatch.setattr(feeds, "_get", _serve({"CVE-1": "gone"}))
     assert feeds.resolve_dates_ubuntu(["CVE-1"]) == {}
-    assert feeds.FEED_HEALTH["ubuntu:dates"]["status"] == feeds.FAILED
+    # Asserted on the error COUNT rather than on the status, which is the claim
+    # this test is actually making. Read as "no date" the pass would report
+    # `dated 0 of 1` with no failure clause at all; the clause is the whole
+    # difference, and unlike the status it does not move with the outage floor.
+    assert "1 lookup(s) failed" in feeds.FEED_HEALTH["ubuntu:dates"]["detail"]
 
 
 def test_a_spent_budget_is_capped_not_truncated(monkeypatch):
@@ -134,10 +150,11 @@ def test_no_undated_rows_is_a_healthy_pass_that_asks_nothing(monkeypatch):
 def test_it_is_a_sub_entry_not_a_fourteenth_feed(monkeypatch):
     """health_summary counts an attempt per FEED. The resolver must be able to
     report loss without changing what `attempts` means."""
-    monkeypatch.setattr(feeds, "_get", _serve({"CVE-1": RuntimeError("503")}))
+    ids, serve = _all_failing(_floor())
+    monkeypatch.setattr(feeds, "_get", serve)
     feeds.record_feed("ubuntu", feeds.CAPPED, "hit the 200-page cap")
     before = feeds.health_summary()[2]
-    feeds.resolve_dates_ubuntu(["CVE-1"])
+    feeds.resolve_dates_ubuntu(ids)
     failures, truncated, attempts, capped = feeds.health_summary()
     assert attempts == before, "the resolver is not an extra feed"
     assert any("ubuntu:dates" in f for f in failures), "but its loss is still visible"
@@ -220,11 +237,71 @@ def test_ubuntu_being_down_is_still_loud(monkeypatch):
     """The mark turns off a comparison, not the pass's own judgement. If every
     lookup fails there is no self-healing to appeal to and the run learned
     nothing, which `verify` accounts for through the status instead."""
-    monkeypatch.setattr(feeds, "_get", _serve({
-        "CVE-2026-1": RuntimeError("HTTP Error 503"),
-        "CVE-2026-2": RuntimeError("HTTP Error 503"),
-    }))
-    feeds.resolve_dates_ubuntu(["CVE-2026-1", "CVE-2026-2"])
+    ids, serve = _all_failing(_floor())
+    monkeypatch.setattr(feeds, "_get", serve)
+    feeds.resolve_dates_ubuntu(ids)
     h = feeds.FEED_HEALTH["ubuntu:dates"]
     assert h["status"] == feeds.FAILED
     assert h["counts_coverage"] is False
+
+
+# --------------------------------------------------------------------------
+# how much evidence "every lookup failed" is
+#
+# 2026-09-01, live. `ubuntu-osv` drained the undated backlog from 82 to 3, all
+# three lookups failed, and the pass reported FAILED: the loudest state this
+# module has, reached on one instant of the endpoint. The branch was written
+# three days earlier against a population of 82, where it was sound.
+# --------------------------------------------------------------------------
+
+def test_a_population_under_one_wave_cannot_call_ubuntu_down(monkeypatch):
+    """The live case. Four workers means three ids are all in flight at the same
+    moment, so they share fate: "all 3 failed" is one observation, not three.
+
+    It falls through to the self-healing reading, which is the honest one. The
+    rows stay `undated` in `held_back.json`, the next run asks again, and that is
+    the same outcome a partial failure at a large population already gets."""
+    ids, serve = _all_failing(3)
+    monkeypatch.setattr(feeds, "_get", serve)
+    feeds.resolve_dates_ubuntu(ids)
+    h = feeds.FEED_HEALTH["ubuntu:dates"]
+    assert h["status"] == feeds.OK
+    # Quieter, never silent. The count is still in the detail, which is where
+    # `feed_csaf` already puts the same shape of partial result.
+    assert "3 lookup(s) failed" in h["detail"]
+
+
+def test_one_id_short_of_the_floor_is_still_not_an_outage(monkeypatch):
+    """The boundary, pinned from below as well as above, because an off-by-one
+    here silently restores the behaviour this exists to remove."""
+    ids, serve = _all_failing(_floor() - 1)
+    monkeypatch.setattr(feeds, "_get", serve)
+    feeds.resolve_dates_ubuntu(ids)
+    assert feeds.FEED_HEALTH["ubuntu:dates"]["status"] == feeds.OK
+
+
+def test_the_floor_is_derived_from_the_worker_count(monkeypatch):
+    """Expressed in waves rather than as a number, so it stays correct if the
+    concurrency changes. A fixed literal would quietly become the wrong number
+    the first time someone tunes `UBUNTU_RESOLVE_WORKERS`."""
+    ids, serve = _all_failing(3)
+    monkeypatch.setattr(feeds, "_get", serve)
+    # One worker: the same three ids are now three sequential observations of
+    # the endpoint, which is exactly the evidence the floor is asking for.
+    feeds.resolve_dates_ubuntu(ids, workers=1)
+    assert feeds.FEED_HEALTH["ubuntu:dates"]["status"] == feeds.FAILED
+
+
+def test_a_partial_failure_at_a_large_population_is_still_ok(monkeypatch):
+    """The floor raises the bar for FAILED and must not lower it for anything
+    else. Measured live on 2026-08-28: three passes over 82 ids returned 59, 62
+    and 64 dated, and reporting that spread as degraded would mark most runs
+    worse than usual."""
+    ids, _ = _all_failing(_floor() * 2)
+    table = {i: RuntimeError("HTTP 503") for i in ids[:4]}
+    for i in ids[4:]:
+        table[i] = [{"id": i, "published": "2026-06-11T00:00:00"}]
+    monkeypatch.setattr(feeds, "_get", _serve(table))
+    got = feeds.resolve_dates_ubuntu(ids)
+    assert len(got) == len(ids) - 4
+    assert feeds.FEED_HEALTH["ubuntu:dates"]["status"] == feeds.OK
