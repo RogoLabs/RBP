@@ -1,1 +1,20 @@
-[]
+[
+ {
+  "cve_id": "CVE-2024-7952",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2024-10-10",
+  "published": "2026-09-01",
+  "days_to_publish": 691,
+  "closed_on": "2026-09-01"
+ },
+ {
+  "cve_id": "CVE-2024-7953",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2024-10-10",
+  "published": "2026-09-01",
+  "days_to_publish": 691,
+  "closed_on": "2026-09-01"
+ }
+]
