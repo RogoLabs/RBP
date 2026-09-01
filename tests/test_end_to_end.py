@@ -699,6 +699,11 @@ def test_an_absent_run_ledger_reads_as_unknown_not_as_zero(built):
     assert "0 of 28" not in page
 
 
+def _ledger(*entries):
+    """One ledger line per (hours_ago, event) pair, newest offsets first."""
+    return "\n".join(json.dumps(e) for e in entries) + "\n"
+
+
 def test_delivered_ticks_are_counted_from_the_ledger(built, tmp_path):
     """Counted from the ledger the DEPLOY job appends, so a run that built and
     failed to deploy is not counted as delivered."""
@@ -709,18 +714,171 @@ def test_delivered_ticks_are_counted_from_the_ledger(built, tmp_path):
     for i in range(5):
         at = (now - dt.timedelta(hours=6 * i)).isoformat(timespec="seconds")
         lines.append(json.dumps({"at": at, "conclusion": "success",
-                                 "run_id": str(i)}))
+                                 "event": "schedule", "run_id": str(i)}))
     # A failed deploy and a tick outside the window: neither counts.
     lines.append(json.dumps({"at": (now - dt.timedelta(hours=1)).isoformat(),
-                             "conclusion": "failure", "run_id": "f"}))
+                             "conclusion": "failure", "event": "schedule",
+                             "run_id": "f"}))
     lines.append(json.dumps({"at": (now - dt.timedelta(days=30)).isoformat(),
-                             "conclusion": "success", "run_id": "old"}))
+                             "conclusion": "success", "event": "schedule",
+                             "run_id": "old"}))
     (built["data"] / "runs.jsonl").write_text("\n".join(lines) + "\n")
 
     c = site_mod.cadence(str(built["data"]), today=now.isoformat())
-    assert c["delivered"] == 5, c
+    assert c["scheduled"] == 5, c
     assert c["expected"] == 28
     assert c["last"].startswith("2026-08-23")
+
+
+def test_a_push_publish_does_not_evidence_a_scheduled_tick(built):
+    """THE DEFECT THIS FILE MISSED FOR A WEEK, and the reason it is first here.
+
+    `cadence` counted every successful publish and divided by the cron schedule
+    alone. Merging to main also publishes, so the numerator drew on a source the
+    denominator did not describe and /status rendered "46 of 28 ... (164.3%)".
+
+    The ratio over 100% was the harmless half. This is the other half: a week in
+    which EVERY scheduled tick was evicted still read green so long as somebody
+    was merging, so the one failure the ledger exists to catch was the one it
+    could not express. A fixture of pure pushes is the shortest statement of it.
+    """
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    # Thirty pushes, not one scheduled tick. The site is FRESH and the schedule
+    # is entirely dead, and those are different facts.
+    lines = [json.dumps({"at": (now - dt.timedelta(hours=4 * i)).isoformat(timespec="seconds"),
+                         "conclusion": "success", "event": "push",
+                         "run_id": str(i)}) for i in range(30)]
+    (built["data"] / "runs.jsonl").write_text("\n".join(lines) + "\n")
+
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["scheduled"] == 0, (
+        "a push-triggered publish was credited as a scheduled tick, which is "
+        "exactly the arithmetic that published 164.3%")
+    assert c["publishes"] == 30, c
+    assert c["pct"] == 0.0, c
+    # The invariant that makes the old defect unrepresentable rather than merely
+    # absent: the scheduled figure can never exceed the scheduled expectation.
+    assert c["scheduled"] <= c["expected"]
+    assert c["pct"] <= 100.0
+
+
+def test_workflow_dispatch_is_not_a_scheduled_tick_either(built):
+    """`schedule` specifically, not "anything that is not a push". A dispatched
+    run is somebody standing at the keyboard, which is the same reason a push
+    does not count."""
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    (built["data"] / "runs.jsonl").write_text(_ledger(
+        {"at": (now - dt.timedelta(hours=2)).isoformat(timespec="seconds"),
+         "conclusion": "success", "event": "workflow_dispatch"},
+        {"at": (now - dt.timedelta(hours=3)).isoformat(timespec="seconds"),
+         "conclusion": "success", "event": "schedule"},
+        # No event at all: a torn or hand-edited line. Not credited, because
+        # this figure exists to raise an alarm and not to reassure.
+        {"at": (now - dt.timedelta(hours=4)).isoformat(timespec="seconds"),
+         "conclusion": "success"},
+    ))
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["scheduled"] == 1, c
+    assert c["publishes"] == 3, c
+
+
+def test_the_longest_gap_is_measured_across_the_window_boundary(built):
+    """A gap that opens before the window and closes inside it is the gap a
+    reader cares about. Slicing to the window before measuring hides exactly the
+    outage that straddles the cutoff, which is the shape of a weekend."""
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    # 8 days ago, then nothing for 48 hours, closing 6 days ago: the gap OPENS
+    # outside the 7-day window and CLOSES inside it. Everything after it is
+    # 3-hourly, so 48 is unambiguously the longest and the assertion cannot pass
+    # by accident on some later gap.
+    entries = [
+        {"at": (now - dt.timedelta(days=8)).isoformat(timespec="seconds"),
+         "conclusion": "success", "event": "schedule"},
+        {"at": (now - dt.timedelta(days=6)).isoformat(timespec="seconds"),
+         "conclusion": "success", "event": "schedule"},
+    ]
+    t = now - dt.timedelta(days=6)
+    while t < now - dt.timedelta(hours=3):
+        t += dt.timedelta(hours=3)
+        entries.append({"at": t.isoformat(timespec="seconds"),
+                        "conclusion": "success", "event": "schedule"})
+    (built["data"] / "runs.jsonl").write_text(_ledger(*entries))
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["longest_gap_hours"] == 48.0, c
+
+
+def test_a_single_publish_reports_no_gap_rather_than_zero(built):
+    """One publish cannot evidence a gap. Zero would read as "never stale",
+    which is the confident-zero failure the absent-ledger branch exists for."""
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    (built["data"] / "runs.jsonl").write_text(_ledger(
+        {"at": (now - dt.timedelta(hours=1)).isoformat(timespec="seconds"),
+         "conclusion": "success", "event": "schedule"}))
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["longest_gap_hours"] is None, c
+
+
+def test_the_status_page_renders_the_cadence_split_and_never_exceeds_100(built,
+                                                                        tmp_path,
+                                                                        monkeypatch):
+    """THE SEAM, not the unit. `cadence` is now correct and nothing above proves
+    the template reads the field it returns: renaming `delivered` to `scheduled`
+    leaves Jinja rendering an empty string silently, and the page would publish
+    " of 28 scheduled runs" while every assertion above stayed green.
+
+    So this rebuilds the site with a populated ledger and reads the page.
+    """
+    import datetime as dt
+    import importlib
+    from rbp import site as site_mod
+    # RELATIVE TO THE REAL CLOCK, deliberately. `site.build` calls cadence()
+    # with no `today`, so a ledger pinned to a fixed date drifts out of the
+    # trailing window and every figure on the page renders 0. The first version
+    # of this test did exactly that and failed for that reason, which is the
+    # same fixture-blindness the file warns about: the assertion was right and
+    # the fixture never produced the state it was about.
+    now = dt.datetime.now(dt.timezone.utc)
+    lines = [json.dumps({"at": (now - dt.timedelta(hours=3 * i)).isoformat(timespec="seconds"),
+                         "conclusion": "success",
+                         "event": "schedule" if i % 4 == 0 else "push"})
+             for i in range(20)]
+    (built["data"] / "runs.jsonl").write_text("\n".join(lines) + "\n")
+
+    monkeypatch.setenv("RBP_LAUNCHED", "1")
+    importlib.reload(site_mod)
+    out = tmp_path / "cadence-rebuild"
+    site_mod.build(str(out), str(built["snapshots"]), str(built["data"]))
+    page = (out / "status.html").read_text()
+
+    c = site_mod.cadence(str(built["data"]))
+    assert c["scheduled"] == 5 and c["publishes"] == 20, c
+
+    # The figures reach the page at all.
+    assert f"{c['scheduled']} of {c['expected']} scheduled runs" in page, (
+        "the scheduled figure is not on the page; the template is reading a "
+        "field cadence() no longer returns")
+    assert "20 times" in page, "the total-publishes figure is not on the page"
+    assert "not evidence that the schedule fired" in page
+
+    # AND THE PUBLISHED RATIO IS NOT ABSURD. This is the assertion that fails on
+    # the original arithmetic: 20 delivered over 28 expected read 71.4%, but a
+    # busier week read over 100 and nothing on the page or in the suite objected.
+    import re as _re
+    ratios = [float(x) for x in _re.findall(r"\((\d+\.\d)%\)", page)]
+    assert ratios, "no cadence percentage rendered on the page"
+    assert all(r <= 100.0 for r in ratios), (
+        f"/status published a delivery ratio over 100%: {ratios}")
+
+    monkeypatch.delenv("RBP_LAUNCHED", raising=False)
+    importlib.reload(site_mod)
 
 
 def test_a_corrupt_ledger_line_does_not_stop_the_count(built):
@@ -728,10 +886,11 @@ def test_a_corrupt_ledger_line_does_not_stop_the_count(built):
     degrade the figure, not the build."""
     from rbp import site as site_mod
     (built["data"] / "runs.jsonl").write_text(
-        '{"at": "2026-08-23T00:00:00+00:00", "conclusion": "success"}\n'
+        '{"at": "2026-08-23T00:00:00+00:00", "conclusion": "success", '
+        '"event": "schedule"}\n'
         'not json at all\n\n')
     c = site_mod.cadence(str(built["data"]), today="2026-08-23T06:00:00+00:00")
-    assert c["delivered"] == 1
+    assert c["scheduled"] == 1
 
 
 def test_staleness_is_recomputed_in_the_browser_not_frozen_at_build(built):

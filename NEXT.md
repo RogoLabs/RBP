@@ -71,11 +71,22 @@ download in bulk and filter locally.
 ### 2. The review panel's list, `docs/reviews/REVIEW-round9.md`
 
 24 FIX items and 12 DELETE items, ranked, with the refuted items recorded
-separately so they are not silently lost. F2, the blocker, is fixed. One
-reader-facing item remains:
+separately so they are not silently lost. F2, the blocker, is fixed.
 
-- **F1.** The front page promises a correction route that
-  `.well-known/security.txt` denies on the same origin.
+**F1 is fixed, 2026-09-01, and it took nine rounds because no single file was
+wrong.** The panel promised "a request to remove a row", "the entire point of
+having a correction route", "someone asking to be delisted" and "rows a CNA had
+contested", while `.well-known/security.txt` on the same origin said the site
+does not operate a removal channel and the README had a section saying so. Every
+file was internally consistent; the contradiction lived only BETWEEN them.
+`tests/test_copy.py::test_no_page_offers_a_route_that_security_txt_denies` now
+reads the built artefacts against each other, in both directions, so reinstating
+the channel also fails until this is rewritten deliberately. The archive promise
+the paragraph was carrying survives, asserted separately, because deleting the
+paragraph was the obvious fix and would have taken `stable_not_immutable` back to
+being a JSON key nobody had been told about.
+
+No reader-facing item from round 9 remains open.
 
 Done: D1, D2, D3, D5, D6, D7, D10, D11, D12, and the F3/F4 prerequisites.
 `SCHEMA_VERSION` is 4 and `tests/test_schema.py` now pins the column set to the
@@ -214,6 +225,35 @@ closed to the pre-launch page.
 
 **PLAN.md predates the pivot in places** and documents pages that no longer
 exist. Trust `git log` and the code over it.
+
+**A guard can be arithmetically unable to report the thing it is for.** /status
+answered "does this site actually run every six hours?" with a numerator counting
+EVERY successful publish and a denominator counting only the cron schedule.
+Merging to `main` publishes, so a week with 29 pushes read **"46 of 28 scheduled
+runs published in the last 7 days (164.3%)"**. The ratio over 100% was the
+harmless half and the only visible one. The other half: a push cannot evidence a
+scheduled tick, so a week in which every cron tick was evicted still read green
+provided somebody was merging. Measured when it was found: 15 of 28 scheduled
+ticks delivered, longest gap between publishes 20.6 hours, reported as 164.3%.
+
+The page now publishes three figures, because the scheduled one alone overstates
+staleness: scheduled ticks against the schedule, total publishes from any trigger,
+and the longest gap. A low first figure beside a healthy second and a small gap is
+a fresh site whose cron ticks are being evicted by its own pushes, which is a real
+thing worth seeing and is not a stale site. **Do not collapse these back into one
+number.**
+
+**The count in the heading is rewritten in the browser, and the unfurl is not.**
+`tests/test_copy.py::test_the_unfurl_and_the_heading_carry_the_same_count` asserts
+that og:title, og:description and the h1 render the same summary key, and all
+three did, in the served bytes. The h1's number is then replaced client-side, and
+the page opens on a 90-day window nobody asked for, so first paint read **1,601**
+under a preview that said **2,016**. `#viewnote` explained the gap correctly and,
+measured at 375x812, did it at y=1213 against an 812px fold: a screen and a half
+below the number. The lead now states the window beside the count, and
+`tests/render/test_filters.py` asserts where it renders, not merely that it does.
+The template-level guard could never have seen this; a test that reads the source
+of a client-rendered page is measuring the wrong artefact.
 
 **A green build is not a correct site.** Three regressions reached the live site
 on 2026-08-29 and 08-30, each a variant of "state that claims to know something

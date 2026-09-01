@@ -180,7 +180,7 @@
      error, where a row is entirely accurate and its listing still cuts across a
      live coordinated disclosure. That case now has no route on this site. #}
 
-  <h2>The data</h2>  <h2>The data</h2>
+  <h2>The data</h2>
   <p>Everything on this page is in
      <a href="data/rbp.json" class="mono">rbp.json</a> and
      <a href="data/rbp.csv" class="mono">rbp.csv</a>, with a dated archive at
@@ -200,11 +200,33 @@
      with that page, leaving `stable_not_immutable: true` in archive.json as the
      only place the site said so. A promise about permanence that lives only in a
      JSON key is not a promise anyone has been told about. #}
-  <p><strong>Stable, not immutable, and the difference is deliberate.</strong> A
-     request to remove a row removes it from every published artefact including
-     the archive, because that is the entire point of having a correction route.
-     So a dated figure can go <em>down</em> later. This project will not promise
-     permanence it is unwilling to honour at the expense of someone asking to be
-     delisted, and an archive that kept rows a CNA had contested would become the
-     reason the removal did not work.</p>
+  {# F1 FROM docs/reviews/REVIEW-round9.md, fixed 2026-09-01.
+
+     This paragraph promised a correction route on the one page everybody reads,
+     while `.well-known/security.txt` on the same origin says "This site does not
+     operate a removal channel for listed CVE IDs" and the README has a section
+     titled "There is no removal channel". It described "a request to remove a
+     row", "the entire point of having a correction route", "someone asking to be
+     delisted" and "rows a CNA had contested": four separate invitations to use a
+     channel that was retired on 2026-08-27.
+
+     A CNA reading the panel would have believed they could ask, found no address
+     anywhere on the site, and concluded the site was either careless or hiding
+     the address. On a project whose whole claim is careful measurement, that is
+     the most expensive kind of wrong sentence.
+
+     THE PROMISE UNDERNEATH IT IS REAL AND IS KEPT. `RBP_WITHHOLD` still drops
+     rows from every published artefact including the dated archive, and is still
+     tested. What is retired is the advertised channel, not the mechanism, so
+     this now states the archive property and stops describing a request nobody
+     can make. The embargo case still has no route here; that cost is stated in
+     the README and is not softened by pretending otherwise. #}
+  <p><strong>Stable, not immutable, and the difference is deliberate.</strong> If
+     a row is ever withheld, it is withheld from every published artefact
+     including the dated archive, so a figure cited today can go <em>down</em>
+     later. This site does not operate a removal channel and publishes no address
+     to request one: a row appears only after the CVE Services reservation
+     endpoint confirms the ID is reserved and unpublished, and every row is an ID
+     already referenced in a public advisory. What the archive will not do is
+     keep serving a row the live list has dropped.</p>
 </aside>

@@ -742,6 +742,12 @@ body.locked{overflow:hidden}
 .lead-floor{margin:16px 0 0;font-size:.85rem;line-height:1.55;max-width:44ch;
   color:var(--rbp-text-secondary)}
 .lead-floor b{color:var(--color-text-primary)}
+/* The scope of the count, directly under it. Same secondary colour as the floor
+   note so it reads as qualification rather than as a second claim, and sized
+   between the count and the floor text: a reader who takes in only the number
+   and the line under it has still been told the window. */
+.lead-window{margin:10px 0 0;font-size:.92rem;line-height:1.4;font-weight:500;
+  color:var(--rbp-text-secondary)}
 
 /* ---- the distribution: the legend for the list ---- */
 .dist{margin:0;border-top:2px solid var(--color-text-primary);padding-top:14px}

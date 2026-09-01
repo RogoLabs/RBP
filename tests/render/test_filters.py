@@ -688,3 +688,82 @@ def test_an_age_picked_with_the_control_also_survives_typing(page, server):
     page.wait_for_timeout(120)
     assert page.eval_on_selector("#age", "e => e.value") == "365+", (
         "an age chosen with the control was overridden by typing")
+
+
+# --------------------------------------------------------------------------
+# the count and the scope of the count
+# --------------------------------------------------------------------------
+
+def test_the_lead_names_the_total_whenever_the_default_window_hides_rows(
+        page, server):
+    """THE UNFURL CONTRADICTION, asserted where it actually happens.
+
+    tests/test_copy.py::test_the_unfurl_and_the_heading_carry_the_same_count
+    already requires og:title, og:description and the h1 to render the same
+    summary key, and all three do. It reads the TEMPLATES, and the defect it
+    cannot see is that the h1's number is rewritten in the browser: the page
+    opens on a 90-day window nobody asked for, so first paint showed **1,601**
+    under a link preview that said **2,016**.
+
+    Measured on the live site 2026-09-01 at 375x812: the h1 sat at y=143 and the
+    `#viewnote` that explained the gap sat at y=1213, a screen and a half below
+    the number it qualified. The reader who screenshots the hero never sees it.
+
+    So whenever rows are hidden, the lead itself must name the total, and it must
+    be within the first screen on a phone. This is the assertion that fails if
+    the scope line is deleted, hidden, or moved down the page.
+    """
+    pg = page
+    pg.set_viewport_size({"width": 375, "height": 812})
+    pg.goto(f"{server}/{LIST_PAGE}")
+    pg.wait_for_selector("#n")
+
+    shown = pg.inner_text("#n")
+    total = pg.evaluate("JSON.parse(document.getElementById('rows').textContent).length")
+    hidden_n = total - int(shown.replace(",", ""))
+    assert hidden_n > 0, (
+        "the fixture's default view hides no rows, so this test cannot see the "
+        "defect it is about. Give the fixture rows older than the 90-day "
+        "default window.")
+
+    scope = pg.locator("#leadwindow")
+    assert scope.is_visible(), (
+        f"the default view hides {hidden_n} row(s) and the lead states no "
+        "window. The h1 is a filtered number with nothing beside it saying so, "
+        "which is the state that contradicted og:title on 2026-09-01.")
+
+    text = scope.inner_text()
+    assert f"{total:,}" in text, (
+        f"the lead scope reads {text!r} and never names the total {total:,}. "
+        "Naming the window without naming the total leaves the reader unable to "
+        "reconcile the page with the preview that brought them here.")
+
+    # WITHIN THE FIRST SCREEN. The old `#viewnote` said all of this correctly and
+    # said it 401px below the fold, which is why this assertion is on geometry
+    # rather than on presence.
+    box = scope.bounding_box()
+    assert box is not None and box["y"] < 812, (
+        f"the lead scope renders at y={box['y'] if box else None} on an 812px "
+        "phone fold. That is where #viewnote already was.")
+
+    # And the count itself must still be the one the reader is looking at.
+    assert pg.inner_text("h1").strip().startswith(shown)
+
+
+def test_clearing_the_window_removes_the_scope_line(page, server):
+    """A qualifier that is always on is not a qualifier.
+
+    With no rows hidden the h1 IS the total, and a line saying "of N in total"
+    beside a number that equals N is noise. This is the same rule the standing
+    limitations on /status are separated by.
+    """
+    pg = page
+    pg.goto(f"{server}/{LIST_PAGE}?age=any")
+    pg.wait_for_selector("#n")
+
+    total = pg.evaluate("JSON.parse(document.getElementById('rows').textContent).length")
+    assert pg.inner_text("#n").replace(",", "") == str(total), (
+        "?age=any did not show every row, so this test is not measuring the "
+        "unfiltered state")
+    assert not pg.locator("#leadwindow").is_visible(), (
+        "the lead states a window while showing everything")

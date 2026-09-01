@@ -117,17 +117,36 @@
   <div class="card-body">
     {% if cadence %}
     <p>
-      <strong>{{ cadence.delivered }} of {{ cadence.expected }} scheduled runs
+      <strong>{{ cadence.scheduled }} of {{ cadence.expected }} scheduled runs
       published in the last {{ cadence.days }} days</strong>
       ({{ cadence.pct }}%){% if cadence.last %}, most recently
       <span class="mono">{{ cadence.last }}</span>{% endif %}.
+    </p>
+    {# THE SCHEDULED FIGURE ALONE WOULD OVERSTATE STALENESS, so the two numbers
+       that qualify it are published beside it rather than left in rbp.json. A
+       cron tick evicted by this site's own push is not a stale site, and a
+       reader cannot tell those apart from the first figure. #}
+    <p>
+      This site also publishes on every merge to its main branch. Counting those,
+      it published
+      <strong>{{ cadence.publishes }} time{{ '' if cadence.publishes == 1 else 's' }}</strong>
+      in the same {{ cadence.days }} days, and the longest it went without
+      publishing anything was
+      {% if cadence.longest_gap_hours is not none %}<strong>{{ cadence.longest_gap_hours }}
+      hours</strong>{% else %}<strong>not measurable</strong> from a single
+      publish{% endif %}. A merge-triggered publish keeps the site fresh but is
+      not evidence that the schedule fired, so it is not counted in the figure
+      above.
     </p>
     <p class="mb-0">
       Counted from a ledger appended by the step that actually publishes, so a run
       that built and failed to deploy is not counted as delivered. This exists
       because the six-hourly claim had no evidence behind it and was false at
       least twice: two scheduled ticks on 2026-08-21 produced nothing, with no
-      pushes in the window, and nothing on the site could have told you.
+      pushes in the window, and nothing on the site could have told you. Until
+      2026-09-01 the figure above divided every publish by the scheduled ticks
+      alone and read <span class="mono">164.3%</span>, which could not have told
+      you either.
     </p>
     {% else %}
     <p class="mb-0">

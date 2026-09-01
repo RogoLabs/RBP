@@ -636,13 +636,49 @@ def assert_artefact(rows, label, cnas=None, covered=None):
 
 
 def cadence(data_dir, today=None, days=7):
-    """Delivered ticks in the trailing `days`, from the run ledger.
+    """What the run ledger can evidence about the publish cadence: three numbers.
 
     The site tells readers it updates every six hours. Before the ledger existed
     there was no evidence for that anywhere, and the claim was false at least
     twice: the 2026-08-21 06:00Z and 18:00Z scheduled ticks both produced
     nothing, with zero pushes in the window, so nothing could have been queued or
     evicted. Nobody could have known.
+
+    THE FIRST VERSION OF THIS FUNCTION COULD NOT HAVE KNOWN EITHER, and that is
+    why it now returns three figures instead of one.
+
+    It answered the six-hour claim with `delivered / (days * 4)`, where the
+    numerator counted EVERY successful publish and the denominator counted only
+    the cron schedule. Merging to `main` also publishes, so a week carrying 29
+    pushes scored 47 against 28 and /status published "46 of 28 scheduled runs
+    published in the last 7 days (164.3%)". A ratio over 100% is the visible half
+    of the defect and the harmless half.
+
+    The other half: a push-triggered publish CANNOT evidence a scheduled tick, so
+    a week in which every single cron tick was evicted or failed still read green
+    as long as somebody was merging. The one failure this ledger exists to catch
+    was the one failure it was arithmetically unable to report. Measured on the
+    live ledger on 2026-09-01: 15 of 28 scheduled ticks delivered, reported as
+    164.3%.
+
+    So the scheduled claim is counted from scheduled runs only, and the two
+    figures that stop that number being MISread as staleness are published beside
+    it rather than dropped:
+
+      scheduled / expected   the cadence claim, cron ticks only
+      publishes              every successful publish, any trigger
+      longest_gap_hours      the longest the site went without publishing at all
+
+    A low `scheduled` next to a healthy `publishes` and a small gap is a site
+    that is fresh and whose cron ticks are being evicted by its own pushes. That
+    is a real thing, worth seeing, and not the same as a stale site. Reporting
+    the first number alone would trade a figure that was too flattering for one
+    that is too alarming, which is not an improvement.
+
+    An entry with no `event` is not credited as a scheduled tick. Every line the
+    deploy job has written carries one, so this only governs a torn or
+    hand-edited ledger, and it errs toward reporting LESS delivery than happened:
+    this figure exists to raise an alarm, not to reassure.
 
     Returns None when the ledger is absent, and the template then says the
     cadence is not yet evidenced rather than printing a confident zero. A fresh
@@ -660,7 +696,8 @@ def cadence(data_dir, today=None, days=7):
         now = now.replace(tzinfo=dt.timezone.utc)
     cutoff = now - dt.timedelta(days=days)
 
-    delivered, last = 0, None
+    scheduled, publishes, last = 0, 0, None
+    published_at = []
     try:
         for line in open(path):
             line = line.strip()
@@ -678,16 +715,36 @@ def cadence(data_dir, today=None, days=7):
                 at = at.replace(tzinfo=dt.timezone.utc)
             if last is None or at > last:
                 last = at
-            if at >= cutoff and rec.get("conclusion") == "success":
-                delivered += 1
+            if rec.get("conclusion") != "success":
+                continue
+            # Kept for the gap, INCLUDING entries older than the cutoff: a gap
+            # that opens before the window and closes inside it is exactly the
+            # gap a reader cares about, and slicing before measuring hides it.
+            published_at.append(at)
+            if at < cutoff:
+                continue
+            publishes += 1
+            if rec.get("event") == "schedule":
+                scheduled += 1
     except OSError:
         return None
+
+    published_at.sort()
+    longest = None
+    for earlier, later in zip(published_at, published_at[1:]):
+        if later < cutoff:
+            continue
+        hours = (later - earlier).total_seconds() / 3600
+        if longest is None or hours > longest:
+            longest = hours
 
     # 4 a day is the schedule. Expressed as a fraction of expected rather than a
     # bare count, because "23" means nothing without "of 28".
     expected = days * 4
-    return {"days": days, "delivered": delivered, "expected": expected,
-            "pct": round(100 * delivered / expected, 1) if expected else None,
+    return {"days": days, "scheduled": scheduled, "expected": expected,
+            "pct": round(100 * scheduled / expected, 1) if expected else None,
+            "publishes": publishes,
+            "longest_gap_hours": round(longest, 1) if longest is not None else None,
             "last": last.isoformat(timespec="seconds") if last else None}
 
 
