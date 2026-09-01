@@ -1968,15 +1968,6 @@
   "CVE-2025-32343": {
    "first_public": "2025-09-01"
   },
-  "CVE-2026-13336": {
-   "first_public": "2026-08-11"
-  },
-  "CVE-2026-13337": {
-   "first_public": "2026-08-11"
-  },
-  "CVE-2026-13348": {
-   "first_public": "2026-08-11"
-  },
   "CVE-2026-49884": {
    "first_public": "2026-08-01"
   },
@@ -5745,9 +5736,6 @@
   "CVE-2024-35585": {
    "first_public": "2025-10-21"
   },
-  "CVE-2024-10085": {
-   "first_public": "2025-10-14"
-  },
   "CVE-2024-7952": {
    "first_public": "2024-10-10"
   },
@@ -6128,6 +6116,27 @@
   },
   "CVE-2026-15717": {
    "first_public": "2026-08-01"
+  },
+  "CVE-2026-83811": {
+   "first_public": "2026-06-23"
+  },
+  "CVE-2026-83812": {
+   "first_public": "2026-06-22"
+  },
+  "CVE-2026-83620": {
+   "first_public": "2026-08-12"
+  },
+  "CVE-2026-83803": {
+   "first_public": "2026-07-16"
+  },
+  "CVE-2026-63199": {
+   "first_public": "2026-07-31"
+  },
+  "CVE-2026-63445": {
+   "first_public": "2026-07-31"
+  },
+  "CVE-2026-63458": {
+   "first_public": "2026-07-31"
   }
  },
  "resolved": [
@@ -7720,6 +7729,42 @@
    "first_public": "2026-08-16",
    "published": "2026-09-01",
    "days_to_publish": 16,
+   "closed_on": "2026-09-01"
+  },
+  {
+   "cve_id": "CVE-2026-13336",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-11",
+   "published": "2026-09-01",
+   "days_to_publish": 21,
+   "closed_on": "2026-09-01"
+  },
+  {
+   "cve_id": "CVE-2026-13337",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-11",
+   "published": "2026-09-01",
+   "days_to_publish": 21,
+   "closed_on": "2026-09-01"
+  },
+  {
+   "cve_id": "CVE-2026-13348",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-11",
+   "published": "2026-09-01",
+   "days_to_publish": 21,
+   "closed_on": "2026-09-01"
+  },
+  {
+   "cve_id": "CVE-2024-10085",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2025-10-14",
+   "published": "2026-09-01",
+   "days_to_publish": 322,
    "closed_on": "2026-09-01"
   }
  ]
