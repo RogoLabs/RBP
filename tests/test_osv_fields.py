@@ -95,7 +95,8 @@ def test_an_archive_with_no_readable_id_is_failed_not_ok(monkeypatch):
     assert rows == []
     h = feeds.FEED_HEALTH["osv:Red Hat"]
     assert h["status"] == feeds.FAILED, "an unreadable archive must not read as ok"
-    assert "upstream" in h["detail"], "the detail must name the likely cause"
+    assert "upstream" in h["detail"], "the detail must name the field it skipped"
+    assert "2 via" in h["detail"], f"and how many it saw there: {h['detail']}"
     assert h["rows"] == 0
 
 
@@ -109,31 +110,82 @@ def test_the_related_only_shape_is_caught_too(monkeypatch):
 
 
 def test_rows_counts_what_the_archive_held_not_what_it_contributed(monkeypatch):
-    """`rows=` MOVED FROM `added` TO `found` ON 2026-09-01, and `osv:Pub` is why.
+    """`rows=` MOVED FROM `added` TO `found` ON 2026-09-01.
 
-    `seen` is shared across the ecosystem loop, so `added` is order-dependent:
-    Pub recorded **+1** on the 2026-08-31 baseline because npm, PyPI and Maven had
-    already supplied nearly all of its ids, not because Pub holds one id. A guard
-    or a magnitude comparison keyed on that number is comparing loop order.
+    `seen` is shared across the ecosystem loop, so `added` is what an ecosystem
+    contributed that no earlier one had: order-dependent, and it understates every
+    ecosystem after the first. `added` from the 2026-08-31 baseline against `found`
+    re-measured 2026-09-01: SwiftURL 16 of 22, Hex 186 of 211, crates.io 366 of
+    384, GitHub Actions 20 of 23. A magnitude comparison keyed on that number is
+    partly comparing loop order.
 
     Here the second ecosystem's ids are entirely supplied by the first, so `added`
-    is 0 and `found` is 2. The part must not report 0 and must not report FAILED.
+    is 0 and `found` is 2. The part must report 2 and must not report FAILED.
+
+    AN EARLIER VERSION OF THIS DOCSTRING CITED `osv:Pub` at +1 as the example and
+    was wrong: Pub genuinely holds 1 in-scope id. It is no longer configured, for
+    a reason `feed_osv`'s tuple comment records.
     """
     blob = _zip([_lang("CVE-2026-1111"), _lang("CVE-2026-2222")])
     _serve(monkeypatch, blob)
-    rows = feeds.feed_osv((2025, 2026), ecosystems=("npm", "Pub"))
+    rows = feeds.feed_osv((2025, 2026), ecosystems=("npm", "SwiftURL"))
     assert len(rows) == 2, "the second ecosystem is a full duplicate of the first"
-    pub = feeds.FEED_HEALTH["osv:Pub"]
-    assert pub["rows"] == 2, "rows is what Pub's archive held, not what it added"
-    assert pub["status"] == feeds.OK, "full overlap is not a failure"
-    assert "0 new of 2" in pub["detail"], pub["detail"]
+    second = feeds.FEED_HEALTH["osv:SwiftURL"]
+    assert second["rows"] == 2, "rows is what the archive held, not what it added"
+    assert second["status"] == feeds.OK, "full overlap is not a failure"
+    assert "0 new of 2" in second["detail"], second["detail"]
 
 
-def test_an_out_of_window_only_archive_is_failed(monkeypatch):
-    """A configured ecosystem holding nothing in the gather window is the other
-    way to reach zero, and it is equally not a healthy part: FEEDS.md's policy is
-    that an ecosystem measured at zero is recorded and un-configured, never left
-    in the tuple reading empty."""
+def test_a_failed_ecosystem_part_degrades_the_whole_run(monkeypatch):
+    """THE MECHANISM THAT FORCED `Pub` OUT OF THE CONFIGURED TUPLE.
+
+    `health_summary` collects FAILED entries from `FEED_HEALTH` without filtering
+    on the colon, so a failed SUB-fetch reaches `failures`, and `cli.degraded_state`
+    marks the run degraded from that list. So the guard above is not a quiet note
+    in the status page: one unreadable ecosystem puts "This run is incomplete"
+    across every page of the site.
+
+    That is correct when the cause is an archive this adapter cannot read, and it is
+    why the guard must not fire on a merely empty one. Asserted here rather than
+    argued in a comment, because the comment's claim is about a function two modules
+    away.
+    """
+    _serve(monkeypatch, _zip([_distro("CVE-2026-1111")]))
+    feeds.feed_osv((2025, 2026), ecosystems=("Red Hat",))
+    failures, truncated, attempts, capped = feeds.health_summary()
+    assert any(f.startswith("osv:Red Hat") for f in failures), failures
+    assert attempts == 0, (
+        "a sub-fetch is not a feed attempt; only top-level names are counted")
+
+
+def test_a_genuinely_empty_window_is_not_a_failure(monkeypatch):
+    """THE OTHER HALF OF THE GUARD, and the reason it compares fields rather than
+    counting zero.
+
+    A small ecosystem with nothing in the gather window is not broken, and marking
+    it FAILED degrades the whole site (see the test below). A first version of this
+    guard fired on emptiness alone and would have done exactly that the first quiet
+    window `Pub` had: 13 records in the archive, 4 in-scope ids on the live
+    three-year window, one bad quarter from putting "This run is incomplete" on
+    every page.
+
+    Ids absent from `aliases` AND absent from `upstream`/`related` means there is
+    nothing here to read, which is a true and boring fact about a small ecosystem.
+    """
     _serve(monkeypatch, _zip([_lang("CVE-2019-1111")]))
     assert feeds.feed_osv((2025, 2026), ecosystems=("Hackage",)) == []
-    assert feeds.FEED_HEALTH["osv:Hackage"]["status"] == feeds.FAILED
+    h = feeds.FEED_HEALTH["osv:Hackage"]
+    assert h["status"] == feeds.OK, "an empty window is not a broken read"
+    assert h["rows"] == 0
+
+
+def test_the_guard_fires_on_the_field_mismatch_not_on_emptiness(monkeypatch):
+    """The discriminator, asserted directly: same zero from `aliases`, opposite
+    verdicts, decided by whether the ids exist in a field this adapter skips."""
+    _serve(monkeypatch, _zip([_distro("CVE-2026-1111")]))
+    feeds.feed_osv((2025, 2026), ecosystems=("Red Hat",))
+    assert feeds.FEED_HEALTH["osv:Red Hat"]["status"] == feeds.FAILED
+    feeds.reset_health()
+    _serve(monkeypatch, _zip([_lang("CVE-2019-9999")]))
+    feeds.feed_osv((2025, 2026), ecosystems=("Red Hat",))
+    assert feeds.FEED_HEALTH["osv:Red Hat"]["status"] == feeds.OK

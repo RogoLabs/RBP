@@ -1814,6 +1814,25 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
 # returned 0 in-scope ids for 2025-2026 on 2026-08-27, at 41KB combined. Recorded
 # here rather than merged-and-empty so the next person does not re-probe them,
 # and dated so revisiting is a decision rather than an oversight.
+#
+# `Pub` WAS BRIEFLY REMOVED ON 2026-09-01 AND PUT STRAIGHT BACK, and the reason is
+# worth more than the ecosystem is.
+#
+# It was removed on the measurement "Pub holds 1 in-scope id", which is true for
+# `2025,2026` and irrelevant, because that is `feedlab`'s default window and NOT
+# the one the pipeline gathers. The live run reads `years=[2024, 2025, 2026]` from
+# `coverage.WINDOW_YEARS`, where Pub holds **4** (`[osv:Pub] +4 (of 4 in scope)`,
+# deploy 33510439080). Every hand measurement behind the 2026-09-01 osv work used
+# the two-year window against a three-year pipeline.
+#
+# That is the trap `test_the_baseline_gathers_the_years_the_pipeline_gathers`
+# exists for, walked into by hand instead of by code. It does not touch the
+# aliases-versus-upstream finding, which is 0 against thousands and survives any
+# window. It did make the case for removing Pub, which was "one id from zero",
+# four times weaker than stated.
+#
+# So Pub stays and the guard below got sharper instead, which is where the
+# argument should have gone in the first place.
 def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
                                 "Maven", "Packagist", "NuGet", "Pub", "Hex",
                                 "Android",
@@ -1850,7 +1869,7 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
             print(f"  [osv:{eco}] FAILED: {e}", file=sys.stderr)
             continue
         n0 = len(out)
-        found = set()
+        found, elsewhere = set(), set()
         for info in zf.infolist():
             name = info.filename
             if not name.endswith(".json") or info.file_size > 2_000_000:
@@ -1861,6 +1880,12 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
                 continue
             cves = [a for a in (rec.get("aliases") or []) if a.startswith("CVE-") and _year(a) in years]
             found.update(cves)
+            # WHAT THIS ADAPTER IS NOT READING, counted so the guard below can tell
+            # a BROKEN read from an EMPTY one. See the note there.
+            for other in ("upstream", "related"):
+                elsewhere.update(a for a in (rec.get(other) or [])
+                                 if isinstance(a, str) and a.startswith("CVE-")
+                                 and _year(a) in years)
             if not cves:
                 continue
             aff = rec.get("affected") or []
@@ -1885,17 +1910,27 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
         #
         # `seen` is shared across the whole ecosystem loop, so `added` is what an
         # ecosystem contributed THAT NO EARLIER ONE HAD: it is order-dependent and
-        # it understates every ecosystem after the first. Measured on the
-        # 2026-08-31 baseline, `osv:Pub` recorded **+1**, not because Pub holds one
-        # in-scope id but because npm, PyPI and Maven had already supplied almost
-        # all of them.
+        # it understates every ecosystem after the first. Measured, `added` from the
+        # 2026-08-31 baseline against `found` re-measured 2026-09-01:
         #
-        # So `added` is one id away from zero for a healthy ecosystem, and a guard
-        # keyed on it would fire on Pub every run while staying silent on the real
-        # failure. `found` is the ids this ecosystem's own archive contained,
-        # deduped within the ecosystem and independent of loop order, which is
-        # both the honest thing to compare and the thing that goes to zero when
-        # something is actually wrong.
+        #   SwiftURL   16 credited of 22 held      Hex   186 of 211
+        #   crates.io  366 of 384                  NuGet 376 of 386
+        #   RubyGems   206 of 219                  GitHub Actions 20 of 23
+        #
+        # (A day apart, so a few of those ids are drift rather than dedup. SwiftURL
+        # at 27% understated in a 62-record archive is not drift.)
+        #
+        # `found` is the ids this ecosystem's own archive contained, deduped within
+        # the ecosystem and independent of loop order, which is both the honest
+        # thing to compare and the thing that goes to zero when something is
+        # actually wrong.
+        #
+        # A FIRST VERSION OF THIS COMMENT SAID `osv:Pub` RECORDED +1 BECAUSE
+        # EARLIER ECOSYSTEMS HAD SUPPLIED ITS IDS. That was wrong, and it was
+        # wrong in the direction that flatters this change. Pub holds **1**
+        # in-scope id, measured directly: 13 records in the whole archive, one of
+        # them aliasing an in-window CVE. `added` and `found` agree there. See the
+        # tuple below, where that measurement had a consequence.
         #
         # `rows=` MOVES FROM `added` TO `found` for the same reason: an
         # order-dependent row count means reordering the tuple below would fire
@@ -1904,9 +1939,26 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
         # right one: `found >= added` always, so every part's recorded count rises
         # or holds, and `compare_magnitudes` only ever fires on a fall.
         detail = f"{added} new of {len(found)} in-scope ids from {nbytes / 1e6:.0f}MB"
-        if not found:
-            # AN ARCHIVE THAT YIELDED NOTHING IS NOT A HEALTHY FEED PART, and
+        if not found and elsewhere:
+            # AN ARCHIVE WHOSE IDS ARE IN A FIELD THIS ADAPTER DOES NOT READ, and
             # until 2026-09-01 it recorded as `ok` with "0 ids".
+            #
+            # THE CONDITION IS `not found AND elsewhere`, NOT `not found`, and the
+            # difference is the whole design. A first version fired on emptiness
+            # alone, which cannot tell "this archive is full of ids I am looking at
+            # the wrong field for" from "this small ecosystem published nothing in
+            # the window". Those want opposite responses, and conflating them is
+            # not a small matter here: `health_summary` collects FAILED entries
+            # without filtering on the colon, so a failed ecosystem PART reaches
+            # `failures` and `cli.degraded_state` puts "This run is incomplete"
+            # across every page of the site.
+            #
+            # So an emptiness guard degrades the whole site the first quiet window
+            # a 13-record ecosystem has, which is the furniture problem
+            # `record_feed`'s four states exist to avoid, reached from a third
+            # direction. Comparing FIELDS is exact rather than heuristic: ids
+            # present in `upstream` or `related` and absent from `aliases` is the
+            # bug, by construction, and no threshold has to be guessed.
             #
             # This is the third appearance of one bug in this file. `feed_osv`
             # reads CVE ids from `aliases`, and that is the WRONG FIELD for an
@@ -1942,12 +1994,12 @@ def feed_osv(years, ecosystems=("PyPI", "npm", "Go", "crates.io", "RubyGems",
             # ecosystem that returns nothing is now loud, and the next one added
             # cannot sit in the tuple reading zero and reporting health.
             record_feed(f"osv:{eco}", FAILED,
-                        f"{nbytes / 1e6:.0f}MB read and no in-scope CVE id found; "
-                        "if this is a distro ecosystem its ids are in `upstream` "
-                        "or `related`, which this adapter does not read",
+                        f"0 in-scope ids via `aliases` but {len(elsewhere)} via "
+                        "`upstream`/`related`, which this adapter does not read; "
+                        f"{nbytes / 1e6:.0f}MB read for nothing",
                         rows=0)
-            print(f"  [osv:{eco}] FAILED: 0 in-scope ids from "
-                  f"{nbytes / 1e6:.0f}MB", file=sys.stderr)
+            print(f"  [osv:{eco}] FAILED: 0 via aliases, {len(elsewhere)} "
+                  f"via upstream/related", file=sys.stderr)
         else:
             record_feed(f"osv:{eco}", True, detail, rows=len(found))
             print(f"  [osv:{eco}] +{added} (of {len(found)} in scope)", file=sys.stderr)

@@ -794,8 +794,46 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > which is how this sat unseen, so a configured ecosystem yielding nothing in scope is
 > now `FAILED` with the field named in the detail. `rows=` also moves from `added` to
 > the ids the archive *held*: `added` is order-dependent because `seen` is shared across
-> the loop, and `osv:Pub` recorded **+1** on the 2026-08-31 baseline for that reason
-> alone, one id from tripping any guard keyed on it. `tests/test_osv_fields.py`.
+> the loop and it understates every ecosystem after the first. `added` from the
+> 2026-08-31 baseline against `found` re-measured 2026-09-01: SwiftURL 16 credited of
+> 22 held, Hex 186 of 211, crates.io 366 of 384, GitHub Actions 20 of 23.
+> `tests/test_osv_fields.py`.
+>
+> ### CORRECTION, same day, twice. The `osv:Pub` example was wrong; so was the fix for it.
+>
+> **First error.** This section said `osv:Pub` recorded **+1** because earlier ecosystems
+> had already supplied its ids, offered as proof that `added` is order-dependent. Pub
+> holds 1 in-scope id over `2025,2026`, `added` and `found` in agreement. Wrong in the
+> direction that flattered the change, which is the direction to distrust. The property
+> is real; the numbers above are the honest version of it.
+>
+> **Second error, found by the deploy the first correction was written alongside.** The
+> live run reads `years=[2024, 2025, 2026]`, from `coverage.WINDOW_YEARS`, and printed
+> `[osv:Pub] +4 (of 4 in scope)`. **Every hand measurement in this section used
+> `feedlab`'s two-year default against a three-year pipeline.** That is the trap
+> `test_the_baseline_gathers_the_years_the_pipeline_gathers` exists for, walked into by
+> hand instead of by code. It does not touch the aliases-versus-upstream finding, which
+> is 0 against thousands and survives any window; it made the case for un-configuring
+> Pub four times weaker than stated.
+>
+> **And the guard as first written would have degraded the whole site.**
+> `health_summary` collects FAILED entries without filtering on the colon, so a failed
+> ecosystem PART reaches `failures` and `cli.degraded_state` puts *"This run is
+> incomplete"* across every page. Keyed on emptiness, that fires the first quiet window
+> any small ecosystem has, which is the furniture problem `record_feed`'s four states
+> exist to avoid, reached from a third direction.
+>
+> **So Pub stays and the guard compares FIELDS instead of counting zero.** Ids present
+> in `upstream` or `related` and absent from `aliases` is the bug by construction; zero
+> in all three is a true and boring fact about a small ecosystem. Exact rather than
+> heuristic, no threshold guessed, and it cannot fire on an ecosystem that simply had a
+> quiet quarter. That is where the argument should have gone in the first place, and it
+> only got there because a wrong sentence had to be re-measured.
+>
+> `test_a_genuinely_empty_window_is_not_a_failure` and
+> `test_the_guard_fires_on_the_field_mismatch_not_on_emptiness` pin both halves.
+> `test_a_failed_ecosystem_part_degrades_the_whole_run` pins why it matters, because
+> that claim is about a function two modules from the guard.
 
 **Tier 0 and Tier 1 together, measured through the adapters:** **+20 CNAs**, taking the
 roster share from 21.7% to about 25.4% and the reachable share from 31.5% to about 37%.
