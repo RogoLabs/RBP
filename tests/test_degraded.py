@@ -2361,3 +2361,95 @@ def test_the_claim_and_the_read_cannot_disagree(monkeypatch):
     detail = feeds.FEED_HEALTH["csaf:v.example"]["detail"]
     assert "3 of 10" in detail, detail
     assert len(asked) == 3, f"the line says 3 and {len(asked)} advisories were read"
+
+
+# --------------------------------------------------------------------------
+# an entry whose rows are not coverage
+#
+# `rows` normally counts ids a source evidences, so a fall means ids left the
+# site. For a resolver it counts work done over a population another feed is
+# draining, so the same fall means the drain is working. `ubuntu:dates` went
+# 56 -> 0 the day `ubuntu-osv` landed and dated its population out from under
+# it, and every guard in the project read that as a regression.
+# --------------------------------------------------------------------------
+
+def test_a_drained_resolver_is_not_a_shrink():
+    """The 2026-08-31 shape. Left alone this set `degraded` on that run and would
+    have set it on every run after it, because the drained population does not
+    come back."""
+    prev = {"ubuntu": {"rows": 3996,
+                       "parts": {"dates": {"rows": 56}}}}
+    cur = {"ubuntu": {"rows": 3991,
+                      "parts": {"dates": {"rows": 0,
+                                          "counts_coverage": False}}}}
+    assert feeds.compare_magnitudes(prev, cur) == []
+
+
+def test_without_the_mark_the_same_drain_reads_as_a_shrink():
+    """The mark is doing the work, not the numbers."""
+    prev = {"ubuntu": {"rows": 3996, "parts": {"dates": {"rows": 56}}}}
+    cur = {"ubuntu": {"rows": 3991, "parts": {"dates": {"rows": 0}}}}
+    assert any("ubuntu:dates" in f for f in feeds.compare_magnitudes(prev, cur))
+
+
+def test_the_mark_does_not_excuse_the_feeds_around_it():
+    """A resolver going quiet must not buy silence for a real collapse recorded
+    beside it, including on its own parent."""
+    prev = {"ubuntu": {"rows": 3996, "parts": {"dates": {"rows": 56}}},
+            "osv": {"rows": 11651}}
+    cur = {"ubuntu": {"rows": 80, "parts": {"dates": {"rows": 0,
+                                            "counts_coverage": False}}},
+           "osv": {"rows": 100}}
+    found = feeds.compare_magnitudes(prev, cur)
+    # Matched on the leading name rather than a substring: the finding for the
+    # PARENT renders as "ubuntu: 3,996 -> ...", so a naive `"ubuntu:" not in f`
+    # reads its own formatting as the child and passes while proving nothing.
+    assert any(f.startswith("ubuntu: ") for f in found), found
+    assert any(f.startswith("osv: ") for f in found), found
+    assert not any(f.startswith("ubuntu:dates") for f in found), found
+
+
+def test_a_resolver_that_is_doing_work_is_still_compared_on_its_own_terms():
+    """`counts_coverage=False` turns off the high-water comparison, not the record. The
+    count still reaches `summary.json` and the log, which is where a resolver
+    that quietly started returning fewer dates is read."""
+    detail = {"rows": 0, "counts_coverage": False, "status": "ok",
+              "detail": "dated 0 of 3 undated row(s) by name"}
+    assert detail["rows"] == 0 and "0 of 3" in detail["detail"]
+
+
+def test_an_unreachable_csaf_provider_carries_its_own_reason(monkeypatch):
+    """The 2026-08-31 build, and the whole point of a mark separate from status.
+
+    SUSE served something that was not JSON for one run. The provider was
+    recorded CAPPED, correctly, because recording it FAILED would pin `degraded`
+    true for ever on Cisco's every-run 403. But CAPPED is deliberately not in
+    `verify.EXPLAINS_A_SHORTFALL`, because a CONFIGURED cap fires by design and
+    must never excuse a shortfall. So the one status word had to mean both "a
+    limit we chose" and "a host we could not reach", and the gate could only read
+    it as the first. The mark says the second without touching the banner.
+    """
+    providers = ("https://a.example/provider-metadata.json",
+                 "https://gone.example/provider-metadata.json")
+    _run_csaf(monkeypatch, providers, {"a.example": ["CVE-2026-1"]},
+              unreachable={"gone.example"})
+    part = feeds.FEED_HEALTH["csaf:gone.example"]
+    assert part["status"] == feeds.CAPPED, "the banner argument still holds"
+    assert part["accounted"], "but the gate has to be able to tell why"
+    # And it survives the nesting into summary.json, which is the only shape
+    # `verify` ever sees.
+    from rbp import verify
+    marks = verify._feed_marks({"feeds": {"detail": feeds.health_detail()}})
+    assert marks["csaf:gone.example"]["accounted"]
+
+
+def test_a_provider_capped_by_a_limit_we_chose_carries_no_reason(monkeypatch):
+    """The other side of the same line, and the reason the mark is per-call
+    rather than derived from the status. A cap we configured fires on every run
+    by design, so letting it explain a shortfall excuses every shortfall on that
+    provider for ever."""
+    providers = ("https://a.example/provider-metadata.json",)
+    _run_csaf(monkeypatch, providers, {"a.example": ["CVE-2026-1"]})
+    part = feeds.FEED_HEALTH["csaf:a.example"]
+    assert not part.get("accounted"), (
+        "a reachable provider must never carry the mark, whatever its status")

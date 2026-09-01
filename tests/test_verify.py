@@ -300,3 +300,126 @@ def test_the_failure_message_names_what_actually_happens_next(tmp_path, capsys):
         "the failure message still claims the site is serving this artefact; the "
         "deploy is skipped, so it is not")
     assert "deploy is skipped" in out and "previous" in out, out
+
+
+# --------------------------------------------------------------------------
+# the two marks that qualify a zero
+#
+# 2026-08-31, the run that stopped publishing. Two sources hit zero and neither
+# was the silent shrink this module exists for:
+#
+#   csaf:www.suse.com  2,732 -> 0  SUSE served non-JSON metadata for one run and
+#                                  was valid again inside the hour
+#   ubuntu:dates          62 -> 0  `ubuntu-osv` landed and dated the undated
+#                                  population out from under the resolver, 82 -> 3
+#
+# The first is weather and should publish as degraded. The second is not a
+# degradation in either direction and should not be compared at all. Both failed
+# the build, and the second would have failed every build after it.
+# --------------------------------------------------------------------------
+
+def test_the_marks_are_the_ones_feeds_actually_writes():
+    """The seam test. `verify` reads two keys out of a record built in `feeds`,
+    by literal, in a module that deliberately imports nothing opening a socket.
+    Nothing else checks the two ends agree, and a rename on either side would
+    silently turn both guards off rather than break anything."""
+    from rbp import feeds
+    feeds.reset_health()
+    try:
+        feeds.record_feed("resolver", feeds.OK, "d", rows=0, counts_coverage=False)
+        feeds.record_feed("dark", feeds.CAPPED, "d", rows=0, accounted="why")
+        feeds.record_feed("plain", feeds.OK, "d", rows=5)
+        detail = feeds.health_detail()
+        assert detail["resolver"]["counts_coverage"] is False
+        assert detail["dark"]["accounted"] == "why"
+        # The default shape is UNCHANGED. A snapshot written before this commit
+        # has neither key, and both guards read the absence as "ordinary
+        # coverage, not accounted for", which is what every old entry meant.
+        assert "counts_coverage" not in detail["plain"]
+        assert "accounted" not in detail["plain"]
+        marks = verify._feed_marks({"feeds": {"detail": detail}})
+        assert marks["resolver"]["counts_coverage"] is False
+        assert marks["dark"]["accounted"] == "why"
+    finally:
+        feeds.reset_health()
+
+
+def _resolver(tmp_path, degraded=False, counts_coverage=False):
+    """`ubuntu:dates`' 2026-08-31 shape: 62 ids at its best, 0 now, status ok."""
+    site = _site(tmp_path, [_row(i) for i in range(50)], degraded=degraded)
+    _snap(tmp_path, "2026-08-30", 100,
+          {"ubuntu": {"rows": 3996, "parts": {"dates": {"rows": 62}}}})
+    part = {"rows": 0, "status": "ok", "detail": "dated 0 of 3 undated row(s)"}
+    if not counts_coverage:
+        part["counts_coverage"] = False
+    snaps = _snap(tmp_path, "2026-08-31", 99,
+                  {"ubuntu": {"rows": 3991, "parts": {"dates": part}}})
+    return site, snaps
+
+
+def test_a_resolver_whose_population_was_drained_is_not_compared(tmp_path):
+    """`ubuntu:dates` dates rows no feed carried a date for. `ubuntu-osv` now
+    carries those dates itself, so the population fell 82 -> 3 and the resolver
+    dated 0 of them. Nothing left the site; a row it does not date stays in
+    `held_back.json` exactly where it already was."""
+    site, snaps = _resolver(tmp_path)
+    problems, notes = verify.review(site, snaps)
+    assert problems == [], problems
+
+
+def test_a_drained_resolver_does_not_demand_a_degraded_artefact(tmp_path):
+    """Skipped outright rather than accounted for, and this is the difference.
+    An accounted shortfall REQUIRES `degraded: true` beside it. This is not a
+    degradation in either direction, and the drained population does not come
+    back: accounting for it would pin `degraded` true on every run for ever,
+    which is the furniture problem `degraded_state` rejects."""
+    site, snaps = _resolver(tmp_path, degraded=False)
+    assert verify.check(site, snaps) == []
+
+
+def test_without_the_mark_the_same_resolver_still_fails(tmp_path):
+    """The mark is doing the work, not the shape of the fixture. This is the
+    2026-08-31 build exactly as it failed."""
+    site, snaps = _resolver(tmp_path, degraded=True, counts_coverage=True)
+    assert any("ubuntu:dates" in p and "goes dark" in p
+               for p in verify.check(site, snaps))
+
+
+def _unreachable(tmp_path, degraded=True, accounted=True):
+    """`csaf:www.suse.com`' 2026-08-31 shape: 2,732 at its best, unreachable now."""
+    site = _site(tmp_path, [_row(i) for i in range(50)], degraded=degraded)
+    _snap(tmp_path, "2026-08-30", 100,
+          {"csaf": {"rows": 20000, "parts": {"www.suse.com": {"rows": 2732}}}})
+    part = {"rows": 0, "status": "capped",
+            "detail": "provider unreachable: Expecting value: line 1 column 1"}
+    if accounted:
+        part["accounted"] = "provider unreachable this run"
+    snaps = _snap(tmp_path, "2026-08-31", 99,
+                  {"csaf": {"rows": 17300, "parts": {"www.suse.com": part}}})
+    return site, snaps
+
+
+def test_a_provider_we_could_not_reach_publishes_as_degraded(tmp_path):
+    """A source we could not reach is weather the run has already accounted for,
+    and publishing it with `degraded: true` beats publishing nothing. It cannot
+    say so through its status: CAPPED is forced there so that Cisco's every-run
+    403 does not pin `degraded` true for ever."""
+    site, snaps = _unreachable(tmp_path)
+    problems, notes = verify.review(site, snaps)
+    assert problems == [], problems
+    assert any("suse" in n and "unreachable" in n for n in notes), notes
+
+
+def test_an_unreachable_provider_still_has_to_be_disclosed(tmp_path):
+    """The half that replaces the build failure, for this route too. Accounted is
+    not a way to publish a short count quietly."""
+    site, snaps = _unreachable(tmp_path, degraded=False)
+    assert any("degraded=false" in p for p in verify.check(site, snaps))
+
+
+def test_the_mark_does_not_leak_to_a_cap_we_chose(tmp_path):
+    """The distinction the mark exists to draw. Both arrive here as `capped`; a
+    provider we could not reach explains its own zero and a configured limit we
+    chose does not, because that one fires on every run by design."""
+    site, snaps = _unreachable(tmp_path, accounted=False)
+    assert any("suse" in p and "goes dark" in p for p in verify.check(site, snaps))

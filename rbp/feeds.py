@@ -86,7 +86,8 @@ def reset_health():
     FETCH_BYTES["total"] = 0
 
 
-def record_feed(name, status, detail="", rows=None):
+def record_feed(name, status, detail="", rows=None, counts_coverage=True,
+                accounted=None):
     """Record one feed outcome in three states, not two.
 
     A feed that hit a page cap is neither a success nor a failure: it returned
@@ -94,18 +95,53 @@ def record_feed(name, status, detail="", rows=None):
     page assert "all N feed fetches succeeded" on every single run, because the
     Ubuntu 200-page cap fires every run. `status` accepts a bool for the old
     call sites, where True means ok.
+
+    TWO MARKS THAT QUALIFY A ZERO. Added 2026-08-31, after a run where a zero
+    meant neither of the things the shrink guards read it as and the site
+    stopped publishing for it.
+
+    `counts_coverage=False` says THIS ENTRY'S ROWS ARE NOT COVERAGE. `rows`
+    normally counts ids a source evidences, so a fall means ids left the site
+    and `compare_magnitudes` and `verify` are both right to be loud. For a resolver
+    it counts work done over a population that some other feed is draining, so
+    the same fall means the opposite, and a guard that fires on it is reporting
+    good news as a regression. `resolve_dates_ubuntu` is the case that forced
+    this: `ubuntu-osv` landed and the undated population it works over went 82
+    to 3 in a day. Note the asymmetry that makes this safe -- a resolver can
+    only fail to IMPROVE a row, never remove one, so nothing it does can be the
+    silent shrink these guards exist for.
+
+    `accounted` says THIS RUN ALREADY KNOWS WHY THIS IS ZERO, and carries the
+    reason for the log. `verify` reads it and treats the shortfall the way it
+    treats one behind a recorded failure: published as degraded rather than
+    blocked. It deliberately does NOT touch `status`, because the status word is
+    load-bearing elsewhere: an unreachable CSAF provider has to stay CAPPED or
+    Cisco's every-run 403 makes `degraded` permanently true, which is the
+    furniture problem `degraded_state` spends a paragraph rejecting. The status
+    word governs the banner; this governs the gate.
     """
     if status is True:
         status = OK
     elif status is False:
         status = FAILED
-    FEED_HEALTH[name] = {"status": status, "detail": detail, "rows": rows,
-                         "ok": status == OK,
-                         # Both incomplete-shaped states answer True here, so a
-                         # consumer asking "did this feed read everything" still
-                         # gets the right answer without knowing about caps.
-                         "truncated": status in (TRUNCATED, CAPPED),
-                         "capped": status == CAPPED}
+    rec = {"status": status, "detail": detail, "rows": rows,
+           "ok": status == OK,
+           # Both incomplete-shaped states answer True here, so a
+           # consumer asking "did this feed read everything" still
+           # gets the right answer without knowing about caps.
+           "truncated": status in (TRUNCATED, CAPPED),
+           "capped": status == CAPPED}
+    # Written only when they are not the default, so every existing entry in
+    # summary.json keeps the shape it has today and a snapshot recorded before
+    # this commit compares against one recorded after it with no special case.
+    # Spelled out rather than `coverage`, which is already a top-level key in
+    # summary.json meaning CNA coverage. Two unrelated senses of one word in one
+    # artefact is how a reader ends up believing the wrong one.
+    if not counts_coverage:
+        rec["counts_coverage"] = False
+    if accounted:
+        rec["accounted"] = accounted
+    FEED_HEALTH[name] = rec
 
 
 def health_summary():
@@ -236,14 +272,26 @@ def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
             return f"{name}: {was:,} -> {now:,} ids ({pct}% fewer)"
         return None
 
+    # AN ENTRY WHOSE ROWS ARE NOT COVERAGE IS NOT COMPARED AT ALL. See
+    # `record_feed`: for a resolver, `rows` is work done over a population
+    # another feed is draining, so a fall is the drain working. `ubuntu:dates`
+    # went 56 -> 0 the day `ubuntu-osv` landed and dated the population out from
+    # under it, and this function called that a shrink and set `degraded`. Left
+    # alone it would have set it on every run from then on, because the drained
+    # population does not come back: a warning that is always on is the
+    # furniture problem `degraded_state` rejects, reached from a third direction.
+    def _is_coverage(rec):
+        return (rec or {}).get("counts_coverage") is not False
+
     out = []
     for name, cur in sorted((current or {}).items()):
         if ":" in name:
             continue                      # raw-shape sub-fetch; handled below
         prev_feed = (previous or {}).get(name) or {}
-        hit = _cmp(name, prev_feed.get("rows"), cur.get("rows"), threshold)
-        if hit:
-            out.append(hit)
+        if _is_coverage(cur):
+            hit = _cmp(name, prev_feed.get("rows"), cur.get("rows"), threshold)
+            if hit:
+                out.append(hit)
 
         # AND EACH PART, which this deliberately skipped.
         #
@@ -259,6 +307,8 @@ def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
         # ecosystem genuinely is noisier than a whole feed, so the guard reports
         # a part only when it has clearly collapsed rather than merely dipped.
         for child, cv in sorted((cur.get("parts") or {}).items()):
+            if not _is_coverage(cv):
+                continue
             pv = ((prev_feed.get("parts") or {}).get(child) or {})
             hit = _cmp(f"{name}:{child}", pv.get("rows"), cv.get("rows"),
                        PART_DROP)
@@ -979,7 +1029,8 @@ def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
     """
     ids = list(dict.fromkeys(cve_ids))
     if not ids:
-        record_feed("ubuntu:dates", OK, "no undated rows to date", rows=0)
+        record_feed("ubuntu:dates", OK, "no undated rows to date", rows=0,
+                    counts_coverage=False)
         return {}
 
     started = time.monotonic()
@@ -1064,7 +1115,8 @@ def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
         status = CAPPED
     else:
         status = OK
-    record_feed("ubuntu:dates", status, detail, rows=len(found))
+    record_feed("ubuntu:dates", status, detail, rows=len(found),
+                counts_coverage=False)
     return found
 
 
@@ -2408,9 +2460,13 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
                 # invisible to the guard this change exists to feed. Caught by
                 # `test_an_unreachable_csaf_provider_never_escalates_the_parent`,
                 # which was written for the status coupling and found this
-                # instead. CAPPED for the reason given at the other call site.
+                # instead. CAPPED for the reason given at the other call site,
+                # and `accounted` for the reason given there too: CAPPED keeps
+                # the banner quiet, and the mark is what stops `verify` reading
+                # this zero as a silent shrink and blocking the deploy.
                 record_feed(f"csaf:{host}", CAPPED,
-                            f"provider unreachable: {str(e)[:60]}", rows=0)
+                            f"provider unreachable: {str(e)[:60]}", rows=0,
+                            accounted="provider unreachable this run")
                 continue
             # Reached, just not by the front door. The provider is NOT recorded
             # as unreachable, because we are about to read every advisory it
@@ -2646,13 +2702,25 @@ def feed_csaf(years, providers=CSAF_PROVIDERS, aggregators=CSAF_AGGREGATORS,
         # publishes the same fact. The part is strictly better than the parent's
         # line there: it names the provider instead of truncating a list at six.
         #
+        # WHAT CAPPED COSTS, AND THE MARK THAT PAYS IT. 2026-08-31: SUSE's
+        # provider metadata answered with something that was not JSON for one
+        # run, this branch recorded 2,732 -> 0 as CAPPED, and `verify` failed the
+        # build because CAPPED is deliberately not in its `EXPLAINS_A_SHORTFALL`.
+        # SUSE was serving valid JSON again within the hour. The status was
+        # right and the gate was right; what was missing was any way to say "this
+        # zero has a known cause" without saying it in the one word that also
+        # drives the banner. That is `accounted`, and it is why both unreachable
+        # branches pass it. A cap that is a CONFIGURED limit still excuses
+        # nothing, which is the distinction `verify`'s comment protects.
+        #
         # It also cannot escalate the parent: `_record_csaf_health` sets csaf to
         # FAILED or CAPPED whenever `unreachable` is non-empty, and
         # `health_detail`'s escalation only fires on a parent that is still OK.
         # `test_an_unreachable_csaf_provider_never_escalates_the_parent` pins that
         # coupling, because it is invisible from either function alone.
         if host in _csaf_hosts(unreachable):
-            record_feed(f"csaf:{host}", CAPPED, "provider unreachable", rows=0)
+            record_feed(f"csaf:{host}", CAPPED, "provider unreachable", rows=0,
+                        accounted="provider unreachable this run")
         elif spent > per_provider_budget_s:
             # NAMED, because this is the failure that took the site off the air
             # for a scheduled run and nothing in the artefact said which provider
