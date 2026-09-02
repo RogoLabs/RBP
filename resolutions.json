@@ -5130,9 +5130,6 @@
   "CVE-2025-43867": {
    "first_public": "2025-08-07"
   },
-  "CVE-2025-46418": {
-   "first_public": "2025-09-18"
-  },
   "CVE-2026-77679": {
    "first_public": "2026-08-21"
   },
@@ -5729,9 +5726,6 @@
   },
   "CVE-2024-8257": {
    "first_public": "2025-12-01"
-  },
-  "CVE-2024-35585": {
-   "first_public": "2025-10-21"
   },
   "CVE-2024-7956": {
    "first_public": "2024-10-10"
@@ -7927,6 +7921,24 @@
    "first_public": "2026-08-25",
    "published": "2026-09-01",
    "days_to_publish": 7,
+   "closed_on": "2026-09-02"
+  },
+  {
+   "cve_id": "CVE-2025-46418",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2025-09-18",
+   "published": "2026-09-02",
+   "days_to_publish": 349,
+   "closed_on": "2026-09-02"
+  },
+  {
+   "cve_id": "CVE-2024-35585",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2025-10-21",
+   "published": "2026-09-02",
+   "days_to_publish": 316,
    "closed_on": "2026-09-02"
   }
  ]

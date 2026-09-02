@@ -1,20 +1,20 @@
 [
  {
-  "cve_id": "CVE-2026-14957",
+  "cve_id": "CVE-2025-46418",
   "state": "PUBLISHED",
   "transferred": false,
-  "first_public": "2026-07-15",
+  "first_public": "2025-09-18",
   "published": "2026-09-02",
-  "days_to_publish": 49,
+  "days_to_publish": 349,
   "closed_on": "2026-09-02"
  },
  {
-  "cve_id": "CVE-2026-75604",
+  "cve_id": "CVE-2024-35585",
   "state": "PUBLISHED",
   "transferred": false,
-  "first_public": "2026-08-25",
-  "published": "2026-09-01",
-  "days_to_publish": 7,
+  "first_public": "2025-10-21",
+  "published": "2026-09-02",
+  "days_to_publish": 316,
   "closed_on": "2026-09-02"
  }
 ]
