@@ -45,6 +45,7 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import clock
 from . import schema as _schema
+from . import slides as _slides
 
 # Pre-launch posture. The dashboard is built and reachable either way, because
 # the repo is public and the data files are served regardless; the gate is on
@@ -988,6 +989,13 @@ def load(snap_root, data_dir):
         # rejection printed under a "Resolved" heading with the prose "RBPs
         # attributed here that have since published" and a cell reading None. A
         # rule 4.5.3.5 rejection is the CNA complying with the rules.
+        # The talk deck's own figures. Computed HERE rather than in the
+        # template, and from the FULL resolution ledger rather than from
+        # `resolutions_published` beside it, which is capped at the 200
+        # slowest closures and whose median is nine days worse than the
+        # ledger's as a result. See rbp/slides.py.
+        "deck": _slides.deck(rows, summary, resolutions, snaps,
+                             len(_published_closures)),
         "resolutions_published": _published_closures,
         "resolutions_rejected": _rejected_closures,
         # Counted from the same lists that render, not from an untruncated
@@ -1535,6 +1543,33 @@ def build(out, snap_root, data_dir):
             **ctx, page=target,
             page_file="" if target == "index.html" else target)
         _schema.write_text(os.path.join(out, target), html)
+
+    # THE TALK DECK, rendered outside the loop above and behind a catch.
+    #
+    # /slides.html is an unlinked page for a working-group session. It is the
+    # least important thing this site serves and it renders on the same publish
+    # path as the count, so a template error in it would raise inside the Build
+    # site step, and `deploy` is `needs: build` with no `if:`: the whole deploy
+    # is skipped and Pages serves the previous artefact indefinitely, four times
+    # a day, with nothing saying why. That is the exact failure the launch gate
+    # is written to avoid, and a slide is not worth it.
+    #
+    # So the split is: CI FAILS LOUD, PUBLISH DEGRADES. tests/test_slides.py
+    # renders this page and asserts its figures, and that job gates the commit
+    # path, so a broken deck cannot reach main. If one reaches the publish path
+    # anyway, the message below goes to the build log and every other page still
+    # ships. The failure is never silent and it is never fatal.
+    try:
+        _schema.write_text(
+            os.path.join(out, "slides.html"),
+            env.get_template("slides.html").render(
+                **ctx, page="slides.html", page_file="slides.html"))
+    except Exception as e:              # noqa: BLE001 - see the note above
+        import traceback
+        print(f"SLIDES: /slides.html did not render ({type(e).__name__}: {e}). "
+              "Every other page is unaffected and the site is publishing "
+              "normally. This should have been caught in CI:")
+        traceback.print_exc()
 
     if not launched:
         # GitHub Pages cannot set X-Robots-Tag, and a meta tag cannot cover the

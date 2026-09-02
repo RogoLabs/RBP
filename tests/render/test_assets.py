@@ -40,7 +40,13 @@ def test_every_page_versions_every_stylesheet_it_loads(site_dir):
     assert expected, "the built site serves no stylesheets at all"
     for name in page_paths(site_dir):
         html = (site_dir / name).read_text()
-        if "static/css/" not in html:
+        # KEYED ON AN ACTUAL <link>, not on the substring "static/css/" appearing
+        # anywhere in the file. /slides.html carries its own styles inline and
+        # names style.css in a CSS comment explaining where its tokens came from,
+        # which tripped the substring guard and then failed the assertion for
+        # linking no stylesheet at all. A page that loads no external stylesheet
+        # cannot serve a stale cached one, which is the defect this test is about.
+        if 'rel="stylesheet"' not in html:
             continue
         got = asset_versions(html)
         assert set(got) == set(expected), (
