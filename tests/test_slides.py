@@ -143,6 +143,28 @@ def _build_with_summary(tmp_path, mutate):
     return (out / "slides.html").read_text()
 
 
+def test_the_deck_does_not_report_cron_eviction_as_this_sites_failure(tmp_path):
+    """THE FIGURE THAT WAS PULLED, and the reason it must not come back.
+
+    The feed-health slide carried "67.9% of scheduled runs in the last 7 days
+    actually published". The run ledger only ever recorded SUCCESSFUL scheduled
+    ticks, so a tick GitHub never fired and a tick that ran and failed were
+    indistinguishable in it, and the residual was almost all GitHub dropping cron
+    under load. Presenting that as this pipeline's delivery rate, on the one slide
+    arguing that a number must be read together with its instrument, was the deck
+    contradicting itself in front of the room.
+
+    Asserted as an absence on the RENDERED page rather than as a rule about
+    `cadence`, because the objection is to the claim reaching a reader, not to the
+    figure existing: /status.html is the right home for it and keeps it.
+    """
+    t = _text(_build_with_summary(tmp_path, lambda s: None))
+    for phrase in ("of scheduled runs", "scheduled runs in the last"):
+        assert phrase not in t, (
+            f"the deck is back to publishing {phrase!r}, which reads as this "
+            "site failing runs that GitHub never fired")
+
+
 def test_the_deck_reports_a_degraded_run_as_degraded(tmp_path):
     """A deck that cannot tell a bad run from a good one is worse than one that
     says nothing, and this is the failure mode the project has already shipped
@@ -213,6 +235,51 @@ def test_closures_are_measured_over_the_whole_ledger_not_the_published_cap():
         "the deck must state how many closures the published file drops, or a "
         "reader recomputing from /data/resolved.json silently gets a different "
         "answer and has no way to know why")
+    # THE NUMBER THE READER GETS IF THEY DO IT ANYWAY, stated beside the true one
+    # so the gap is a fact they can check rather than a claim they must take.
+    assert out["published_median"] == 62, (
+        "the deck does not say what the published file's own median is, so "
+        "'the cap moves the median' is an assertion with nothing behind it")
+
+
+def test_the_cap_drops_undated_closures_before_it_drops_fast_ones():
+    """"Capped at the 200 slowest, which drops 29 of the fastest" was WRONG in a
+    checkable way, and the reader can check it: on the live ledger the 29 dropped
+    rows are 19 fast closures and 10 whose duration never parsed, which
+    `site.load`'s sort puts last precisely so they fall off the end first.
+
+    Overstating how many FAST rows the cap eats overstates the bias it introduces,
+    on the one slide that tells the room not to trust the published file.
+    """
+    ledger = {"open": {}, "resolved": (
+        [{"cve_id": f"CVE-2026-{i}", "state": "PUBLISHED", "days_to_publish": 10 + i}
+         for i in range(6)]
+        + [{"cve_id": f"CVE-2026-n{i}", "state": "PUBLISHED", "days_to_publish": None}
+           for i in range(4)])}
+    out = slides.closures(ledger, published_n=5)
+    assert out["n"] == 10 and out["measured"] == 6 and out["undated"] == 4
+    assert out["withheld_by_cap"] == 5
+    assert out["withheld_measured"] == 1, "the one fastest measured row"
+    assert out["withheld_undated"] == 4, "and every undated row"
+    assert out["withheld_measured"] + out["withheld_undated"] == out["withheld_by_cap"]
+
+
+def test_a_whole_numbered_median_is_not_rendered_with_a_decimal_point():
+    """`statistics.median` returns a float on an even sample, so 41 rendered as
+    "41.0" beside a 34 that rendered as "34", on a slide whose whole point is
+    that the reader compare the two. A genuinely fractional median keeps its
+    half."""
+    even = {"open": {}, "resolved": [
+        {"cve_id": "a", "state": "PUBLISHED", "days_to_publish": 40},
+        {"cve_id": "b", "state": "PUBLISHED", "days_to_publish": 42}]}
+    assert slides.closures(even, published_n=2)["median"] == 41
+    assert not isinstance(slides.closures(even, published_n=2)["median"], float)
+    odd = {"open": {}, "resolved": [
+        {"cve_id": "a", "state": "PUBLISHED", "days_to_publish": 40},
+        {"cve_id": "b", "state": "PUBLISHED", "days_to_publish": 41},
+        {"cve_id": "c", "state": "PUBLISHED", "days_to_publish": 41},
+        {"cve_id": "d", "state": "PUBLISHED", "days_to_publish": 42}]}
+    assert slides.closures(odd, published_n=4)["median"] == 41
 
 
 def test_a_rejected_closure_never_counts_as_a_publication():
@@ -244,6 +311,11 @@ def test_an_empty_ledger_does_not_raise():
     """First run, and every fixture that does not care about closures."""
     out = slides.closures({"open": {}, "resolved": []}, published_n=0)
     assert out["n"] == 0 and out["buckets"] == []
+    # Every key the template reads, present on the empty path too. The deck
+    # renders these unconditionally, and a missing key is an empty cell that
+    # reads as a measured zero.
+    for k in ("undated", "withheld_measured", "withheld_undated", "published_median"):
+        assert k in out, f"the empty ledger drops {k}, which the deck renders"
 
 
 # --------------------------------------------------------------------------

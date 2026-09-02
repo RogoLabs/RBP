@@ -38,6 +38,18 @@ def _pct(n, d):
     return round(100.0 * n / d, 1) if d else None
 
 
+def _tidy(x):
+    """A whole-numbered median as an int.
+
+    `statistics.median` returns a float whenever the sample is even, so a median
+    of exactly 41 days rendered as "41.0" beside a median of 34 that rendered as
+    "34". Two figures the slide invites the reader to compare should not be
+    formatted differently by an accident of sample parity. A genuinely fractional
+    median, like the site's own 60.5, keeps its half.
+    """
+    return int(x) if isinstance(x, float) and x.is_integer() else x
+
+
 def feed_split(rows, requested=()):
     """Rows by the feed that evidenced them, and rows evidenced by one feed only.
 
@@ -118,8 +130,11 @@ def closures(resolutions, published_n):
     days = sorted(r["days_to_publish"] for r in rows
                   if isinstance(r.get("days_to_publish"), int))
     if not days:
-        return {"n": 0, "measured": 0, "open": len((resolutions or {}).get("open", {})),
-                "published_n": published_n, "withheld_by_cap": 0, "buckets": []}
+        return {"n": len(rows), "measured": 0, "undated": len(rows),
+                "open": len((resolutions or {}).get("open", {})),
+                "published_n": published_n, "withheld_by_cap": 0,
+                "withheld_measured": 0, "withheld_undated": 0,
+                "published_median": None, "buckets": []}
     edges = [(0, 3), (3, 7), (7, 14), (14, 30), (30, 60), (60, 90), (90, None)]
     buckets = []
     for lo, hi in edges:
@@ -131,14 +146,39 @@ def closures(resolutions, published_n):
             # it is marked rather than left for a reader to count edges.
             "within_expectation": hi == 3,
         })
+    # WHAT THE CAP ACTUALLY DROPS, split rather than summed.
+    #
+    # The deck said "capped at the 200 slowest, which drops 29 of the fastest".
+    # 29 is right and "of the fastest" is not: on the 2026-09-02 ledger 19 of them
+    # are the fastest closures and the other 10 are rows whose duration could not
+    # be measured at all, which `site.load`'s sort puts last precisely so they
+    # fall off the end. Overstating how many FAST rows the cap eats overstates the
+    # bias it introduces, and a reader who downloads the file can count both.
+    #
+    # Derived from the three totals rather than by re-sorting, so this cannot
+    # drift from `site.load`'s ordering by being a second implementation of it.
+    # Nulls sort last there, so the cap fills from the measured rows first.
+    kept_measured = min(published_n, len(days))
+    withheld_measured = len(days) - kept_measured
+    withheld_total = max(0, len(rows) - published_n)
+    # THE MEDIAN A READER GETS IF THEY RECOMPUTE FROM THE PUBLISHED FILE. Stated
+    # beside the true one, because "the cap moves the median" is an assertion and
+    # two numbers are a fact the reader can check against the file in front of
+    # them. `days` is ascending and the cap keeps the SLOWEST, so the kept set is
+    # its tail.
+    kept = days[len(days) - kept_measured:] if kept_measured else []
     return {
         "n": len(rows),
         "measured": len(days),
+        "undated": len(rows) - len(days),
         "open": len((resolutions or {}).get("open", {})),
         "published_n": published_n,
-        "withheld_by_cap": max(0, len(rows) - published_n),
+        "withheld_by_cap": withheld_total,
+        "withheld_measured": withheld_measured,
+        "withheld_undated": max(0, withheld_total - withheld_measured),
+        "published_median": _tidy(statistics.median(kept)) if kept else None,
         "min": days[0],
-        "median": statistics.median(days),
+        "median": _tidy(statistics.median(days)),
         "mean": round(statistics.mean(days), 1),
         "p90": days[int(0.9 * (len(days) - 1))],
         "max": days[-1],

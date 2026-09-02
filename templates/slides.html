@@ -389,10 +389,10 @@ body.notes-on .notes { display: block; }
     </div>
   </div>
   <p class="note warn" style="margin-top:1.2rem"><strong>The largest block is repository
-  security advisories.</strong> An advisory published against a repository with no package
-  ecosystem never enters the global advisory database, so no page of that database's API
-  can return it. It has to be polled one repository at a time. If your pipeline reads the
-  database endpoint, you see none of them.</p>
+  security advisories.</strong> An advisory against a repository with no package ecosystem
+  never enters the global advisory database, so no page of its API can return it. These
+  are polled one repository at a time, from a configured list, so the block is only as
+  large as that list. Read the database endpoint and you see none of them.</p>
   <div class="notes">This is the slide the room came for. It is a concrete, checkable
   statement about a specific API shape, not a complaint. Expect a question about how the
   repo list is chosen: the answer is that it is a configured list, which is exactly why
@@ -458,10 +458,13 @@ body.notes-on .notes { display: block; }
   </div>
   <p class="note warn" style="margin-top:1.2rem"><strong>Do not compute this from the
   published file.</strong> <code>/data/resolved.json</code> is capped at the
-  {{ deck.closures.published_n }} <em>slowest</em> closures, which drops
-  {{ deck.closures.withheld_by_cap }} of the fastest and moves the median several days
-  the wrong way. The figures here are from the whole ledger, and the cap is a known
-  reporting gap on this site rather than a property of the data.</p>
+  {{ deck.closures.published_n }} <em>slowest</em> closures, dropping
+  {{ deck.closures.withheld_by_cap }} rows: the {{ deck.closures.withheld_measured }}
+  fastest, and {{ deck.closures.withheld_undated }} whose duration could not be measured.
+  Recomputed from that file the median is
+  {{ deck.closures.published_median if deck.closures.published_median is not none else 'higher' }};
+  over the whole ledger it is {{ deck.closures.median }}. This slide is the whole ledger.
+  The cap is a known reporting gap on this site, not a property of the data.</p>
   <div class="notes">Say the caveat before anyone can find it. A room of data consumers
   will absolutely go and recompute this from the JSON, and it is far better that they hear
   the cap from me than discover it. It is also a genuine to-do: the published file should
@@ -506,7 +509,7 @@ body.notes-on .notes { display: block; }
     <div class="stat"><div class="n">{{ summary.coverage.top_covered_effective if summary.coverage.top_covered_effective is not none else 'n/a' }}<span style="color:var(--muted);font-size:0.5em"> / {{ summary.coverage.top_n }}</span></div>
       <div class="k">of the largest {{ summary.coverage.top_n }} assigners by published volume</div></div>
     <div class="stat"><div class="n">{{ summary.coverage.observed_pct | round(1) if summary.coverage.observed_pct is not none else 'n/a' }}%</div>
-      <div class="k">of the {{ summary.coverage.total_pub | commafy }} CVEs published in the window were referenced by at least one feed here</div></div>
+      <div class="k">of the {{ summary.coverage.total_pub | commafy }} CVEs published in {% if summary.coverage.window %}{{ summary.coverage.window | first }}&ndash;{{ summary.coverage.window | last }}{% else %}the window{% endif %} were referenced by at least one feed here</div></div>
   </div>
   <p style="margin-top:1.4rem">Coverage of the <em>large</em> assigners is close to
   complete. Coverage of the <em>long tail</em> is not, and the tail is where a small
@@ -535,14 +538,15 @@ body.notes-on .notes { display: block; }
   <div class="cols" style="margin-top:0.6rem">
     <div class="stat"><div class="n">{{ 'true' if summary.degraded else 'false' }}</div>
       <div class="k"><code>degraded</code> in <code>/data/rbp.json</code>, machine-readable, this run</div></div>
-    <div class="stat"><div class="n">{{ cadence.pct if cadence and cadence.pct is not none else 'n/a' }}%</div>
-      <div class="k">of scheduled runs in the last {{ cadence.days if cadence else 7 }} days actually published</div></div>
+    <div class="stat"><div class="n">{{ summary.feeds.freshness_unmeasurable | length if summary.feeds.freshness_unmeasurable else 0 }}</div>
+      <div class="k">feeds returning no dates at all, so no freshness threshold can reach them</div></div>
     <div class="stat"><div class="n">{{ summary.limitations | length if summary.limitations else 0 }}</div>
       <div class="k">standing limits published beside the count, separately from degradation</div></div>
   </div>
   <p class="note" style="margin-top:1.2rem">Caps that fire by design are not degradation.
   A warning that is on every run is furniture, and it teaches a reader to ignore the one
-  that means something.</p>
+  that means something. And a feed with no dates is not a feed that passed the check: it
+  is one the check cannot reach, reported separately for exactly that reason.</p>
   <div class="notes">Generalise past this project: any consumer aggregating third-party
   feeds has this failure mode and most do not check for it. Freshness of the newest record,
   not row count, is the check. This has bitten this project twice.</div>
