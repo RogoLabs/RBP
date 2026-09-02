@@ -351,7 +351,9 @@ body.notes-on .notes { display: block; }
   <p class="note" style="margin-top:1rem">A row carries every feed that referenced the
   ID, so the column sums past {{ deck.feeds.total | commafy }}. The last column does not
   overlap: it is the count of rows that vanish entirely if you are not reading that one
-  source.</p>
+  source.{% if deck.feeds.configured > deck.feeds.evidencing %} {{ deck.feeds.configured - deck.feeds.evidencing }} of the
+  {{ deck.feeds.configured }} configured feeds answered in full and referenced nothing that was
+  still reserved, so they have no line here.{% endif %}</p>
   <div class="notes">Do not read the table out. Point at the top two rows and at the last
   column, then move. The last column is the whole slide and it sets up the next one.</div>
 </section>
