@@ -279,10 +279,11 @@ body.notes-on .notes { display: block; }
   sources. Every figure in this deck was computed by the run that built the page.</p>
   <p class="note" style="margin-top:1.6rem">rbptracker.org &middot; Jerry Gamblin &middot;
   built from the {{ snapshot_date }} run &middot; {{ generated }}</p>
-  <div class="notes">Open with the count, not with the argument. This deck names no CNA
-  and makes no claim about what anyone did or failed to do; it is a measurement of a
-  state the CVE Program itself defines. If someone asks "whose fault is this", the answer
-  is that the site cannot tell you, on purpose, and the boundaries slide says why.</div>
+  <div class="notes">Open with the count, not with the argument. This deck attributes no
+  row to anyone and makes no claim about what anyone did or failed to do; it is a
+  measurement of a state the CVE Program itself defines. If someone asks "whose fault is
+  this", the answer is that the site cannot tell you, on purpose, and the boundaries slide
+  says why.</div>
 </section>
 
 {# ------------------------------------------------------------ 2. definition #}
@@ -519,7 +520,9 @@ body.notes-on .notes { display: block; }
   correction factor is applied and none is proposed: a number nobody can check is worse
   than a number that is honestly too small.</p>
   <div class="notes">If asked which large assigner is missing, give the count and not the
-  name. The site names no CNA anywhere and the deck holds that line; the boundaries slide explains it.</div>
+  name. Do not say the site names nobody: /data/summary.json publishes the aggregate
+  coverage set, and someone can open it while you are talking. The line that IS true, and
+  the one to give, is that no ROW is attributed to anyone.</div>
 </section>
 
 {# ------------------------------------------------------------- 10. degraded #}
@@ -611,10 +614,13 @@ body.notes-on .notes { display: block; }
     it did not assign, so a party can hold an ID precisely <em>because</em> it is a
     CNA-LR, and nothing observable distinguishes an ID accepted for a third-party
     requester from one withheld by its assigner.</li>
-    <li><strong>Not a scorecard.</strong> No CNA is named anywhere on the site, in any
-    field, in any format. The reservation API redacts the owner for every reserved ID, so
-    ownership could only be estimated, and an estimate is not a thing to publish beside
-    someone's name.</li>
+    <li><strong>Not a scorecard.</strong> <strong>No row here is attributed to anyone.</strong>
+    The reservation API redacts the owner for every reserved ID, so ownership could only be
+    estimated, and an estimate is not a thing to publish beside a name. The site does
+    publish the <em>aggregate</em> coverage set, which CNAs its feeds can see at all, in
+    <code>/data/summary.json</code>. That is deliberate: the reach figure earlier is not
+    auditable without it. It is a statement about this site's reach, and it attributes no
+    CVE ID to anybody.</li>
     <li><strong>Not a total.</strong> A floor, bounded by
     {{ deck.feeds.configured }} feeds and by the measured reach.</li>
     <li><strong>Not comparable run to run</strong> while the feed set is still changing.</li>

@@ -444,3 +444,48 @@ def test_every_deck_token_clears_aa_on_every_surface_it_lands_on():
             f"--{name} ({toks[name]}) renders at {worst:.2f}:1 against a bar of "
             f"{AA_NORMAL}; this page's styles are inline, so contrast.py's sweep "
             "over static/css cannot see them")
+
+
+# --------------------------------------------------------------------------
+# the claim that was false
+# --------------------------------------------------------------------------
+
+def test_the_deck_never_claims_the_site_names_nobody(deck_page):
+    """THE WORST THING THIS DECK SAID, and it took ten seconds to disprove.
+
+    The boundaries slide read "No CNA is named anywhere on the site, in any
+    field, in any format." That sentence is `publish.check`'s refusal message,
+    which is about the DATA BRANCH and about attributing a ROW. As a claim about
+    the site it is false: /data/summary.json serves `coverage.covered`, 308
+    certified CNA short names on the live 2026-09-02 run, plus `near_floor`,
+    `off_roster`, `own_channel_cnas` and `top_missed_effective`.
+
+    Said to a room of data consumers, one of whom opens the file while you are
+    talking, it would have cost the deck every other claim on it.
+
+    The true guarantee is narrower and stronger for being checkable: no ROW is
+    attributed to anyone, and the aggregate set is published deliberately because
+    the reach figure is not auditable without it.
+    """
+    t = _text(deck_page).lower()
+    for false_claim in ("named anywhere on the site",
+                        "the site names no cna",
+                        "names no cna anywhere",
+                        "no cna is named anywhere"):
+        assert false_claim not in t, (
+            f"the deck claims {false_claim!r}; /data/summary.json publishes the "
+            "aggregate coverage set, so this is refutable from a browser in the "
+            "room. The claim that holds is that no ROW is attributed.")
+    assert "no row here is attributed to anyone" in t, (
+        "the deck dropped the claim that IS true along with the one that was not")
+
+
+def test_the_deck_points_at_the_file_that_carries_the_names(deck_page):
+    """Volunteering where the aggregate set lives is what makes the narrower
+    claim credible. A deck that quietly stopped making the false claim, without
+    saying what the site does publish, reads as a retreat rather than a
+    correction."""
+    t = _text(deck_page)
+    assert "aggregate" in t.lower() and "/data/summary.json" in t, (
+        "the boundaries slide does not say where the coverage set is published, "
+        "so a reader who finds it finds it as a contradiction")
