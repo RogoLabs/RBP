@@ -106,6 +106,26 @@
       </ul>
     </div>
     {% endif %}
+    {% if summary.feeds and summary.feeds.get('withdrawn') %}
+    {# THE THIRD OF THE THREE, in the same chrome as the other two and for the
+       reason given at the stale block: these are read the same way and giving
+       them different chrome would suggest a difference in kind.
+
+       Its own block rather than a line in the summary above, because the
+       summary can only say HOW MANY feeds withdrew history, and the fact a
+       reader needs is WHICH PERIOD stopped being evidenced. #}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>A feed withdrew history it had already served.</strong> A source
+        that deletes advisories it previously published moves neither the total
+        far enough to trip a proportional check nor the newest date far enough
+        to trip a freshness one, so it is checked directly:
+      </p>
+      <ul class="mb-0">
+        {% for line in summary.feeds.withdrawn %}<li class="mono small">{{ line }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </div>
 </div>
 
@@ -137,6 +157,29 @@
       publish{% endif %}. A merge-triggered publish keeps the site fresh but is
       not evidence that the schedule fired, so it is not counted in the figure
       above.
+    </p>
+    {# THE THIRD OUTCOME, and the reason the figure above was unfair to this
+       pipeline for a week. A cron tick GitHub never fired and a tick that ran
+       and broke are different failures with different owners, and the ledger
+       reported them as one number until 2026-09-02, because it only ever
+       recorded deliveries. #}
+    <p>
+      Of the {{ cadence.expected }} ticks expected in that window,
+      <strong>{{ cadence.scheduled }} published</strong>,
+      <strong>{{ cadence.failed }} ran and did not publish</strong>, and
+      <strong>{{ cadence.unaccounted }} left no record at all</strong>.
+      A tick that leaves no record never started. GitHub delays and drops
+      scheduled workflows under load: on 2026-09-02 the four runs of the day
+      began at 04:35, 11:19, 16:35 and 21:04 against a cron that asks for
+      00:17, 06:17, 12:17 and 18:17, and six of the 28 expected ticks never
+      fired at all. That is worth seeing and it is not this pipeline failing,
+      which is why the two are no longer added together.
+    </p>
+    <p>
+      The last figure is a residual rather than a measurement: it is what is
+      left of the expectation after the runs that left a record. Ticks that ran
+      and failed have only been recorded since 2026-09-02, so for the first week
+      after that date this number still carries some of them.
     </p>
     <p class="mb-0">
       Counted from a ledger appended by the step that actually publishes, so a run

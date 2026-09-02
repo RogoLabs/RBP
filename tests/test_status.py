@@ -70,6 +70,11 @@ def _degrade(summary):
     summary["degraded"] = True
     summary["degraded_reasons"] = REASONS
     summary["feeds"]["shrunk"] = ["ghsa: 3321 -> 41 ids (-98.8%)"]
+    summary["feeds"]["withdrawn"] = [
+        "msrc: newest advisory moved BACKWARD, 2026-08-11 -> 2026-07-14; the "
+        "source withdrew advisories it had already served",
+        "msrc: 2026-08 held 1,637 ids and holds 0 now (100% of that month "
+        "withdrawn)"]
     summary["feeds"]["failures"] = ["ubuntu: HTTP 503"]
     summary["feeds"]["detail"] = {
         "osv": {"status": "ok", "detail": "", "rows": 1200, "ok": True},
@@ -282,6 +287,24 @@ def test_a_silent_shrink_is_named_not_just_counted(degraded_build):
     assert "ghsa: 3321 -&gt; 41 ids (-98.8%)" in body or \
            "ghsa: 3321 -> 41 ids (-98.8%)" in body, \
         "the shrink is reported as a count with no feed named"
+
+
+def test_withdrawn_history_is_named_not_just_counted(degraded_build):
+    """Same argument as the silent shrink above, and the same failure if it is
+    skipped. `degraded_reasons` can only say HOW MANY feeds withdrew history; the
+    fact a reader needs is WHICH PERIOD stopped being evidenced, because that is
+    what tells them which rows to distrust.
+
+    Both findings render, because they are different claims: the horizon moving
+    backward says the source deleted its most recent advisories, and the month
+    bucket says which period went with them.
+    """
+    body = (degraded_build / "status.html").read_text()
+    assert "moved BACKWARD" in body, (
+        "a feed withdrew history and the page names no feed and no date")
+    assert "2026-08 held 1,637 ids and holds 0 now" in body, (
+        "the withdrawn month is counted but not named")
+    assert "withdrew history it had already served" in body
 
 
 def test_a_configured_cap_is_reported_apart_from_a_degradation(degraded_build):

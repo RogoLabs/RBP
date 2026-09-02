@@ -301,3 +301,61 @@ def test_the_verify_step_runs_after_the_upload_not_before_it():
     wf = pathlib.Path(".github/workflows/deploy.yml").read_text()
     assert wf.index("upload-pages-artifact") < wf.index("python -m rbp.verify"), (
         "the artefact check gates the publication instead of reporting on it")
+
+
+# --------------------------------------------------------------------------
+# the run ledger has two writers and must never have two writes
+# --------------------------------------------------------------------------
+
+def _job(workflow, name):
+    return yaml.safe_load(workflow.read_text())["jobs"][name]
+
+
+def test_the_ledger_records_ticks_that_ran_and_did_not_publish():
+    """`runs.jsonl` was appended only by `deploy`, and only with
+    `conclusion: success`. A scheduled tick that broke at verify wrote nothing,
+    which from the ledger is indistinguishable from a tick GitHub never fired,
+    and /status added the two together into "18 of 28 ... (64.3%)".
+
+    Asserted as configuration because none of it is reachable from Python: the
+    job either exists in the YAML or the middle number on /status is always
+    zero and nothing in the suite would say so.
+    """
+    job = _job(DEPLOY, "ledger")
+    assert "deploy" in job["needs"], (
+        "the ledger job must observe the deploy job's result")
+    src = DEPLOY.read_text()
+    assert '"conclusion": "failure"' in src, (
+        "the undelivered-tick record does not mark itself as a non-delivery, "
+        "so site.cadence will count it as a publish")
+
+
+def test_exactly_one_ledger_writer_can_run_per_workflow_run():
+    """THE RACE THAT MUST NOT EXIST. Two jobs append to the same file on the same
+    branch; if both can fire on one run, a successful publish is recorded twice
+    and the cadence figure counts a delivery it did not make.
+
+    They are mutually exclusive by construction: the delivered-tick append is a
+    STEP INSIDE `deploy`, so it runs only when deploy runs and succeeds, and the
+    `ledger` job runs only when `deploy.result != 'success'`.
+    """
+    cond = " ".join(_job(DEPLOY, "ledger")["if"].split())
+    assert "needs.deploy.result != 'success'" in cond, cond
+    assert cond.startswith("always()"), (
+        f"the ledger job cannot report a failed run unless it runs on failure: "
+        f"{cond}")
+    # The delivered-tick append is still a step of deploy, not a job of its own.
+    steps = _steps(DEPLOY, "deploy")
+    assert any("run ledger" in str(s.get("name", "")).lower() for s in steps), (
+        "the delivered-tick append left the deploy job; if that was deliberate, "
+        "the mutual exclusion above no longer holds and both writers can fire")
+
+
+def test_a_deliberately_withheld_run_is_not_recorded_as_a_failed_tick():
+    """The incident switch and the dry run are not failures. Recording them as
+    such would put this site's own pause lever into its published reliability
+    figure, which is the same category error as counting a configured page cap
+    as a degradation."""
+    cond = " ".join(_job(DEPLOY, "ledger")["if"].split())
+    assert "vars.RBP_PAUSE != '1'" in cond, cond
+    assert "inputs.dry_run != true" in cond, cond

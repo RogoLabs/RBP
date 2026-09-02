@@ -399,7 +399,7 @@ def test_a_magnitude_drop_marks_the_run_degraded_in_the_cli():
     # search over source, which passes on code that never runs.
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=[], dropped=0,
-        shrunk=["osv: 11,000 -> 400 ids (96% fewer)"], stale=[])
+        shrunk=["osv: 11,000 -> 400 ids (96% fewer)"], stale=[], withdrawn=[])
     assert on is True and any("fewer ids" in r for r in reasons), (
         "a magnitude drop does not reach degraded, so no banner renders")
 
@@ -411,7 +411,7 @@ def test_a_configured_cap_alone_does_not_degrade_the_run():
     from rbp import cli
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ubuntu: hit the 200-page cap"],
-        dropped=0, shrunk=[], stale=[])
+        dropped=0, shrunk=[], stale=[], withdrawn=[])
     assert on is False and reasons == []
 
 
@@ -423,9 +423,14 @@ def test_every_other_signal_still_degrades_the_run():
                {"shrunk": ["osv: fewer"]},
                # A feed that has stopped updating. Added 2026-08-27; without it
                # this loop asserted that four of five signals still degrade.
-               {"stale": ["mozilla: newest advisory is 118 days old"]}):
+               {"stale": ["mozilla: newest advisory is 118 days old"]},
+               # A feed that withdrew history it had already served. Added
+               # 2026-09-02; without it this loop asserted that five of six
+               # signals still degrade, which is the shape of the omission it
+               # was written to catch in the first place.
+               {"withdrawn": ["msrc: newest advisory moved BACKWARD"]}):
         args = {"failures": [], "truncated": [], "capped": [], "dropped": 0,
-                "shrunk": [], "stale": [], **kw}
+                "shrunk": [], "stale": [], "withdrawn": [], **kw}
         on, reasons = cli.degraded_state(**args)
         assert on is True and reasons, kw
 
@@ -791,7 +796,7 @@ def test_a_cap_is_a_standing_limit_and_not_a_degraded_run():
     which is furniture rather than a warning."""
     on, _reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ghsa: hit the 40-page cap"],
-        dropped=0, shrunk=[], stale=[])
+        dropped=0, shrunk=[], stale=[], withdrawn=[])
     assert on is False
 
 
@@ -846,7 +851,7 @@ def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
     assert capped and not truncated and not failures
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
                                      capped=capped, dropped=0,
-                                     shrunk=[], stale=[])
+                                     shrunk=[], stale=[], withdrawn=[])
     assert on is False, (
         f"a standing WAF block is being reported as a degraded run: {reasons}")
 
@@ -861,7 +866,7 @@ def test_a_provider_that_stops_working_is_caught_by_the_shrink_guard():
     assert shrunk, "a 87% collapse in csaf rows was not reported"
     on, _reasons = cli.degraded_state(failures=[], truncated=[], capped=[],
                                       dropped=0,
-                                      shrunk=shrunk, stale=[])
+                                      shrunk=shrunk, stale=[], withdrawn=[])
     assert on is True
 
 
@@ -1209,7 +1214,7 @@ def test_a_permanently_unreachable_csaf_provider_does_not_degrade_the_run(monkey
     assert failures == [], failures
     assert truncated == [], truncated
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
-                                     capped=capped, dropped=0, shrunk=[], stale=[])
+                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[])
     assert on is False, reasons
     # It is still published, by name, as a standing limitation.
     assert any("gone.example" in c for c in capped), capped
@@ -1416,12 +1421,12 @@ def test_staleness_degrades_the_run_and_unmeasurable_does_not():
     loud until fixed, which is not the same as a cap that fires by design."""
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=[], dropped=0, shrunk=[],
-        stale=["mozilla: newest advisory is 2026-05-01, 118 days old"])
+        stale=["mozilla: newest advisory is 2026-05-01, 118 days old"], withdrawn=[])
     assert on is True
     assert any("stopped returning recent advisories" in r for r in reasons), reasons
 
     off, _ = cli.degraded_state(failures=[], truncated=[], capped=[], dropped=0,
-                                shrunk=[], stale=[])
+                                shrunk=[], stale=[], withdrawn=[])
     assert off is False
 
 
@@ -1560,7 +1565,7 @@ def test_the_wall_clock_budget_is_a_standing_limit_not_a_degradation(monkeypatch
     assert truncated == [], "a configured time budget degraded the run"
     assert any("ubuntu" in c for c in capped), capped
     on, _ = cli.degraded_state(failures=[], truncated=truncated, capped=capped,
-                               dropped=0, shrunk=[], stale=[])
+                               dropped=0, shrunk=[], stale=[], withdrawn=[])
     assert on is False, "spending the time budget put the site in a degraded posture"
 
 
@@ -1577,7 +1582,7 @@ def test_the_page_cap_is_still_reported_as_a_standing_limit(monkeypatch):
     assert h.get("capped") is True
     on, _ = cli.degraded_state(failures=[], truncated=[],
                                capped=["ubuntu: capped"], dropped=0,
-                               shrunk=[], stale=[])
+                               shrunk=[], stale=[], withdrawn=[])
     assert on is False, "a standing cap degraded the run"
 
 
@@ -1642,7 +1647,7 @@ def test_the_advisory_cap_does_not_put_the_site_in_a_degraded_state(monkeypatch)
     assert capped, "the cap was not recorded as a standing limit"
     assert not truncated and not failures, (failures, truncated)
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
-                                     capped=capped, dropped=0, shrunk=[], stale=[])
+                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[])
     assert on is False, f"a standing advisory cap is degrading the run: {reasons}"
 
 
@@ -1840,7 +1845,7 @@ def test_a_stalled_provider_does_not_put_the_site_in_a_degraded_state(monkeypatc
     failures, truncated, _n, capped = feeds.health_summary()
     assert capped and not failures and not truncated
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
-                                     capped=capped, dropped=0, shrunk=[], stale=[])
+                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[])
     assert on is False, f"a slow third party is degrading the run: {reasons}"
 
 
@@ -2453,3 +2458,148 @@ def test_a_provider_capped_by_a_limit_we_chose_carries_no_reason(monkeypatch):
     part = feeds.FEED_HEALTH["csaf:a.example"]
     assert not part.get("accounted"), (
         "a reachable provider must never carry the mark, whatever its status")
+
+
+# --------------------------------------------------------------------------
+# withdrawn history: a feed that stops evidencing a period it already served
+#
+# 2026-09-02. Microsoft's CVRF index stopped listing `2026-Aug`, msrc went
+# 15,025 -> 13,388 ids, and the site published the loss without a word about it
+# in any count guard. The month that vanished happened to be the newest one, so
+# `stale_feeds` caught it by luck; the general case had nothing looking at it.
+# --------------------------------------------------------------------------
+
+def _feed(rows, newest, months, **kw):
+    rec = {"status": feeds.OK, "detail": "", "rows": rows, "ok": True,
+           "truncated": False, "capped": False, "newest": newest,
+           "dated_rows": rows, "months": dict(months)}
+    rec.update(kw)
+    return rec
+
+
+def test_a_backward_newest_is_reported_as_a_withdrawal():
+    """THE EVENT ITSELF. msrc's newest advisory went 2026-08-11 -> 2026-07-14,
+    which no rolling window and no page cap can produce: both trim the OLD end.
+    Measured across the 12 snapshots on the data branch and all 14 feeds, this
+    is the only backward step that has ever occurred, so it carries no
+    threshold."""
+    prev = {"msrc": _feed(15025, "2026-08-11", {"2026-07": 1200, "2026-08": 1637})}
+    cur = {"msrc": _feed(13388, "2026-07-14", {"2026-07": 1200})}
+    found = feeds.withdrawn_history(prev, cur)
+    assert any("moved BACKWARD" in f and "2026-08-11 -> 2026-07-14" in f
+               for f in found), found
+
+
+def test_a_month_withdrawn_from_the_middle_is_caught_by_nothing_else():
+    """THE HOLE THIS EXISTS TO CLOSE, stated as the negative space around it.
+
+    Had Microsoft withdrawn 2026-Mar instead of 2026-Aug, the newest edge would
+    not have moved and the proportional loss would have been identical. This
+    asserts that the two guards that were supposed to cover it BOTH stay silent
+    on the same fixture, so the test fails if someone later decides this check is
+    redundant and deletes it.
+    """
+    prev = {"msrc": _feed(15025, "2026-08-11",
+                          {"2026-03": 1637, "2026-07": 1200, "2026-08": 900})}
+    cur = {"msrc": _feed(13388, "2026-08-11",
+                         {"2026-03": 0, "2026-07": 1200, "2026-08": 900})}
+
+    # The guard that does see it.
+    found = feeds.withdrawn_history(prev, cur)
+    assert any("2026-03" in f and "withdrawn" in f for f in found), found
+
+    # And the two that do not. 15,025 -> 13,388 is 10.9%, under MAGNITUDE_DROP
+    # (0.40) and under verify.MAX_ROW_DROP (0.25), and the newest edge did not
+    # move at all, so freshness has nothing to say either.
+    assert feeds.compare_magnitudes(prev, cur) == [], (
+        "MAGNITUDE_DROP now catches this; if that was deliberate, this test "
+        "should be rewritten rather than the guard deleted")
+    stale, _ = feeds.stale_feeds(cur, today="2026-09-02")
+    assert stale == [], stale
+
+
+def test_a_year_leaving_the_rolling_window_is_not_a_withdrawal():
+    """The window is three years and it rolls. When 2023 ages out it leaves
+    EVERY feed at once, and reporting that as a withdrawal would put a permanent
+    finding on the site every January."""
+    prev = {"a": _feed(500, "2026-08-01", {"2023-06": 400, "2026-08": 100}),
+            "b": _feed(500, "2026-08-01", {"2023-06": 400, "2026-08": 100})}
+    cur = {"a": _feed(100, "2026-08-01", {"2026-08": 100}),
+           "b": _feed(100, "2026-08-01", {"2026-08": 100})}
+    assert feeds.withdrawn_history(prev, cur) == []
+
+
+def test_a_year_leaving_ONE_feed_is_still_a_withdrawal():
+    """The complement, and the reason the window is derived from every feed
+    rather than from the feed being checked. If `a` alone loses 2023 while `b`
+    still carries it, the year did not roll: `a` dropped it."""
+    prev = {"a": _feed(500, "2026-08-01", {"2023-06": 400, "2026-08": 100}),
+            "b": _feed(500, "2026-08-01", {"2023-06": 400, "2026-08": 100})}
+    cur = {"a": _feed(100, "2026-08-01", {"2026-08": 100}),
+           "b": _feed(500, "2026-08-01", {"2023-06": 400, "2026-08": 100})}
+    found = feeds.withdrawn_history(prev, cur)
+    assert len(found) == 1 and found[0].startswith("a: 2023-06"), found
+
+
+def test_a_failed_or_truncated_feed_is_not_reported_as_a_withdrawal():
+    """A feed that stopped early holds a PARTIAL view of its own history, so
+    comparing it against a complete one reports that outage a second time under
+    a name that means something else. The same line verify draws."""
+    prev = {"u": _feed(3996, "2026-08-11", {"2026-08": 3996})}
+    for status in (feeds.FAILED, feeds.TRUNCATED):
+        cur = {"u": _feed(20, "2026-07-01", {"2026-07": 20}, status=status)}
+        assert feeds.withdrawn_history(prev, cur) == [], status
+    # And an explicitly accounted zero, which carries the same meaning in the
+    # cases where the status word is busy saying something else.
+    cur = {"u": _feed(20, "2026-07-01", {"2026-07": 20},
+                      accounted="provider unreachable")}
+    assert feeds.withdrawn_history(prev, cur) == []
+
+
+def test_a_capped_feed_is_still_checked():
+    """CAPPED must never excuse a withdrawal. Ubuntu's page cap fires on every
+    single run, so excusing it here would excuse every withdrawal on that feed
+    for ever, which is the argument `degraded_state` and `verify` both make."""
+    prev = {"ubuntu": _feed(3996, "2026-08-11", {"2026-08": 3996})}
+    cur = {"ubuntu": _feed(3900, "2026-07-01", {"2026-07": 3900},
+                           status=feeds.CAPPED)}
+    assert feeds.withdrawn_history(prev, cur), (
+        "a configured page cap is excusing a withdrawal")
+
+
+def test_a_resolver_is_never_reported_as_a_withdrawal():
+    """`counts_coverage=False` says these rows are work over a population
+    another feed is draining, so a fall is the drain working. ubuntu:dates is
+    the case and it is permanent, not a bad afternoon."""
+    prev = {"ubuntu-dates": _feed(56, "2026-08-11", {"2026-08": 56})}
+    cur = {"ubuntu-dates": _feed(0, "2026-07-01", {},
+                                 counts_coverage=False)}
+    assert feeds.withdrawn_history(prev, cur) == []
+
+
+def test_a_baseline_without_months_reports_nothing():
+    """Self-seeding. The first run after this shipped compares against a
+    snapshot that predates the field, and a guard that invents a finding from an
+    absent baseline is worse than one that waits a day."""
+    prev = {"msrc": {"status": feeds.OK, "rows": 15025, "newest": "2026-08-11"}}
+    cur = {"msrc": _feed(13388, "2026-08-11", {"2026-07": 1200})}
+    assert feeds.withdrawn_history(prev, cur) == []
+
+
+def test_a_growing_feed_is_never_a_withdrawal():
+    """The guard asks one direction only. A month gaining ids, and a newest edge
+    moving forward, are the feed working."""
+    prev = {"msrc": _feed(13388, "2026-07-14", {"2026-07": 1200})}
+    cur = {"msrc": _feed(15025, "2026-08-11", {"2026-07": 1250, "2026-08": 1637})}
+    assert feeds.withdrawn_history(prev, cur) == []
+
+
+def test_a_small_month_does_not_trip_the_bucket_check():
+    """MONTH_MIN_ROWS. `arch` returns 75 ids across three years, so a month there
+    is single digits and ordinary movement would be a finding on every run. The
+    thresholds on this half are NOT measured, which is exactly why the floor
+    exists and why this half reports on the degraded path and not the blocking
+    one."""
+    prev = {"arch": _feed(75, "2026-08-01", {"2026-08": 8})}
+    cur = {"arch": _feed(70, "2026-08-01", {"2026-08": 1})}
+    assert feeds.withdrawn_history(prev, cur) == []

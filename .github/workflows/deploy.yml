@@ -640,3 +640,78 @@ jobs:
           git commit -qm "runs: $GITHUB_RUN_ID" || exit 0
           git push -q origin data
 
+
+  # THE OTHER HALF OF THE RUN LEDGER: ticks that ran and did not publish.
+  #
+  # `runs.jsonl` was appended only by `deploy`, and only ever with
+  # `conclusion: success`, so a scheduled tick that ran and failed at verify
+  # wrote NOTHING AT ALL. From the ledger that is indistinguishable from a tick
+  # GitHub never fired, and /status added the two together: it published "18 of
+  # 28 scheduled runs published (64.3%)" on 2026-09-02, a figure that reads as
+  # this pipeline failing a third of its runs.
+  #
+  # It was not. 22 of those 28 ticks started and 19 of them published; the other
+  # six were GitHub dropping cron under load, which this repository cannot fix
+  # and should not be reporting as its own failure. `site.cadence` now splits
+  # delivered, failed and unaccounted, and this job is where the middle number
+  # comes from.
+  #
+  # WRITES ONLY WHEN `deploy` DID NOT SUCCEED, so a run appends exactly one
+  # ledger line and the two writers can never race each other. The paused and
+  # dry-run cases are excluded by the same conditions `deploy` carries: a tick
+  # that was deliberately withheld is not a tick that failed, and recording it
+  # as one would put this site's own incident switch into its reliability
+  # figure.
+  ledger:
+    needs: [test, build, deploy]
+    if: >-
+      always() && needs.deploy.result != 'success'
+      && vars.RBP_PAUSE != '1' && inputs.dry_run != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      # continue-on-error for the same reason the delivered-tick append carries
+      # it: bookkeeping must never be the reason a run reports a worse outcome
+      # than it actually had.
+      - name: Append the undelivered tick to the run ledger
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RBP_CRON: ${{ github.event.schedule }}
+          TEST_RESULT: ${{ needs.test.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        run: |
+          set -euo pipefail
+          git init -q ledger && cd ledger
+          git remote add origin \
+            "https://x-access-token:${GH_TOKEN}@github.com/$GITHUB_REPOSITORY"
+          git -c protocol.version=2 fetch -q --depth=1 origin data || true
+          git checkout -q -B data FETCH_HEAD 2>/dev/null || git checkout -q -B data
+          python3 - <<'PY' >> runs.jsonl
+          import json, os, datetime
+          # WHICH JOB LOST IT, recorded because "did not publish" is the
+          # question /status asks and "why" is the question the next person
+          # asks. `cadence` reads `conclusion` alone and ignores the rest.
+          jobs = {k: os.environ.get(f"{k.upper()}_RESULT") or "unknown"
+                  for k in ("test", "build", "deploy")}
+          print(json.dumps({
+              "at": datetime.datetime.now(datetime.timezone.utc)
+                    .isoformat(timespec="seconds"),
+              "run_id": os.environ.get("GITHUB_RUN_ID"),
+              "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
+              "event": os.environ.get("GITHUB_EVENT_NAME"),
+              "cron": os.environ.get("RBP_CRON") or "",
+              "sha": (os.environ.get("GITHUB_SHA") or "")[:12],
+              "conclusion": "failure",
+              "jobs": jobs,
+              "page_url": "",
+          }))
+          PY
+          git config user.name "rbp-bot"
+          git config user.email "noreply@github.com"
+          git add runs.jsonl
+          git commit -qm "runs: $GITHUB_RUN_ID did not publish" || exit 0
+          git push -q origin data

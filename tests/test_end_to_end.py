@@ -881,6 +881,132 @@ def test_the_status_page_renders_the_cadence_split_and_never_exceeds_100(built,
     importlib.reload(site_mod)
 
 
+def test_a_scheduled_tick_that_ran_and_failed_is_not_counted_as_never_fired(built):
+    """THE SPLIT, and the figure it corrects.
+
+    /status published "18 of 28 scheduled runs published (64.3%)" on 2026-09-02,
+    which reads as this pipeline failing a third of its runs. It was not: 22 of
+    the 28 ticks started and 19 published, and the other six were GitHub dropping
+    cron under load. The ledger could not express that, because it only ever
+    recorded deliveries, so a run that broke at verify and a run that never
+    existed were the same absence.
+    """
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    lines = []
+    for i in range(4):
+        lines.append(json.dumps(
+            {"at": (now - dt.timedelta(hours=6 * i)).isoformat(timespec="seconds"),
+             "conclusion": "success", "event": "schedule"}))
+    for i in range(4, 7):
+        lines.append(json.dumps(
+            {"at": (now - dt.timedelta(hours=6 * i)).isoformat(timespec="seconds"),
+             "conclusion": "failure", "event": "schedule"}))
+    (built["data"] / "runs.jsonl").write_text("\n".join(lines) + "\n")
+
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["scheduled"] == 4, c
+    assert c["failed"] == 3, c
+    # 28 expected, 7 accounted for by a ledger line, 21 that never started.
+    assert c["unaccounted"] == 21, c
+    # The three buckets are exhaustive and cannot double-count.
+    assert c["scheduled"] + c["failed"] + c["unaccounted"] == c["expected"], c
+
+
+def test_a_failed_run_is_never_rendered_as_the_most_recent_publish(built):
+    """`last` IS RENDERED IN THE SENTENCE ABOUT PUBLISHING, and it was assigned
+    from every ledger line rather than from the successful ones.
+
+    That was harmless for exactly as long as the ledger held nothing but
+    successes. The commit that started recording failures would have made the
+    first failure the site's "most recently published" timestamp, which is the
+    freshness claim being wrong in the one direction that matters.
+    """
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    (built["data"] / "runs.jsonl").write_text(_ledger(
+        {"at": (now - dt.timedelta(hours=8)).isoformat(timespec="seconds"),
+         "conclusion": "success", "event": "schedule"},
+        # LATER than the publish above, and it did not publish.
+        {"at": (now - dt.timedelta(hours=1)).isoformat(timespec="seconds"),
+         "conclusion": "failure", "event": "schedule"},
+    ))
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["last"].startswith("2026-08-23T04:00"), (
+        f"a run that published nothing is being reported as the moment the "
+        f"site most recently published: {c['last']}")
+
+
+def test_a_push_that_failed_is_not_counted_against_the_schedule(built):
+    """`failed` counts CRON ticks, for the same reason `scheduled` does. A
+    developer breaking the build on a merge is not the six-hourly schedule
+    missing a beat, and folding it in would rebuild the 164.3% defect from the
+    other end."""
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    (built["data"] / "runs.jsonl").write_text(_ledger(
+        {"at": (now - dt.timedelta(hours=2)).isoformat(timespec="seconds"),
+         "conclusion": "failure", "event": "push"},
+        {"at": (now - dt.timedelta(hours=3)).isoformat(timespec="seconds"),
+         "conclusion": "failure", "event": "workflow_dispatch"},
+        {"at": (now - dt.timedelta(hours=4)).isoformat(timespec="seconds"),
+         "conclusion": "failure", "event": "schedule"},
+    ))
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["failed"] == 1, c
+
+
+def test_unaccounted_never_goes_negative(built):
+    """A week with more scheduled ledger lines than cron ticks is a re-run, not
+    evidence of negative missing ticks. The residual is clamped because /status
+    renders it as a count of things that did not happen."""
+    import datetime as dt
+    from rbp import site as site_mod
+    now = dt.datetime(2026, 8, 23, 12, 0, tzinfo=dt.timezone.utc)
+    lines = [json.dumps({"at": (now - dt.timedelta(minutes=5 * i)).isoformat(timespec="seconds"),
+                         "conclusion": "success", "event": "schedule"})
+             for i in range(40)]
+    (built["data"] / "runs.jsonl").write_text("\n".join(lines) + "\n")
+    c = site_mod.cadence(str(built["data"]), today=now.isoformat())
+    assert c["unaccounted"] == 0, c
+
+
+def test_the_status_page_renders_all_three_cadence_outcomes(built, tmp_path,
+                                                            monkeypatch):
+    """THE SEAM AGAIN. `cadence` returning the split proves nothing about the
+    page reading it: Jinja renders a missing key as an empty string, so the page
+    would publish " ran and did not publish" in silence.
+    """
+    import datetime as dt
+    import importlib
+    from rbp import site as site_mod
+    now = dt.datetime.now(dt.timezone.utc)
+    lines = [json.dumps({"at": (now - dt.timedelta(hours=3 * i)).isoformat(timespec="seconds"),
+                         "conclusion": "success" if i % 3 else "failure",
+                         "event": "schedule"})
+             for i in range(1, 12)]
+    (built["data"] / "runs.jsonl").write_text("\n".join(lines) + "\n")
+
+    monkeypatch.setenv("RBP_LAUNCHED", "1")
+    importlib.reload(site_mod)
+    out = tmp_path / "cadence-split"
+    site_mod.build(str(out), str(built["snapshots"]), str(built["data"]))
+    page = (out / "status.html").read_text()
+    c = site_mod.cadence(str(built["data"]))
+
+    assert c["failed"] > 0, "the fixture produced no failed tick to render"
+    assert f"{c['failed']} ran and did not publish" in page, page[:0] or (
+        "the failed-tick figure is not on the page")
+    assert f"{c['unaccounted']} left no record at all" in page, (
+        "the unaccounted figure is not on the page")
+    assert "never started" in page
+    monkeypatch.delenv("RBP_LAUNCHED", raising=False)
+    importlib.reload(site_mod)
+
+
 def test_a_corrupt_ledger_line_does_not_stop_the_count(built):
     """The ledger is appended by a shell step on every deploy; a torn write must
     degrade the figure, not the build."""
