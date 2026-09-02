@@ -265,7 +265,13 @@ def summary(rows, date=SNAPSHOT_DATE):
         "must_rows": sum(1 for r in rows if r["rule_strength"] == "MUST"),
         "should_rows": sum(1 for r in rows if r["rule_strength"] != "MUST"),
         "unmeasurable_rows": len(rows), "candidate_rows": 0,
-        "age_buckets": {"30d+": len(rows)},
+        # FOUR BUCKETS, NOT ONE. The live run reports 7-30d, 30-90d, 90-180d and
+        # 180d+, and /slides.html renders a bar per bucket. With a single bucket
+        # the age slide was one row tall, so the deck built from this fixture was
+        # structurally shorter than the deck that ships and no layout assertion
+        # made against it could reach the density it is about.
+        "age_buckets": {"7-30d": len(rows) - 24, "30-90d": 12,
+                        "90-180d": 8, "180d+": 4},
         "corroborated": sum(1 for r in rows if not r["single_origin"]),
         "single_origin": sum(1 for r in rows if r["single_origin"]),
         "generated_at": "2026-08-20T00:00:00+00:00",
@@ -300,7 +306,16 @@ def summary(rows, date=SNAPSHOT_DATE):
         #   arch   thousands of ids and ZERO published rows, which is round 7's
         #          B4 finding and the reason the Rows column exists
         #   csaf   a fan-out with per-provider parts, one of them unreachable
-        "feeds": {"requested": ["osv", "ghsa", "ubuntu", "arch", "csaf"],
+        # REQUESTED IS A SUPERSET OF WHAT THE ROWS CITE, because in a real run it
+        # has to be: a feed cannot evidence a row without having been asked for.
+        # This listed five while ROWS cite ten, so the deck rendered "5 configured
+        # feeds" above a table of ten of them, and `configured > evidencing` was
+        # false where live it is true, which left the clause reconciling the two
+        # numbers unreachable. `arch` and `mozilla` are the two that evidence
+        # nothing, which is the live shape.
+        "feeds": {"requested": ["alas", "alpine", "arch", "csaf", "debian", "ghsa",
+                                "mozilla", "msrc", "osv", "redhat", "samsung",
+                                "ubuntu"],
                   "failures": [], "attempts": 5, "truncated": [],
                   "detail": {
                       "osv": {"status": "ok", "detail": "12,434 ids", "rows": 12434,
@@ -436,19 +451,21 @@ def write_snapshots(root):
     return snaps, data
 
 
-def build(root, launched):
-    """Build the site into `root/site-<posture>` and return its path.
+def build_at(out, snaps, data, launched):
+    """Build the site at `out` from the given snapshots, in the given posture.
 
+    EXTRACTED FROM `build` so a caller can supply its own snapshot. The posture
+    dance is the whole reason this is not two lines at the call site:
     RBP_LAUNCHED is set around the build and `rbp.site` is reloaded, because that
     module captures the posture at import. Reloaded again on the way out, so a
     fixture cannot leave the rest of the session looking at a launched module.
+
+    `tests/render/test_layout.py` needs a snapshot denser than the one below, and
+    copying this dance into it would be a second place for the reload to be got
+    wrong.
     """
     import pytest
     from rbp import site as _site
-
-    root = pathlib.Path(root)
-    snaps, data = write_snapshots(root)
-    out = root / ("site-launched" if launched else "site-prelaunch")
 
     mp = pytest.MonkeyPatch()
     mp.setenv("RBP_LAUNCHED", "1" if launched else "")
@@ -458,6 +475,15 @@ def build(root, launched):
     finally:
         mp.undo()
         importlib.reload(_site)
+    return pathlib.Path(out)
+
+
+def build(root, launched):
+    """Build the site into `root/site-<posture>` and return its path."""
+    root = pathlib.Path(root)
+    snaps, data = write_snapshots(root)
+    out = build_at(root / ("site-launched" if launched else "site-prelaunch"),
+                   snaps, data, launched)
     assert_renders(out, launched)
     return out
 

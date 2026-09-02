@@ -391,3 +391,139 @@ def test_the_mobile_menu_can_be_closed(page, server):
     pg.wait_for_timeout(150)
     assert not state()["open"], (
         "the menu stayed 'active' after the viewport crossed the breakpoint")
+
+
+# --------------------------------------------------------------------------
+# the deck (/slides.html)
+# --------------------------------------------------------------------------
+
+# THE SIZES A PROJECTOR ACTUALLY RUNS AT, typed here rather than taken from
+# `breakpoints.sweep()`, and that is the one place in this package where typing a
+# number is right. The sweep is derived from the @media preludes in the site's
+# stylesheets, which /slides.html does not load: it carries its own styles inline
+# and has no breakpoints for the sweep to find. What constrains a slide is the
+# room's display mode, and 1280x720 is the single most common one.
+#
+# HEIGHT IS THE AXIS THAT MATTERS, which no other test in this file measures. The
+# deck read perfectly at 1280x800 and overflowed by 81px at 1280x720: the same
+# width, a shorter screen, and the sources table ran under the chrome bar. A
+# presenter cannot scroll a slide mid-sentence, and the failure shows up on the
+# projector rather than on the laptop it was written on.
+PROJECTOR_SIZES = ((1280, 720), (1366, 768), (1920, 1080), (1440, 900), (1024, 768))
+
+# THE ROW COUNT THE LIVE SOURCES TABLE ACTUALLY HAS. The deck's tallest slides
+# render a bar per feed that evidenced a row, and on 2026-09-02 that was twelve.
+LIVE_SOURCE_ROWS = 12
+
+
+@pytest.fixture(scope="session")
+def dense_deck(tmp_path_factory):
+    """A served deck built from a snapshot as DENSE as the one that ships.
+
+    ITS OWN SNAPSHOT, and that is the point of this fixture rather than an aside.
+    The shared `_sitefixture` build is deliberately small, and a deck built from
+    it does not overflow at 1280x720 EVEN WITH BOTH LAYOUT DEFECTS REINTRODUCED:
+    measured, both mutations passed. Its sources table was ten bars where the
+    live one is twelve, and two bars is most of the 81px that was the original
+    bug. A layout assertion made against that is vacuous in the precise way this
+    repository keeps paying for.
+
+    So the density is stated here, in the test that depends on it, and
+    `test_the_overflow_sweep_measures_a_deck_as_dense_as_the_live_one` fails if
+    it ever stops being met.
+    """
+    import functools
+    import http.server
+    import json
+    import pathlib
+    import socketserver
+    import threading
+
+    import _sitefixture as F
+
+    root = pathlib.Path(tmp_path_factory.mktemp("dense"))
+    snaps, data = F.write_snapshots(root)
+    latest = sorted(pathlib.Path(snaps).iterdir())[-1]
+
+    # One row per configured feed, sole-sourced, so every feed gets a bar and the
+    # sole-source table beside it is populated too. Written OVER the fixture's own
+    # rows rather than appended, so summary.json's totals still match the backlog
+    # and `site._assert_consistent` does not refuse the build.
+    rows = json.loads((latest / "backlog.json").read_text())
+    feeds = json.loads((latest / "summary.json").read_text())["feeds"]["requested"]
+    assert len(feeds) >= LIVE_SOURCE_ROWS, (
+        f"the fixture requests {len(feeds)} feeds; the live deck renders "
+        f"{LIVE_SOURCE_ROWS} bars and this sweep cannot reach that density")
+    for i, feed in enumerate(feeds):
+        rows[i]["sources"] = feed
+        rows[i]["feed_count"] = 1
+    (latest / "backlog.json").write_text(json.dumps(rows))
+
+    out = F.build_at(root / "site", snaps, data, launched=True)
+
+    handler = functools.partial(http.server.SimpleHTTPRequestHandler,
+                                directory=str(out))
+    srv = socketserver.TCPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    try:
+        yield f"http://127.0.0.1:{srv.server_address[1]}"
+    finally:
+        srv.shutdown()
+
+
+def _slide_overflow(browser, base, width, height):
+    """Every slide's overflow at one viewport.
+
+    Measured by switching the `on` class rather than by clicking through: a click
+    sequence that desynchronises silently measures the same slide fourteen times
+    and passes.
+    """
+    pg = browser.new_page(viewport={"width": width, "height": height})
+    try:
+        pg.goto(f"{base}/slides.html", wait_until="load")
+        return pg.evaluate("""() => {
+          const out = [], slides = [...document.querySelectorAll('.slide')];
+          slides.forEach((s, i) => {
+            slides.forEach(x => x.classList.remove('on'));
+            s.classList.add('on');
+            s.getBoundingClientRect();                 // force layout
+            const h = s.querySelector('h1, h2');
+            out.push({n: i + 1, title: (h ? h.textContent : '?').slice(0, 40),
+                      vOver: s.scrollHeight - s.clientHeight,
+                      hOver: document.documentElement.scrollWidth
+                           - document.documentElement.clientWidth,
+                      bars: s.querySelectorAll('.bars tbody tr').length});
+          });
+          return out;
+        }""")
+    finally:
+        pg.close()
+
+
+@pytest.mark.parametrize("size", PROJECTOR_SIZES, ids=lambda s: f"{s[0]}x{s[1]}")
+def test_no_slide_overflows_at_any_projector_size(browser, dense_deck, size):
+    """Every slide fits its viewport, in both axes, at every size a room runs."""
+    width, height = size
+    bad = [s for s in _slide_overflow(browser, dense_deck, width, height)
+           if s["vOver"] > 1 or s["hOver"] > 0]
+    assert not bad, (
+        f"at {width}x{height}, {len(bad)} slide(s) do not fit: {bad}. A slide the "
+        "presenter has to scroll is a slide the room does not see.")
+
+
+def test_the_overflow_sweep_measures_a_deck_as_dense_as_the_live_one(browser,
+                                                                    dense_deck):
+    """THE GUARD ON THE SWEEP ABOVE, and the reason this file grew a fixture.
+
+    The sweep asserts an ABSENCE, so it passes on a deck with no slides, on a
+    deck whose tables are empty, and on a deck two bars shorter than the one that
+    ships. All three look identical to green.
+    """
+    slides = _slide_overflow(browser, dense_deck, 1280, 720)
+    assert len(slides) >= 12, (
+        f"the deck rendered {len(slides)} slides; the sweep is vacuous")
+    widest = max(s["bars"] for s in slides)
+    assert widest >= LIVE_SOURCE_ROWS, (
+        f"the densest slide carries {widest} bars and the live deck carries "
+        f"{LIVE_SOURCE_ROWS}. This sweep is measuring a shorter page than the one "
+        "that ships, which is how both of the original layout defects passed it.")
