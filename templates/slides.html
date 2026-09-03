@@ -532,11 +532,22 @@ body.notes-on .notes { display: block; }
   <p class="lede">A feed that fails is easy: it throws, the run records it, the artefact
   says so. A feed that quietly stops updating returns the same healthy row count on every
   run, indefinitely, and every downstream check passes.</p>
-  {% if summary.feeds.stale %}
-  <p class="note bad"><strong>This run, live:</strong></p>
-  <ul>
-    {% for s in summary.feeds.stale %}<li class="mono" style="background:none">{{ s }}</li>{% endfor %}
-  </ul>
+  {% if deck.stale %}
+  {# THE OBSERVATION, NOT THE RUN'S VERDICT. `feeds.stale` ends every line with
+     "the feed has likely stopped", and on 2026-09-02 that was false: the source
+     was live and a month had left its index. Asserting a third party's feed is
+     dead, to a room, on evidence that does not support it, is the one mistake
+     this slide cannot afford. See rbp/slides.stale_sources. #}
+  <p class="note bad"><strong>This run, live:</strong>
+    {% for s in deck.stale %}<span class="mono" style="background:none">{{ s.feed }}</span>'s
+    newest advisory is {{ s.newest }}{% if s.days %}, {{ s.days }} days old{% endif %}{% if not loop.last %};
+    {% endif %}{% endfor %}. The check fires on age alone.</p>
+  <p class="note" style="margin-top:0.6rem"><strong>And age alone does not say why.</strong>
+    Checked by hand: that source is not down. Its index listed months only to the
+    date above, while the missing month's document was still served at its own
+    URL, 8&nbsp;MB of it, carrying 1,638 CVE IDs. A month had left the index, not
+    the internet. The site read it until the previous run and lost it on this
+    one.</p>
   {% endif %}
   <div class="cols" style="margin-top:0.6rem">
     <div class="stat"><div class="n">{{ 'true' if summary.degraded else 'false' }}</div>
@@ -546,13 +557,18 @@ body.notes-on .notes { display: block; }
     <div class="stat"><div class="n">{{ summary.limitations | length if summary.limitations else 0 }}</div>
       <div class="k">standing limits published beside the count, separately from degradation</div></div>
   </div>
-  <p class="note" style="margin-top:1.2rem">Caps that fire by design are not degradation.
-  A warning that is on every run is furniture, and it teaches a reader to ignore the one
-  that means something. And a feed with no dates is not a feed that passed the check: it
-  is one the check cannot reach, reported separately for exactly that reason.</p>
+  <p class="note" style="margin-top:1.2rem">A feed with no dates is not a feed that
+  passed the check: it is one the check cannot reach. <strong>An automated freshness check
+  detects, it does not diagnose.</strong> Ours said this source had likely stopped. It had
+  not, and the difference is two requests nobody had made.</p>
   <div class="notes">Generalise past this project: any consumer aggregating third-party
   feeds has this failure mode and most do not check for it. Freshness of the newest record,
-  not row count, is the check. This has bitten this project twice.</div>
+  not row count, is the check. This has bitten this project twice. Do NOT say the vendor's
+  feed is down: it is not, and someone in the room may work there. The verified story is
+  that a month left the index while its document stayed up, which is the more useful
+  lesson anyway. If pressed for the detail: the index listed to 2026-07, the August
+  document returned 200 with 1,638 CVE IDs, and the previous month's document had been
+  revised that same day.</div>
 </section>
 
 {# ---------------------------------------------------------- 11. other states #}
