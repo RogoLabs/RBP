@@ -53,6 +53,13 @@ def _hermetic_csaf_cursor(tmp_path, monkeypatch):
     """
     monkeypatch.setattr(feeds, "CSAF_STATE",
                         str(tmp_path / "csaf_state.json"), raising=False)
+    # AND THE MSRC MONTH LIST, for exactly the same two reasons. `feed_msrc`
+    # remembers month ids so the index dropping one cannot delete a month it has
+    # already read; without this the suite would write the developer's real
+    # data/msrc_state.json, and a month "already known" from one test would be
+    # re-fetched in another that never set it.
+    monkeypatch.setattr(feeds, "MSRC_STATE",
+                        str(tmp_path / "msrc_state.json"), raising=False)
 
 
 @pytest.fixture(autouse=True, scope="session")

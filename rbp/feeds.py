@@ -340,12 +340,16 @@ FRESHNESS_FLOOR_DAYS = 45
 
 
 def stale_feeds(detail, today=None, floor_days=FRESHNESS_FLOOR_DAYS):
-    """Feeds whose newest advisory is old enough that the feed has likely stopped.
+    """Feeds whose newest advisory is older than the freshness floor.
 
-    Returns (stale, unmeasurable). `stale` is a degradation: a feed that has
-    stopped updating makes this run's counts a lower floor than usual, and unlike
-    a configured page cap it is not a standing limit fired by design, so it must
-    stay loud until someone fixes it.
+    Returns (stale, unmeasurable). `stale` is a degradation: a source that has
+    stopped producing recent records makes this run's counts a lower floor than
+    usual, and unlike a configured page cap it is not a standing limit fired by
+    design, so it must stay loud until someone fixes it.
+
+    IT DOES NOT SAY WHY, and it used to. See the note at the append below: a
+    threshold on one date cannot tell a dead feed from one that withdrew a month,
+    and this site published the guess as a finding about a named third party.
 
     `unmeasurable` is NOT a degradation and is reported separately. `alpine`,
     `arch` and `debian` return no dates at all, so their freshness cannot be
@@ -368,8 +372,22 @@ def stale_feeds(detail, today=None, floor_days=FRESHNESS_FLOOR_DAYS):
             unmeasurable.append(f"{name}: newest date {newest!r} did not parse")
             continue
         if age > floor_days:
+            # THE OBSERVATION, WITHOUT THE CAUSE. This ended "the feed has
+            # likely stopped", and on 2026-09-02 that was wrong in a way anyone
+            # could check: msrc was flagged, and Microsoft's API was live. Its
+            # index listed months only to 2026-Jul while the 2026-Aug document
+            # was still served at its own URL, 8.2 MB and 1,638 CVE IDs, and the
+            # July document had been revised that same day. A month had left the
+            # index, not the internet.
+            #
+            # This check reads one number. It cannot see whether a source is
+            # down, has withdrawn history, has moved, or is simply between
+            # releases, and it published a guess at that in the site's own voice
+            # about a named third party. `withdrawn_history` answers a different
+            # part of it and no check answers all of it, so the sentence stops
+            # where the evidence does.
             stale.append(f"{name}: newest advisory is {newest}, {age} days old "
-                         f"(floor {floor_days}); the feed has likely stopped")
+                         f"(floor {floor_days}); reason not established")
     return stale, unmeasurable
 
 
@@ -2156,20 +2174,84 @@ def _date_year(s):
         return None
 
 
-def feed_msrc(years):
+MSRC_STATE = os.path.join(os.path.dirname(_HERE), "data", "msrc_state.json")
+MSRC_CVRF = "https://api.msrc.microsoft.com/cvrf/v3.0/cvrf/{}"
+
+
+def _load_msrc_months(path):
+    """Month ids this feed has successfully read before, with their dates."""
+    try:
+        with open(path) as f:
+            st = json.load(f)
+    except Exception:
+        return {}
+    m = st.get("months")
+    return m if isinstance(m, dict) else {}
+
+
+def _save_msrc_months(path, months):
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            json.dump({"months": months}, f, indent=1, sort_keys=True)
+    except OSError as e:
+        print(f"  [msrc] could not write {os.path.basename(path)}: {e}",
+              file=sys.stderr)
+
+
+def feed_msrc(years, state_path=None):
     """Microsoft MSRC CVRF API: monthly Patch-Tuesday docs. Microsoft is its own
     CNA, so an RBP here is self-disclosure (the stronger §4.5.1.4 MUST). Also bundles
-    Azure Linux/Mariner CVEs, adding breadth."""
+    Azure Linux/Mariner CVEs, adding breadth.
+
+    A MONTH THIS FEED HAS ALREADY READ IS NEVER DROPPED BECAUSE THE INDEX
+    STOPPED LISTING IT.
+
+    On 2026-09-02 the index at /cvrf/v3.0/updates listed months to 2026-Jul and
+    no further, having listed 2026-Aug on every run for the previous five days.
+    The August document had not gone anywhere: /cvrf/v3.0/cvrf/2026-Aug returned
+    200 and 8.2 MB, titled "August 2026 Security Updates", carrying 1,638
+    distinct CVE IDs, and the July document had been revised that same day. Only
+    the index entry was missing.
+
+    This feed read the index and nothing else, so it lost the month: 14,893 rows
+    on 2026-09-01, 13,388 on 2026-09-02. Every downstream check was working, and
+    none of them could put a month back.
+
+    So month ids are remembered. Each run reads the index, unions it with what
+    has been read before, and fetches by id; the CVRF url is derivable from the
+    id, which is what makes the recovery possible at all. `_month` already
+    tolerates a fetch failure per month, so a month that really does go away
+    costs its own rows and nothing else, and drops out of the state on the next
+    successful write.
+
+    Bounded by the `years` window, so the state cannot grow without limit.
+    """
+    state_path = state_path or MSRC_STATE
+    known = _load_msrc_months(state_path)
     try:
         idx, _, _ = _get("https://api.msrc.microsoft.com/cvrf/v3.0/updates",
                          timeout=40, headers={"Accept": "application/json"})
     except Exception as e:
         print(f"  [msrc] index skip: {e}", file=sys.stderr)
         return []
-    months = [(u["ID"], u["CvrfUrl"], _d(u.get("InitialReleaseDate")))
+    listed = {u["ID"]: (u["CvrfUrl"], _d(u.get("InitialReleaseDate")))
               for u in (idx or {}).get("value", [])
               if len(u.get("ID", "")) == 8 and _date_year(u.get("InitialReleaseDate")) in years
-              and u.get("CvrfUrl")]
+              and u.get("CvrfUrl")}
+
+    # RETAINED MONTHS, IN THE SAME SHAPE AS LISTED ONES. Keyed by id so a month
+    # the index still lists always wins: its url and date are current, and the
+    # remembered pair is only ever a fallback.
+    retained = {mid: (MSRC_CVRF.format(mid), date)
+                for mid, date in sorted(known.items())
+                if mid not in listed and _date_year(date) in years}
+    if retained:
+        print(f"  [msrc] index dropped {len(retained)} month(s) it listed before "
+              f"({', '.join(sorted(retained))}); reading them by id",
+              file=sys.stderr)
+    months = [(mid, url, date)
+              for mid, (url, date) in sorted({**retained, **listed}.items())]
 
     def _month(item):
         mid, url, mdate = item
@@ -2191,13 +2273,21 @@ def feed_msrc(years):
                          "public_date": pub, "product": "", "description": title[:400]})
         return rows
 
-    out, seen = [], set()
+    out, seen, read_ok = [], set(), {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
-        for rows in ex.map(_month, months):
+        for (mid, _url, mdate), rows in zip(months, ex.map(_month, months)):
+            # ONLY A MONTH THAT ACTUALLY PRODUCED ROWS IS REMEMBERED. `_month`
+            # returns [] both for an empty month and for a fetch that failed, and
+            # recording the second would pin a url this feed cannot read into the
+            # state for ever.
+            if rows:
+                read_ok[mid] = mdate
             for r in rows:
                 if r["cve_id"] not in seen:
                     seen.add(r["cve_id"])
                     out.append(r)
+    if read_ok:
+        _save_msrc_months(state_path, read_ok)
     return out
 
 

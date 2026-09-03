@@ -56,7 +56,7 @@
     <p class="lead-floor">
       A floor, not a total. Only configured feeds are read, and they reach
       <b>{{ summary.coverage.pct_effective if summary.coverage and summary.coverage.get('pct_effective') is not none else 'a minority of' }}%</b>
-      of CNAs. This site names no CNA.
+      of CNAs. No row here is attributed to a CNA.
       <button type="button" class="linkbtn" id="panel-open"
               aria-expanded="false" aria-controls="panel">How the count is built</button>
     </p>
@@ -760,12 +760,21 @@
   // a screen reader's link list read "OSV" 44 times and "open advisory" more than
   // that, each pointing somewhere different, with nothing to tell them apart.
   function chipLabel(feed, cve) {
-    // Two of the display names already END in "Advisory" ("CSAF Advisory",
-    // "GitHub Repo Advisory"), so the naive concatenation announced "CSAF
-    // Advisory advisory for CVE-2026-1" to a screen reader.
-    var name = feedName(feed);
-    var tail = /advisory$/i.test(name) ? " for " : " advisory for ";
-    return esc(name + tail + cve);
+    // "ENTRY", NOT "ADVISORY". Five of the fourteen feeds are distribution
+    // trackers, and clock.py draws that distinction as the whole difference
+    // between belonging in the count and starting a 72-hour clock: a tracker
+    // entry records that an id exists and how a package is affected, and is
+    // created when the tracker ingests it rather than when anyone disclosed.
+    // Announcing "Debian advisory for CVE-..." discarded the site's most
+    // carefully drawn distinction in the one channel where the reader cannot
+    // see the hostname and correct it.
+    //
+    // The word is DELETED rather than made conditional. "Entry" is true of an
+    // advisory and of a tracker row alike, so it needs no origin-kind map in the
+    // template, no new context key and no per-row branch. It also fixes the
+    // older bug the naive concatenation had: two display names already end in
+    // "Advisory", which announced "CSAF Advisory advisory for CVE-2026-1".
+    return esc(feedName(feed) + " entry for " + cve);
   }
 
   function chips(r) {
@@ -808,7 +817,7 @@
     var items = Object.keys(d).sort().map(function (k) {
       return "<dt>" + esc(feedName(k)) + "</dt><dd>First seen " + esc(d[k]) +
         (urls[k] ? ' &middot; <a href="' + esc(urls[k]) + '" rel="noopener" aria-label="' +
-                   chipLabel(k, r.cve_id) + '">Open Advisory</a>' : "") +
+                   chipLabel(k, r.cve_id) + '">Open reference</a>' : "") +
         "</dd>";
     }).join("");
     if (!items) { items = "<dt>None</dt><dd>No per-feed dates recorded</dd>"; }
@@ -980,7 +989,7 @@
       var body;
       if (looksLikeCve) {
         body = "<p>This site lists reserved CVE IDs that appear in the public " +
-          "advisory feeds it reads, which are a minority of all CNAs. " +
+          "feeds it reads, which are a minority of all CNAs. " +
           "<b>Not finding " + esc(typed.toUpperCase()) + " here does not mean it " +
           "has been published</b>, only that no feed read by this site " +
           "references it while it is reserved.</p>" +
