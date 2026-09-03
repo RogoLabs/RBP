@@ -1298,40 +1298,6 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-52047",
-  "state": "RESERVED",
-  "public_date": "",
-  "sources": "debian",
-  "feed_count": 1,
-  "dates": {},
-  "refs": "debian:mongoose",
-  "description": "mongoose",
-  "state_verified_this_run": true,
-  "public_date_origin": "none",
-  "days_public": null,
-  "clock_known": false,
-  "hours_public": null,
-  "clock_origin": "tracker",
-  "advisory_date": null,
-  "advisory_days_public": null,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "mongoose",
-  "ecosystem": "",
-  "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52047"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "undated"
- },
- {
   "cve_id": "CVE-2026-52048",
   "state": "RESERVED",
   "public_date": "",
@@ -1359,40 +1325,6 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52048"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "undated"
- },
- {
-  "cve_id": "CVE-2026-52050",
-  "state": "RESERVED",
-  "public_date": "",
-  "sources": "debian",
-  "feed_count": 1,
-  "dates": {},
-  "refs": "debian:mongoose",
-  "description": "mongoose",
-  "state_verified_this_run": true,
-  "public_date_origin": "none",
-  "days_public": null,
-  "clock_known": false,
-  "hours_public": null,
-  "clock_origin": "tracker",
-  "advisory_date": null,
-  "advisory_days_public": null,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "mongoose",
-  "ecosystem": "",
-  "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52050"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -1706,7 +1638,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52071",
+  "cve_id": "CVE-2026-52072",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -1732,7 +1664,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52071"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52072"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -1740,7 +1672,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52075",
+  "cve_id": "CVE-2026-52073",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -1766,7 +1698,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52075"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52073"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -5131,6 +5063,82 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-76594",
+  "state": "RESERVED",
+  "public_date": "2026-09-02",
+  "sources": "csaf,redhat",
+  "feed_count": 2,
+  "dates": {
+   "redhat": "2026-09-02",
+   "csaf": "2026-09-02"
+  },
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-76594\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76594.json;redhat:CVE-2026-76594",
+  "description": "advisor-backend: advisor-backend: Unauthenticated /private/import_content/ endpoint allows global rule-catalogue overwrite",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-02",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "CVE-2026-76594",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76594.json",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-76594"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-76595",
+  "state": "RESERVED",
+  "public_date": "2026-09-02",
+  "sources": "csaf,redhat",
+  "feed_count": 2,
+  "dates": {
+   "redhat": "2026-09-02",
+   "csaf": "2026-09-02"
+  },
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-76595\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76595.json;redhat:CVE-2026-76595",
+  "description": "advisor-backend: Unsafe YAML deserialization of associate-editable Task playbook (yaml.Loader)",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-02",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "CVE-2026-76595",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76595.json",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-76595"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-83589",
   "state": "RESERVED",
   "public_date": "2026-08-31",
@@ -6101,78 +6109,6 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11645-1.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-76594",
-  "state": "RESERVED",
-  "public_date": "2026-09-02",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-09-02"
-  },
-  "refs": "csaf:Red Hat Product Security\tCVE-2026-76594\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76594.json",
-  "description": "advisor-backend: advisor-backend: Unauthenticated /private/import_content/ endpoint allows global rule-catalogue overwrite",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-02",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76594.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-76595",
-  "state": "RESERVED",
-  "public_date": "2026-09-02",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-09-02"
-  },
-  "refs": "csaf:Red Hat Product Security\tCVE-2026-76595\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76595.json",
-  "description": "advisor-backend: Unsafe YAML deserialization of associate-editable Task playbook (yaml.Loader)",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-02",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-76595.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
