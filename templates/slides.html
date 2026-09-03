@@ -1,0 +1,728 @@
+{#
+  /slides.html - the CVE Consumer Working Group deck.
+
+  UNLINKED BY DESIGN. Nothing on this site links here and the page is noindex,
+  nofollow: it is a talk, not a page of the site, and it should not compete with
+  /method or /policy in a search result or turn up in a reader's crawl.
+
+  IT DOES NOT EXTEND base.html. Every other page shares that shell so the site
+  looks like one site; a deck needs the whole viewport, no nav and no footer, and
+  wrapping it in the site chrome would mean fighting that shell on every slide.
+  The two things base.html carries that this page genuinely needs, the self-hosted
+  font and a per-page og:url and canonical, are repeated below rather than
+  inherited, and tests/test_copy.py asserts the second over every built page.
+
+  EVERY FIGURE COMES FROM THE RUN THAT BUILT THE PAGE. Nothing here is typed in.
+  The deck is rebuilt on the same four-times-daily schedule as the count, so a
+  slide cannot drift away from the site behind it, and the run that produced the
+  numbers is stamped on the title slide and in the footer of every slide. A deck
+  that quotes a number the site no longer shows is the failure this avoids.
+#}<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reserved but Public: what a consumer sees</title>
+<meta name="description" content="Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. A working-group deck on what a data consumer sees.">
+{# og:description, because an unfurler renders it whatever robots.txt says and a
+   deck pasted into a channel should say what it is rather than lead with a bare
+   count. Deliberately does NOT open with a digit: see
+   test_link_previews_do_not_carry_the_count_before_launch. #}
+<meta property="og:description" content="Reserved but Public is the CVE Program's own term for a CVE ID that is reserved, referenced publicly, and still unpublished. A working-group deck on what a data consumer sees.">
+{# NOINDEX ON BOTH POSTURES, unlike base.html which indexes once launched. An
+   unlinked deck that a search engine finds is no longer unlinked. #}
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:title" content="Reserved but Public: what a consumer sees">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://rbptracker.org/slides.html">
+<link rel="canonical" href="https://rbptracker.org/slides.html">
+{# The font, PRELOADED. This page declares its own @font-face below rather than
+   loading rbp.css, so without this the request waits for the inline <style> to be
+   parsed. `crossorigin` is required even same-origin: fonts are always fetched in
+   CORS mode and a preload without it is fetched twice. #}
+<link rel="preload" href="static/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+{# ICONS. Repeated from base.html rather than inherited, and asserted by
+   test_every_page_declares_icons_and_they_are_all_written over every built page:
+   a <link> to a file the build does not write is a 404 with extra steps. #}
+<link rel="icon" type="image/svg+xml" href="static/img/favicon.svg">
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="apple-touch-icon" href="static/img/apple-touch-icon.png">
+{# THE CARD, absolute and cache-busted, on the same conditional as base.html. An
+   og:image that 404s makes some unfurlers render a broken-image frame instead of
+   the text unfurl they would otherwise have shown. #}
+{% if asset_v.get('og-card.png') %}
+<meta property="og:image" content="https://rbptracker.org/static/img/og-card.png?v={{ asset_v['og-card.png'] }}">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="RBP Tracker: CVE IDs that are reserved, referenced in a public advisory, and still unpublished.">
+<meta name="twitter:card" content="summary_large_image">
+{% else %}
+<meta name="twitter:card" content="summary">
+{% endif %}
+<meta property="og:site_name" content="RBP Tracker">
+<style>
+/* The site's self-hosted face, declared again because this page does not load
+   rbp.css. One variable weight, one file, no third-party request. */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("static/fonts/inter-latin.woff2") format("woff2");
+}
+
+/* The site's dark tokens, verbatim from static/css/style.css. A projector in a
+   lit room is the worst display this content will ever meet, so the deck is
+   dark-first and prints light. */
+:root {
+  --bg: #0f1117;
+  --surface: #1a1d27;
+  --raised: #1e2130;
+  --text: #e1e4ea;
+  --dim: #9ca3b4;
+  /* RAISED FROM THE SITE'S #6b7280. That value is `--color-text-muted` in
+     style.css and it is fine there, on a page read at arm's length; here it
+     carries the slide footer, the table headers and the blockquote attribution,
+     and it renders at 3.5:1 on --surface against a bar of 4.5. This page's
+     styles are inline, so rbp/contrast.py's sweep over static/css never sees
+     them: tests/test_slides.py asserts these tokens directly instead. */
+  --muted: #8b93a3;
+  --line: #2d3348;
+  --accent: #60a5fa;
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  /* SIZED OFF WHICHEVER AXIS IS TIGHTER, because a slide is constrained by the
+     screen's HEIGHT and a web page is not. On width alone this read well at
+     1280x800 and overflowed by 81px at 1280x720, which is the single most common
+     projector mode there is: the sources table ran under the chrome bar and the
+     presenter would have had to scroll a slide mid-sentence.
+
+     The cap stays at 28px so a 1080p room still gets large type, and the floor
+     stays at 15px so a laptop preview stays readable. */
+  font-size: clamp(15px, min(1.5vw, 2.35vh), 28px);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+.deck { height: 100%; min-height: 0; padding: 0; }
+
+.slide {
+  display: none;
+  height: 100%;
+  padding: clamp(1.6rem, 4vh, 3.4rem) clamp(1.6rem, 5vw, 5rem) 3.6rem;
+  flex-direction: column;
+  /* `safe` matters. Plain `center` on a scrolling flex column clips the TOP of
+     content that overflows, and the overflow is unreachable because the scroll
+     origin is above the container. `safe` falls back to flex-start exactly when
+     that would happen, so a sparse slide is centred and a dense one is not cut. */
+  justify-content: safe center;
+  overflow-y: auto;
+}
+.slide.on { display: flex; }
+
+.eyebrow {
+  font-family: var(--mono);
+  font-size: 0.7em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.7rem;
+}
+h1, h2 {
+  margin: 0 0 1.1rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+h1 { font-size: clamp(2rem, 5.2vw, 3.9rem); }
+h2 { font-size: clamp(1.5rem, 3.3vw, 2.5rem); }
+p { margin: 0 0 0.9rem; max-width: 62ch; }
+.lede { font-size: 1.12em; color: var(--dim); max-width: 58ch; }
+strong { font-weight: 650; color: #fff; }
+a { color: var(--accent); }
+
+/* The lead number. Tabular figures so it does not jitter between builds. */
+.big {
+  font-size: clamp(3.6rem, 13vw, 10rem);
+  font-weight: 700;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums;
+  margin: 0.2em 0 0.15em;
+}
+.big-sub { font-size: 1.05em; color: var(--dim); max-width: 50ch; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: clamp(1rem, 2.4vw, 2.4rem); align-items: start; }
+.cols-2 { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(1rem, 2.4vw, 2.4rem); align-items: start; }
+@media (max-width: 820px) { .cols-2 { grid-template-columns: 1fr; } }
+
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.1rem; }
+.stat .n { font-size: clamp(1.7rem, 3.4vw, 2.9rem); font-weight: 680; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.05; }
+.stat .k { color: var(--dim); font-size: 0.86em; margin-top: 0.35rem; }
+.stat.hot .n { color: var(--warn); }
+
+/* Horizontal bars. CSS only: this site loads no chart library and a deck is not
+   the place to start. */
+.bars { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.bars th, .bars td { text-align: left; padding: 0.16rem 0.55rem 0.16rem 0; border: 0; vertical-align: middle; font-size: 0.92em; }
+.bars thead th { color: var(--muted); font-weight: 550; font-size: 0.74em; letter-spacing: 0.07em; text-transform: uppercase; padding-bottom: 0.5rem; }
+.bars td.name { font-family: var(--mono); font-size: 0.86em; white-space: nowrap; }
+.bars td.num { text-align: right; white-space: nowrap; }
+.bars td.bar { width: 100%; }
+.bars .track { background: var(--surface); border-radius: 3px; height: 0.78rem; }
+/* The row rhythm above is tight on purpose. The sources table is twelve rows
+   plus a four-line caption, and at 0.22rem of row padding it was the one slide
+   that still ran under the chrome bar at 1280x720. tests/render/test_layout.py
+   measures every slide at four projector sizes so this cannot creep back. */
+.bars .fill { background: var(--accent); border-radius: 3px; height: 100%; }
+.bars .fill.sole { background: var(--warn); }
+.bars tr.hi td { color: #fff; }
+
+/* The run-over-run series. Two rows of bars, the count and the instrument that
+   produced it, because neither reads honestly without the other. */
+.series { display: flex; gap: 0.4rem; align-items: flex-end; height: clamp(7rem, 20vh, 13rem); margin: 0.6rem 0 0.3rem; }
+.series .col { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 0.3rem; height: 100%; }
+.series .b { width: 100%; background: var(--accent); border-radius: 2px 2px 0 0; min-height: 2px; }
+.series .col.deg .b { background: repeating-linear-gradient(45deg, var(--accent), var(--accent) 4px, #2b5a95 4px, #2b5a95 8px); }
+.series .v { font-size: 0.62em; color: var(--dim); font-variant-numeric: tabular-nums; }
+.axis { display: flex; gap: 0.4rem; }
+.axis .col { flex: 1; text-align: center; font-size: 0.6em; color: var(--muted); font-family: var(--mono); }
+.axis .col .f { display: block; color: var(--warn); font-weight: 600; }
+
+.note { border-left: 2px solid var(--line); padding-left: 0.9rem; color: var(--dim); font-size: 0.92em; max-width: 60ch; }
+.note.warn { border-left-color: var(--warn); }
+.note.bad { border-left-color: var(--bad); }
+
+ul { margin: 0 0 0.9rem; padding-left: 1.15rem; max-width: 62ch; }
+li { margin-bottom: 0.5rem; }
+li::marker { color: var(--muted); }
+
+code, .mono { font-family: var(--mono); font-size: 0.88em; background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
+
+blockquote { margin: 0 0 1.1rem; padding: 0.9rem 1.2rem; background: var(--surface); border-left: 3px solid var(--accent); border-radius: 0 6px 6px 0; font-size: 1.05em; max-width: 60ch; }
+blockquote cite { display: block; margin-top: 0.6rem; font-size: 0.78em; font-style: normal; color: var(--muted); }
+
+table.grid { border-collapse: collapse; font-size: 0.9em; font-variant-numeric: tabular-nums; }
+table.grid th, table.grid td { text-align: left; padding: 0.38rem 1.1rem 0.38rem 0; border-bottom: 1px solid var(--line); }
+table.grid thead th { color: var(--muted); font-weight: 550; font-size: 0.78em; letter-spacing: 0.06em; text-transform: uppercase; }
+table.grid td.num { text-align: right; }
+table.grid td.mono { font-family: var(--mono); font-size: 0.86em; background: none; padding-right: 1.1rem; }
+
+/* Speaker notes, off by default and toggled with N. Rendered into the page
+   rather than kept in a separate file so the deck is one artefact. */
+.notes { display: none; margin-top: 1.6rem; padding-top: 1rem; border-top: 1px dashed var(--line); color: var(--muted); font-size: 0.82em; max-width: 74ch; }
+body.notes-on .notes { display: block; }
+
+.chrome {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: 0.5rem clamp(1rem, 5vw, 5rem);
+  font-family: var(--mono); font-size: clamp(0.62rem, 0.72vw, 0.95rem); color: var(--muted);
+  background: linear-gradient(to top, var(--bg) 60%, transparent);
+}
+.chrome .stamp { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.chrome .controls { display: flex; gap: 0.5rem; align-items: center; }
+.chrome button {
+  font: inherit; color: var(--dim); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 4px; padding: 0.2rem 0.6rem; cursor: pointer;
+}
+.chrome button:hover { color: var(--text); }
+.chrome button:focus-visible, .slide a:focus-visible,
+.deck:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.progress { position: fixed; top: 0; left: 0; height: 2px; background: var(--accent); transition: width 0.18s ease; }
+
+/* PRINT: every slide on its own page, light, so ctrl-P is a usable handout and
+   a working backup if the browser will not cooperate on the day. */
+@media print {
+  /* height:100% on the scroll chain clips every page after the first in some
+     engines. The deck is a scrolling app on screen and a stack of pages here. */
+  html, body, .deck { height: auto; }
+  body { background: #fff; color: #111; font-size: 11pt; }
+  .chrome, .progress { display: none; }
+  .slide { display: flex !important; height: auto; min-height: 96vh; page-break-after: always; padding: 1.5cm; overflow: visible; }
+  .notes { display: block; }
+  .stat, blockquote, .bars .track, code, .mono { background: #f1f3f5; }
+  .big { color: #111; }
+  strong { color: #000; }
+  a { color: #0d6efd; }
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress" style="width:0"></div>
+{# ONE <main>, wrapping every slide. A slide is a <section> inside it rather than
+   a landmark of its own: fourteen <main> elements would offer a screen reader
+   fourteen main landmarks on one document. #}
+<main class="deck" id="deck" tabindex="0"
+      aria-label="Slide deck. Use the left and right arrow keys to move between slides, and N to show the speaker notes.">
+
+{# ---------------------------------------------------------------- 1. title #}
+<section class="slide" aria-label="Title">
+  <p class="eyebrow">CVE Consumer Working Group</p>
+  <h1>Reserved but Public</h1>
+  <p class="lede">What a data consumer sees when a CVE ID is reserved, referenced
+  in a public advisory, and still unpublished. Which is nothing.</p>
+  <p class="lede" style="margin-top:1.4rem"><strong>{{ summary.total | commafy }}</strong>
+  IDs are in that state right now, from {{ deck.feeds.configured }} public advisory
+  sources. Every figure in this deck was computed by the run that built the page.</p>
+  <p class="note" style="margin-top:1.6rem">rbptracker.org &middot; Jerry Gamblin &middot;
+  built from the {{ snapshot_date }} run &middot; {{ generated }}</p>
+  <div class="notes">Open with the count, not with the argument. This deck attributes no
+  row to anyone and makes no claim about what anyone did or failed to do; it is a
+  measurement of a state the CVE Program itself defines. If someone asks "whose fault is
+  this", the answer is that the site cannot tell you, on purpose, and the boundaries slide
+  says why.</div>
+</section>
+
+{# ------------------------------------------------------------ 2. definition #}
+<section class="slide" aria-label="Definition">
+  <p class="eyebrow">The term is the Program's own</p>
+  <h2>A state, defined by the glossary</h2>
+  <blockquote>A CVE ID in the &ldquo;Reserved&rdquo; state that is referenced in
+  one or more public sources but for which a CVE Record has not been published.
+  <cite>CVE Program glossary, &ldquo;Reserved but Public&rdquo;</cite></blockquote>
+  <div class="cols-2">
+    <div>
+      <p><strong>What the advisory says.</strong> A distribution, a vendor or a
+      repository publishes a fix and cites the ID. The vulnerability is public.
+      The patch is public. The ID is in the changelog.</p>
+    </div>
+    <div>
+      <p><strong>What the CVE List says.</strong> Nothing. Pull
+      <code>cvelistV5</code> and there are zero records in the RESERVED state, so
+      a consumer joining on CVE ID gets an empty row and no signal that one is
+      missing.</p>
+    </div>
+  </div>
+  <p class="note">The bulk data is not wrong. Reserved records are not published
+  by design, so the gap is structural rather than a defect in any one feed.</p>
+  <div class="notes">Read the glossary line verbatim. The point of leading with it is that
+  nobody in the room has to accept a new definition from me. Then the two-column contrast:
+  the advisory exists, the record does not, and the consumer is the one holding both halves.</div>
+</section>
+
+{# ---------------------------------------------------------------- 3. count #}
+<section class="slide" aria-label="The count">
+  <p class="eyebrow">As of the {{ snapshot_date }} run</p>
+  <div class="big">{{ summary.total | commafy }}</div>
+  <p class="big-sub">CVE IDs that are <strong>reserved</strong>, <strong>referenced in
+  a public advisory</strong>, <strong>still unpublished</strong>, and have been
+  provably public for at least {{ summary.min_age_days }} days.</p>
+  <div class="cols" style="margin-top:1.6rem">
+    <div class="stat"><div class="n">{{ summary.past_expectation | commafy }}</div>
+      <div class="k">past the {{ expectation_hours }}-hour expectation on an advisory-dated clock</div></div>
+    <div class="stat"><div class="n">{{ summary.median_days }}</div>
+      <div class="k">days public, median</div></div>
+    <div class="stat hot"><div class="n">{{ summary.oldest_days | commafy }}</div>
+      <div class="k">days public, oldest row still reserved</div></div>
+  </div>
+  <p class="note" style="margin-top:1.4rem"><strong>This is a floor.</strong> It counts
+  only what {{ deck.feeds.configured }} configured feeds referenced. An RBP nobody in
+  this set wrote an advisory about is not in the number, and cannot be.</p>
+  <div class="notes">Say "floor" out loud here and keep saying it. The number is defensible
+  precisely because it is a lower bound: every row has a public advisory behind it that
+  anyone in the room can open. Do not let it get quoted as a total.</div>
+</section>
+
+{# --------------------------------------------------------------- 4. sources #}
+<section class="slide" aria-label="Sources">
+  <p class="eyebrow">Where the evidence comes from</p>
+  <h2>Which feed saw it</h2>
+  <table class="bars" aria-label="Rows by the feed that referenced them, with the count for which that feed was the only source">
+    <thead><tr>
+      <th scope="col">Source</th><th scope="col">Rows</th>
+      <th scope="col">Share of {{ deck.feeds.total | commafy }}</th><th scope="col">Only source</th>
+    </tr></thead>
+    <tbody>
+    {% for f in deck.feeds.by_feed %}
+      <tr{% if f.sole > 50 %} class="hi"{% endif %}>
+        <td class="name">{{ f.feed }}</td>
+        <td class="num">{{ f.rows | commafy }}</td>
+        <td class="bar"><div class="track"><div class="fill" style="width:{{ f.pct }}%"></div></div></td>
+        <td class="num">{% if f.sole %}{{ f.sole | commafy }}{% else %}&mdash;{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="note" style="margin-top:1rem">A row carries every feed that referenced the
+  ID, so the column sums past {{ deck.feeds.total | commafy }}. The last column does not
+  overlap: it is the count of rows that vanish entirely if you are not reading that one
+  source.{% if deck.feeds.configured > deck.feeds.evidencing %} {{ deck.feeds.configured - deck.feeds.evidencing }} of the
+  {{ deck.feeds.configured }} configured feeds answered in full and referenced nothing that was
+  still reserved, so they have no line here.{% endif %}</p>
+  <div class="notes">Do not read the table out. Point at the top two rows and at the last
+  column, then move. The last column is the whole slide and it sets up the next one.</div>
+</section>
+
+{# ----------------------------------------------------------- 5. sole source #}
+<section class="slide" aria-label="Single source">
+  <p class="eyebrow">The consumer's actual problem</p>
+  <h2>Most of these have exactly one witness</h2>
+  <div class="cols-2">
+    <div>
+      <div class="big" style="font-size:clamp(3rem,9vw,6.5rem);margin-top:0">{{ deck.feeds.sole_pct }}%</div>
+      <p class="big-sub">{{ deck.feeds.sole_total | commafy }} of {{ deck.feeds.total | commafy }}
+      rows were referenced by a <strong>single</strong> source in this set.</p>
+    </div>
+    <div>
+      <table class="bars" aria-label="Rows by their only witnessing feed">
+        <thead><tr><th scope="col">Only witness</th><th scope="col">Rows</th><th scope="col">&nbsp;</th></tr></thead>
+        <tbody>
+        {% for f in deck.feeds.sole_list %}
+          <tr><td class="name">{{ f.feed }}</td>
+            <td class="num">{{ f.sole | commafy }}</td>
+            <td class="bar"><div class="track"><div class="fill sole" style="width:{{ f.pct }}%"></div></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <p class="note warn" style="margin-top:1.2rem"><strong>The largest block is repository
+  security advisories.</strong> An advisory against a repository with no package ecosystem
+  never enters the global advisory database, so no page of its API can return it. These
+  are polled one repository at a time, from a configured list, so the block is only as
+  large as that list. Read the database endpoint and you see none of them.</p>
+  <div class="notes">This is the slide the room came for. It is a concrete, checkable
+  statement about a specific API shape, not a complaint. Expect a question about how the
+  repo list is chosen: the answer is that it is a configured list, which is exactly why
+  the count is a floor.</div>
+</section>
+
+{# ------------------------------------------------------------------ 6. ages #}
+<section class="slide" aria-label="Age">
+  <p class="eyebrow">Against a 72-hour expectation</p>
+  <h2>How long they have been public</h2>
+  <table class="bars" aria-label="Rows by how many days they have been publicly referenced">
+    <thead><tr><th scope="col">Days public</th><th scope="col">Rows</th><th scope="col">Share</th></tr></thead>
+    <tbody>
+    {% for label, n in summary.age_buckets.items() %}
+      <tr><td class="name">{{ label }}</td>
+        <td class="num">{{ n | commafy }}</td>
+        <td class="bar"><div class="track"><div class="fill" style="width:{{ (100 * n / summary.total) | round(1) }}%"></div></div></td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="cols" style="margin-top:1.4rem">
+    <div class="stat"><div class="n">{{ deck.clock.advisory | commafy }}</div>
+      <div class="k">rows dated from a published advisory, and claimed past expectation</div></div>
+    <div class="stat"><div class="n">{{ deck.clock.unclaimed | commafy }}</div>
+      <div class="k">rows dated only from a tracker sighting, and <strong>not</strong> claimed</div></div>
+    <div class="stat"><div class="n">{{ deck.clock.oldest_unclaimed | commafy }}</div>
+      <div class="k">days: the oldest row the site declines to call late</div></div>
+  </div>
+  <p class="note" style="margin-top:1.2rem">A tracker sighting proves the ID was public.
+  It does not prove <em>when</em> it went public, so those rows are counted and their
+  lateness is not asserted, however old they are.</p>
+  <div class="notes">The third tile is the credibility slide. Volunteering a case where
+  the measurement refuses to score in its own favour buys more trust than any amount of
+  method prose. Land it and move on.</div>
+</section>
+
+{# -------------------------------------------------------------- 7. closures #}
+<section class="slide" aria-label="Closure">
+  <p class="eyebrow">They do close, and the ledger says how fast</p>
+  <h2>Time from first public reference to a published record</h2>
+  <div class="cols-2">
+    <div>
+      <table class="bars" aria-label="Closures by days from first public reference to a published record">
+        <thead><tr><th scope="col">Days to publish</th><th scope="col">Closures</th><th scope="col">Share</th></tr></thead>
+        <tbody>
+        {% for b in deck.closures.buckets %}
+          <tr{% if b.within_expectation %} class="hi"{% endif %}>
+            <td class="name">{{ b.label }}</td>
+            <td class="num">{{ b.n | commafy }}</td>
+            <td class="bar"><div class="track"><div class="fill{% if not b.within_expectation %} sole{% endif %}" style="width:{{ b.pct }}%"></div></div></td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <div class="stat"><div class="n">{{ deck.closures.median }}</div>
+        <div class="k">days, median, over all {{ deck.closures.measured | commafy }} measured closures</div></div>
+      <div class="stat" style="margin-top:0.8rem"><div class="n">{{ deck.closures.max | commafy }}</div>
+        <div class="k">days, slowest closure in the ledger</div></div>
+      <div class="stat" style="margin-top:0.8rem"><div class="n">{{ deck.closures.open | commafy }}</div>
+        <div class="k">IDs still open in the ledger</div></div>
+    </div>
+  </div>
+  <p class="note warn" style="margin-top:1.2rem"><strong>Do not compute this from the
+  published file.</strong> <code>/data/resolved.json</code> is capped at the
+  {{ deck.closures.published_n }} <em>slowest</em> closures, dropping
+  {{ deck.closures.withheld_by_cap }} rows: the {{ deck.closures.withheld_measured }}
+  fastest, and {{ deck.closures.withheld_undated }} whose duration could not be measured.
+  Recomputed from that file the median is
+  {{ deck.closures.published_median if deck.closures.published_median is not none else 'higher' }};
+  over the whole ledger it is {{ deck.closures.median }}. This slide is the whole ledger.
+  The cap is a known reporting gap on this site, not a property of the data.</p>
+  <div class="notes">Say the caveat before anyone can find it. A room of data consumers
+  will absolutely go and recompute this from the JSON, and it is far better that they hear
+  the cap from me than discover it. It is also a genuine to-do: the published file should
+  carry the distribution or the whole ledger.</div>
+</section>
+
+{# ---------------------------------------------------------------- 8. series #}
+<section class="slide" aria-label="Series">
+  <p class="eyebrow">Read the instrument, not the line</p>
+  <h2>Why this is not a trend</h2>
+  <div class="series" role="img" aria-label="Published total per run over the last {{ deck.series | length }} snapshots, rising from {{ deck.series[0].total }} to {{ deck.series[-1].total }} as the number of feeds read rose from {{ deck.series[0].feeds }} to {{ deck.series[-1].feeds }}.">
+    {% for s in deck.series %}
+    <div class="col{% if s.degraded %} deg{% endif %}">
+      <span class="v">{{ s.total | commafy }}</span>
+      <div class="b" style="height:{{ s.height }}%"></div>
+    </div>
+    {% endfor %}
+  </div>
+  <div class="axis">
+    {% for s in deck.series %}
+    <div class="col">{{ s.date[5:] }}<span class="f">{% if s.feeds %}{{ s.feeds }}f{% else %}&mdash;{% endif %}</span></div>
+    {% endfor %}
+  </div>
+  <p class="note bad" style="margin-top:1.2rem">The count roughly quadrupled over
+  {{ deck.series | length }} daily snapshots. Over the same days the number of feeds read went from
+  {{ deck.series[0].feeds }} to {{ deck.series[-1].feeds }}. <strong>That is the
+  instrument moving, not the world.</strong> A floor rises when the floor is raised, so
+  these snapshots are not comparable to each other and the site does not publish a trend
+  line. Hatched bars are runs the site marked degraded.</p>
+  <div class="notes">The most likely way this project gets misused is someone screenshotting
+  a rising line and captioning it. Pre-empt it. The honest version of "is it getting worse"
+  is that nobody can say yet, and will not be able to until the feed set holds still.</div>
+</section>
+
+{# -------------------------------------------------------------- 9. coverage #}
+<section class="slide" aria-label="Reach">
+  <p class="eyebrow">How much of the landscape this can see</p>
+  <h2>Reach, stated as a limit</h2>
+  <div class="cols">
+    <div class="stat"><div class="n">{{ summary.coverage.cnas_effective if summary.coverage.cnas_effective is not none else 'n/a' }}<span style="color:var(--muted);font-size:0.5em"> / {{ summary.coverage.total_cnas if summary.coverage.total_cnas is not none else 'n/a' }}</span></div>
+      <div class="k">CNAs seen at least {{ summary.coverage.min_sightings }} times in the feed set, of all certified CNAs</div></div>
+    <div class="stat"><div class="n">{{ summary.coverage.top_covered_effective if summary.coverage.top_covered_effective is not none else 'n/a' }}<span style="color:var(--muted);font-size:0.5em"> / {{ summary.coverage.top_n }}</span></div>
+      <div class="k">of the largest {{ summary.coverage.top_n }} assigners by published volume</div></div>
+    <div class="stat"><div class="n">{{ summary.coverage.observed_pct | round(1) if summary.coverage.observed_pct is not none else 'n/a' }}%</div>
+      <div class="k">of the {{ summary.coverage.total_pub | commafy }} CVEs published in {% if summary.coverage.window %}{{ summary.coverage.window | first }}&ndash;{{ summary.coverage.window | last }}{% else %}the window{% endif %} were referenced by at least one feed here</div></div>
+  </div>
+  <p style="margin-top:1.4rem">Coverage of the <em>large</em> assigners is close to
+  complete. Coverage of the <em>long tail</em> is not, and the tail is where a small
+  vendor with one advisory channel lives. Both facts are published on
+  <code>/status.html</code>, per feed and per provider.</p>
+  <p class="note">This is the reason the count is a floor rather than an estimate. No
+  correction factor is applied and none is proposed: a number nobody can check is worse
+  than a number that is honestly too small.</p>
+  <div class="notes">If asked which large assigner is missing, give the count and not the
+  name. Do not say the site names nobody: /data/summary.json publishes the aggregate
+  coverage set, and someone can open it while you are talking. The line that IS true, and
+  the one to give, is that no ROW is attributed to anyone.</div>
+</section>
+
+{# ------------------------------------------------------------- 10. degraded #}
+<section class="slide" aria-label="Feed health">
+  <p class="eyebrow">The failure a row count cannot see</p>
+  <h2>A frozen feed returns a perfect number for ever</h2>
+  <p class="lede">A feed that fails is easy: it throws, the run records it, the artefact
+  says so. A feed that quietly stops updating returns the same healthy row count on every
+  run, indefinitely, and every downstream check passes.</p>
+  {% if summary.feeds.stale %}
+  <p class="note bad"><strong>This run, live:</strong></p>
+  <ul>
+    {% for s in summary.feeds.stale %}<li class="mono" style="background:none">{{ s }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+  <div class="cols" style="margin-top:0.6rem">
+    <div class="stat"><div class="n">{{ 'true' if summary.degraded else 'false' }}</div>
+      <div class="k"><code>degraded</code> in <code>/data/rbp.json</code>, machine-readable, this run</div></div>
+    <div class="stat"><div class="n">{{ summary.feeds.freshness_unmeasurable | length if summary.feeds.freshness_unmeasurable else 0 }}</div>
+      <div class="k">feeds returning no dates at all, so no freshness threshold can reach them</div></div>
+    <div class="stat"><div class="n">{{ summary.limitations | length if summary.limitations else 0 }}</div>
+      <div class="k">standing limits published beside the count, separately from degradation</div></div>
+  </div>
+  <p class="note" style="margin-top:1.2rem">Caps that fire by design are not degradation.
+  A warning that is on every run is furniture, and it teaches a reader to ignore the one
+  that means something. And a feed with no dates is not a feed that passed the check: it
+  is one the check cannot reach, reported separately for exactly that reason.</p>
+  <div class="notes">Generalise past this project: any consumer aggregating third-party
+  feeds has this failure mode and most do not check for it. Freshness of the newest record,
+  not row count, is the check. This has bitten this project twice.</div>
+</section>
+
+{# ---------------------------------------------------------- 11. other states #}
+<section class="slide" aria-label="Other states">
+  <p class="eyebrow">Also in the advisories you are parsing</p>
+  <h2>Three other states worth handling</h2>
+  <table class="grid" aria-label="Other reservation states seen in public advisories this run">
+    <thead><tr><th scope="col">State</th><th scope="col">This run</th><th scope="col">What it means for a consumer</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">RESERVED</td><td class="num">{{ summary.oracle.reserved | commafy if summary.oracle else 'n/a' }}</td>
+        <td>Public advisory, no record. More than the {{ summary.total | commafy }} counted, because a lookup is made for every candidate including the ones still inside the {{ summary.min_age_days }}-day buffer.</td></tr>
+      <tr><td class="mono">REJECTED</td><td class="num">{{ summary.oracle.rejected | commafy if summary.oracle else 'n/a' }}</td>
+        <td>Cited in a public advisory and rejected upstream. Worse than an open RBP: the ID will never resolve.</td></tr>
+      <tr><td class="mono">never allocated</td><td class="num">{{ summary.oracle.never_allocated | commafy if summary.oracle else 'n/a' }}</td>
+        <td>An advisory citing an ID that was never issued at all.</td></tr>
+      <tr><td class="mono">malformed</td><td class="num">{{ summary.oracle.malformed | commafy if summary.oracle else 'n/a' }}</td>
+        <td>Strings shaped like a CVE ID in advisory text that do not parse as one.</td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="margin-top:1.2rem">Counts from the {{ summary.oracle.lookups_attempted | commafy if summary.oracle else 'n/a' }}
+  reservation lookups this run made, not cumulative. Small numbers, and each one is an
+  advisory pointing at an identifier that resolves to nothing for the person reading it.</p>
+  <div class="notes">This slide exists because it is the one that gets a nod from people
+  who build ingest pipelines. Everyone has hit the malformed case. Nobody handles the
+  rejected case, which is the one that silently poisons a join.</div>
+</section>
+
+{# ------------------------------------------------------------- 12. consuming #}
+<section class="slide" aria-label="Endpoints">
+  <p class="eyebrow">If you want the data</p>
+  <h2>Everything here is a static file</h2>
+  <table class="grid" aria-label="Published data files and what each one holds">
+    <thead><tr><th scope="col">Path</th><th scope="col">What it holds</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">/data/rbp.json</td><td>The rows, wrapped in an envelope carrying <code>degraded</code>, <code>limitations</code> and the source commit. Schema v{{ schema_version }}.</td></tr>
+      <tr><td class="mono">/data/rbp.csv</td><td>The same rows, with a <code>.meta.json</code> sidecar stating every column's type and how a non-string cell is encoded.</td></tr>
+      <tr><td class="mono">/data/summary.json</td><td>Per-feed health, coverage, the reservation-lookup tally, and the degraded reasons.</td></tr>
+      <tr><td class="mono">/data/resolved.json</td><td>Closures, capped at the {{ deck.closures.published_n }} slowest. See the closure slide.</td></tr>
+      <tr><td class="mono">/data/held-back.json</td><td>Rows inside the {{ summary.min_age_days }}-day buffer, so the filter is auditable rather than described.</td></tr>
+      <tr><td class="mono">/data/archive/&lt;date&gt;/</td><td>A dated copy of each run, so a citation keeps meaning what it meant.</td></tr>
+    </tbody>
+  </table>
+  <p class="note" style="margin-top:1.2rem">No server, no database, no runtime API. Four
+  builds a day, on GitHub Pages, from a public repository under Apache 2.0. If a number on
+  this page is wrong, the code that produced it is readable.</p>
+  <div class="notes">Offer the archive explicitly: anyone wanting to reproduce a figure from
+  today can pin the dated path rather than the live one. That is the single most useful
+  thing for this audience.</div>
+</section>
+
+{# ------------------------------------------------------------ 13. boundaries #}
+<section class="slide" aria-label="Boundaries">
+  <p class="eyebrow">Stated plainly, because it limits the claim</p>
+  <h2>What this is not</h2>
+  <ul>
+    <li><strong>Not a count of violations.</strong> It is a count of a state. Rows
+    include IDs inside a coordinated disclosure and IDs whose record is in flight.
+    RBP Policy v2.0.0 also lets a Root direct a CNA-LR to publish a record for an ID
+    it did not assign, so a party can hold an ID precisely <em>because</em> it is a
+    CNA-LR, and nothing observable distinguishes an ID accepted for a third-party
+    requester from one withheld by its assigner.</li>
+    <li><strong>Not a scorecard.</strong> <strong>No row here is attributed to anyone.</strong>
+    The reservation API redacts the owner for every reserved ID, so ownership could only be
+    estimated, and an estimate is not a thing to publish beside a name. The site does
+    publish the <em>aggregate</em> coverage set, which CNAs its feeds can see at all, in
+    <code>/data/summary.json</code>. That is deliberate: the reach figure earlier is not
+    auditable without it. It is a statement about this site's reach, and it attributes no
+    CVE ID to anybody.</li>
+    <li><strong>Not a total.</strong> A floor, bounded by
+    {{ deck.feeds.configured }} feeds and by the measured reach.</li>
+    <li><strong>Not comparable run to run</strong> while the feed set is still changing.</li>
+    <li><strong>Not an argument about the Program.</strong> The definition is the
+    Program's own and the measurement is taken from outside it.</li>
+  </ul>
+  <div class="notes">If the room pushes for names, the answer is that the enforcement of
+  no-attribution is structural rather than editorial: one flag at the writer, one
+  definition of what counts as a name, a staging check that refuses any tree containing a
+  certified short name, and a test asserting the inference module is not even importable
+  from the publish path.</div>
+</section>
+
+{# ----------------------------------------------------------------- 14. asks #}
+<section class="slide" aria-label="Questions">
+  <p class="eyebrow">What I would like from this group</p>
+  <h2>Four questions</h2>
+  <ul>
+    <li><strong>Is this state representable in your tooling at all?</strong> Most consumer
+    schemas have published and withdrawn. Reserved-and-publicly-referenced is usually a
+    null row rather than a state.</li>
+    <li><strong>Which sources are missing?</strong> The count is a floor bounded by the
+    feed list. Every source added raises it, and the admissibility rules are published.</li>
+    <li><strong>Is a stable machine-readable feed of this useful to you</strong>, and in
+    what shape? The files exist today; the schema is v{{ schema_version }} and the
+    versioning is deliberate.</li>
+    <li><strong>What would you want a consumer-facing convention to say</strong> about an
+    advisory that cites an ID with no record behind it?</li>
+  </ul>
+  <p class="note" style="margin-top:1rem"><strong>rbptracker.org</strong> &middot;
+  source and method are public &middot; built from the {{ snapshot_date }} run</p>
+  <div class="notes">Do not ask for endorsement and do not ask the group to act. Ask for
+  sources and for schema opinions, which are things this room is uniquely able to give and
+  which cost nobody anything politically.</div>
+</section>
+
+</main>
+
+<div class="chrome">
+  <span class="stamp">rbptracker.org &middot; {{ snapshot_date }} run &middot; commit {{ summary.source_commit if summary.source_commit else 'unknown' }}{% if summary.degraded %} &middot; degraded{% endif %}</span>
+  <div class="controls" role="group" aria-label="Slide controls">
+    <button type="button" id="notes-btn" aria-pressed="false">Notes (N)</button>
+    <button type="button" id="prev" aria-label="Previous slide">&larr;</button>
+    <span id="count" aria-live="polite">1 / 14</span>
+    <button type="button" id="next" aria-label="Next slide">&rarr;</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+  var countEl = document.getElementById("count");
+  var progress = document.getElementById("progress");
+  var i = 0;
+
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach(function (s, k) { s.classList.toggle("on", k === i); });
+    countEl.textContent = (i + 1) + " / " + slides.length;
+    progress.style.width = ((i + 1) / slides.length * 100) + "%";
+    // The hash, so a slide is linkable and a reload does not lose the place
+    // mid-talk. replaceState rather than a hash assignment: assigning scrolls.
+    history.replaceState(null, "", "#" + (i + 1));
+    slides[i].scrollTop = 0;
+  }
+
+  document.getElementById("next").addEventListener("click", function () { show(i + 1); });
+  document.getElementById("prev").addEventListener("click", function () { show(i - 1); });
+
+  var notesBtn = document.getElementById("notes-btn");
+  function toggleNotes() {
+    var on = document.body.classList.toggle("notes-on");
+    notesBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  notesBtn.addEventListener("click", toggleNotes);
+
+  document.addEventListener("keydown", function (e) {
+    if (e.metaKey || e.ctrlKey || e.altKey) { return; }
+    var k = e.key;
+    if (k === "ArrowRight" || k === "PageDown" || k === " ") { e.preventDefault(); show(i + 1); }
+    else if (k === "ArrowLeft" || k === "PageUp") { e.preventDefault(); show(i - 1); }
+    else if (k === "Home") { e.preventDefault(); show(0); }
+    else if (k === "End") { e.preventDefault(); show(slides.length - 1); }
+    else if (k === "n" || k === "N") { e.preventDefault(); toggleNotes(); }
+  });
+
+  // Touch, for reviewing the deck on a phone. Horizontal only, and only past a
+  // threshold, so a vertical scroll on a long slide does not change slide.
+  var x0 = null, y0 = null;
+  document.addEventListener("touchstart", function (e) {
+    x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+  }, { passive: true });
+  document.addEventListener("touchend", function (e) {
+    if (x0 === null) { return; }
+    var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
+    if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) { show(i + (dx < 0 ? 1 : -1)); }
+    x0 = null; y0 = null;
+  }, { passive: true });
+
+  var start = parseInt((location.hash || "").replace("#", ""), 10);
+  show(isNaN(start) ? 0 : start - 1);
+}());
+</script>
+</body>
+</html>
