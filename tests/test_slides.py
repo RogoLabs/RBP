@@ -413,11 +413,13 @@ def test_a_row_dated_only_from_a_tracker_is_never_claimed_as_late():
     published figure: the summary reports the numerator without the reason. A
     tracker sighting proves the ID was public and not WHEN, so lateness is not
     asserted on those rows however old they are."""
-    rows = [{"clock_origin": "advisory", "past_expectation": True, "days_public": 90},
-            {"clock_origin": "tracker", "past_expectation": False, "days_public": 624}]
+    rows = [{"clock_origin": "advisory", "past_expectation": True, "days_public": 90,
+             "advisory_days_public": 90},
+            {"clock_origin": "tracker", "past_expectation": False, "days_public": 624,
+             "advisory_days_public": None}]
     out = slides.clock_basis(rows)
-    assert out["advisory"] == 1 and out["unclaimed"] == 1
-    assert out["oldest_unclaimed"] == 624
+    assert out["advisory"] == 1 and out["unmeasurable"] == 1
+    assert out["oldest_unmeasurable"] == 624
 
 
 # --------------------------------------------------------------------------
@@ -649,32 +651,97 @@ def test_the_deck_reconciles_its_two_lead_numbers(deck_page):
     buffer against a 72-hour rule, will ask why they differ. The answer has to
     be on the slide that puts them together, not four slides later."""
     t = _text(deck_page)
-    # Keyed on the substance, not on a sentence. The reconciliation has to name
-    # the cause (evidence rather than age) and the thing that supplies it; the
-    # wording around that is free to change.
-    assert "evidence, not by time" in t, (
-        "the count slide shows two figures that look contradictory and does not "
-        "say why they differ")
-    assert "only in distribution trackers" in t
-    assert "the 72-hour rule runs from a disclosure" in t, (
+    # THE READING THAT HAS TO BE BLOCKED, not merely explained.
+    #
+    # A reader sees "every row is at least 7 days public" and "N are past 72
+    # hours", notes that 7 days is longer than 72 hours, subtracts, and concludes
+    # the difference is rows that cleared the longer bar and failed the shorter
+    # one. That is impossible, so the slide looks broken. It took two readings of
+    # the earlier wording to get this far, so the assertions are about the three
+    # things that actually stop the subtraction:
+    low = t.lower()
+    assert "different" in low and "do not subtract" in low, (
+        "the slide does not tell the reader the two figures are on different "
+        "clocks, so subtracting them still looks reasonable")
+    assert "unmeasurable" in low, (
+        "the rows with no advisory are not named as unmeasurable, so they read "
+        "as rows that failed the 72-hour bar")
+    assert "72-hour rule runs from a dated" in low, (
         "the slide asserts the gap without the rule that creates it")
+    # And the arithmetic is shown, because a reader who is told not to subtract
+    # is owed the sum that does work.
+    assert "unmeasurable" in low and "=" in t
 
 
-def test_the_unclaimed_rows_are_reported_as_old_not_young():
-    """The gap is NOT that those rows are recent. The youngest was 13 days
-    public on the live run and the oldest 624, so publishing only the oldest
-    invites "well, maybe the rest are new". Both ends ship."""
-    rows = [{"clock_origin": "advisory", "past_expectation": True, "days_public": 90},
-            {"clock_origin": "tracker", "past_expectation": False, "days_public": 13},
-            {"clock_origin": "tracker", "past_expectation": False, "days_public": 624}]
+def test_the_unmeasurable_rows_are_reported_as_old_not_young():
+    """The gap is NOT that those rows are recent. On the live run the youngest
+    was 14 days public and the oldest 625, so publishing only the oldest invites
+    "well, maybe the rest are new". Both ends ship, because "unmeasurable" has to
+    be visibly a gap in the EVIDENCE and not a gap in the elapsed time."""
+    rows = [{"advisory_days_public": 90, "past_expectation": True, "days_public": 90},
+            {"advisory_days_public": None, "past_expectation": False, "days_public": 14},
+            {"advisory_days_public": None, "past_expectation": False, "days_public": 625}]
     out = slides.clock_basis(rows)
-    assert out["unclaimed"] == 2
-    assert out["youngest_unclaimed"] == 13 and out["oldest_unclaimed"] == 624
+    assert out["unmeasurable"] == 2
+    assert out["youngest_unmeasurable"] == 14 and out["oldest_unmeasurable"] == 625
 
 
-def test_youngest_unclaimed_is_absent_rather_than_zero_when_nothing_is_unclaimed():
+def test_the_unmeasurable_ages_are_absent_rather_than_zero_when_the_set_is_empty():
     """A zero here would render as "the youngest is 0 days public", which is a
-    measurement nobody made."""
+    measurement nobody made. The whole note is also `{% if %}`-ed away when the
+    set is empty, so a clean run says nothing rather than saying nothing is
+    wrong in a sentence about rows that do not exist."""
     out = slides.clock_basis(
-        [{"clock_origin": "advisory", "past_expectation": True, "days_public": 90}])
-    assert out["unclaimed"] == 0 and out["youngest_unclaimed"] is None
+        [{"advisory_days_public": 90, "past_expectation": True, "days_public": 90}])
+    assert out["unmeasurable"] == 0
+    assert out["youngest_unmeasurable"] is None and out["oldest_unmeasurable"] is None
+
+
+
+def test_the_past_expectation_figure_carries_its_own_denominator():
+    """IT IS NOT A PASS RATE. It is the size of the measurable population, and
+    every member of it is past the expectation.
+
+    Live on 2026-09-03: 2,007 rows have a dated advisory and all 2,007 are past
+    72 hours; 45 have no advisory and none of them are. The two groups partition
+    the 2,052 exactly. So the honest reading is "the rule can be applied to 2,007
+    rows and all of them are late", and the reading the old tile invited was
+    "45 rows failed a bar they had already cleared".
+    """
+    rows = ([{"advisory_days_public": 40, "past_expectation": True,
+              "clock_origin": "advisory", "days_public": 40}] * 3
+            + [{"advisory_days_public": None, "past_expectation": False,
+                "clock_origin": "tracker", "days_public": 200}] * 2)
+    out = slides.clock_basis(rows)
+    assert out["measurable"] == 3 and out["measurable_past"] == 3
+    assert out["all_measurable_past"] is True
+    assert out["unmeasurable"] == 2 and out["partitions"] is True
+
+
+def test_all_measurable_past_is_false_when_one_measurable_row_is_not_past():
+    """The slide says "every one" only when that is true. Claiming it on a run
+    where a dated advisory sits inside 72 hours would be a worse error than the
+    one this replaced, so the flag is computed and not assumed."""
+    rows = [{"advisory_days_public": 40, "past_expectation": True, "days_public": 40},
+            {"advisory_days_public": 1, "past_expectation": False, "days_public": 8}]
+    out = slides.clock_basis(rows)
+    assert out["measurable"] == 2 and out["measurable_past"] == 1
+    assert out["all_measurable_past"] is False
+    # STILL A PARTITION. The previous version built this out of
+    # `past_expectation`, so this row set made it False and the printed sum was
+    # wrong on screen. The sets are defined by the CLOCK now, so a dated
+    # advisory inside 72 hours changes the outcome and not the arithmetic.
+    assert out["unmeasurable"] == 0 and out["partitions"] is True
+
+
+def test_the_two_groups_always_cover_the_rows():
+    """The slide prints "measurable + unmeasurable = total", so the two sets are
+    defined as complements on the clock rather than derived from the outcome.
+    A row with no advisory is unmeasurable even if something upstream marked it
+    past expectation, which is the case that broke the earlier version."""
+    rows = [{"advisory_days_public": None, "past_expectation": True, "days_public": 9}]
+    out = slides.clock_basis(rows)
+    assert out["measurable"] == 0 and out["unmeasurable"] == 1
+    # True BY CONSTRUCTION now, which is the point: the sum the slide prints
+    # cannot be made wrong by the data, only by someone redefining the sets.
+    assert out["partitions"] is True

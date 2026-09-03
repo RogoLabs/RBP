@@ -97,40 +97,54 @@ def feed_split(rows, requested=()):
 
 
 def clock_basis(rows):
-    """How the site dates a row, split by what it is willing to claim.
+    """How the site dates a row, and what it is therefore willing to claim.
 
-    `past_expectation` is asserted only where the clock came from a DATED
-    ADVISORY. A row sighted in a distribution tracker with no advisory date is
-    not claimed as past the 72-hour expectation however old it is, and on the
-    2026-09-02 run 79 rows sat in that bucket with a median age well past two
-    years. That refusal is the most quotable thing about the method and it is
-    invisible in every published figure, because the summary reports the
-    numerator and not the reason.
+    TWO PREDICATES, NAMED APART, because conflating them has now cost three
+    bugs in this one function:
+
+      measurable    the row has a dated advisory, so a 72-hour clock exists
+      unmeasurable  it does not, so no clock exists and no lateness is asserted
+
+    These partition the rows BY CONSTRUCTION, which is what lets the deck print
+    "measurable + unmeasurable = total" and have it always be true.
+
+    `past_expectation` is an OUTCOME over the measurable set, not a third group.
+    On every run observed it is true of all of them, so `unmeasurable` and
+    "rows failing past_expectation" have been the same set, and that coincidence
+    is exactly what hid the earlier mistakes: the first version counted one and
+    took ages over the other, and the second built the partition out of the
+    outcome so that a dated advisory inside 72 hours broke the sum on screen.
+
+    WHY THE DECK NEEDS ALL OF THIS. The count slide says every row is at least 7
+    days public and the tile beside it gives the past-expectation figure. 7 days
+    is longer than 72 hours, so a reader subtracts, and the difference reads as
+    rows that cleared the longer bar and failed the shorter one. That is
+    impossible, and the slide was inviting it. The figures are on different
+    clocks: the buffer runs from the first sighting in ANY public source, the
+    rule runs from a dated advisory. So the tile carries its own denominator and
+    the note says not to subtract.
     """
     out = {"advisory": 0, "tracker": 0, "other": 0}
     for r in rows:
         origin = r.get("clock_origin")
         out[origin if origin in ("advisory", "tracker") else "other"] += 1
 
-    # ONE PREDICATE, NOT TWO. `unclaimed` was `tracker + other`, counted by
-    # clock origin, while the ages beside it were taken over rows failing
-    # `past_expectation`. On live data those coincide exactly, which is what
-    # made it look right. On a fixture whose rows carry no `clock_origin` they
-    # do not: every row landed in `other`, so `unclaimed` was positive while the
-    # age generator was empty, and `min()` on an empty sequence raised.
-    #
-    # It raised inside `slides.deck`, `_deck` caught it, and the build published
-    # every page except the deck. That is the guard working, and it is also the
-    # reason this comment exists rather than a bug report.
-    #
-    # `not past_expectation` is the right predicate anyway: the figure the deck
-    # reconciles is the gap between the total and the past-expectation tile, and
-    # that gap is defined by exactly this test.
-    unclaimed = [r for r in rows if not r.get("past_expectation")]
-    ages = [r.get("days_public") or 0 for r in unclaimed]
-    out["unclaimed"] = len(unclaimed)
-    out["oldest_unclaimed"] = max(ages) if ages else None
-    out["youngest_unclaimed"] = min(ages) if ages else None
+    measurable = [r for r in rows if r.get("advisory_days_public") is not None]
+    unmeasurable = [r for r in rows if r.get("advisory_days_public") is None]
+    ages = [r.get("days_public") or 0 for r in unmeasurable]
+
+    out["measurable"] = len(measurable)
+    out["measurable_past"] = sum(1 for r in measurable if r.get("past_expectation"))
+    # Computed, never assumed. A slide reading "every one" on a run where a dated
+    # advisory sits inside 72 hours would be a worse error than the one it fixed.
+    out["all_measurable_past"] = (bool(measurable)
+                                  and out["measurable_past"] == len(measurable))
+    out["unmeasurable"] = len(unmeasurable)
+    out["oldest_unmeasurable"] = max(ages) if ages else None
+    out["youngest_unmeasurable"] = min(ages) if ages else None
+    # True by construction. Asserted anyway, because the sum is printed and the
+    # previous version of this key was built from the outcome and could be false.
+    out["partitions"] = len(measurable) + len(unmeasurable) == len(rows)
     return out
 
 
