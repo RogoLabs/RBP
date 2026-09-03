@@ -1747,9 +1747,9 @@
   "feed_count": 3,
   "dates": {
    "ghsa-repos": "2026-08-30",
-   "csaf": "2026-09-01"
+   "csaf": "2026-08-31"
   },
-  "refs": "alpine:exiv2;csaf:SUSE Product Security Team\topenSUSE-SU-2026:11658-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11658-1.json;ghsa-repos:Exiv2/exiv2\tGHSA-hxph-pv7w-8649",
+  "refs": "alpine:exiv2;csaf:SUSE Product Security Team\tCVE-2026-49275\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-49275.json;ghsa-repos:Exiv2/exiv2\tGHSA-hxph-pv7w-8649",
   "description": "Exiv2/exiv2 repository advisory GHSA-hxph-pv7w-8649",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1770,7 +1770,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-49275",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11658-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-49275.json",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-hxph-pv7w-8649"
   },
   "veto_evaluated": false,
@@ -1786,9 +1786,9 @@
   "feed_count": 3,
   "dates": {
    "ghsa-repos": "2026-08-30",
-   "csaf": "2026-09-01"
+   "csaf": "2026-08-31"
   },
-  "refs": "alpine:exiv2;csaf:SUSE Product Security Team\topenSUSE-SU-2026:11658-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11658-1.json;ghsa-repos:Exiv2/exiv2\tGHSA-jcgh-p9v3-pw6j",
+  "refs": "alpine:exiv2;csaf:SUSE Product Security Team\tCVE-2026-68547\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-68547.json;ghsa-repos:Exiv2/exiv2\tGHSA-jcgh-p9v3-pw6j",
   "description": "Exiv2/exiv2 repository advisory GHSA-jcgh-p9v3-pw6j",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1809,7 +1809,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-68547",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11658-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-68547.json",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-jcgh-p9v3-pw6j"
   },
   "veto_evaluated": false,
@@ -1825,9 +1825,9 @@
   "feed_count": 3,
   "dates": {
    "ghsa-repos": "2026-08-30",
-   "csaf": "2026-09-01"
+   "csaf": "2026-08-31"
   },
-  "refs": "alpine:exiv2;csaf:SUSE Product Security Team\topenSUSE-SU-2026:11658-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11658-1.json;ghsa-repos:Exiv2/exiv2\tGHSA-3695-mjv8-3r52",
+  "refs": "alpine:exiv2;csaf:SUSE Product Security Team\tCVE-2026-68546\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-68546.json;ghsa-repos:Exiv2/exiv2\tGHSA-3695-mjv8-3r52",
   "description": "Exiv2/exiv2 repository advisory GHSA-3695-mjv8-3r52",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1848,7 +1848,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-68546",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11658-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-68546.json",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-3695-mjv8-3r52"
   },
   "veto_evaluated": false,
