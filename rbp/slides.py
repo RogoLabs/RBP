@@ -107,15 +107,30 @@ def clock_basis(rows):
     invisible in every published figure, because the summary reports the
     numerator and not the reason.
     """
-    out = {"advisory": 0, "tracker": 0, "other": 0, "oldest_unclaimed": 0}
+    out = {"advisory": 0, "tracker": 0, "other": 0}
     for r in rows:
         origin = r.get("clock_origin")
-        key = origin if origin in ("advisory", "tracker") else "other"
-        out[key] += 1
-        if not r.get("past_expectation"):
-            out["oldest_unclaimed"] = max(out["oldest_unclaimed"],
-                                          r.get("days_public") or 0)
-    out["unclaimed"] = out["tracker"] + out["other"]
+        out[origin if origin in ("advisory", "tracker") else "other"] += 1
+
+    # ONE PREDICATE, NOT TWO. `unclaimed` was `tracker + other`, counted by
+    # clock origin, while the ages beside it were taken over rows failing
+    # `past_expectation`. On live data those coincide exactly, which is what
+    # made it look right. On a fixture whose rows carry no `clock_origin` they
+    # do not: every row landed in `other`, so `unclaimed` was positive while the
+    # age generator was empty, and `min()` on an empty sequence raised.
+    #
+    # It raised inside `slides.deck`, `_deck` caught it, and the build published
+    # every page except the deck. That is the guard working, and it is also the
+    # reason this comment exists rather than a bug report.
+    #
+    # `not past_expectation` is the right predicate anyway: the figure the deck
+    # reconciles is the gap between the total and the past-expectation tile, and
+    # that gap is defined by exactly this test.
+    unclaimed = [r for r in rows if not r.get("past_expectation")]
+    ages = [r.get("days_public") or 0 for r in unclaimed]
+    out["unclaimed"] = len(unclaimed)
+    out["oldest_unclaimed"] = max(ages) if ages else None
+    out["youngest_unclaimed"] = min(ages) if ages else None
     return out
 
 

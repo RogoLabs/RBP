@@ -55,7 +55,7 @@
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="RBP Tracker: CVE IDs that are reserved, referenced in a public advisory, and still unpublished.">
+<meta property="og:image:alt" content="RBP Tracker: CVE IDs that are reserved, referenced in a public source, and still unpublished.">
 <meta name="twitter:card" content="summary_large_image">
 {% else %}
 <meta name="twitter:card" content="summary">
@@ -273,9 +273,9 @@ body.notes-on .notes { display: block; }
   <p class="eyebrow">CVE Consumer Working Group</p>
   <h1>Reserved but Public</h1>
   <p class="lede">What a data consumer sees when a CVE ID is reserved, referenced
-  in a public advisory, and still unpublished. Which is nothing.</p>
+  in a public source, and still unpublished. Which is nothing.</p>
   <p class="lede" style="margin-top:1.4rem"><strong>{{ summary.total | commafy }}</strong>
-  IDs are in that state right now, from {{ deck.feeds.configured }} public advisory
+  IDs are in that state right now, from {{ deck.feeds.configured }} public
   sources. Every figure in this deck was computed by the run that built the page.</p>
   <p class="note" style="margin-top:1.6rem">rbptracker.org &middot; Jerry Gamblin &middot;
   built from the {{ snapshot_date }} run &middot; {{ generated }}</p>
@@ -318,7 +318,7 @@ body.notes-on .notes { display: block; }
   <p class="eyebrow">As of the {{ snapshot_date }} run</p>
   <div class="big">{{ summary.total | commafy }}</div>
   <p class="big-sub">CVE IDs that are <strong>reserved</strong>, <strong>referenced in
-  a public advisory</strong>, <strong>still unpublished</strong>, and have been
+  one or more public sources</strong>, <strong>still unpublished</strong>, and have been
   provably public for at least {{ summary.min_age_days }} days.</p>
   <div class="cols" style="margin-top:1.6rem">
     <div class="stat"><div class="n">{{ summary.past_expectation | commafy }}</div>
@@ -328,11 +328,15 @@ body.notes-on .notes { display: block; }
     <div class="stat hot"><div class="n">{{ summary.oldest_days | commafy }}</div>
       <div class="k">days public, oldest row still reserved</div></div>
   </div>
-  <p class="note" style="margin-top:1.4rem"><strong>This is a floor.</strong> It counts
-  only what {{ deck.feeds.configured }} configured feeds referenced. An RBP nobody in
-  this set wrote an advisory about is not in the number, and cannot be.</p>
+  <p class="note" style="margin-top:1.2rem"><strong>This is a floor</strong>, counting
+  only what {{ deck.feeds.configured }} configured feeds referenced.{% if deck.clock.unclaimed %}
+  And the first two figures differ by evidence, not by time:
+  {{ deck.clock.unclaimed }} rows are referenced only in distribution trackers, never in
+  an advisory, and the 72-hour rule runs from a disclosure. No clock starts, however old
+  the row is; the youngest of these is {{ deck.clock.youngest_unclaimed }} days
+  public.{% endif %}</p>
   <div class="notes">Say "floor" out loud here and keep saying it. The number is defensible
-  precisely because it is a lower bound: every row has a public advisory behind it that
+  precisely because it is a lower bound: every row has a public reference behind it that
   anyone in the room can open. Do not let it get quoted as a total.</div>
 </section>
 
@@ -418,7 +422,7 @@ body.notes-on .notes { display: block; }
     <div class="stat"><div class="n">{{ deck.clock.advisory | commafy }}</div>
       <div class="k">rows dated from a published advisory, and claimed past expectation</div></div>
     <div class="stat"><div class="n">{{ deck.clock.unclaimed | commafy }}</div>
-      <div class="k">rows dated only from a tracker sighting, and <strong>not</strong> claimed</div></div>
+      <div class="k">rows with <strong>no advisory at all</strong>, referenced only in distribution trackers, so not claimed</div></div>
     <div class="stat"><div class="n">{{ deck.clock.oldest_unclaimed | commafy }}</div>
       <div class="k">days: the oldest row the site declines to call late</div></div>
   </div>
