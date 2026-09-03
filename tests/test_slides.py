@@ -174,12 +174,29 @@ def test_the_deck_reports_a_degraded_run_as_degraded(tmp_path):
         s["degraded_reasons"] = ["1 feed(s) have stopped returning recent advisories"]
         s["feeds"]["stale"] = ["msrc: newest advisory is 2026-07-14, 50 days old "
                                "(floor 45); the feed has likely stopped"]
+        # AND THE DETAIL ROW BEHIND IT. A real run cannot flag a feed stale
+        # without having read it, so a fixture that sets `stale` alone is a run
+        # that could not happen, and the slide renders a feed name with an empty
+        # date beside it. `stale_sources` reads the facts from `detail`.
+        s["feeds"]["detail"]["msrc"] = {
+            "status": "ok", "rows": 13388, "ok": True, "truncated": False,
+            "capped": False, "newest": "2026-07-14", "oldest": "2024-01-09",
+            "dated_rows": 13388, "rows_published": 3, "rows_only": 0}
+        s["date"] = "2026-09-02"
 
     t = _text(_build_with_summary(tmp_path, go_bad))
-    assert "the feed has likely stopped" in t, (
-        "the stale-feed line did not render, so the deck reports a frozen feed "
+    assert "msrc" in t and "2026-07-14" in t, (
+        "the stale source did not render, so the deck reports a frozen feed "
         "nowhere: the one shortfall a row count cannot see")
     assert "true" in t, "the degraded flag did not render"
+    # THE RUN'S VERDICT MUST NOT REACH THE ROOM. `feeds.stale` ends every line
+    # "the feed has likely stopped", and on 2026-09-02 that was false: the source
+    # was live, its index had merely dropped a month whose document was still
+    # served. Repeating it asserts an operational fact about a named third party
+    # that two requests disprove.
+    assert "has likely stopped" not in t, (
+        "the deck repeats the run's diagnosis verbatim; the check fires on age "
+        "and cannot know why, and here it was wrong")
 
 
 def test_the_deck_reports_a_clean_run_as_clean(tmp_path):
@@ -188,8 +205,8 @@ def test_the_deck_reports_a_clean_run_as_clean(tmp_path):
     block passes the other. Both branches have to be reachable and different."""
     t = _text(_build_with_summary(tmp_path, lambda s: s.update(
         {"degraded": False, "degraded_reasons": []})))
-    assert "the feed has likely stopped" not in t, (
-        "the deck prints a stale-feed line on a clean run, so the line is "
+    assert "This run, live" not in t, (
+        "the deck prints a stale-source line on a clean run, so the line is "
         "furniture rather than a warning")
     assert "false" in t
 
@@ -557,3 +574,107 @@ def test_the_deck_is_not_imported_at_module_scope(tmp_path):
     assert "import slides" not in head, (
         "rbp/site.py imports the deck at module scope, so a broken deck module "
         "stops rbp.site importing at all and the guard in _deck never runs")
+
+
+
+def test_the_deck_states_the_stale_observation_without_the_runs_diagnosis():
+    """`stale_sources` turns the run's sentence back into the facts under it.
+
+    The run says "msrc: newest advisory is 2026-07-14, 50 days old (floor 45);
+    the feed has likely stopped". The first half is measured. The second is a
+    guess, and on the run this deck was built from it was wrong: the source was
+    live, its index had dropped a month, and that month's document was still
+    served at its own URL with 1,638 CVE IDs in it.
+
+    WHICH feeds are stale still comes from the run, so the deck cannot disagree
+    with /status about that. Only the wording is the deck's.
+    """
+    summary = {"date": "2026-09-02", "feeds": {
+        "stale": ["msrc: newest advisory is 2026-07-14, 50 days old "
+                  "(floor 45); the feed has likely stopped"],
+        "detail": {"msrc": {"newest": "2026-07-14", "rows": 13388}}}}
+    out = slides.stale_sources(summary)
+    assert out == [{"feed": "msrc", "newest": "2026-07-14", "days": 50,
+                    "rows": 13388}]
+    assert not any("stopped" in str(v) for row in out for v in row.values()), (
+        "the diagnosis survived into the structured facts")
+
+
+def test_a_stale_feed_with_no_detail_row_still_names_the_feed():
+    """The run and the detail dict can disagree: a feed can be listed stale and
+    have no usable `newest`. Dropping it silently would leave the slide claiming
+    a clean run while /status says otherwise."""
+    out = slides.stale_sources(
+        {"date": "2026-09-02",
+         "feeds": {"stale": ["ghost: newest advisory is nothing"], "detail": {}}})
+    assert out == [{"feed": "ghost", "newest": None, "days": None, "rows": None}]
+
+
+# --------------------------------------------------------------------------
+# the two lead numbers have to reconcile on the slide they share
+# --------------------------------------------------------------------------
+
+def test_the_count_is_not_called_advisory_referenced():
+    """THE CONTRADICTION IN THE LEAD SUBTITLE, and the question it produced.
+
+    The count slide read "CVE IDs that are reserved, referenced in a public
+    advisory, still unpublished" directly above a tile counting 1,965 as
+    advisory-dated. The 79-row gap IS the rows with no advisory, so the label
+    contradicted the number beside it, and the obvious reading of the two
+    together is that the second should equal the first.
+
+    `clock.py` draws the distinction deliberately: RBP membership is
+    "referenced in one or more public sources" and a distribution tracker is
+    squarely one, while the 72-hour rule runs from Publicly Disclosing, which a
+    tracker entry is not. Conflating them once made `past_expectation` true on
+    522 of 522 rows.
+
+    "Public source" is the Program's own word and is already quoted verbatim on
+    the definition slide, so this also puts two slides back in agreement.
+    """
+    import pathlib
+    tpl = (pathlib.Path(__file__).resolve().parents[1]
+           / "templates" / "slides.html").read_text()
+    body = re.sub(r"\{#.*?#\}", "", tpl, flags=re.S)
+    body = re.sub(r'<div class="notes">.*?</div>', "", body, flags=re.S)
+    assert "referenced in\n  a public advisory" not in body, (
+        "the lead subtitle calls every row advisory-referenced; 79 of them have "
+        "no advisory, which is exactly why the tile beside it reads lower")
+    assert "one or more public sources" in body, (
+        "the count slide dropped the Program's own wording for membership")
+
+
+def test_the_deck_reconciles_its_two_lead_numbers(deck_page):
+    """A reader looking at 2,044 and 1,965 side by side, both past a 7-day
+    buffer against a 72-hour rule, will ask why they differ. The answer has to
+    be on the slide that puts them together, not four slides later."""
+    t = _text(deck_page)
+    # Keyed on the substance, not on a sentence. The reconciliation has to name
+    # the cause (evidence rather than age) and the thing that supplies it; the
+    # wording around that is free to change.
+    assert "evidence, not by time" in t, (
+        "the count slide shows two figures that look contradictory and does not "
+        "say why they differ")
+    assert "only in distribution trackers" in t
+    assert "the 72-hour rule runs from a disclosure" in t, (
+        "the slide asserts the gap without the rule that creates it")
+
+
+def test_the_unclaimed_rows_are_reported_as_old_not_young():
+    """The gap is NOT that those rows are recent. The youngest was 13 days
+    public on the live run and the oldest 624, so publishing only the oldest
+    invites "well, maybe the rest are new". Both ends ship."""
+    rows = [{"clock_origin": "advisory", "past_expectation": True, "days_public": 90},
+            {"clock_origin": "tracker", "past_expectation": False, "days_public": 13},
+            {"clock_origin": "tracker", "past_expectation": False, "days_public": 624}]
+    out = slides.clock_basis(rows)
+    assert out["unclaimed"] == 2
+    assert out["youngest_unclaimed"] == 13 and out["oldest_unclaimed"] == 624
+
+
+def test_youngest_unclaimed_is_absent_rather_than_zero_when_nothing_is_unclaimed():
+    """A zero here would render as "the youngest is 0 days public", which is a
+    measurement nobody made."""
+    out = slides.clock_basis(
+        [{"clock_origin": "advisory", "past_expectation": True, "days_public": 90}])
+    assert out["unclaimed"] == 0 and out["youngest_unclaimed"] is None

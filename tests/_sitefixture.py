@@ -178,7 +178,21 @@ def _row(n, public_date="2026-08-05", days=19):
         "days_public": days + n,
         "clock_known": True,
         "hours_public": (days + n) * 24,
-        "past_expectation": True,
+        # NOT TRUE ON EVERY ROW. It was, on all 60, which is precisely the state
+        # `clock.py:225-239` records as the defect it fixed: "past_expectation
+        # came out TRUE on 522 of 522 published rows... a claim asserted on every
+        # single row does no discriminating work". A fixture in that state makes
+        # every assertion about the GAP between the total and the
+        # past-expectation count vacuous, and /slides.html renders exactly that
+        # gap.
+        #
+        # Every fifth row is tracker-only: referenced in a distribution tracker,
+        # never in an advisory, so no 72-hour clock starts however old it is.
+        # That is the live shape, where 79 of 2,044 rows sit in this bucket and
+        # the youngest of them is 13 days public.
+        "past_expectation": n % 5 != 0,
+        "clock_origin": "tracker" if n % 5 == 0 else "advisory",
+        "advisory_days_public": None if n % 5 == 0 else days + n,
         # A MUST row carries the evidence MUST requires. The fixture used to
         # set rule_strength MUST on every fifth row while leaving
         # disclosure_order "unmeasurable" and self_disclosed False, which is a
@@ -258,7 +272,12 @@ def summary(rows, date=SNAPSHOT_DATE):
     """
     return {
         "date": date, "expectation_hours": 72,
-        "total": len(rows), "past_expectation": len(rows),
+        # COUNTED FROM THE ROWS, not `len(rows)`. Hardcoding it meant the summary
+        # could never disagree with "all of them", so nothing downstream could
+        # ever observe the two figures differing, which is the one thing the
+        # count slide puts side by side.
+        "total": len(rows),
+        "past_expectation": sum(1 for r in rows if r.get("past_expectation")),
         "clock_unknown": 0, "undated_excluded": 0, "epoch": EPOCH,
         "epoch_excluded": len(HELD_BACK), "min_age_days": 7,
         "oldest_days": 519, "median_days": 42, "named_cnas": 0,
