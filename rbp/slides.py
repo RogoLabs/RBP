@@ -29,6 +29,7 @@ error this site exists to complain about.
 """
 from __future__ import annotations
 
+import datetime as dt
 import json
 import os
 import statistics
@@ -221,6 +222,46 @@ def series(snaps, keep=14):
     return out
 
 
+def stale_sources(summary):
+    """The stale feeds as FACTS, not as the run's prose verdict.
+
+    `feeds.stale` is a list of sentences ending "the feed has likely stopped".
+    That is a diagnosis, and on 2026-09-02 it was the wrong one. What the run
+    can actually see is that a source's newest advisory is older than the floor.
+    Why is a separate question, and answering it takes a request the pipeline
+    does not make.
+
+    Checked by hand for the msrc case that day: Microsoft's index
+    (/cvrf/v3.0/updates) listed months only to 2026-Jul, so the observation was
+    right. The feed had not stopped. The 2026-Aug document was still served at
+    its own URL, 8.2 MB and 1,638 CVE IDs, and the July document's
+    CurrentReleaseDate was that same day. A month had left the INDEX while the
+    document behind it stayed up.
+
+    So the deck renders the observation and says what checking found. Repeating
+    "has likely stopped" to a room would have asserted an operational fact about
+    a named third party that two requests disprove.
+
+    WHICH feeds are stale still comes from the run, so the deck cannot disagree
+    with the site about that. Only the wording is the deck's own.
+    """
+    detail = ((summary or {}).get("feeds") or {}).get("detail") or {}
+    out = []
+    for line in ((summary or {}).get("feeds") or {}).get("stale") or []:
+        name = str(line).split(":", 1)[0].strip()
+        d = detail.get(name) or {}
+        newest = d.get("newest") or None
+        days = None
+        try:
+            snap = dt.date.fromisoformat((summary or {}).get("date"))
+            days = (snap - dt.date.fromisoformat(newest[:10])).days
+        except (TypeError, ValueError):
+            pass
+        out.append({"feed": name, "newest": newest, "days": days,
+                    "rows": d.get("rows")})
+    return out
+
+
 def deck(rows, summary, resolutions, snaps, published_n):
     """Everything /slides.html renders that is not already in `summary`."""
     requested = ((summary or {}).get("feeds") or {}).get("requested") or ()
@@ -229,4 +270,5 @@ def deck(rows, summary, resolutions, snaps, published_n):
         "clock": clock_basis(rows),
         "closures": closures(resolutions, published_n),
         "series": series(snaps),
+        "stale": stale_sources(summary),
     }
