@@ -2603,3 +2603,139 @@ def test_a_small_month_does_not_trip_the_bucket_check():
     prev = {"arch": _feed(75, "2026-08-01", {"2026-08": 8})}
     cur = {"arch": _feed(70, "2026-08-01", {"2026-08": 1})}
     assert feeds.withdrawn_history(prev, cur) == []
+
+
+# --------------------------------------------------------------------------
+# a month the index stops listing is not a month that went away
+# --------------------------------------------------------------------------
+
+def test_msrc_keeps_a_month_the_index_stopped_listing(tmp_path, monkeypatch):
+    """THE 2026-09-02 LOSS, as a test.
+
+    Microsoft's index listed 2026-Aug on every run for five days and then
+    stopped. The document had not moved: /cvrf/v3.0/cvrf/2026-Aug returned 200
+    and 8.2 MB with 1,638 CVE IDs in it, and the July document had been revised
+    that same day. `feed_msrc` read the index and nothing else, so the month went
+    with the index entry: 14,893 rows on 09-01, 13,388 on 09-02.
+
+    Every guard in this file was working and none of them could put a month back.
+    """
+    from rbp import feeds as F
+
+    state = tmp_path / "msrc_state.json"
+    state.write_text(json.dumps({"months": {"2026-Jul": "2026-07-14",
+                                            "2026-Aug": "2026-08-11"}}))
+
+    index = {"value": [{"ID": "2026-Jul", "InitialReleaseDate": "2026-07-14T07:00:00Z",
+                        "CvrfUrl": "https://x.invalid/cvrf/2026-Jul"}]}
+    docs = {
+        "https://x.invalid/cvrf/2026-Jul": {"Vulnerability": [
+            {"CVE": "CVE-2026-1", "ReleaseDate": "2026-07-14T00:00:00Z"}]},
+        F.MSRC_CVRF.format("2026-Aug"): {"Vulnerability": [
+            {"CVE": "CVE-2026-2", "ReleaseDate": "2026-08-11T00:00:00Z"},
+            {"CVE": "CVE-2026-3", "ReleaseDate": "2026-08-11T00:00:00Z"}]},
+    }
+    asked = []
+
+    def fake_get(url, **kw):
+        asked.append(url)
+        if url.endswith("/updates"):
+            return index, 200, {}
+        return docs.get(url, {}), 200, {}
+
+    monkeypatch.setattr(F, "_get", fake_get)
+    rows = F.feed_msrc([2026], state_path=str(state))
+
+    ids = sorted(r["cve_id"] for r in rows)
+    assert ids == ["CVE-2026-1", "CVE-2026-2", "CVE-2026-3"], (
+        f"the dropped month was not recovered; got {ids}")
+    assert F.MSRC_CVRF.format("2026-Aug") in asked, (
+        "the feed never asked for the month the index stopped listing, so it "
+        "can only ever lose it")
+
+
+def test_msrc_does_not_remember_a_month_it_could_not_read(tmp_path, monkeypatch):
+    """`_month` returns [] both for an empty month and for a fetch that failed.
+    Recording the second would pin a url this feed cannot read into the state for
+    ever, and every run would spend a request on it."""
+    from rbp import feeds as F
+
+    state = tmp_path / "msrc_state.json"
+    index = {"value": [{"ID": "2026-Jul", "InitialReleaseDate": "2026-07-14T07:00:00Z",
+                        "CvrfUrl": "https://x.invalid/cvrf/2026-Jul"}]}
+
+    def fake_get(url, **kw):
+        if url.endswith("/updates"):
+            return index, 200, {}
+        raise RuntimeError("502")
+
+    monkeypatch.setattr(F, "_get", fake_get)
+    assert F.feed_msrc([2026], state_path=str(state)) == []
+    assert not state.exists(), (
+        "a month that could not be read was written to the state, so the feed "
+        "will re-request a dead url on every run for ever")
+
+
+def test_msrc_prefers_the_index_url_over_the_remembered_one(tmp_path, monkeypatch):
+    """A month the index still lists carries a current url and date. The
+    remembered pair is a fallback, never an override: if Microsoft moves a
+    document, the state must not pin the old location."""
+    from rbp import feeds as F
+
+    state = tmp_path / "msrc_state.json"
+    state.write_text(json.dumps({"months": {"2026-Jul": "2026-07-14"}}))
+    index = {"value": [{"ID": "2026-Jul", "InitialReleaseDate": "2026-07-14T07:00:00Z",
+                        "CvrfUrl": "https://x.invalid/moved/2026-Jul"}]}
+    asked = []
+
+    def fake_get(url, **kw):
+        asked.append(url)
+        if url.endswith("/updates"):
+            return index, 200, {}
+        return {"Vulnerability": [{"CVE": "CVE-2026-1",
+                                   "ReleaseDate": "2026-07-14T00:00:00Z"}]}, 200, {}
+
+    monkeypatch.setattr(F, "_get", fake_get)
+    F.feed_msrc([2026], state_path=str(state))
+    assert "https://x.invalid/moved/2026-Jul" in asked
+    assert F.MSRC_CVRF.format("2026-Jul") not in asked, (
+        "the remembered url overrode the one the index is currently serving")
+
+
+def test_msrc_retention_is_bounded_by_the_year_window(tmp_path, monkeypatch):
+    """The state cannot grow without limit: a month outside the configured years
+    is not carried forward, however long it has been remembered."""
+    from rbp import feeds as F
+
+    state = tmp_path / "msrc_state.json"
+    state.write_text(json.dumps({"months": {"2019-Jan": "2019-01-08",
+                                            "2026-Aug": "2026-08-11"}}))
+    asked = []
+
+    def fake_get(url, **kw):
+        asked.append(url)
+        if url.endswith("/updates"):
+            return {"value": []}, 200, {}
+        return {"Vulnerability": [{"CVE": "CVE-2026-9",
+                                   "ReleaseDate": "2026-08-11T00:00:00Z"}]}, 200, {}
+
+    monkeypatch.setattr(F, "_get", fake_get)
+    F.feed_msrc([2026], state_path=str(state))
+    assert F.MSRC_CVRF.format("2026-Aug") in asked
+    assert F.MSRC_CVRF.format("2019-Jan") not in asked
+
+
+def test_the_stale_line_states_the_observation_and_not_a_cause():
+    """It ended "the feed has likely stopped". On 2026-09-02 msrc was flagged and
+    Microsoft's API was live: the index had dropped a month whose document was
+    still served. A threshold on one date cannot tell a dead feed from one that
+    withdrew history, and this site published the guess in its own voice about a
+    named third party."""
+    from rbp import feeds as F
+
+    detail = {"msrc": {"dated_rows": 10, "newest": "2026-07-14"}}
+    stale, _ = F.stale_feeds(detail, today="2026-09-02")
+    assert len(stale) == 1
+    assert "2026-07-14" in stale[0] and "50 days old" in stale[0]
+    assert "has likely stopped" not in stale[0], (
+        "the freshness check still publishes a cause it did not measure")

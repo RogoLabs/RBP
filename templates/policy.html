@@ -75,12 +75,18 @@
 <div class="card">
   <div class="card-header"><h2 class="card-title">The field that would let anyone check</h2></div>
   <div class="card-body">
-    <p>Ask the CVE Services API about a published ID and it tells you who assigned it:</p>
-<pre class="api">GET /api/cve-id/CVE-2026-26100
-{"state":"PUBLISHED","owning_cna":"<strong>Nozomi</strong>"}</pre>
-    <p>Ask about a reserved one and it does not:</p>
+    {# THE PUBLISHED HALF IS GONE, and with it the only certified CNA short name
+       this site rendered. It printed a real assigner against a real published id
+       to contrast with the redacted response below. The contrast was worth
+       having and the cost was not: the site's whole claim is that it attributes
+       nothing, and that example asserted an ownership fact about a specific CVE
+       which no fixture pins and nothing re-checks, on the page that argues the
+       redaction matters. The response below carries the point on its own,
+       because the field being present and empty IS the point. #}
+    <p>Ask the CVE Services API about a reserved ID and the assigner is withheld:</p>
 <pre class="api">GET /api/cve-id/CVE-2026-2574
 {"state":"RESERVED","owning_cna":"<strong>[REDACTED]</strong>"}</pre>
+    <p>The same field is populated for a published ID. For a reserved one it is not.</p>
     <p>
       The field is populated and served, and withheld for reserved IDs. Being precise
       about scope: that redaction covers every reserved ID, on the order of tens of

@@ -341,7 +341,7 @@
     {% set detail = (summary.feeds or {}).get('detail') or {} %}
     {% if detail %}
     <table class="table table-sm small">
-      <caption class="sr-only">Every configured advisory feed, the state it ended in, how many CVE IDs it returned, how many rows on this site it accounts for, how many of those it is the only source for, and any note about why it stopped. A feed that fans out to third-party providers lists each provider beneath it.</caption>
+      <caption class="sr-only">Every configured feed, the state it ended in, how many CVE IDs it returned, how many rows on this site it accounts for, how many of those it is the only source for, and any note about why it stopped. A feed that fans out to third-party providers lists each provider beneath it.</caption>
       <thead>
         <tr>
           <th scope="col">Feed</th>

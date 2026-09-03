@@ -359,3 +359,36 @@ def test_a_deliberately_withheld_run_is_not_recorded_as_a_failed_tick():
     cond = " ".join(_job(DEPLOY, "ledger")["if"].split())
     assert "vars.RBP_PAUSE != '1'" in cond, cond
     assert "inputs.dry_run != true" in cond, cond
+
+
+def test_every_feed_state_file_is_cached_between_runs():
+    """A STATE FILE WITH NO CACHE ENTRY LASTS EXACTLY ONE RUN.
+
+    `rbp/feeds.py` keeps three of these: the repo-advisory cursor, the CSAF read
+    marks, and the MSRC month list. Each is written at the end of a run and read
+    at the start of the next, and on a fresh GitHub runner "the next run" starts
+    from an empty disk. The only thing that carries them across is an
+    `actions/cache` entry naming the path.
+
+    For the first two, losing that is slow. For the MSRC month list it is silent:
+    the feature exists so that an index which stops listing a month cannot delete
+    it from the count, and with no cache the memory is one run long. The code
+    would be correct, the plumbing absent, and every test in the suite would still
+    pass, which is the shape this repository keeps paying for.
+
+    Asserted as the CLASS. A fourth state file added to feeds.py without a cache
+    block fails here rather than being found by someone wondering why a feed
+    keeps starting cold.
+    """
+    import re
+
+    src = (ROOT / "rbp" / "feeds.py").read_text()
+    paths = set(re.findall(r'"data",\s*"([a-z0-9_]+_state\.json)"', src))
+    assert paths, "found no feed state files in feeds.py; this test is not reading it"
+
+    deploy = (WORKFLOWS / "deploy.yml").read_text()
+    missing = [p for p in sorted(paths) if f"data/{p}" not in deploy]
+    assert not missing, (
+        f"{missing} are written by feeds.py and cached by no workflow step, so "
+        "every run starts from an empty file and whatever they remember is "
+        "forgotten between runs")

@@ -483,7 +483,11 @@ def capped_build(tmp_path_factory):
 
 def _feed_table(out):
     body = (pathlib.Path(out) / "status.html").read_text()
-    m = re.search(r"<caption[^>]*>Every configured advisory feed.*?</tbody>", body, re.S)
+    # Matched on "Every configured" rather than the whole caption. The word
+    # "advisory" came out of it because five of the fourteen feeds are trackers
+    # and the caption named the whole table, and five tests in this file located
+    # the table by that exact sentence and went blind at once.
+    m = re.search(r"<caption[^>]*>Every configured feed.*?</tbody>", body, re.S)
     assert m, "the feed table is not on the page"
     return m.group(0)
 

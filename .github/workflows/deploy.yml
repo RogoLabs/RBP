@@ -279,6 +279,27 @@ jobs:
           key: csaf-marks-${{ github.run_id }}
           restore-keys: csaf-marks-
 
+      # The MSRC month list, and UNLIKE the two caches above this one is not just
+      # an optimisation. `feed_msrc` remembers the month ids it has read so that
+      # an index which stops listing a month cannot delete it from the count.
+      # Without this entry the memory lasts exactly one run and the feature is
+      # decoration: the code would be correct, the plumbing absent, and nothing
+      # would say so.
+      #
+      # Losing the cache is safe. The state rebuilds from whatever the index
+      # currently lists, which is the behaviour that existed before it, and the
+      # only cost is that a month dropped while the cache was cold stays dropped
+      # until it is listed again.
+      #
+      # Rolling, like the others: the run id saves a fresh entry, the prefix
+      # restores the most recent.
+      - name: Cache MSRC month list
+        uses: actions/cache@v5
+        with:
+          path: data/msrc_state.json
+          key: msrc-months-${{ github.run_id }}
+          restore-keys: msrc-months-
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
