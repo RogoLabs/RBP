@@ -62,6 +62,13 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
    `/policy.html`, `/status.html` and `/about-this-count.html`. Before launch `/`
    is the holding page instead and the list moves to `/overview.html`.
 
+   `/slides.html` is a sixth file and not a sixth page. It is a conference deck,
+   nothing links to it, it is `noindex, nofollow` in both postures, and it is
+   built from the same run as the count so a slide cannot quote a number the site
+   no longer shows. Its figures come from `rbp/slides.py`; both computing and
+   rendering it are guarded, so a broken deck skips the deck and publishes
+   everything else. `tests/test_slides.py` asserts that by making it fail.
+
 Whether the last run was complete, which feeds answered, how often the site has
 actually published and what moved since the previous run are all on
 **`/status.html`**, and nowhere else. The pages that carry the count carry no

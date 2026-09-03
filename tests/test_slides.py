@@ -489,3 +489,71 @@ def test_the_deck_points_at_the_file_that_carries_the_names(deck_page):
     assert "aggregate" in t.lower() and "/data/summary.json" in t, (
         "the boundaries slide does not say where the coverage set is published, "
         "so a reader who finds it finds it as a contradiction")
+
+
+# --------------------------------------------------------------------------
+# the deck must never take the publish down
+# --------------------------------------------------------------------------
+
+def test_a_broken_deck_does_not_stop_the_site_publishing(tmp_path, monkeypatch):
+    """THE CLAIM THE COMMENT IN `site.build` MAKES, asserted instead of asserted.
+
+    That comment said a failing deck leaves "every other page unaffected". It was
+    half true and the half it missed was the whole outage: the try/except wrapped
+    the RENDER, while the FIGURES were computed up in `site.load`, so a raise
+    there propagated straight out of `site.build`. Measured before the fix by
+    making `slides.deck` raise and running a build: ZERO pages written. Not a
+    degraded deck, the whole site, four times a day, with `deploy` needing
+    `build` and no `if:`.
+
+    Mutation-shaped on purpose: it injects the failure rather than waiting for
+    one, because a test that only ever sees a healthy deck cannot tell a guard
+    that works from a guard that is not there.
+    """
+    import importlib
+    import pathlib
+
+    import _sitefixture as F
+    from rbp import site as _site, slides as _slides
+
+    def boom(*a, **k):
+        raise RuntimeError("the deck figures failed")
+
+    monkeypatch.setattr(_slides, "deck", boom)
+
+    root = pathlib.Path(tmp_path)
+    snaps, data = F.write_snapshots(root)
+    out = root / "site"
+    mp = pytest.MonkeyPatch()
+    mp.setenv("RBP_LAUNCHED", "1")
+    site = importlib.reload(_site)
+    # The reload discards the patched module reference, so re-apply it to the
+    # object `site` will actually reach through its local import.
+    monkeypatch.setattr(_slides, "deck", boom)
+    try:
+        site.build(str(out), str(snaps), str(data))
+    finally:
+        mp.undo()
+        importlib.reload(_site)
+
+    pages = sorted(p.name for p in out.glob("*.html"))
+    assert "index.html" in pages, (
+        f"a failing deck took the whole build down; pages written: {pages}")
+    for required in ("method.html", "policy.html", "status.html"):
+        assert required in pages, f"{required} did not ship: {pages}"
+    assert "slides.html" not in pages, (
+        "the deck was written with no figures behind it, so its cells render "
+        "blank, and a blank cell reads as a measured zero")
+    assert (out / "data" / "rbp.json").exists(), "the artefact did not publish"
+
+
+def test_the_deck_is_not_imported_at_module_scope(tmp_path):
+    """A syntax error in rbp/slides.py made `import rbp.site` fail, which is the
+    same outage by a shorter route and one no try/except inside `build` could
+    catch. The import is local to `_deck` now."""
+    import pathlib
+    src = (pathlib.Path(__file__).resolve().parents[1] / "rbp" / "site.py").read_text()
+    head = src.split("def ", 1)[0]
+    assert "import slides" not in head, (
+        "rbp/site.py imports the deck at module scope, so a broken deck module "
+        "stops rbp.site importing at all and the guard in _deck never runs")

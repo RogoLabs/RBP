@@ -45,7 +45,6 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from . import clock
 from . import schema as _schema
-from . import slides as _slides
 
 # Pre-launch posture. The dashboard is built and reachable either way, because
 # the repo is public and the data files are served regardless; the gate is on
@@ -994,8 +993,12 @@ def load(snap_root, data_dir):
         # `resolutions_published` beside it, which is capped at the 200
         # slowest closures and whose median is nine days worse than the
         # ledger's as a result. See rbp/slides.py.
-        "deck": _slides.deck(rows, summary, resolutions, snaps,
-                             len(_published_closures)),
+        #
+        # `None` when it could not be computed, and the deck is then not
+        # rendered at all. See `_deck` for why that is not the same shape as
+        # swallowing the error.
+        "deck": _deck(rows, summary, resolutions, snaps,
+                      len(_published_closures)),
         "resolutions_published": _published_closures,
         "resolutions_rejected": _rejected_closures,
         # Counted from the same lists that render, not from an untruncated
@@ -1042,6 +1045,41 @@ def load(snap_root, data_dir):
         # it in both postures.
         "home": "index.html" if launched else "overview.html",
     }
+
+
+def _deck(rows, summary, resolutions, snaps, published_n):
+    """The talk deck's figures, or None if they could not be computed.
+
+    THE HALF THE try/except IN `build` DID NOT COVER, and the review round that
+    found it was right that the gap made the comment there a false claim. That
+    block wraps the RENDER. This is the COMPUTE, it ran here in `load`, and a
+    raise in it propagated straight out of `site.build`.
+
+    Demonstrated rather than assumed: making `slides.deck` raise and running a
+    build produced ZERO pages. Not a degraded deck, not a missing slide, the
+    whole site. `deploy` is `needs: build` with no `if:`, so that is the deploy
+    skipped and Pages serving the previous artefact four times a day for a page
+    nobody can reach from anywhere on the site.
+
+    Returning None rather than swallowing: the message is printed, CI fails on
+    tests/test_slides.py long before this, and `build` renders no deck at all
+    when the figures are absent, so there is no half-built page carrying blank
+    cells that read as measured zeroes.
+
+    The import is local for the same reason. At module scope a syntax error in
+    rbp/slides.py made `import rbp.site` fail, which is the same outage by a
+    shorter route and one this function could not have caught.
+    """
+    try:
+        from . import slides as _slides
+        return _slides.deck(rows, summary, resolutions, snaps, published_n)
+    except Exception as e:                  # noqa: BLE001 - see the docstring
+        import traceback
+        print(f"SLIDES: the deck figures did not compute ({type(e).__name__}: "
+              f"{e}). /slides.html will not be written; every other page is "
+              "unaffected. This should have been caught in CI:")
+        traceback.print_exc()
+        return None
 
 
 def _changes(rows, prev_dir, latest_dir, withheld=frozenset()):
@@ -1559,17 +1597,26 @@ def build(out, snap_root, data_dir):
     # path, so a broken deck cannot reach main. If one reaches the publish path
     # anyway, the message below goes to the build log and every other page still
     # ships. The failure is never silent and it is never fatal.
-    try:
-        _schema.write_text(
-            os.path.join(out, "slides.html"),
-            env.get_template("slides.html").render(
-                **ctx, page="slides.html", page_file="slides.html"))
-    except Exception as e:              # noqa: BLE001 - see the note above
-        import traceback
-        print(f"SLIDES: /slides.html did not render ({type(e).__name__}: {e}). "
-              "Every other page is unaffected and the site is publishing "
-              "normally. This should have been caught in CI:")
-        traceback.print_exc()
+    #
+    # BOTH HALVES, and for a while only this one. `ctx["deck"]` is None when the
+    # FIGURES failed, which this block never saw because that happened up in
+    # `load`; the guard is in `_deck` now and this skips the page rather than
+    # rendering a deck of blank cells. A blank cell reads as a measured zero.
+    if ctx.get("deck") is None:
+        print("SLIDES: no deck figures, so /slides.html was not written. Every "
+              "other page is unaffected.")
+    else:
+        try:
+            _schema.write_text(
+                os.path.join(out, "slides.html"),
+                env.get_template("slides.html").render(
+                    **ctx, page="slides.html", page_file="slides.html"))
+        except Exception as e:          # noqa: BLE001 - see the note above
+            import traceback
+            print(f"SLIDES: /slides.html did not render ({type(e).__name__}: "
+                  f"{e}). Every other page is unaffected and the site is "
+                  "publishing normally. This should have been caught in CI:")
+            traceback.print_exc()
 
     if not launched:
         # GitHub Pages cannot set X-Robots-Tag, and a meta tag cannot cover the
