@@ -373,6 +373,136 @@ def stale_feeds(detail, today=None, floor_days=FRESHNESS_FLOOR_DAYS):
     return stale, unmeasurable
 
 
+# A FEED THAT WITHDRAWS HISTORY IT HAD ALREADY SERVED, which every other guard
+# on this project is structurally blind to.
+#
+# 2026-09-02: Microsoft's CVRF index stopped listing `2026-Aug`. The document had
+# been read on every run since it published; it simply left the index. `msrc`
+# went 15,025 -> 13,388 ids and its newest advisory moved BACKWARD, 2026-08-11 ->
+# 2026-07-14, taking 1,637 ids with it.
+#
+# NOT ONE COUNT GUARD FIRED, on either side of the deploy:
+#
+#   compare_magnitudes    MAGNITUDE_DROP is 0.40;  the loss was 10.9%
+#   verify.MAX_ROW_DROP   0.25;                    the loss was 10.9%
+#
+# `stale_feeds` did fire, and that is the misleading part, because it fired for a
+# reason that does not generalise: the withdrawn month happened to be the NEWEST
+# one. Had Microsoft dropped `2026-Mar` instead, `newest` would still have read
+# 2026-08-11, the proportional loss would have been identical, and nothing on
+# this site would have noticed 1,637 ids leave.
+#
+# That is the hole. A count guard asks whether the TOTAL fell far enough. A
+# freshness guard asks whether the NEWEST EDGE stopped moving. A source that
+# deletes a month from the MIDDLE of its window moves neither past a threshold,
+# and every row that month alone evidenced leaves the site quietly, which is the
+# one failure this project has already decided it cannot tolerate.
+#
+# So this asks the question that actually describes the event: DID A FEED STOP
+# EVIDENCING A PERIOD IT HAD ALREADY SERVED. Two signals, because the cheap one
+# is exact and the general one is not.
+#
+#   the horizon   `newest` moving backward. NO THRESHOLD, because there is no
+#                 legitimate way for it to happen: the rolling window trims the
+#                 OLD end, and the caps on these feeds trim the old end too
+#                 (ubuntu's is stated in days back, and reads newest-first).
+#                 MEASURED BEFORE IT WAS TRUSTED: across the 12 snapshots on the
+#                 data branch, 2026-08-22 to 2026-09-02, over all 14 feeds and
+#                 roughly 150 feed-to-feed transitions, there is exactly ONE
+#                 backward step and it is the msrc event. There is no false
+#                 positive to trade against, so there is no threshold to tune.
+#
+#   the buckets   per-month counts, which see a withdrawal ANYWHERE in the
+#                 window rather than only at its newest edge. This is the half
+#                 that covers the `2026-Mar` case above.
+#
+# THE BUCKET THRESHOLDS ARE NOT MEASURED, and saying so is the point. `months` is
+# a new field, so there is no history to backtest against and these are set to
+# fire only on wholesale withdrawal: a month that was materially populated and
+# has lost half of itself is the shape of a document leaving an index, and
+# ordinary restatement does not do that. Once a few weeks of `months` have
+# accumulated, the honest move is to measure the real per-month variation and
+# tighten them, the way FRESHNESS_FLOOR_DAYS was derived from the feeds' own
+# cadences rather than picked.
+#
+# Until then BOTH signals report on the DEGRADED path and not the blocking one.
+# A guard whose thresholds have never been measured must not be able to freeze
+# the site on its first bad afternoon, and `verify` freezing the site over one
+# feed's bad afternoon is a mistake this repository has already made once.
+MONTH_MIN_ROWS = 25
+MONTH_DROP = 0.5
+
+
+def _explains_a_gap(rec):
+    """A shortfall the run already accounted for is weather, not a withdrawal.
+
+    The same line `verify.EXPLAINS_A_SHORTFALL` draws, drawn for the same reason:
+    a feed that failed or stopped early holds a PARTIAL view of its own history,
+    and comparing a partial view against a complete one reports that outage a
+    second time under a name that means something else.
+
+    CAPPED is deliberately absent, exactly as it is there. Ubuntu's page cap
+    fires on every single run by design, so letting a cap excuse a withdrawal
+    would excuse every withdrawal on that feed for ever.
+    """
+    rec = rec or {}
+    return rec.get("status") in (FAILED, TRUNCATED) or bool(rec.get("accounted"))
+
+
+def withdrawn_history(previous, current):
+    """Feeds that have stopped evidencing a period they had already served.
+
+    Takes two `health_detail()`-shaped dicts and returns human-readable findings,
+    newest-edge regressions first. Empty means no feed lost ground it held.
+
+    Silent when `previous` predates the `months` field, which is correct and
+    self-seeding: the first run after this shipped has no baseline to compare
+    against, and a guard that invents a finding from an absent baseline is worse
+    than one that waits a day.
+    """
+    horizons, buckets = [], []
+
+    # THE LIVE WINDOW, taken from what the CURRENT run actually returned across
+    # every feed rather than from a recorded year list. When the three-year
+    # window rolls, a whole year leaves every feed at once, so it leaves this set
+    # too and its months are not reported as withdrawn. A year that vanishes from
+    # ONE feed while the others still carry it stays in the set, and that is
+    # precisely the case being checked.
+    live_years = {m[:4] for rec in (current or {}).values()
+                  if isinstance(rec, dict)
+                  for m in (rec.get("months") or {})}
+
+    for name, cur in sorted((current or {}).items()):
+        if ":" in name:
+            continue                       # sub-fetch; the parent carries it
+        if not isinstance(cur, dict) or cur.get("counts_coverage") is False:
+            continue
+        if _explains_a_gap(cur):
+            continue
+        prev = (previous or {}).get(name) or {}
+
+        was_newest, now_newest = prev.get("newest") or "", cur.get("newest") or ""
+        if was_newest and now_newest and now_newest < was_newest:
+            horizons.append(
+                f"{name}: newest advisory moved BACKWARD, {was_newest} -> "
+                f"{now_newest}; the source withdrew advisories it had already "
+                f"served")
+
+        was_months = prev.get("months") or {}
+        now_months = cur.get("months") or {}
+        for month, was in sorted(was_months.items()):
+            if month[:4] not in live_years:
+                continue                   # the window rolled; the year is gone
+            now = now_months.get(month, 0)
+            if (isinstance(was, int) and was >= MONTH_MIN_ROWS
+                    and isinstance(now, int) and now < was * (1 - MONTH_DROP)):
+                buckets.append(
+                    f"{name}: {month} held {was:,} ids and holds {now:,} now "
+                    f"({round(100 * (was - now) / was)}% of that month withdrawn)")
+
+    return horizons + buckets
+
+
 def health_detail():
     """Structured per-feed health for summary.json. Sub-fetches (osv:npm) are
     nested under their parent so the top-level count means what it says."""
@@ -3293,6 +3423,20 @@ def gather(sources, years):
         FEED_HEALTH[s]["newest"] = dates[-1] if dates else ""
         FEED_HEALTH[s]["oldest"] = dates[0] if dates else ""
         FEED_HEALTH[s]["dated_rows"] = len(dates)
+        # PER-MONTH COUNTS, so a source that deletes a month from the MIDDLE of
+        # the window is visible at all. `newest` moves only when the withdrawn
+        # month is the most recent one, and `rows` moves only when the loss is
+        # large enough to trip a proportional threshold; a month bucket moves
+        # whenever the evidence for that month goes away, which is the thing
+        # being checked. See `withdrawn_history` for the run that forced this.
+        #
+        # Top-level feeds only. A csaf provider or an osv ecosystem is recorded
+        # by its own adapter and never reaches this loop, which keeps this to
+        # about 500 integers across the whole run rather than several thousand.
+        months = {}
+        for d in dates:
+            months[d[:7]] = months.get(d[:7], 0) + 1
+        FEED_HEALTH[s]["months"] = months
         print(f"  [{s}] {len(rows)} referenced IDs in scope"
               + (f", {dates[0]} to {dates[-1]}" if dates else ", undated"))
         for r in rows:

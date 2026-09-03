@@ -118,6 +118,23 @@ Per-feed shrink baselines surviving a profile change; a failure budget expressed
 as a fraction rather than a count; `gather` parallelised while preserving
 per-feed health recording exactly.
 
+**A fourth guard landed 2026-09-02 and one half of it is unfinished.**
+`feeds.withdrawn_history` catches a feed that stops evidencing a period it had
+ALREADY served, which is the case none of the count guards could see: Microsoft
+withdrew `2026-Aug` from its CVRF index, msrc lost 1,637 ids, and 10.9% cleared
+both `MAGNITUDE_DROP` (0.40) and `verify.MAX_ROW_DROP` (0.25). `stale_feeds`
+caught it only because the withdrawn month happened to be the newest one.
+
+The horizon half is measured and needs nothing: zero backward steps across the 12
+snapshots on the data branch except the event itself. **The bucket half is not.**
+`MONTH_MIN_ROWS` and `MONTH_DROP` were picked to fire only on wholesale
+withdrawal because `months` was a new field with no history to backtest, and both
+halves therefore report on the degraded path rather than the blocking one. Once a
+few weeks of `months` have accumulated in the snapshots, measure the real
+per-month variation and tighten them, the way `FRESHNESS_FLOOR_DAYS` was derived
+from the feeds' own cadences rather than picked. Until that is done, do not
+promote either half into `verify`.
+
 ### 4. Rehearse the withhold lever end to end
 
 `RBP_WITHHOLD` drops rows from every published artefact and is tested, but has

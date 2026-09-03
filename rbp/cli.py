@@ -75,7 +75,8 @@ BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 # Runner-local handoff from `run` to `publish stage`. Never published.
 
 
-def degraded_state(*, failures, truncated, capped, dropped, shrunk, stale):
+def degraded_state(*, failures, truncated, capped, dropped, shrunk, stale,
+                   withdrawn):
     """One flag a consumer can branch on, plus the reasons. `(bool, [str])`.
 
     EXTRACTED FROM cli.run so it can be tested. It could not be before, and the
@@ -129,7 +130,14 @@ def degraded_state(*, failures, truncated, capped, dropped, shrunk, stale):
         + [f"{len(stale)} feed(s) have stopped returning recent advisories"
            for _ in [0] if stale]
         + [f"{len(shrunk)} feed(s) returned far fewer ids than last run"
-           for _ in [0] if shrunk])
+           for _ in [0] if shrunk]
+        # A REASON OF ITS OWN, not folded into `shrunk`. A feed that withdraws a
+        # month it had already served can lose thousands of ids without moving
+        # any proportional threshold, so the two are different findings about
+        # different failures and a reader who sees one must not be told the
+        # other. See `feeds.withdrawn_history`.
+        + [f"{len(withdrawn)} feed(s) withdrew history they had already served"
+           for _ in [0] if withdrawn])
     return bool(reasons), reasons
 
 
@@ -664,6 +672,20 @@ def cmd_run(args):
             print(f"    - {line}")
     stats["feeds"]["stale"] = stale
     stats["feeds"]["freshness_unmeasurable"] = unmeasurable
+    # The third question, after "did the total fall" and "did the newest edge
+    # stop moving": did a feed stop evidencing a period it had ALREADY served.
+    # msrc lost 1,637 ids on 2026-09-02 without tripping either of the other two,
+    # and was caught only because the month Microsoft withdrew happened to be the
+    # newest one. See `feeds.withdrawn_history`.
+    withdrawn = feeds.withdrawn_history(_prev_detail, feed_detail)
+    if withdrawn:
+        print("  DEGRADED: a feed has withdrawn history it had already served. "
+              "This is not a count falling and not an edge going stale; it is "
+              "the evidence for a past period disappearing, and every row that "
+              "period alone evidenced goes with it.")
+        for line in withdrawn:
+            print(f"    - {line}")
+    stats["feeds"]["withdrawn"] = withdrawn
     stats["oracle"] = oracle
     stats["corpus_lag_days"] = corpus_lag
     # Counts only, never ids. Publishing which rows are withheld would undo the
@@ -673,7 +695,8 @@ def cmd_run(args):
     # correctly. True whenever this run's count is a lower floor than usual.
     stats["degraded"], stats["degraded_reasons"] = degraded_state(
         failures=failures, truncated=truncated, capped=capped,
-        dropped=oracle["dropped"], shrunk=shrunk, stale=stale)
+        dropped=oracle["dropped"], shrunk=shrunk, stale=stale,
+        withdrawn=withdrawn)
     stats["limitations"] = capped
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.

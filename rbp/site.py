@@ -661,13 +661,19 @@ def cadence(data_dir, today=None, days=7):
     live ledger on 2026-09-01: 15 of 28 scheduled ticks delivered, reported as
     164.3%.
 
-    So the scheduled claim is counted from scheduled runs only, and the two
-    figures that stop that number being MISread as staleness are published beside
-    it rather than dropped:
+    So the scheduled claim is counted from scheduled runs only, and the figures
+    that stop that number being MISread as staleness are published beside it
+    rather than dropped:
 
       scheduled / expected   the cadence claim, cron ticks only
+      failed                 cron ticks that RAN and did not publish
+      unaccounted            cron ticks with no record at all, so never started
       publishes              every successful publish, any trigger
       longest_gap_hours      the longest the site went without publishing at all
+
+    `failed` and `unaccounted` were added 2026-09-02 and split a number that had
+    been blaming this pipeline for GitHub's scheduling. See the note above the
+    return for what the two mean and why the residual is honest about being one.
 
     A low `scheduled` next to a healthy `publishes` and a small gap is a site
     that is fresh and whose cron ticks are being evicted by its own pushes. That
@@ -696,7 +702,7 @@ def cadence(data_dir, today=None, days=7):
         now = now.replace(tzinfo=dt.timezone.utc)
     cutoff = now - dt.timedelta(days=days)
 
-    scheduled, publishes, last = 0, 0, None
+    scheduled, failed, publishes, last = 0, 0, 0, None
     published_at = []
     try:
         for line in open(path):
@@ -713,10 +719,20 @@ def cadence(data_dir, today=None, days=7):
                 continue
             if at.tzinfo is None:
                 at = at.replace(tzinfo=dt.timezone.utc)
+            if rec.get("conclusion") != "success":
+                # A TICK THAT RAN AND DID NOT PUBLISH, recorded from 2026-09-02
+                # so that it stops being indistinguishable from a tick that
+                # never fired. See the three-outcome note below.
+                if at >= cutoff and rec.get("event") == "schedule":
+                    failed += 1
+                continue
+            # `last` MOVED BELOW THE SUCCESS FILTER on the same day, and it had
+            # to. It means "most recently published" and /status renders it in
+            # that sentence, but it was assigned from every ledger line; the
+            # first failure the ledger ever carried would have been published as
+            # the moment the site most recently published.
             if last is None or at > last:
                 last = at
-            if rec.get("conclusion") != "success":
-                continue
             # Kept for the gap, INCLUDING entries older than the cutoff: a gap
             # that opens before the window and closes inside it is exactly the
             # gap a reader cares about, and slicing before measuring hides it.
@@ -741,8 +757,34 @@ def cadence(data_dir, today=None, days=7):
     # 4 a day is the schedule. Expressed as a fraction of expected rather than a
     # bare count, because "23" means nothing without "of 28".
     expected = days * 4
+
+    # THREE OUTCOMES FOR A SCHEDULED TICK, NOT TWO, and the third one is not
+    # this pipeline's fault.
+    #
+    # `scheduled / expected` reported 64.3% on 2026-09-02: 18 of 28. Read as a
+    # reliability figure that says this site fails a third of its runs, and it
+    # was the wrong reading. Of those 28 expected ticks, only 22 EVER STARTED:
+    # GitHub delays and drops scheduled workflows under load, and that day's
+    # runs began at 04:35, 11:19, 16:35 and 21:04 against a `17 */6 * * *` cron.
+    # Of the 22 that did start, 19 published.
+    #
+    # A tick GitHub never fired and a tick that ran and broke are different
+    # failures with different owners, and one number could not tell them apart
+    # because the ledger only ever recorded DELIVERIES. Both halves are fixed
+    # together: `deploy.yml` now appends a line when a run does not publish, and
+    # the arithmetic below stops folding the two together.
+    #
+    # `unaccounted` is honest about being a residual rather than a measurement.
+    # It is what is left of the expectation after the runs that left a record,
+    # so before the failure lines existed it silently absorbed them, and for the
+    # first week after this shipped it still carries any pre-existing gap. It
+    # cannot go negative: a week with more scheduled runs than cron ticks is a
+    # re-run, not evidence of a tick that never fired.
+    failed_or_delivered = scheduled + failed
     return {"days": days, "scheduled": scheduled, "expected": expected,
             "pct": round(100 * scheduled / expected, 1) if expected else None,
+            "failed": failed,
+            "unaccounted": max(0, expected - failed_or_delivered),
             "publishes": publishes,
             "longest_gap_hours": round(longest, 1) if longest is not None else None,
             "last": last.isoformat(timespec="seconds") if last else None}
