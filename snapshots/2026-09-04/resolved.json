@@ -1,1 +1,11 @@
-[]
+[
+ {
+  "cve_id": "CVE-2026-15937",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-07-28",
+  "published": "2026-09-04",
+  "days_to_publish": 38,
+  "closed_on": "2026-09-04"
+ }
+]
