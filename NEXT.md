@@ -157,12 +157,35 @@ Both follow-ups are blocked on the same thing: `ubuntu.com/security/` answering
 rather than detecting. Its cost that run was 88.0s, against 1,070s on 2026-08-27,
 93.1s on 2026-08-31 and 257.5s earlier on 2026-09-06; price the bad case.
 
-**That is not yet a decision to delete it, and the reasons are unchanged and
-below**: `resolve_dates_ubuntu` queries the tracker by name for 130 rows, the two
-feeds demonstrably failed independently on 2026-08-31, and it still references
-135 ids that are unpublished now, which is the one thing `ubuntu-osv` cannot be
-shown to do for those rows. What the audit removes is the *coverage* argument for
-keeping it. Weigh the rest and decide, rather than re-running the audit.
+**The three reasons for keeping it were then priced, and two of them changed.**
+
+*The dependency reason is gone.* `resolve_dates_ubuntu` does not go through
+`feed_ubuntu`: it asks `cves.json?q=<id>` by name, and `cli.py:444` calls it on
+the undated rows of ANY feed. Its own docstring says it exists BECAUSE the walk
+cannot reach those rows. Deleting the adapter would not touch it. What the site
+depends on either way is the HOST, and deleting a feed does not reduce that.
+
+*The rows reason survives and is small.* Of the 156 distinct ids `feed_ubuntu`
+references that are unpublished now, **7 are referenced by no other feed in the
+profile**. That is what deleting it costs today, beside 0 marginal CNAs. For
+scale, on the same baseline: `ghsa-repos` is sole source for 1,129, `csaf` 303,
+`samsung` 64, `alpine` 45, `ubuntu-osv` 30. One measurement, not a rate.
+
+*And the obvious compromise does not work.* Six of those 7 sit at rank ~3,730 of
+3,993 in the feed's own newest-first order, which is the far edge of what the
+200-page cap reaches. **Shrinking the cap to make it cheaper would lose six of
+the seven.** Its unique contribution lives exactly at the bottom of its reach,
+which is also why raising the cap was measured and rejected at 1,128 pages.
+
+So the trade is 7 candidate rows against 88s in the good case and ~18 minutes in
+the bad one, inside a 60-minute job ceiling where a cancelled job publishes
+nothing. **Recommend KEEPING it and closing this item.** The project's standing
+bias is to delete, but that bias is about accreting guards and surfaces, not
+about dropping the only source of rows the site exists to publish; and the cost
+is bounded by a cap that is already there rather than open-ended. The 2026-08-31
+independent failure is the second reason and it is unchanged. If it goes, the
+diff should say it is trading 7 rows for 18 bad-case minutes, because that is
+what it is.
 
 Read that 0 against item 1: the merged set it is marginal to is 20,141 `csaf` ids
 short of the live one, and that error runs the other way, making a feed look
@@ -190,6 +213,12 @@ subtraction now gives 38.9% purely because the tracker fetch got newer.
 **Neither number is a scope measurement; do not quote either.** Separating scope
 from lag needs per-release status for a sample of the gap, which needs
 `cves.json?q=`, which was 503 on 25 of 30 queries.
+
+**The host was answering 200 on 2026-09-06**, checked before the rebuild:
+`cves.json?limit=1` in 41.0s and `notices.json?limit=1` in 3.6s. So this is
+runnable right now rather than blocked, and 41s for a one-record query is the
+thing to budget for. It re-blocks itself without warning, so **check again before
+starting rather than trusting this line.**
 
 Second: `osv-all.tar.xz` was **30.5 hours stale** when checked, while
 `canonical/ubuntu-security-notices` runs its OSV conversion every five to six
@@ -299,6 +328,19 @@ costs a session.
   pre-launch conditions reads as a site that has not launched.
 - **UI chrome is title case.** Control labels, options, optgroups, buttons.
 - **The About/panel duplication stays**, on measured evidence.
+- **A harness-artefact test may not stop a publication.** The four tests marked
+  `harness_artefact` compare a committed `feedlab/` artefact to the code, and
+  `deploy.yml` deselects them because `rbp/feedlab.py` is imported by nothing the
+  site builds: a stale scorecard cannot make a page wrong, and a cron tick cannot
+  rebuild a baseline. Three of the four resolve against
+  `coverage.window(TODAY'S YEAR)`, so before the marker they would have gone red
+  on **1 January** and halted the live site until somebody was free to run a
+  26-minute rebuild. ci.yml runs the suite unfiltered on every pull request and
+  every push to main, so all four are still enforced where somebody is present to
+  act on them. This is the same rule `deploy.yml` already applied to the render
+  suite, and the reasoning is in `pyproject.toml` beside the marker. **Deleting
+  the marker re-arms the tripwire**; verified by moving `WINDOW_YEARS` to 5 with
+  no rebuild, which fails the commit path and publishes anyway.
 - **CSAF provider identity is DERIVED, not in `sources`.** `?src=csaf:cisa` is
   built in the template from `refs`. Putting the host in `sources` breaks
   `origin_kind` (an unmapped slug reads as a tracker and silently stops the
@@ -392,19 +434,6 @@ one failure this site cannot tolerate, because the count goes down and the page
 still looks fine, and by the next run the shrunken value is the baseline.
 **Read the per-feed lines, every time, whatever the status says.** This is a
 general rule and not a note about one host: it has been paid for twice.
-
-**The harness's own tests can stop the site publishing, and one of them is
-dated.** `deploy.yml` runs the offline suite and `build: needs: test`, so a red
-assertion about a `feedlab` artefact halts a publication that has nothing to do
-with it. Three of those assertions compare a committed artefact to
-`coverage.window(TODAY'S YEAR)`: the recorded baseline's years, its
-`coverage_years`, and all fifteen scorecards. **They go red on 1 January**, when
-the window rolls to a year no committed card was measured over, and the fix is a
-26-minute rebuild plus an audit. They are telling the truth when they fire, which
-is why they are not being weakened here; the thing to know is that the deadline
-is a calendar date and the cost lands on whoever is on call that day. The same
-workflow already refuses to let a LAYOUT suite stop a publication, for exactly
-this reason, and the harness suite has not been given the same treatment.
 
 **A green build is not a correct site.** Three regressions reached the live site
 on 2026-08-29 and 08-30, each a variant of "state that claims to know something

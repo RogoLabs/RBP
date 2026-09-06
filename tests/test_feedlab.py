@@ -673,6 +673,17 @@ def test_the_floor_the_report_uses_is_the_one_inference_uses():
 # --------------------------------------------------------------------------
 # Round 7 B1 and B2: the harness has to describe the feed set that actually runs
 # --------------------------------------------------------------------------
+#
+# THE FOUR TESTS BELOW ARE MARKED `harness_artefact` AND THAT IS A DEPLOY
+# DECISION, not a hint about strength. Each compares a committed artefact under
+# `feedlab/` to the code, so each fails on a change that is CORRECT but
+# unaccompanied by a 26-minute rebuild: a feed added to the profile, a window
+# widened, a calendar year turning over. `deploy.yml` gates the live site's
+# four-times-daily publish on this suite, and `rbp/feedlab.py` is imported by
+# nothing the site builds, so without the marker a stale scorecard could halt
+# publication while being unable to make any page wrong. ci.yml runs them
+# unfiltered on every pull request and every push to main, which is where the
+# staleness is actually someone's to fix. Reasoning in full in pyproject.toml.
 
 def _lab():
     import pathlib
@@ -684,6 +695,7 @@ def _profile_feeds():
     return [x for x in PROFILES["weekly"].split(",") if x]
 
 
+@pytest.mark.harness_artefact
 def test_every_feed_in_the_running_profile_has_a_scorecard():
     """feedlab/README.md, line 3: "no feed is merged without its scorecard in
     the diff."
@@ -705,6 +717,7 @@ def test_every_feed_in_the_running_profile_has_a_scorecard():
         "baseline and run `audit`, and commit the result.")
 
 
+@pytest.mark.harness_artefact
 def test_every_committed_scorecard_measures_the_window_the_pipeline_reads():
     """The DAMAGE from a stale `--years`, as opposed to its cause.
 
@@ -737,6 +750,7 @@ def test_every_committed_scorecard_measures_the_window_the_pipeline_reads():
         "`python -m rbp.feedlab audit`.")
 
 
+@pytest.mark.harness_artefact
 def test_the_recorded_baseline_describes_the_profile_that_actually_runs():
     """A stale baseline does not make the harness cautious. It makes it permissive.
 
@@ -762,6 +776,7 @@ def test_the_recorded_baseline_describes_the_profile_that_actually_runs():
         "Re-run `python -m rbp.feedlab baseline`.")
 
 
+@pytest.mark.harness_artefact
 def test_the_baseline_gathers_the_years_the_pipeline_gathers():
     """THE RECORDED BASELINE READS THE PIPELINE'S WINDOW, whatever it is.
 
