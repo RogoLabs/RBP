@@ -3570,12 +3570,12 @@
   "cve_id": "CVE-2026-53495",
   "state": "RESERVED",
   "public_date": "2026-09-04",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "alpine,ghsa-repos",
+  "feed_count": 2,
   "dates": {
    "ghsa-repos": "2026-09-04"
   },
-  "refs": "ghsa-repos:containerd/containerd\tGHSA-7jxh-36q5-gcqv",
+  "refs": "alpine:containerd;ghsa-repos:containerd/containerd\tGHSA-7jxh-36q5-gcqv",
   "description": "containerd/containerd repository advisory GHSA-7jxh-36q5-gcqv",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3592,9 +3592,10 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "package": "",
+  "package": "containerd",
   "ecosystem": "",
   "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-53495",
    "ghsa-repos": "https://github.com/containerd/containerd/security/advisories/GHSA-7jxh-36q5-gcqv"
   },
   "veto_evaluated": false,
