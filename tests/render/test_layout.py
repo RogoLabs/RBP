@@ -98,24 +98,42 @@ def test_no_row_hides_its_content_at_any_swept_width(page, server, site_dir):
         _load(page, server, name)
         for w in WIDTHS:
             m = measure(page, w)
+            total = len(m.get("rows", []))
             # 640 is the grid's own collapse, and it is passed in rather than
             # read from the CSS for the same reason test_mutations.py passes it:
             # `rows_not_stacked` answers "below THIS width, are the rows
             # stacked", so the width is the question, not an implementation
             # detail to be derived. It is bracketed by the sweep either way.
-            for r in rows_not_stacked(m, 640):
-                failures.append(f"{name} at {w}px: a row is still in the "
-                                "three-column desktop layout")
-            for r in rows_squeezed(m):
-                failures.append(f"{name} at {w}px: a row's content column is "
-                                f"crushed to {r['bodyWidth']}px")
-            for r in rows_refusing_to_wrap(m):
-                failures.append(f"{name} at {w}px: a row's description is set "
-                                "to nowrap and will push the page sideways")
-            for r in row_overflow(m):
-                failures.append(f"{name} at {w}px: a row's content is "
-                                f"{r['hidden_px']}px wider than the row, so it "
-                                "is clipped with nothing saying so")
+            #
+            # REPORTED PER WIDTH AND NOT PER ROW. Each of these returns a list
+            # of rows, and the list page renders 54 of them at 19 widths: a
+            # failure appended per row buries the one fact that identifies the
+            # defect, which width it starts at, under four figures of near
+            # identical lines. The count and one worst example carry it.
+            unstacked = rows_not_stacked(m, 640)
+            if unstacked:
+                failures.append(
+                    f"{name} at {w}px: {len(unstacked)} of {total} rows are "
+                    f"still in the {unstacked[0]['cols']}-column desktop layout")
+            squeezed = rows_squeezed(m)
+            if squeezed:
+                worst = min(r["bodyWidth"] for r in squeezed)
+                failures.append(
+                    f"{name} at {w}px: {len(squeezed)} of {total} rows have "
+                    f"their content column crushed, narrowest {worst}px")
+            nowrap = rows_refusing_to_wrap(m)
+            if nowrap:
+                failures.append(
+                    f"{name} at {w}px: {len(nowrap)} of {total} row "
+                    "descriptions are set to nowrap and will push the page "
+                    "sideways")
+            clipped = row_overflow(m)
+            if clipped:
+                worst = max(r["hidden_px"] for r in clipped)
+                failures.append(
+                    f"{name} at {w}px: {len(clipped)} of {total} rows are "
+                    f"wider than the row box, worst {worst}px, so content is "
+                    "clipped with nothing saying so")
     assert not failures, ("row content is hidden or crushed:\n  "
                           + "\n  ".join(failures))
 
