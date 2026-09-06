@@ -64,41 +64,50 @@ drains, not what the site can see.
 
 ## What is open
 
-### 1. `feedlab` measures two years while the pipeline gathers four
+### 1. The harness's `csaf` is colder than the pipeline's, and nothing said so
 
-**Found 2026-09-06 by reading the first live run of the feed merge, and it makes
-every committed scorecard's marginal figure an understatement.**
+**Found 2026-09-06 by fixing the window below, rebuilding the baseline at four
+years, and then failing to reproduce the live run's numbers with it.**
 
-`coverage.WINDOW_YEARS` became 4 on 2026-09-05 and `a6332c0` unified the two
-windows, so `cli.run` gathers `coverage.window(year)` and so does
-`feedlab.coverage_years`. The harness's own CLI did not follow: all three
-`--years` arguments in `rbp/feedlab.py` are still the literal `"2025,2026"`, and
-`tests/test_feedlab.py::test_the_baseline_gathers_the_years_the_pipeline_gathers`
-still asserts `{now, now - 1}` with a docstring describing the three-year
-coverage window that no longer exists either.
+The rebuild read the same fifteen feeds over the same four years as the live run
+of the same commit, and fourteen of them returned the same row count to the id:
+`alas` 19,976, `ubuntu` 3,993, `jvn` 1,968, `msrc` 17,397. `csaf` returned
+**42,659 against the live run's 62,800**. That one feed is the entire difference
+between the harness's 247 effective roster CNAs and the live run's 263, and it is
+why `twcert` is sighted 15 times live and **zero** times here, with 550 of its
+ids sitting in the window waiting to be sighted.
 
-**The test passes, and that is the problem.** The baseline was built with the
-stale default, so the assertion agrees with it and pins the wrong invariant
-rather than catching it. This is the same failure as the round-9 F1 item: every
-file internally consistent, the contradiction only BETWEEN them.
+Neither half is broken. `deploy.yml` caches `data/csaf_state.json` across runs
+and a provider emits everything it has ever seen, so the live state is as deep as
+every run before it, while a local state is as deep as the runs that happened
+locally: three providers were still catching up in this one and three more
+stopped on the time budget. The consequence is one-directional and it is the
+permissive one. **A candidate scored against this baseline looks better than it
+is**, because the CNAs `csaf` already covers are missing from the set it is
+marginal to. That is exactly what
+`test_the_recorded_baseline_describes_the_profile_that_actually_runs` exists to
+prevent, arriving one level below where it looks: the feed LIST matches the
+pipeline and the STATE behind one of those feeds does not.
 
-What it costs, measured on the same commit:
+It also means the harness cannot answer a question the site answers four times a
+day, which is what makes it worth fixing rather than annotating forever. Three
+routes, none scoped: publish the read marks where the harness can fetch them, the
+way the roster is pinned; drain the backlog locally over successive runs and
+accept that a baseline is only as good as the last drain; or record the depth in
+the baseline and subtract it when reading a card. The third costs nothing and is
+half done, in that `health.csaf` in `feedlab/_baseline.json` now carries the
+provider count and the two catching-up figures.
 
-| | harness, 2-year | live run, 4-year |
-|---|---:|---:|
-| `jvn` ids | 1,117 | 1,968 |
-| `cnas_effective` | 208 | 263 |
-| top-50 at the floor | 46 / 50 | 49 / 50 |
+**Until one of them lands, read `cnas_new_effective` as an upper bound.** The
+fifteen committed cards are now measured over the right window, which they were
+not before, and they are still marginal to a merged set 20,141 `csaf` ids short
+of the live one.
 
-The fix is four things and the third is the expensive one: derive `feedlab`'s
-`--years` from `coverage.window()` instead of a literal; rewrite that test to
-assert the baseline's years EQUAL `coverage.window()` rather than a hand-written
-pair; rebuild the baseline, which is roughly half an hour and a real fetch of
-fifteen third parties; and re-score. Doing the last two is also what item 5a
-wants, so **do them in one pass**.
-
-**Do not quote any existing `cnas_new_effective` while this is open.** They are
-all marginal to a two-year merged set.
+The corpus half of the same question was measured at the same time and is NOT a
+gap: the index was ten days stale, refreshing it moved 3,696 referenced ids into
+the corpus, and it changed the effective count by nothing. `corpus_newest` is
+recorded in the baseline now so the next reader does not have to re-measure that
+to rule it out.
 
 ### 2. FEEDS.md section 3's three remaining guards
 
@@ -142,17 +151,27 @@ measurement in `FEEDS.md` under "MERGED 2026-08-31".
 Both follow-ups are blocked on the same thing: `ubuntu.com/security/` answering
 503. Neither can be started while it is down, so **check the endpoint first**.
 
-**a. Run `python -m rbp.feedlab audit` and answer whether `feed_ubuntu` is still
-worth its cost.** The baseline is fresh, so the audit is cheap. That cost is not
-one number: 1,070s on 2026-08-27, 93.1s on 2026-08-31 and 257.5s on 2026-09-06,
-for 3,994, 3,968 and 3,988 rows. Price the bad case, not the good one, and note
-that the audit rewrites all FIFTEEN scorecards, so it wants its own commit.
+**a. THE AUDIT HAS RUN, 2026-09-06, at the four-year window, and it says
+`feed_ubuntu` earns nothing on coverage.** `cnas_new_effective` **0**, 16 of its
+3,993 ids not already seen by the other fourteen feeds, verdict **corroborating**
+rather than detecting. Its cost that run was 88.0s, against 1,070s on 2026-08-27,
+93.1s on 2026-08-31 and 257.5s earlier on 2026-09-06; price the bad case.
 
-Two of those fifteen are now newer than the rest: `jvn.json` from `feedlab score`
-and `csaf.json` re-scored offline on 2026-09-06. The other thirteen still
-describe the pre-jvn baseline. That is not a reason to run the audit in a hurry;
-it is the thing to know when reading them side by side, because each card
-records the baseline it is marginal to and those baselines are no longer one set.
+**That is not yet a decision to delete it, and the reasons are unchanged and
+below**: `resolve_dates_ubuntu` queries the tracker by name for 130 rows, the two
+feeds demonstrably failed independently on 2026-08-31, and it still references
+135 ids that are unpublished now, which is the one thing `ubuntu-osv` cannot be
+shown to do for those rows. What the audit removes is the *coverage* argument for
+keeping it. Weigh the rest and decide, rather than re-running the audit.
+
+Read that 0 against item 1: the merged set it is marginal to is 20,141 `csaf` ids
+short of the live one, and that error runs the other way, making a feed look
+BETTER than it is. `ubuntu` scoring zero against an understated baseline is a
+stronger result than the same zero against a complete one, not a weaker one.
+
+All fifteen cards now describe one baseline, recorded at one moment, over the
+window the pipeline actually gathers. Before this pass they did not: two were
+newer than the other thirteen, and every one of them measured two years.
 
 `ubuntu-osv` reaches 15,500 ids to the tracker's 3,994 and beats it on every
 scorecard axis, but it is **not a superset**: 31.9% of the tracker's ids have no
@@ -179,12 +198,16 @@ hours. The lag window held 293 new in-window ids and 202 RBP candidates, and
 rows. Reading the git repo's delta beside the tarball is the obvious follow-up
 and is unscoped.
 
-**The baseline was rebuilt again 2026-09-06 for the feed merge: 15 feeds, 51,070
-ids, 208 effective roster CNAs, `[ubuntu] 3988 rows`, no feed failed and no feed
-shrank.** It is good in the sense that matters here, which is that nothing in it
-is a broken fetch. **It is still the WRONG WINDOW** and item 1 is that: two years
-recorded against a pipeline that gathers four, so it wants rebuilding again
-before the audit below is worth running. Do both in one pass.
+**The baseline was rebuilt a third time 2026-09-06, at the right window:
+15 feeds, 77,219 ids, 247 effective roster CNAs, `[ubuntu] 3993 rows`, 26
+minutes, no feed failed and no feed shrank.** Every feed grew or held against the
+two-year rebuild it replaced (51,070 ids, 208 CNAs) and none lost an effective
+CNA, which is the shape a window widening should have. Two feeds barely moved and
+both are explained rather than suspicious: `ubuntu` by 5 rows because its
+200-page cap binds long before the window does, reading back 36 days of a window
+that opens 2023-01-01, and `samsung` by 4 because its feed does not reach back
+either. `corpus_newest` and the endpoint check are in the record: the host was
+answering 200 when it ran.
 
 The 2026-08-31 rebuild it replaced read 14 feeds, 45,895 ids and 183 effective
 CNAs. The
@@ -204,31 +227,31 @@ file is kept for that reason, but the 80 is an outage rather than variation, so
 fetches between 15,500 and 16,338, a 5.1% swing, which is the shape a healthy
 history has.
 
-**`csaf` acquired the same shape on 2026-09-06 for the opposite reason**, and its
-29.3% is now a COMMITTED field in `feedlab/csaf.json` rather than gitignored
-working state. The two recorded fetches are 22,334 ids over sixteen providers and
-31,598 over eighteen, so the swing is two `CSAF_PROVIDERS` lines and not the feed
-moving. Same rule: real, recorded, not a shrink baseline. The first gather after
-that one is the first comparable pair.
+**Every `stability` figure on every card is null as of 2026-09-06, deliberately,
+and this is the fix rather than a regression.** `record_fetch` now stamps the
+window each fetch read and `stability` compares only fetches of the newest window
+that are at least `MIN_FETCH_INTERVAL_H` (24) apart, which is what FEEDS.md asked
+for and nothing enforced. Both filters were needed and both were violated by
+committed numbers:
 
-**And `jvn` has the third shape, which is the worst of them: a 0.0% swing that
-measured nothing.** Its two recorded fetches are both 1,117 and they are **thirty
-minutes apart**, because `feedlab score jvn` and the baseline rebuild ran in the
-same session. FEEDS.md asks for three fetches 24 hours apart and `stability`
-enforces only "more than one", so the next `audit` will write `swing_pct: 0.0`
-into `feedlab/jvn.json` and commit it.
+- ten of the fifteen cards carried **0.0%** from two fetches four hours apart, on
+  a feed nobody had watched for a day;
+- `jvn`'s two fetches were **thirty minutes** apart, both 1,117, so the next
+  audit would have committed a perfect reading of one observation;
+- `csaf`'s **29.3%** was sixteen CSAF providers against eighteen, and `ubuntu`'s
+  **98.0%** was the 503 outage below. Neither is the feed moving;
+- and the window itself moved on 2026-09-06, so the first four-year fetch beside
+  a two-year history would have read as a 20-50% swing on **every feed at once**.
 
-`build_baseline`'s own comment says why that is worse than null: "null says not
-measured, and 0% says measured, and perfect". The committed card is still null
-today because `score` wrote it when there was one fetch. **Delete
-`data/feedlab/jvn.fetches.json` down to a single entry before the next audit, or
-give `record_fetch` a minimum interval.** It is gitignored working state, so this
-costs nothing and is not editing a published record.
+So the histories restart at this window. The first rebuild at least a day after
+2026-09-06 produces the first honest pair, and until then null is the correct
+answer. The raw files keep every fetch, including `ubuntu`'s 80-row outage: the
+filtering happens when the history is read, so nothing was deleted to get here.
 
-This is item 2's "per-feed shrink baselines surviving a profile change" arriving
-one level down, at the provider set rather than the feed set, and `record_fetch`
-writes `{at, ids}` with nowhere to say which config produced the count. Worth
-fixing together rather than separately.
+This was item 2's "per-feed shrink baselines surviving a profile change" one
+level down, at the harness rather than at `verify`. It is done HERE and not
+there: `feeds.py` and `verify` still compare row counts across runs with nowhere
+to record which profile or window produced them.
 
 ---
 
@@ -299,6 +322,13 @@ the 2026-09-06 merge sights `TR-CERT` 6 times and `twcert` 15, both over the
 as `huawei` alone. Neither CNA needs euvd and neither ever needed a new parser;
 they needed more years of the feeds already in the profile.
 
+The harness reproduces `TR-CERT` at exactly 6 and sights `twcert` **zero** times,
+which is item 1 and not a contradiction of this: fourteen feeds returned
+identical row counts in both runs and `csaf` did not, so every id the live run
+had and the harness lacked came from `csaf`. Which locates `twcert` for anyone
+who needs it later: it is reached through a CSAF provider, by a feed already
+merged, and still not through euvd.
+
 So what is left is the cost side on its own: no incremental route was found,
 `api/search` is not date-ordered, and covering the window means roughly 150,000
 records and 1,500 requests for rows that only corroborate. **Recommend leaving it
@@ -362,6 +392,19 @@ one failure this site cannot tolerate, because the count goes down and the page
 still looks fine, and by the next run the shrunken value is the baseline.
 **Read the per-feed lines, every time, whatever the status says.** This is a
 general rule and not a note about one host: it has been paid for twice.
+
+**The harness's own tests can stop the site publishing, and one of them is
+dated.** `deploy.yml` runs the offline suite and `build: needs: test`, so a red
+assertion about a `feedlab` artefact halts a publication that has nothing to do
+with it. Three of those assertions compare a committed artefact to
+`coverage.window(TODAY'S YEAR)`: the recorded baseline's years, its
+`coverage_years`, and all fifteen scorecards. **They go red on 1 January**, when
+the window rolls to a year no committed card was measured over, and the fix is a
+26-minute rebuild plus an audit. They are telling the truth when they fire, which
+is why they are not being weakened here; the thing to know is that the deadline
+is a calendar date and the cost lands on whoever is on call that day. The same
+workflow already refuses to let a LAYOUT suite stop a publication, for exactly
+this reason, and the harness suite has not been given the same treatment.
 
 **A green build is not a correct site.** Three regressions reached the live site
 on 2026-08-29 and 08-30, each a variant of "state that claims to know something
