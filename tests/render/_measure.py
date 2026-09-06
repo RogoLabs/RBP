@@ -49,7 +49,6 @@ MEASURE_JS = r"""
     const wcs = wrap ? getComputedStyle(wrap) : null;
     return {
       cls: t.className || '',
-      rbp: t.classList.contains('rbp'),
       theadDisplay: head ? getComputedStyle(head).display : null,
       cellWhiteSpace: cell ? getComputedStyle(cell).whiteSpace : null,
       minWidth: cs.minWidth,
@@ -100,51 +99,36 @@ def document_overflow(m):
     return m["scrollWidth"] - m["clientWidth"]
 
 
-def nested_overflow(m):
-    """Row content hidden inside a scroll container, per table, in px.
-
-    This is the measurement the panel's investigation turned on. At exactly 768px
-    the document overflow is 0 and this is ~74% of every row, because
-    `.tablewrap { overflow-x: auto }` absorbs the page-level overflow while
-    hiding the content behind a nested scrollbar. A reader cannot see the
-    difference between "the page fits" and "the page fits because the data is
-    off screen inside a box".
-    """
-    out = []
-    for t in m["tables"]:
-        if t["wrapClientWidth"] and t["wrapScrollWidth"]:
-            over = t["wrapScrollWidth"] - t["wrapClientWidth"]
-            if over > 0:
-                out.append({"cls": t["cls"], "rbp": t["rbp"], "hidden_px": over,
-                            "visible_px": t["wrapClientWidth"],
-                            "hidden_pct": round(
-                                100 * over / t["wrapScrollWidth"], 1)})
-    return out
+# `nested_overflow()` WAS HERE, and `row_overflow()` below is what replaced it.
+#
+# It measured content hidden inside a `.tablewrap` scroll container, which is
+# the measurement the panel's investigation turned on: at exactly 768px the
+# document overflow read 0 while the wrapper hid ~74% of every row, so a reader
+# could not tell "the page fits" from "the page fits because the data is off
+# screen inside a box".
+#
+# Its only in-scope subject was `table.rbp`, now deleted. The tables that remain
+# are `table.table-sm`, which is DESIGNED to scroll inside its own box below
+# 768 because a three-column figure table reads worse as stacked cards, so an
+# assertion over what is left would fire on a recorded decision rather than on a
+# defect.
+#
+# `row_overflow()` asks the identical question of the row layout that replaced
+# the table, and until this commit it had never been called from anywhere.
 
 
-def card_mode_disagreements(m):
-    """Tables whose thead and cells disagree about which layout is running.
-
-    The 768px defect in one sentence: thead was still displayed (card layout off,
-    from rbp.css) while the cells were still `nowrap` (mobile block on, from
-    style.css). Two files, one pixel apart, and neither of them wrong on its own.
-    """
-    bad = []
-    for t in m["tables"]:
-        if not t["rbp"] or t["theadDisplay"] is None or t["cellWhiteSpace"] is None:
-            continue
-        card_head = t["theadDisplay"] == "none"
-        card_cell = t["cellWhiteSpace"] != "nowrap"
-        if card_head != card_cell:
-            bad.append((t["cls"], t["theadDisplay"], t["cellWhiteSpace"]))
-    return bad
-
-
-def rbp_tables_in_card_mode(m):
-    """Every .rbp table reporting that its card layout is fully on."""
-    rbp = [t for t in m["tables"] if t["rbp"]]
-    return rbp, [t for t in rbp
-                 if t["theadDisplay"] == "none" and t["cellWhiteSpace"] != "nowrap"]
+# `card_mode_disagreements()` AND `rbp_tables_in_card_mode()` WERE HERE.
+#
+# Both filtered `m["tables"]` down to `t.classList.contains('rbp')` and asked
+# whether that component's thead and cells agreed about which layout was
+# running. The component rendered on no page and has been deleted, so both
+# would have gone on returning an empty list forever while their callers
+# reported green over zero tables.
+#
+# That is the exact shape this package's docstring calls the project's most
+# expensive recurring bug, so they are deleted rather than left to pass
+# vacuously. `rows_not_stacked()` below is the equivalent question for the row
+# layout that replaced the table, and it has a live subject.
 
 
 def asset_versions(html):

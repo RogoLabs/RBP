@@ -88,18 +88,17 @@ Done: D1, D2, D3, D5, D6, D7, D10, D11, D12, and the F3/F4 prerequisites.
 `SCHEMA_VERSION` is 4 and `tests/test_schema.py` now pins the column set to the
 version, so removing a column without bumping fails the suite.
 
-Done: every FIX prerequisite and DELETE item except one.
-
-NOT done, with the reason: **D11's `table.rbp` removal**. The component renders
-nowhere, but `rbp.breakpoints.card_layout_boundary()` parses
-`table.rbp thead { display: none }` out of the stylesheet to derive the render
-sweep's breakpoint, and five a11y tests assert against it. That is a subsystem
-change, not a deletion, and two attempts at it in one sitting each broke the
-dark-theme contrast rule, which shares one body across three selector lines.
+**Round 9 is closed.** D11's `table.rbp` removal was the last item and landed
+2026-09-06: 198 lines of unreachable CSS, the derived card-layout breakpoint that
+parsed one of its rules, and eight tests whose subject no longer existed. The
+review output stays in `docs/reviews/REVIEW-round9.md`; the reasoning is in the
+commit.
 
 The panel's own balance was 21 removals against 7 additions. Prefer the DELETE
 list when in doubt; this project's documented failure mode is accreting guards
 and caveats around a list and its links.
+
+**The next open item is 2 below.**
 
 ### 2. Three measured feed candidates, none merged
 
@@ -312,6 +311,28 @@ run the shrunken value was the baseline so it went quiet.
 had nineteen of them and all nineteen went stale in two days. The review panel's
 context block had the same problem and produced findings against a site that no
 longer existed. Write pointers, not values.
+
+**A comment that records a defect will outlive the defect, and it does not know
+that.** Deleting `table.rbp` was blocked for nine rounds by a comment saying two
+attempts had "broken the dark-theme contrast rule", and the rule it pointed at
+carried a note saying that without it `.text-muted` reads 2.54:1 in dark.
+Measured on 2026-09-06 before touching it: deleting that rule changes dark theme
+by **nothing**, because `style.css` sets `[data-theme="dark"] .text-muted` from
+`--color-text-secondary` with `!important` and always wins. The 2.54 was that
+TOKEN going un-asserted for dark, a different fix, still in place, and guarded by
+`test_a_root_override_does_not_silently_undo_the_dark_theme`. What the rule
+actually buys is light theme, 6.07 against 5.30, both clear of AA. **The blocker
+was a sentence, not a defect.** Re-measure a scary comment before you let it stop
+you; this one cost more than the deletion did.
+
+**Deleting a component silently disarms every check scoped to it.** Four render
+assertions filtered on `.rbp` and would have gone on iterating over an empty list
+and reporting green at all 19 widths. They were deleted rather than left. Two
+detectors in `tests/render/_measure.py` were found in the same pass with no
+caller at all: `row_overflow` had never been called by anything since it was
+written, and it is the row layout's own version of the measurement the whole
+render package exists for. It is wired in now. **When you delete a component,
+grep the tests for its class name before you grep for its rules.**
 
 ### The lesson that still costs the most time
 

@@ -102,22 +102,21 @@ def test_the_abstention_marker_is_not_the_least_legible_cell():
         assert worst >= AA, f"{theme}: abstention marker worst case {worst:.2f}:1"
 
 
-def test_the_table_header_has_its_own_fill():
-    """A sticky header that shares the even-row stripe token scrolls over rows of
-    the same colour."""
-    css = CSS.read_text()
-    block = css[css.index("table.rbp thead th {"):]
-    block = block[:block.index("}")]
-    assert "background:" in block
+def test_no_sticky_element_is_bound_to_a_scrollport_that_never_scrolls():
+    """`.tablewrap { overflow-x: auto }` made the wrapper a scroll container on
+    both axes bound to a scrollport with no max-height. Proven at 4000px of
+    scroll: the th sat at -3,630px, so a table 44,000px tall at live scale was
+    read with no column labels visible at any point.
 
-
-def test_the_sticky_header_can_actually_stick():
-    """`.tablewrap { overflow-x: auto }` made the wrapper a scroll container on both
-    axes, so `position: sticky; top: 0` bound to a scrollport with no max-height
-    that never scrolls. Proven at 4000px of scroll: the th sat at -3,630px, so a
-    table 44,000px tall at live scale was read with no column labels visible at any
-    point, and the first columns lost are Inferred owner, Confidence and Rule, the
-    three that carry all the hedging."""
+    THE SUBJECT CHANGED AND THE RULE DID NOT. `table.rbp thead th` was the only
+    sticky element inside a `.tablewrap` and was deleted with the rest of the
+    unreachable component, so this stopped being a claim about a table header.
+    It is now the general form: any element that goes sticky inside `.tablewrap`
+    inherits a bounded scrollport, or it does not stick. Two tests stood here,
+    one asserting the header had its own fill so it would not scroll over rows
+    of its own colour; that one had no subject left at all and went with the
+    component.
+    """
     css = CSS.read_text()
     wrap = re.search(r"\.tablewrap\s*\{([^}]*)\}", css)
     assert wrap, ".tablewrap rule not found"
@@ -381,26 +380,23 @@ def test_there_is_a_mobile_breakpoint_at_all():
         "the card layout reopened one pixel below style.css's mobile block, "
         "which leaves 768px with nowrap on and no card layout")
     mob = css[css.index("@media (max-width: 768px)"):]
-    assert "min-width: 0" in mob, "the table's min-width is never released"
-    assert "data-label" in mob, "no per-cell labels for the card layout"
-    # And the inherited nowrap has to be undone IN THE CARD-LAYOUT RULE, or
-    # stacked block cells still refuse to wrap and push the page sideways.
-    # Scoped to that rule rather than to the whole media block: `white-space:
-    # normal` appears twice, so a bare substring check passed with the one that
-    # matters deleted.
-    # The STANDALONE rule, not the combined `table.rbp, ... , table.rbp td {`
-    # display rule that appears first and only sets display and width.
-    # Comments stripped FIRST. The comment inside this very rule quotes
-    # `th, td { white-space: nowrap }`, braces and all, so an unstripped
-    # `[^}]*` stops inside the comment and reads half a rule. Exactly the bug
-    # rbp/contrast.py had to fix for the same reason.
-    import re as _re
-    m = _re.search(r"(?:^|\n)\s*table\.rbp td \{([^}]*)\}",
-                   contrast.strip_comments(mob))
-    assert m, "no standalone `table.rbp td` rule in the card layout"
-    card_td = m.group(1)
-    assert "white-space: normal" in card_td, (
-        "the card layout never resets style.css's `th, td { white-space: nowrap }`")
+    assert "min-width: 0" in mob, "no table's min-width is ever released"
+    # THE ASSERTIONS ABOUT THE CARD LAYOUT WERE DELETED WITH IT, not weakened.
+    # Two of the four checks here were `data-label` and a standalone `table.rbp
+    # td { white-space: normal }`, and that component rendered on no page. What
+    # still binds is the half that is about style.css rather than about the
+    # deleted table: style.css sets `table { min-width: 600px }` and `th, td {
+    # white-space: nowrap }` at this same 768px, and something in this file has
+    # to undo both or the page scrolls sideways. That is asserted, on the rules
+    # that actually run now, by
+    # test_no_table_keeps_a_min_width_floor_at_narrow_widths below.
+    #
+    # Comments are stripped first wherever this file reads a rule body: rbp.css
+    # quotes `th, td { white-space: nowrap }` inside a comment, braces and all,
+    # so an unstripped `[^}]*` stops inside the comment and reads half a rule.
+    assert "white-space: normal" in contrast.strip_comments(mob), (
+        "nothing at this breakpoint resets style.css's `th, td { white-space: "
+        "nowrap }`, so cells refuse to wrap and push the page sideways")
 
 
 def test_no_table_keeps_a_min_width_floor_at_narrow_widths():
@@ -446,17 +442,47 @@ def test_every_value_in_a_row_is_labelled_next_to_itself():
 def test_print_preserves_the_certainty_vocabulary():
     """The inherited print block forces `color: #212529 !important` on td, th, span
     and a, collapsing the whole certainty vocabulary to one ink: a candidate MUST
-    becomes indistinguishable from a SHOULD and the abstention marker loses its
-    distinction. It also never reset .tablewrap's overflow or the table's
-    min-width, so an overflow box with no scrollbar clipped the page."""
+    becomes indistinguishable from a SHOULD.
+
+    The abstention marker was the third assertion here. Its cell was `td.
+    unattributed` on the deleted table component and no page rendered it, so it
+    went with the component rather than being kept as a check on a rule nothing
+    could reach.
+    """
     css = CSS.read_text()
     assert "@media print" in css
     pr = css[css.index("@media print"):]
     assert "chip-must::after" in pr, "MUST is not distinguishable in one ink"
     assert "chip-unmeasured::after" in pr
-    assert "unattributed::after" in pr
-    assert "overflow: visible !important" in pr, "the overflow box still clips"
-    assert "min-width: 0 !important" in pr
+
+
+def test_print_leaves_no_scroll_container_holding_content():
+    """A scroll container on paper is a clip with no scrollbar, and the reader
+    loses the hidden columns with nothing on the page saying so.
+
+    TWO CONTAINERS, and the second was missed for as long as the first existed
+    to hide it. `.tablewrap` is the wrapper; the table's own box is separate,
+    and the reflow block gives `table.table-sm` `display: block; overflow-x:
+    auto` so a wide figure table scrolls inside itself rather than scrolling the
+    page. That block carries no media type, so it matches paper as well as a
+    narrow screen.
+
+    This used to be asserted through `table.rbp`'s print resets, on a component
+    that rendered nowhere. Measured at a 700px print box after those were
+    deleted: every table on /method and /status computed `overflow-x: auto`,
+    fitting only because none of them is currently wide enough to overflow. A
+    check that passes on today's column count is not a check.
+    """
+    css = contrast.strip_comments(CSS.read_text())
+    pr = css[css.index("@media print"):]
+    assert "overflow: visible !important" in pr, (
+        ".tablewrap still scrolls on paper")
+    assert "overflow-x: visible !important" in pr, (
+        "the tables keep their own scroll box on paper, so a table wider than "
+        "the page box loses columns silently")
+    assert "display: table !important" in pr, (
+        "the tables print as `display: block` and stop being tables, so the "
+        "columns do not line up")
 
 
 def test_reduced_motion_is_respected():
@@ -803,24 +829,6 @@ def test_effective_ratio_actually_composites_the_translucent_background():
     assert contrast.composite((255, 255, 255), 0.5, (0, 0, 0)) == (128, 128, 128)
     assert contrast.composite((10, 20, 30), 1.0, (200, 200, 200)) == (10, 20, 30)
     assert contrast.composite((10, 20, 30), 0.0, (200, 200, 200)) == (200, 200, 200)
-
-
-def test_the_sort_buttons_have_a_focus_indicator_that_wins():
-    """`all: unset` on table.rbp th button.sortbtn is specificity (0,2,3) and
-    beat the project's single focus rule, so seven keyboard-operable controls
-    had no visible focus indicator at all. SC 2.4.7, on the control a keyboard
-    user reaches first on the page the site most wants cited.
-
-    Asserted on the SELECTOR, not just on the presence of an outline somewhere:
-    a focus rule that loses the cascade is the same as no focus rule, and that
-    is precisely what was there."""
-    css = contrast.strip_comments(CSS.read_text())
-    assert "table.rbp th button.sortbtn:focus-visible" in css, (
-        "no focus rule at the sort button's own specificity; a lower-specificity "
-        "rule loses to `all: unset`")
-    block = css[css.index("table.rbp th button.sortbtn:focus-visible"):]
-    block = block[:block.index("}")]
-    assert "outline" in block and "none" not in block
 
 
 def test_every_scroll_container_is_keyboard_reachable():

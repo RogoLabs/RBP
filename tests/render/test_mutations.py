@@ -30,14 +30,23 @@ from __future__ import annotations
 
 import pytest
 
-from rbp import breakpoints
-
-from _measure import (LIST_PAGE, asset_versions, card_mode_disagreements,
-                      rows_not_stacked, rows_refusing_to_wrap, rows_squeezed,
-                      document_overflow, file_hash, measure)
+from _measure import (LIST_PAGE, asset_versions, rows_not_stacked,
+                      rows_refusing_to_wrap, rows_squeezed, document_overflow,
+                      file_hash, measure)
 from test_focus import _invisible, _traverse
 
-BOUNDARY = breakpoints.card_layout_boundary()
+# WHERE `DEFECT_NO_COLLAPSE` IS ACTUALLY LIVE, and it is not where this constant
+# used to point. It was `breakpoints.card_layout_boundary()`, which returned 768
+# from the deleted table component, while the mutation below is written inside
+# `@media (max-width: 640px)` and therefore does not apply at 768 at all.
+#
+# Measured on the built fixture with the mutation injected: at 768px it reports
+# 0 unstacked and 0 squeezed rows, because nothing is broken there. The one
+# assertion that used it was `document_overflow(...) == 0`, which passed for
+# that reason rather than for the reason it claimed. 640 is the width at which
+# the mutation applies and the collision is real: 54 of 54 rows unstacked and
+# squeezed, with document overflow still 0, which IS the finding.
+COLLAPSE = 640
 
 # THE DEFECT CLASSES, REWRITTEN FOR THE ROW LAYOUT (2026-08-26).
 #
@@ -134,19 +143,23 @@ def test_the_document_overflow_check_does_NOT_catch_768(page, server):
     this assertion being deleted.
     """
     _broken(page, server, LIST_PAGE, DEFECT_NO_COLLAPSE)
-    assert document_overflow(measure(page, BOUNDARY)) == 0, (
-        "document overflow now detects the 768px collision; the panel measured "
-        "0 here, and the nested-scrollbar check exists because of it")
+    m = measure(page, COLLAPSE)
+    # THE MUTATION HAS TO BE LIVE AT THIS WIDTH or the assertion below passes on
+    # an unbroken page, which is what it did while this measured at 768.
+    assert rows_not_stacked(m, COLLAPSE), (
+        "the mutation is not applying at this width, so the assertion that "
+        "follows would pass on a page with nothing wrong with it")
+    assert document_overflow(m) == 0, (
+        "document overflow now detects the collision; the panel measured 0 "
+        "here, and the row-level checks exist because of it")
 
 
-def test_the_agreement_check_does_NOT_catch_768_either(page, server):
-    """Recorded because PLAN.md 8e's shorthand implies it does.
-
-    Both halves report "not card layout", so they agree. The agreement check is
-    for the other defect, and mutation 2 is where it earns its place.
-    """
-    _broken(page, server, LIST_PAGE, DEFECT_NO_COLLAPSE)
-    assert not card_mode_disagreements(measure(page, BOUNDARY))
+# `test_the_agreement_check_does_NOT_catch_768_either` STOOD HERE and was
+# deleted with `card_mode_disagreements()`. It recorded that the thead/cells
+# agreement check does not catch this defect, because both halves report "not
+# card layout" and therefore agree. Both the check and the `table.rbp` component
+# it read are gone, so there is no longer a second detector to record a
+# negative result for.
 
 
 # --------------------------------------------------------------------------

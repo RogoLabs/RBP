@@ -12,8 +12,6 @@ inside the job that needs a browser download.
 """
 from __future__ import annotations
 
-import pytest
-
 from rbp import breakpoints
 
 
@@ -69,33 +67,28 @@ def test_absurd_widths_are_excluded():
     assert all(breakpoints.MIN_WIDTH <= w <= breakpoints.MAX_WIDTH for w in got)
 
 
-def test_the_card_layout_boundary_is_read_from_the_rule_that_switches_it():
-    """768, and the one pixel was a real failure: rbp.css opened the card layout
-    at 767 while style.css opened `th, td { white-space: nowrap }` at 768, so at
-    exactly 768 the card layout was off and nowrap was on."""
-    assert breakpoints.card_layout_boundary() == 768
+def test_the_sweep_does_not_depend_on_any_one_component():
+    """The four tests that stood here measured `card_layout_boundary()`, which
+    derived the card-mode breakpoint from `table.rbp thead { display: none }`.
+    That component rendered on no page and was deleted, and the derivation went
+    with it rather than being repointed at a rule that switches something else.
 
-
-def test_the_boundary_follows_the_rule_rather_than_being_declared():
-    """Move the rule, and the boundary moves with it. This is what makes the
-    number impossible to type wrong."""
-    css = ("@media (max-width: 640px) { table.rbp thead { display: none; } }\n"
-           "@media (max-width: 900px) { .nav { gap: 0 } }")
-    assert breakpoints.card_layout_boundary([("x.css", css)]) == 640
-
-
-def test_a_missing_card_layout_is_an_error_rather_than_a_default():
-    """If the card layout is deleted, the sweep must not quietly decide that no
-    width needs to be in card mode. That is the false-green the whole job exists
-    to avoid."""
-    with pytest.raises(AssertionError):
-        breakpoints.card_layout_boundary([("x.css", "@media (max-width: 768px) { a{b:c} }")])
-
-
-def test_a_nested_media_block_does_not_end_at_the_first_brace():
-    """A media rule CONTAINS rules, so `[^}]*` reads one rule and stops. The
-    switch rule is not always first in its block: in rbp.css it sits after
-    `.filters`, `.tablewrap` and `table.rbp`."""
-    css = ("@media (max-width: 700px) { .a { b: c } .d { e: f } "
-           "table.rbp thead { display: none; } }")
-    assert breakpoints.card_layout_boundary([("x.css", css)]) == 700
+    What replaces them is the property that actually has to hold: deleting a
+    component must not shrink the sweep, because the sweep is what every render
+    check runs at. `sweep()` reads every `@media` prelude in both stylesheets
+    and never depended on that rule, so removing 219 lines of CSS left all 19
+    widths standing. Asserted here rather than assumed, since a sweep that
+    quietly collapses to the three FIXED widths is the exact false-green this
+    module's docstring is about.
+    """
+    got = breakpoints.sweep()
+    assert len(got) > len(breakpoints.FIXED), (
+        "the sweep has collapsed to its fixed widths, so the stylesheets are "
+        "contributing no breakpoints at all")
+    # The three joins the site actually has: the row grid's collapse, style.css's
+    # mobile block, and the nav band. All bracketed, which is what b-1/b+1 is for.
+    # 640 is here because tests/render/test_layout.py passes it to
+    # `rows_not_stacked()`: it is the one join this package's own checks depend
+    # on, and it was the one not asserted.
+    for b in (640, 768, 900):
+        assert {b - 1, b, b + 1} <= set(got), f"{b} is no longer bracketed"
