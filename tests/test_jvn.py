@@ -19,8 +19,6 @@ Each test below is a trap already paid for somewhere in this repository:
   * a coordinator feed credits the CNA that owns the id, never the CNA that
     publishes the advisory, which is what made this feed look worthless
 """
-import pytest
-
 from rbp import clock, feeds
 
 
