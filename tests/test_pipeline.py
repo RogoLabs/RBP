@@ -455,6 +455,10 @@ def test_every_adapter_either_builds_a_link_or_declares_it_cannot():
         "ghsa": "ghsa:GHSA-aaaa-bbbb-cccc",
         "mozilla": "mozilla:mfsa2026-01",
         "osv": "osv:PyPI:somepkg",
+        # The year in the JVNDB identifier is the path segment of the advisory
+        # page, so a generic ref cannot produce a link and would report this
+        # adapter as unhandled when it is not.
+        "jvn": "jvn:JVNDB-2026-000001",
     }
     handled = set()
     for slug in feeds.ADAPTERS:

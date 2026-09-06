@@ -6,6 +6,7 @@ import datetime as dt
 import glob
 import json
 import os
+import re
 from collections import Counter
 
 from . import classify
@@ -90,6 +91,18 @@ def _derive_meta(row):
             ref = next((r.split(":", 1)[1] for r in refs if r.startswith("samsung:")), "")
             return ("https://security.samsungmobile.com/securityUpdate.smsb"
                     if ref.startswith("SMR-") else "")
+        if s == "jvn":
+            # The advisory's own English page. refs carry "jvn:JVNDB-<year>-<n>",
+            # and the year in the identifier is the path segment, so the link is
+            # derivable from the ref and needs no second field.
+            #
+            # `/en/` deliberately: the adapter reads the English tree, and a
+            # reader who cannot open the evidence has no evidence. The Japanese
+            # page carries the same advisory at `/ja/`.
+            ref = next((r.split(":", 1)[1] for r in refs if r.startswith("jvn:")), "")
+            m = re.match(r"JVNDB-(\d{4})-\d+$", ref)
+            return (f"https://jvndb.jvn.jp/en/contents/{m.group(1)}/{ref}.html"
+                    if m else "")
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
         if s == "ubuntu-osv":

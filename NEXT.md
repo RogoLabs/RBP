@@ -64,64 +64,32 @@ drains, not what the site can see.
 
 ## What is open
 
-### 1. The review panel's list, `docs/reviews/REVIEW-round9.md`
+### 1. `euvd`: merge as `corroborating`, or leave it out
 
-24 FIX items and 12 DELETE items, ranked, with the refuted items recorded
-separately so they are not silently lost. F2, the blocker, is fixed.
-
-**F1 is fixed, 2026-09-01, and it took nine rounds because no single file was
-wrong.** The panel promised "a request to remove a row", "the entire point of
-having a correction route", "someone asking to be delisted" and "rows a CNA had
-contested", while `.well-known/security.txt` on the same origin said the site
-does not operate a removal channel and the README had a section saying so. Every
-file was internally consistent; the contradiction lived only BETWEEN them.
-`tests/test_copy.py::test_no_page_offers_a_route_that_security_txt_denies` now
-reads the built artefacts against each other, in both directions, so reinstating
-the channel also fails until this is rewritten deliberately. The archive promise
-the paragraph was carrying survives, asserted separately, because deleting the
-paragraph was the obvious fix and would have taken `stable_not_immutable` back to
-being a JSON key nobody had been told about.
-
-No reader-facing item from round 9 remains open.
-
-Done: D1, D2, D3, D5, D6, D7, D10, D11, D12, and the F3/F4 prerequisites.
-`SCHEMA_VERSION` is 4 and `tests/test_schema.py` now pins the column set to the
-version, so removing a column without bumping fails the suite.
-
-**Round 9 is closed.** D11's `table.rbp` removal was the last item and landed
-2026-09-06: 198 lines of unreachable CSS, the derived card-layout breakpoint that
-parsed one of its rules, and eight tests whose subject no longer existed. The
-review output stays in `docs/reviews/REVIEW-round9.md`; the reasoning is in the
-commit.
-
-The panel's own balance was 21 removals against 7 additions. Prefer the DELETE
-list when in doubt; this project's documented failure mode is accreting guards
-and caveats around a list and its links.
-
-**The next open item is 2 below.**
-
-### 2. Three measured feed candidates, none merged
-
-Measured 2026-09-05 against the 2026-08-31 baseline. Scorecards and every probed
-route, failures included, in `feedlab/_candidates.json`; the reasoning and the
-traps are in FEEDS.md under "MEASURED 2026-09-05".
-
-`csaf:ncsc-nl` (+18 marginal CNAs) and `csaf:trendmicro` (+1) are each **one
-`CSAF_PROVIDERS` line and no code**. `jvn` (+9) needs a small adapter: the English
-yearly RDFs list the coordinated advisories, then one `getVulnDetailInfo` call each.
-Together they take `cnas_effective` 183 to 212 and the gate 45/50 to 47/50, clearing
-`qnap` and `juniper`.
+The other three candidates landed 2026-09-06 and this is what is left of that
+item. `csaf:ncsc-nl`, `csaf:trendmicro` and `jvn` are in the profile; the
+measured before-and-after is in FEEDS.md under "MERGED 2026-09-06".
 
 `euvd` is measured and **refused as a numerator source**: zero disclosure lead on
-9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live oracle.
-It is a publication mirror. Merging it as `corroborating` is still an open question
-and the reasons both ways are written down. **Do not merge it as detecting to pick
-up `TR-CERT` and `twcert`**, which is exactly what its CNA count invites.
+9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
+oracle. It is a publication mirror. **Do not merge it as `detecting` to pick up
+`TR-CERT` and `twcert`**, which is exactly what its CNA count invites, and those
+two are still the top-50 misses after the merge.
 
-None of the four has a `stability` figure or has been through `feedlab score`, so
-each still wants an adapter and a real scorecard before it goes in the profile.
+Merging it tagged `corroborating` is a real question and the reasons both ways
+are written down in FEEDS.md. Against: no incremental route was found,
+`api/search` is not date-ordered, and covering the window means roughly 150,000
+records and 1,500 requests for rows that corroborate. For: it is the only source
+measured that references `TR-CERT` and `twcert` at all. Nothing here is blocked
+on more measurement; it is a decision.
 
-### 3. FEEDS.md section 3's three remaining guards
+**Before scoring any further candidate, read the window.** The probe that scored
+these four read the 2024 yearly RDF for `jvn`, which is `coverage_years` and not
+the years the pipeline gathers, and over-counted its marginal CNAs 9 to 6. The
+same error accounts for NCSC-NL reading 18 against a delivered 13. Two windows,
+one function call apart, confused twice now in this document.
+
+### 2. FEEDS.md section 3's three remaining guards
 
 Per-feed shrink baselines surviving a profile change; a failure budget expressed
 as a fraction rather than a count; `gather` parallelised while preserving
@@ -144,70 +112,90 @@ per-month variation and tighten them, the way `FRESHNESS_FLOOR_DAYS` was derived
 from the feeds' own cadences rather than picked. Until that is done, do not
 promote either half into `verify`.
 
-### 4. Rehearse the withhold lever end to end
+### 3. Rehearse the withhold lever end to end
 
 `RBP_WITHHOLD` drops rows from every published artefact and is tested, but has
 never been exercised against a real run.
 
-### 5. Loose threads from the uncapping
+### 4. Loose threads from the uncapping
 
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.
 
-### 6. `ubuntu-osv` landed with two things unfinished, both blocked on one host
+### 5. `ubuntu-osv`: two follow-ups, both blocked on one host
 
 `feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
 recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
-measurement in `FEEDS.md` under "MERGED 2026-08-31". Two follow-ups, and they are
-blocked on the same thing:
+measurement in `FEEDS.md` under "MERGED 2026-08-31".
 
-**a. DONE, and the false start is worth reading before you rebuild a baseline
-again.** The first attempt ran while `ubuntu.com/security/` was answering 503 and
-then timing out, and produced `[ubuntu] 80 rows, 750.2s` against its usual 3,994.
-Committing that would have made every future candidate look better than it is, in
-exactly the direction `test_the_recorded_baseline_describes_the_profile_that_
-actually_runs` warns about, so it was thrown away and the good 13-feed baseline
-kept. The endpoint recovered the same evening and the rebuild landed:
-**14 feeds, 45,895 ids, 183 effective roster CNAs, `[ubuntu] 3968 rows`.**
+Both follow-ups are blocked on the same thing: `ubuntu.com/security/` answering
+503. Neither can be started while it is down, so **check the endpoint first**.
 
-**Check the endpoint before you start, and read the per-feed lines in the log
-rather than the exit status.** The bad run exited 0. It cost 25 minutes to find
-out, and only the `[ubuntu] 80 rows` line said so.
+**a. Run `python -m rbp.feedlab audit` and answer whether `feed_ubuntu` is still
+worth its cost.** The baseline is fresh, so the audit is cheap. That cost is not
+one number: 1,070s on 2026-08-27, 93.1s on 2026-08-31 and 257.5s on 2026-09-06,
+for 3,994, 3,968 and 3,988 rows. Price the bad case, not the good one, and note
+that the audit rewrites all FIFTEEN scorecards, so it wants its own commit.
+
+Two of those fifteen are now newer than the rest: `jvn.json` from `feedlab score`
+and `csaf.json` re-scored offline on 2026-09-06. The other thirteen still
+describe the pre-jvn baseline. That is not a reason to run the audit in a hurry;
+it is the thing to know when reading them side by side, because each card
+records the baseline it is marginal to and those baselines are no longer one set.
+
+`ubuntu-osv` reaches 15,500 ids to the tracker's 3,994 and beats it on every
+scorecard axis, but it is **not a superset**: 31.9% of the tracker's ids have no
+OSV record. All the RBP candidates in that 31.9% are already sighted elsewhere,
+so the tracker's remaining contribution is *sightings*, which feed
+`cnas_effective`, which is the gate. The audit is the only thing that can price
+that. Two things push the other way and must be costed in: the tracker's endpoint
+is what `resolve_dates_ubuntu` queries by name (130 rows still depend on it), and
+on 2026-08-31 the two feeds demonstrably failed independently. **Do not delete
+`feed_ubuntu` before the audit.**
+
+**b. Two things from Canonical's second reply, 2026-09-01**, both in FEEDS.md
+under "CANONICAL ANSWERED THE OPEN QUESTION". The 31.9% non-overlap figure quoted
+to them was inflated: it charged tarball snapshot lag to scope, and the same
+subtraction now gives 38.9% purely because the tracker fetch got newer.
+**Neither number is a scope measurement; do not quote either.** Separating scope
+from lag needs per-release status for a sample of the gap, which needs
+`cves.json?q=`, which was 503 on 25 of 30 queries.
+
+Second: `osv-all.tar.xz` was **30.5 hours stale** when checked, while
+`canonical/ubuntu-security-notices` runs its OSV conversion every five to six
+hours. The lag window held 293 new in-window ids and 202 RBP candidates, and
+**zero** of them unseen by the other thirteen feeds. So it costs sightings, not
+rows. Reading the git repo's delta beside the tarball is the obvious follow-up
+and is unscoped.
+
+**The baseline these are measured against was rebuilt 2026-08-31 and is good:
+14 feeds, 45,895 ids, 183 effective roster CNAs, `[ubuntu] 3968 rows`.** The
+first attempt at it is the reason the endpoint warning above is the first line of
+this section: it ran while the host was answering 503 and then timing out, and
+produced `[ubuntu] 80 rows, 750.2s` against a usual 3,994. **That run exited 0.**
+Committing it would have made every future candidate look better than it is, in
+exactly the direction
+`test_the_recorded_baseline_describes_the_profile_that_actually_runs` warns
+about. It cost 25 minutes to catch and only the `[ubuntu] 80 rows` line said so.
 
 One local artefact survives it. `data/feedlab/ubuntu.fetches.json` (gitignored
 working state, not in any diff) holds **80 then 3,968**, so `stability` reports a
-~98% swing for `ubuntu`. Both fetches are real and the file is being kept for that
-reason, but the 80 is an outage rather than variation, so do not read that swing
-as a shrink baseline. `ubuntu-osv` beside it has three fetches at 15,500 and a
-0.0% swing.
+~98% swing for `ubuntu`. Both fetches are real and the file is kept for that
+reason, but the 80 is an outage rather than variation, so **do not read that
+swing as a shrink baseline**. `ubuntu-osv` beside it has three fetches at 15,500
+and a 0.0% swing.
 
-**c. NEW, from Canonical's second reply, 2026-09-01.** Two things, both in FEEDS.md
-under "CANONICAL ANSWERED THE OPEN QUESTION". The 31.9% non-overlap figure quoted to
-them was inflated: it charged tarball snapshot lag to scope, and the same subtraction
-now gives 38.9% purely because the tracker fetch got newer. **Neither number is a
-scope measurement; do not quote either.** Separating scope from lag needs per-release
-status for a sample of the gap, which needs `cves.json?q=`, which was 503 on 25 of 30
-queries. Blocked on the same endpoint as everything else here.
+**`csaf` acquired the same shape on 2026-09-06 for the opposite reason**, and its
+29.3% is now a COMMITTED field in `feedlab/csaf.json` rather than gitignored
+working state. The two recorded fetches are 22,334 ids over sixteen providers and
+31,598 over eighteen, so the swing is two `CSAF_PROVIDERS` lines and not the feed
+moving. Same rule: real, recorded, not a shrink baseline. The first gather after
+that one is the first comparable pair.
 
-Second: `osv-all.tar.xz` was **30.5 hours stale** when checked, while
-`canonical/ubuntu-security-notices` runs its OSV conversion every five to six hours.
-The lag window held 293 new in-window ids and 202 RBP candidates, and **zero** of them
-unseen by the other thirteen feeds. So it costs sightings, not rows. Reading the git
-repo's delta beside the tarball is the obvious follow-up and is unscoped.
-
-**b. STILL OPEN. Run `python -m rbp.feedlab audit`, which is now cheap because the
-baseline is fresh, and answer whether `feed_ubuntu` is still worth its cost.**
-That cost is not one number: 1,070s on 2026-08-27 and 93.1s on 2026-08-31, for
-3,994 and 3,968 rows. Price the bad case, not the good one, and note that the
-audit rewrites all fourteen scorecards, so it wants its own commit. `ubuntu-osv` reaches 15,500 ids to the tracker's
-3,994 and beats it on every scorecard axis, but it is **not a superset**: 31.9% of
-the tracker's ids have no OSV record. All the RBP candidates in that 31.9% are
-already sighted elsewhere, so the tracker's remaining contribution is *sightings*,
-which feed `cnas_effective`, which is the gate. The audit is the only thing that
-can price that. Two things push the other way and must be costed in: the tracker's
-endpoint is what `resolve_dates_ubuntu` queries by name (130 rows still depend on
-it), and on 2026-08-31 the two feeds demonstrably failed independently. **Do not
-delete `feed_ubuntu` before the audit.**
+This is item 2's "per-feed shrink baselines surviving a profile change" arriving
+one level down, at the provider set rather than the feed set, and `record_fetch`
+writes `{at, ids}` with nowhere to say which config produced the count. Worth
+fixing together rather than separately.
 
 ---
 
@@ -216,6 +204,11 @@ delete `feed_ubuntu` before the audit.**
 Each of these was decided with reasoning that is in `git log`. Re-litigating one
 costs a session.
 
+- **Prefer the DELETE list when in doubt.** Every review this project has run
+  came back weighted towards removal; round 9's own balance was 21 removals
+  against 7 additions. The documented failure mode is accreting guards and
+  caveats around a list and its links, and the last four rounds each ended by
+  deleting something that had been kept because deleting it looked risky.
 - **No attribution.** No CNA is named on any row, in any field, in any format.
 - **The window is four years, and five is the wrong way to widen it.**
   `coverage.WINDOW_YEARS = 4` since 2026-09-05, measured with four full gathers
@@ -235,7 +228,14 @@ costs a session.
   control that clears it. Unfiltered and oldest-first, the first screen was ten
   near-identical rows naming one vendor's platform.
 - **There is no removal channel and no email address on the site.** The embargo
-  case has no route here, and that cost is real and stated.
+  case has no route here, and that cost is real and stated. It took nine rounds
+  to retire because no single file was wrong: four surfaces still promised a
+  correction route while `.well-known/security.txt` on the same origin denied
+  one, and each file was internally consistent.
+  `tests/test_copy.py::test_no_page_offers_a_route_that_security_txt_denies`
+  reads the built artefacts against each other in BOTH directions, so
+  reinstating the channel fails the suite until that test is rewritten
+  deliberately. That is the intended cost, not an obstacle to route around.
 - **The hedge above the rows is gone.** A reader who copies rows into a ticket
   carries the rows and none of the qualification. Stated because it is a real
   reduction in disclosure.
@@ -297,6 +297,15 @@ below the number. The lead now states the window beside the count, and
 `tests/render/test_filters.py` asserts where it renders, not merely that it does.
 The template-level guard could never have seen this; a test that reads the source
 of a client-rendered page is measuring the wrong artefact.
+
+**A gather that exits 0 is not a gather that worked, and the exit status is the
+only part of it nobody has to read.** A run against a 503-ing host produced
+`[ubuntu] 80 rows, 750.2s` against a usual 3,994 and exited 0; the only thing
+that said so was one per-feed line in the log. A feed that quietly shrinks is the
+one failure this site cannot tolerate, because the count goes down and the page
+still looks fine, and by the next run the shrunken value is the baseline.
+**Read the per-feed lines, every time, whatever the status says.** This is a
+general rule and not a note about one host: it has been paid for twice.
 
 **A green build is not a correct site.** Three regressions reached the live site
 on 2026-08-29 and 08-30, each a variant of "state that claims to know something

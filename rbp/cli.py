@@ -44,8 +44,19 @@ from . import (cvelist, feeds, classify, report, coverage,
 # currently-unpublished ids, in 34s and 42 MB. Verdict DETECTING. It sits BESIDE
 # `ubuntu` rather than replacing it; the block comment on `feed_ubuntu_osv` has
 # the 31.9% non-overlap that is the reason.
+#
+# `jvn` added 2026-09-06 on `feedlab/jvn.json`: 1,117 in-window ids for 6 new
+# effective CNAs (Canon, Hitachi, LY-Corporation, NEC, OMRON, trendmicro), 173
+# lead references and 20 currently-unpublished ids, in 25s and 0.9 MB over two
+# requests. Verdict DETECTING.
+#
+# The candidate probe scored it at NINE new CNAs, and the difference is the
+# window: the probe read the 2024 yearly RDF as well, which is `coverage_years`
+# and not the years the pipeline gathers. ESET, Toshiba and
+# Panasonic_Holdings_Corporation cross the floor only on 2024 ids this profile
+# never fetches. Six is the number that describes what running it does.
 _WEEKLY = ("alas,ubuntu,ubuntu-osv,debian,ghsa,ghsa-repos,redhat,alpine,osv,"
-           "mozilla,arch,csaf,msrc,samsung")
+           "mozilla,arch,csaf,msrc,samsung,jvn")
 PROFILES = {
     "weekly": _WEEKLY,
     # ONE STRING, REFERENCED TWICE, not two identical literals.

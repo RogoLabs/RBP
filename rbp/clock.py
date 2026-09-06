@@ -267,6 +267,12 @@ _ORIGIN_KIND = {
     # identifier and release date, which is exactly the shape 4.5.1.4 and
     # 4.5.1.6 mean by Publicly Disclosing.
     "samsung": "advisory",
+    # A JVN advisory is coordinated disclosure with its own JVNDB identifier, its
+    # own page and its own `dcterms:issued` date, which is the shape 4.5.1.4 and
+    # 4.5.1.6 mean by Publicly Disclosing. It is NOT the iPedia mirror: the
+    # adapter reads the English yearly RDFs, which carry the coordinated
+    # advisories only, and never `jvndb.rdf`, which republishes NVD.
+    "jvn": "advisory",
     # A repository advisory is a published advisory with its own identifier and
     # release date, on the vendor's own security tab. Absence from this map is a
     # deliberate fail-safe that reads an unmapped adapter as a tracker, and

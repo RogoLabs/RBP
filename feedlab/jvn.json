@@ -1,0 +1,71 @@
+{
+ "baseline": {
+  "effective_n": 183,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "ghsa-repos",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu",
+   "ubuntu-osv"
+  ],
+  "scored_at": "2026-08-31T20:23:00+00:00"
+ },
+ "bytes": 890921,
+ "cnas_effective_alone": 17,
+ "cnas_new_effective": 6,
+ "cnas_new_effective_names": [
+  "Canon",
+  "Hitachi",
+  "LY-Corporation",
+  "NEC",
+  "OMRON",
+  "trendmicro"
+ ],
+ "cnas_reached": 43,
+ "disclosure": {
+  "dated_n": 1097,
+  "lead_examples": [
+   "CVE-2025-4960",
+   "CVE-2025-2146",
+   "CVE-2025-4106",
+   "CVE-2025-0824",
+   "CVE-2025-2902"
+  ],
+  "lead_max_days": 226,
+  "lead_median_days": 3,
+  "lead_n": 173,
+  "lead_pct": 15.77,
+  "mirror_n": 924,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2025-71386",
+   "CVE-2025-71387",
+   "CVE-2026-16876",
+   "CVE-2026-44162",
+   "CVE-2026-44163"
+  ],
+  "unpublished_n": 20
+ },
+ "feed": "jvn",
+ "health": {},
+ "ids": 1117,
+ "ids_new": 579,
+ "scored_at": "2026-09-06T18:05:01+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "6 marginal CNA(s) and 173 lead / 20 unpublished references",
+ "wall_seconds": 25.0,
+ "years": [
+  2025,
+  2026
+ ]
+}
