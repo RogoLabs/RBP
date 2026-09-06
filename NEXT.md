@@ -64,30 +64,41 @@ drains, not what the site can see.
 
 ## What is open
 
-### 1. `euvd`: merge as `corroborating`, or leave it out
+### 1. `feedlab` measures two years while the pipeline gathers four
 
-The other three candidates landed 2026-09-06 and this is what is left of that
-item. `csaf:ncsc-nl`, `csaf:trendmicro` and `jvn` are in the profile; the
-measured before-and-after is in FEEDS.md under "MERGED 2026-09-06".
+**Found 2026-09-06 by reading the first live run of the feed merge, and it makes
+every committed scorecard's marginal figure an understatement.**
 
-`euvd` is measured and **refused as a numerator source**: zero disclosure lead on
-9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
-oracle. It is a publication mirror. **Do not merge it as `detecting` to pick up
-`TR-CERT` and `twcert`**, which is exactly what its CNA count invites, and those
-two are still the top-50 misses after the merge.
+`coverage.WINDOW_YEARS` became 4 on 2026-09-05 and `a6332c0` unified the two
+windows, so `cli.run` gathers `coverage.window(year)` and so does
+`feedlab.coverage_years`. The harness's own CLI did not follow: all three
+`--years` arguments in `rbp/feedlab.py` are still the literal `"2025,2026"`, and
+`tests/test_feedlab.py::test_the_baseline_gathers_the_years_the_pipeline_gathers`
+still asserts `{now, now - 1}` with a docstring describing the three-year
+coverage window that no longer exists either.
 
-Merging it tagged `corroborating` is a real question and the reasons both ways
-are written down in FEEDS.md. Against: no incremental route was found,
-`api/search` is not date-ordered, and covering the window means roughly 150,000
-records and 1,500 requests for rows that corroborate. For: it is the only source
-measured that references `TR-CERT` and `twcert` at all. Nothing here is blocked
-on more measurement; it is a decision.
+**The test passes, and that is the problem.** The baseline was built with the
+stale default, so the assertion agrees with it and pins the wrong invariant
+rather than catching it. This is the same failure as the round-9 F1 item: every
+file internally consistent, the contradiction only BETWEEN them.
 
-**Before scoring any further candidate, read the window.** The probe that scored
-these four read the 2024 yearly RDF for `jvn`, which is `coverage_years` and not
-the years the pipeline gathers, and over-counted its marginal CNAs 9 to 6. The
-same error accounts for NCSC-NL reading 18 against a delivered 13. Two windows,
-one function call apart, confused twice now in this document.
+What it costs, measured on the same commit:
+
+| | harness, 2-year | live run, 4-year |
+|---|---:|---:|
+| `jvn` ids | 1,117 | 1,968 |
+| `cnas_effective` | 208 | 263 |
+| top-50 at the floor | 46 / 50 | 49 / 50 |
+
+The fix is four things and the third is the expensive one: derive `feedlab`'s
+`--years` from `coverage.window()` instead of a literal; rewrite that test to
+assert the baseline's years EQUAL `coverage.window()` rather than a hand-written
+pair; rebuild the baseline, which is roughly half an hour and a real fetch of
+fifteen third parties; and re-score. Doing the last two is also what item 5a
+wants, so **do them in one pass**.
+
+**Do not quote any existing `cnas_new_effective` while this is open.** They are
+all marginal to a two-year merged set.
 
 ### 2. FEEDS.md section 3's three remaining guards
 
@@ -168,8 +179,15 @@ hours. The lag window held 293 new in-window ids and 202 RBP candidates, and
 rows. Reading the git repo's delta beside the tarball is the obvious follow-up
 and is unscoped.
 
-**The baseline these are measured against was rebuilt 2026-08-31 and is good:
-14 feeds, 45,895 ids, 183 effective roster CNAs, `[ubuntu] 3968 rows`.** The
+**The baseline was rebuilt again 2026-09-06 for the feed merge: 15 feeds, 51,070
+ids, 208 effective roster CNAs, `[ubuntu] 3988 rows`, no feed failed and no feed
+shrank.** It is good in the sense that matters here, which is that nothing in it
+is a broken fetch. **It is still the WRONG WINDOW** and item 1 is that: two years
+recorded against a pipeline that gathers four, so it wants rebuilding again
+before the audit below is worth running. Do both in one pass.
+
+The 2026-08-31 rebuild it replaced read 14 feeds, 45,895 ids and 183 effective
+CNAs. The
 first attempt at it is the reason the endpoint warning above is the first line of
 this section: it ran while the host was answering 503 and then timing out, and
 produced `[ubuntu] 80 rows, 750.2s` against a usual 3,994. **That run exited 0.**
@@ -179,11 +197,12 @@ exactly the direction
 about. It cost 25 minutes to catch and only the `[ubuntu] 80 rows` line said so.
 
 One local artefact survives it. `data/feedlab/ubuntu.fetches.json` (gitignored
-working state, not in any diff) holds **80 then 3,968**, so `stability` reports a
-~98% swing for `ubuntu`. Both fetches are real and the file is kept for that
-reason, but the 80 is an outage rather than variation, so **do not read that
-swing as a shrink baseline**. `ubuntu-osv` beside it has three fetches at 15,500
-and a 0.0% swing.
+working state, not in any diff) holds **80, then 3,968, then 3,988**, so
+`stability` reports a ~98% swing for `ubuntu`. All three fetches are real and the
+file is kept for that reason, but the 80 is an outage rather than variation, so
+**do not read that swing as a shrink baseline**. `ubuntu-osv` beside it has five
+fetches between 15,500 and 16,338, a 5.1% swing, which is the shape a healthy
+history has.
 
 **`csaf` acquired the same shape on 2026-09-06 for the opposite reason**, and its
 29.3% is now a COMMITTED field in `feedlab/csaf.json` rather than gitignored
@@ -191,6 +210,20 @@ working state. The two recorded fetches are 22,334 ids over sixteen providers an
 31,598 over eighteen, so the swing is two `CSAF_PROVIDERS` lines and not the feed
 moving. Same rule: real, recorded, not a shrink baseline. The first gather after
 that one is the first comparable pair.
+
+**And `jvn` has the third shape, which is the worst of them: a 0.0% swing that
+measured nothing.** Its two recorded fetches are both 1,117 and they are **thirty
+minutes apart**, because `feedlab score jvn` and the baseline rebuild ran in the
+same session. FEEDS.md asks for three fetches 24 hours apart and `stability`
+enforces only "more than one", so the next `audit` will write `swing_pct: 0.0`
+into `feedlab/jvn.json` and commit it.
+
+`build_baseline`'s own comment says why that is worse than null: "null says not
+measured, and 0% says measured, and perfect". The committed card is still null
+today because `score` wrote it when there was one fetch. **Delete
+`data/feedlab/jvn.fetches.json` down to a single entry before the next audit, or
+give `record_fetch` a minimum interval.** It is gitignored working state, so this
+costs nothing and is not editing a published record.
 
 This is item 2's "per-feed shrink baselines surviving a profile change" arriving
 one level down, at the provider set rather than the feed set, and `record_fetch`
@@ -249,6 +282,29 @@ costs a session.
   72-hour clock), changes `feed_count`'s meaning, collides with the 250-char
   `refs` truncation, and breaks every `?src=csaf` link already shared. The
   review panel reached the same conclusion from six directions.
+
+### 6. `euvd`: the one argument for it is gone
+
+`euvd` is measured and **refused as a numerator source**: zero disclosure lead on
+9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
+oracle. It is a publication mirror. That has never been in doubt.
+
+The open question was whether to merge it tagged `corroborating` anyway, and the
+single reason for was that **it is the only source measured that references
+`TR-CERT` and `twcert` at all**, the two top-50 misses nothing else reached.
+
+**That reason did not survive the four-year window.** The first live run after
+the 2026-09-06 merge sights `TR-CERT` 6 times and `twcert` 15, both over the
+3-sighting floor, from feeds already merged, and `top_missed_effective` came back
+as `huawei` alone. Neither CNA needs euvd and neither ever needed a new parser;
+they needed more years of the feeds already in the profile.
+
+So what is left is the cost side on its own: no incremental route was found,
+`api/search` is not date-ordered, and covering the window means roughly 150,000
+records and 1,500 requests for rows that only corroborate. **Recommend leaving it
+out and closing this item.** It is written down rather than deleted because the
+reasoning above is what a future reader will otherwise re-derive from euvd's CNA
+count, which still looks like the best row in FEEDS.md.
 
 ---
 
