@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 241,
   "feeds": [
    "alas",
    "alpine",
@@ -17,54 +17,56 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 890921,
- "cnas_effective_alone": 17,
+ "bytes": 1862082,
+ "cnas_effective_alone": 24,
  "cnas_new_effective": 6,
  "cnas_new_effective_names": [
+  "ASUS",
   "Canon",
-  "Hitachi",
-  "LY-Corporation",
   "NEC",
   "OMRON",
-  "trendmicro"
+  "Panasonic_Holdings_Corporation",
+  "Toshiba"
  ],
- "cnas_reached": 43,
+ "cnas_reached": 56,
  "disclosure": {
-  "dated_n": 1097,
+  "dated_n": 1959,
   "lead_examples": [
+   "CVE-2024-54014",
+   "CVE-2023-35841",
    "CVE-2025-4960",
-   "CVE-2025-2146",
-   "CVE-2025-4106",
-   "CVE-2025-0824",
-   "CVE-2025-2902"
+   "CVE-2023-39223",
+   "CVE-2023-39933"
   ],
-  "lead_max_days": 226,
-  "lead_median_days": 3,
-  "lead_n": 173,
-  "lead_pct": 15.77,
-  "mirror_n": 924,
+  "lead_max_days": 469,
+  "lead_median_days": 6,
+  "lead_n": 658,
+  "lead_pct": 33.59,
+  "mirror_n": 1301,
   "undated_n": 0,
   "unpublished_examples": [
+   "CVE-2023-1658",
+   "CVE-2024-25555",
+   "CVE-2024-57391",
    "CVE-2025-71386",
-   "CVE-2025-71387",
-   "CVE-2026-16876",
-   "CVE-2026-44162",
-   "CVE-2026-44163"
+   "CVE-2025-71387"
   ],
-  "unpublished_n": 20
+  "unpublished_n": 9
  },
  "feed": "jvn",
  "health": {},
- "ids": 1117,
- "ids_new": 579,
- "scored_at": "2026-09-06T18:05:01+00:00",
+ "ids": 1968,
+ "ids_new": 1290,
+ "scored_at": "2026-09-06T21:17:15+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "6 marginal CNA(s) and 173 lead / 20 unpublished references",
- "wall_seconds": 25.0,
+ "verdict_reason": "6 marginal CNA(s) and 658 lead / 9 unpublished references",
+ "wall_seconds": 11.9,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 247,
   "feeds": [
    "alas",
    "arch",
@@ -8,6 +8,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,16 +17,15 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 683889,
- "cnas_effective_alone": 42,
- "cnas_new_effective": 2,
+ "bytes": 686099,
+ "cnas_effective_alone": 51,
+ "cnas_new_effective": 1,
  "cnas_new_effective_names": [
-  "ESET",
-  "naver"
+  "Trellix"
  ],
- "cnas_reached": 60,
+ "cnas_reached": 74,
  "disclosure": {
   "dated_n": 0,
   "lead_examples": [],
@@ -34,31 +34,28 @@
   "lead_n": 0,
   "lead_pct": 0.0,
   "mirror_n": 0,
-  "undated_n": 2520,
+  "undated_n": 3939,
   "unpublished_examples": [
-   "CVE-2025-141765",
-   "CVE-2026-12184",
-   "CVE-2026-22802",
-   "CVE-2026-25832",
-   "CVE-2026-27852"
+   "CVE-2023-47342",
+   "CVE-2024-28661",
+   "CVE-2024-6837",
+   "CVE-2024-6992",
+   "CVE-2025-141765"
   ],
-  "unpublished_n": 131
+  "unpublished_n": 158
  },
  "feed": "alpine",
  "health": {},
- "ids": 2651,
- "ids_new": 45,
- "scored_at": "2026-09-04T00:54:50+00:00",
- "stability": {
-  "fetches": 2,
-  "max": 2651,
-  "min": 2651,
-  "swing_pct": 0.0
- },
+ "ids": 4097,
+ "ids_new": 67,
+ "scored_at": "2026-09-06T21:17:11+00:00",
+ "stability": null,
  "verdict": "detecting",
- "verdict_reason": "2 marginal CNA(s) and 0 lead / 131 unpublished references",
- "wall_seconds": 5.4,
+ "verdict_reason": "1 marginal CNA(s) and 0 lead / 158 unpublished references",
+ "wall_seconds": 5.6,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

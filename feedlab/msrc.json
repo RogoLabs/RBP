@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 247,
   "feeds": [
    "alas",
    "alpine",
@@ -9,6 +9,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "osv",
    "redhat",
@@ -16,54 +17,49 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 74336400,
- "cnas_effective_alone": 45,
- "cnas_new_effective": 1,
- "cnas_new_effective_names": [
-  "Tcpdump"
- ],
- "cnas_reached": 67,
+ "bytes": 140839124,
+ "cnas_effective_alone": 59,
+ "cnas_new_effective": 0,
+ "cnas_new_effective_names": [],
+ "cnas_reached": 86,
  "disclosure": {
-  "dated_n": 11145,
+  "dated_n": 17389,
   "lead_examples": [
+   "CVE-2023-41953",
    "CVE-2026-1220",
    "CVE-2026-25250",
-   "CVE-2025-4609",
-   "CVE-2025-47182",
-   "CVE-2025-47964"
+   "CVE-2023-21712",
+   "CVE-2025-4609"
   ],
-  "lead_max_days": 148,
-  "lead_median_days": 11,
-  "lead_n": 5105,
-  "lead_pct": 45.81,
-  "mirror_n": 6040,
+  "lead_max_days": 664,
+  "lead_median_days": 10,
+  "lead_n": 7445,
+  "lead_pct": 42.81,
+  "mirror_n": 9944,
   "undated_n": 0,
   "unpublished_examples": [
-   "CVE-2026-11053",
-   "CVE-2026-11099",
-   "CVE-2026-58616",
-   "CVE-2026-62904",
-   "CVE-2026-66323"
+   "CVE-2023-32002 - M",
+   "CVE-2023-38039 mariner - do not use this one",
+   "CVE-2024-0132-M",
+   "CVE-2024-9370",
+   "CVE-2026-11053"
   ],
-  "unpublished_n": 11
+  "unpublished_n": 8
  },
  "feed": "msrc",
  "health": {},
- "ids": 11156,
- "ids_new": 1854,
- "scored_at": "2026-09-04T00:54:54+00:00",
- "stability": {
-  "fetches": 3,
-  "max": 11288,
-  "min": 9651,
-  "swing_pct": 14.5
- },
- "verdict": "detecting",
- "verdict_reason": "1 marginal CNA(s) and 5105 lead / 11 unpublished references",
- "wall_seconds": 6.8,
+ "ids": 17397,
+ "ids_new": 1562,
+ "scored_at": "2026-09-06T21:17:16+00:00",
+ "stability": null,
+ "verdict": "corroborating",
+ "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
+ "wall_seconds": 10.3,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

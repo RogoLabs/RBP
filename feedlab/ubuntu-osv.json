@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 247,
   "feeds": [
    "alas",
    "alpine",
@@ -9,6 +9,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,66 +17,61 @@
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 41749480,
- "cnas_effective_alone": 85,
- "cnas_new_effective": 6,
+ "bytes": 42529880,
+ "cnas_effective_alone": 98,
+ "cnas_new_effective": 4,
  "cnas_new_effective_names": [
-  "ClickHouse",
   "Gridware",
-  "SEC-VLab",
-  "Tcpdump",
   "Toreon",
-  "naver"
+  "Trellix",
+  "odoo"
  ],
- "cnas_reached": 117,
+ "cnas_reached": 136,
  "disclosure": {
-  "dated_n": 15310,
+  "dated_n": 26025,
   "lead_examples": [
-   "CVE-2025-24528",
-   "CVE-2025-24531",
-   "CVE-2025-57833",
-   "CVE-2026-26081",
-   "CVE-2025-10256"
+   "CVE-2023-3866",
+   "CVE-2023-3865",
+   "CVE-2023-3867",
+   "CVE-2023-27539",
+   "CVE-2023-5616"
   ],
-  "lead_max_days": 350,
-  "lead_median_days": 16,
-  "lead_n": 206,
-  "lead_pct": 1.35,
-  "mirror_n": 15104,
-  "undated_n": 1,
+  "lead_max_days": 703,
+  "lead_median_days": 19,
+  "lead_n": 546,
+  "lead_pct": 2.1,
+  "mirror_n": 25479,
+  "undated_n": 14,
   "unpublished_examples": [
-   "CVE-2025-13402",
-   "CVE-2025-26843",
-   "CVE-2025-30156",
-   "CVE-2025-55662",
-   "CVE-2025-59490"
+   "CVE-2023-24283",
+   "CVE-2023-24284",
+   "CVE-2023-24285",
+   "CVE-2023-24286",
+   "CVE-2023-24287"
   ],
-  "unpublished_n": 189
+  "unpublished_n": 255
  },
  "feed": "ubuntu-osv",
  "health": {
   "capped": false,
-  "detail": "15500 ids from 42MB; skipped 290 withdrawn record(s)",
+  "detail": "26294 ids from 43MB; skipped 665 withdrawn record(s)",
   "ok": true,
-  "rows": 15500,
+  "rows": 26294,
   "status": "ok",
   "truncated": false
  },
- "ids": 15500,
- "ids_new": 404,
- "scored_at": "2026-09-04T00:54:57+00:00",
- "stability": {
-  "fetches": 4,
-  "max": 15500,
-  "min": 15500,
-  "swing_pct": 0.0
- },
+ "ids": 26294,
+ "ids_new": 789,
+ "scored_at": "2026-09-06T21:17:19+00:00",
+ "stability": null,
  "verdict": "detecting",
- "verdict_reason": "6 marginal CNA(s) and 206 lead / 189 unpublished references",
- "wall_seconds": 35.8,
+ "verdict_reason": "4 marginal CNA(s) and 546 lead / 255 unpublished references",
+ "wall_seconds": 32.6,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]
