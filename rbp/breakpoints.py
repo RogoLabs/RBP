@@ -97,52 +97,31 @@ def sweep(sheets=None, fixed=FIXED):
     return sorted(w for w in out if MIN_WIDTH <= w <= MAX_WIDTH)
 
 
-def card_layout_boundary(sheets=None):
-    """The width at or below which the .rbp tables must be in card layout.
-
-    Derived from the stylesheet rather than declared, for the same reason as the
-    sweep: this number was wrong by one pixel for the whole of the project's
-    first week, and the way it was wrong was that somebody typed it.
-
-    Found as the `max-width` of the media block that actually contains
-    `table.rbp thead`, which is the rule that switches the layout. If that rule
-    moves to a different breakpoint, this follows it.
-    """
-    sheets = stylesheets() if sheets is None else sheets
-    best = None
-    for _name, css in sheets:
-        body = strip_comments(css)
-        for m in re.finditer(r"@media([^{]*)\{", body):
-            block = _block(body, m.end() - 1)
-            if not re.search(r"table\.rbp\s+thead\s*\{[^}]*display:\s*none", block):
-                continue
-            widths_here = [int(w) for w in
-                           re.findall(r"max-width:\s*(\d+)px", m.group(1))]
-            if widths_here:
-                b = max(widths_here)
-                best = b if best is None else max(best, b)
-    if best is None:
-        raise AssertionError(
-            "no @media block contains `table.rbp thead { display: none }`, so "
-            "the card layout has no breakpoint and the render sweep cannot "
-            "know which widths must be in card mode")
-    return best
-
-
-def _block(css, open_brace):
-    """The text inside a balanced brace pair starting at `open_brace`.
-
-    `[^}]*` is wrong for a media rule, because a media rule contains rules. This
-    counts depth. Comments are stripped by the caller; an unstripped comment in
-    this file quotes braces and would end the block early, which is exactly the
-    bug rbp/contrast.py had to fix.
-    """
-    depth = 0
-    for i in range(open_brace, len(css)):
-        if css[i] == "{":
-            depth += 1
-        elif css[i] == "}":
-            depth -= 1
-            if depth == 0:
-                return css[open_brace + 1:i]
-    return css[open_brace + 1:]
+# `card_layout_boundary()` WAS HERE, and it is not coming back by accident.
+#
+# It derived the card-mode breakpoint by parsing `table.rbp thead { display:
+# none }` out of rbp.css, on the same principle as `sweep()` above: the number
+# is read from the rule that switches the layout rather than typed, so moving
+# the rule moves the tests with it.
+#
+# The rule is gone. `table.rbp` rendered on no page, live or built, and was
+# deleted with the rest of the unreachable component. Nothing switches to a
+# card layout any more: the front page is `<details>` rows at every width, and
+# the remaining tables are `table.table-sm`, which stays tabular and scrolls
+# inside its own bounded box.
+#
+# So there is nothing left to derive, and the honest move was to delete the
+# derivation rather than repoint it. Repointing it at `table.table-sm` would
+# have kept the name and measured a different property; keeping one `table.rbp`
+# rule alive purely so this function had something to parse would have been a
+# rule that exists to be tested, which is what the review found in the first
+# place.
+#
+# WHAT THIS COST, stated because a deletion that quietly reduces coverage is
+# the failure mode this file's docstring is about: the two card-mode assertions
+# in tests/render/test_layout.py went with it. `sweep()` did not depend on this
+# function and is unchanged, so every width is still swept and every other
+# render check still runs at all 19 of them.
+#
+# If a card layout is ever reintroduced, derive its boundary again. Do not type
+# the number: the 768-versus-767 defect is what this module exists for.

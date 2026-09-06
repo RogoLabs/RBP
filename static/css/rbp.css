@@ -86,8 +86,10 @@
    than left: dead CSS is what let a hand-typed test list look complete while
    omitting a chip that WAS rendering. */
 /* chip-none carried --color-text-muted at 1.75, which is the EXACT ratio the
-   comment further down this file claims to have fixed: that fix created a new
-   token and applied it to td.unattributed, and the chip kept the old one. */
+   comment further down this file claims to have fixed: that fix created
+   --rbp-text-muted and repointed the rules it knew about, and the chip kept the
+   old token. The rule it did repoint has since been deleted; this one had not
+   been found, which is the whole reason it is called out here. */
 .chip-none    { background: var(--color-bg-secondary); color: #666b70; }
 
 /* DARK THEME. Solved separately against #151821, the card surface, because a
@@ -102,24 +104,6 @@
 [data-theme="dark"] .chip-corrob { color: #4ade80; }
 [data-theme="dark"] .chip-none   { background: #262a36; color: #b6bcc7; }
 
-/* WHY `table.rbp` IS STILL HERE, though no page emits it.
-   
-   Its one emitter is method.html's misses table, behind `{% if grader.misses %}`,
-   and the grader has no misses, so the whole component renders nowhere: not on a
-   built page, not on the live site. Round 9's review said to delete it.
-   
-   It is not a pile of dead lines. `rbp.breakpoints.card_layout_boundary()` DERIVES
-   the render sweep's card-mode breakpoint by parsing `table.rbp thead { display:
-   none }` out of this file, `tests/render/_measure.py` reads the same rule to tell
-   which layout a table is in, and five a11y tests assert its focus ring, its
-   header fill and its per-cell labels directly against this source.
-   
-   Removing it is a subsystem change with its own blast radius, not a deletion.
-   Two attempts at it in one sitting each broke the dark-theme contrast rule two
-   sections down, because that rule shares one body across three selector lines
-   and only the last carries the brace. Left standing deliberately, with the
-   reason recorded, rather than half-removed. */
-
 /* ---- tables ------------------------------------------------------------ */
 /* A BOUNDED scrollport, so `position: sticky` on the header actually has
    something to stick to. This was `overflow-x: auto` with no max-height, which
@@ -132,36 +116,6 @@
   max-height: calc(100vh - 8rem);
   overflow: auto;
 }
-table.rbp {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 0.9rem;
-  min-width: 940px;
-}
-table.rbp th {
-  text-align: left;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  padding: 0.6rem 0.7rem;
-  border-bottom: 2px solid var(--color-border);
-  background: var(--color-bg-secondary);
-  white-space: nowrap;
-  position: sticky;
-  top: 0;
-}
-table.rbp th[data-sort] { cursor: pointer; user-select: none; }
-table.rbp th[data-sort]:hover { color: var(--color-primary); }
-table.rbp th[aria-sort="descending"]::after { content: " \25BC"; font-size: 0.7em; }
-table.rbp th[aria-sort="ascending"]::after  { content: " \25B2"; font-size: 0.7em; }
-table.rbp td {
-  padding: 0.55rem 0.7rem;
-  border-bottom: 1px solid var(--color-border-light);
-  vertical-align: top;
-}
-table.rbp tbody tr:hover { background: var(--color-bg-hover); }
 td.num, th.num {
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -169,11 +123,6 @@ td.num, th.num {
   white-space: nowrap;
 }
 td.id { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; }
-td.desc { color: var(--color-text-secondary); min-width: 22rem; }
-/* The AA-corrected token. The generic rule kept the inherited one while the
-   table-scoped rule below was fixed, so the same class rendered at two
-   different ratios depending on which table it landed in. */
-td.unattributed { color: var(--rbp-text-muted); font-style: italic; }
 
 /* ---- fan-out feed sub-rows (/status) ----------------------------------- */
 /*
@@ -214,32 +163,6 @@ td.indent { padding-left: 1.6rem; }
 */
 table.table-sm td.mono { overflow-wrap: anywhere; }
 
-/* ---- filter bar -------------------------------------------------------- */
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  align-items: center;
-  margin-bottom: var(--spacing-md);
-}
-.filters input[type="search"], .filters select {
-  padding: 0.4rem 0.6rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--border-radius);
-  background: var(--color-bg-content);
-  color: var(--color-text-primary);
-  font-family: inherit;
-  font-size: 0.9rem;
-}
-.filters input[type="search"] { min-width: 15rem; flex: 1 1 15rem; }
-.filters label {
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  font-weight: 600;
-}
-
 /* ---- caveat block ------------------------------------------------------ */
 .caveat {
   border-left: 3px solid var(--color-primary);
@@ -250,9 +173,6 @@ table.table-sm td.mono { overflow-wrap: anywhere; }
 }
 .caveat p:last-child { margin-bottom: 0; }
 .caveat.warn { border-left-color: var(--color-warning); }
-
-/* ---- histogram --------------------------------------------------------- */
-.histo { display: flex; align-items: flex-end; gap: 2px; height: 5rem; margin: var(--spacing-md) 0 0; }
 
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .small { font-size: 0.85rem; }
@@ -312,36 +232,6 @@ blockquote p:last-child { margin-bottom: 0; }
 }
 [data-theme="dark"] .metric-value { color: var(--color-accent); }
 
-/* The ported sheet carries an UNSCOPED `tbody tr:nth-child(2n)` with a
-   hardcoded rgba(248,249,250,.5) fill and no dark override, so it striped every
-   table on the page with a near-white band on a near-black ground and dropped
-   link contrast badly. Restated here scoped to our own table and driven by a
-   token, so it resolves correctly in both themes. */
-table.rbp tbody tr:nth-child(2n) { background-color: var(--color-bg-secondary); }
-table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover); }
-
-/* The certainty qualifier that must accompany every rule strength, and the
-   independent-source clarification. Deliberately a block rather than a title
-   attribute: a hedge that only appears on mouse hover is not a hedge. Sized and
-   coloured to pass AA against the card background rather than to disappear. */
-.qualifier {
-  display: block;
-  margin-top: 0.2rem;
-  font-size: 0.72rem;
-  line-height: 1.3;
-  color: var(--color-text-secondary);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  letter-spacing: 0.02em;
-}
-
-/* The bound strip: the qualifiers that make the headline safe to use, directly
-   under it. Every one of these lived three clicks away or in a sibling file while
-   the count itself was the whole product. Deliberately plain and small: it is
-   context, not a second headline competing with the first. */
-
-/* A tile's denominator. Four tiles previously carried four different unstated
-   bases, and a reader takes them all as shares of the headline. */
-
 /* ==========================================================================
    Accessibility (review item 17)
    ==========================================================================
@@ -362,10 +252,11 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
      text-muted       1.75 FAIL     5.44
      link             3.80 FAIL     5.43
 
-   The 1.75 was td.unattributed, the site's own abstention marker, on the majority
-   of rows. The least certain cell on the page was the least legible one, so the
-   site's conservatism was the part a reader could not see. That is a semantic
-   failure as much as a standards one. */
+   The 1.75 was the abstention marker, the site's own statement that it does not
+   know, on the majority of rows. The least certain cell on the page was the
+   least legible one, so the site's conservatism was the part a reader could not
+   see. That is a semantic failure as much as a standards one. The cell it was
+   measured on is gone; the tokens it produced carry the whole site. */
 :root {
   /* THE INHERITED TOKENS, CORRECTED AT THE ROOT.
      
@@ -397,12 +288,10 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
      moment the list page used it. Semantic colour still has to be
      readable; a signal nobody can read is decoration. */
   --rbp-age: #8A5013;
-  /* Two sticky offsets have to agree, so the header height is a token. */
-  --rbp-thead-h: 2.5rem;
 }
 [data-theme="dark"] {
   /* Same corrections for dark. --color-text-muted is #6b7280 there, which is
-     3.67 on the card surface and is what .histo-labels reads at. */
+     3.67 on the card surface. */
   --color-text-muted: #9aa3b2;
   /* --color-text-secondary HAS TO BE RE-ASSERTED HERE, and it was missing.
      
@@ -437,23 +326,25 @@ table.rbp tbody tr:nth-child(2n):hover { background-color: var(--color-bg-hover)
   --rbp-age: #D9A05B;
 }
 
-table.rbp th { color: var(--rbp-text-secondary); }
-table.rbp td.desc { color: var(--rbp-text-secondary); }
-table.rbp td.unattributed { color: var(--rbp-text-muted); }
-table.rbp a { color: var(--rbp-link); }
-.qualifier, .result-count, .filters label,
-.page-header p.text-muted, .text-muted { color: var(--rbp-text-secondary); }
+/* THIS RULE CARRIED THREE DEAD SELECTORS AND TWO LIVE ONES, across two lines
+   with only the second holding the brace, so "delete the dead line" took the
+   live half with it twice. The dead three are gone and the body stays.
 
-table.rbp thead th {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  /* Its own fill. It previously shared the even-row stripe token, so a sticky
-     header scrolled over rows of the same colour. */
-  background: var(--color-bg-content);
-  box-shadow: inset 0 -2px 0 var(--color-border);
-  height: var(--rbp-thead-h);
-}
+   WHAT IT IS ACTUALLY WORTH, measured rather than inherited, because the note
+   that used to sit here said losing it dropped `.text-muted` to 2.54:1 in dark
+   and that is not true. In DARK this rule never applies at all: style.css sets
+   `[data-theme="dark"] .text-muted` from --color-text-secondary with
+   `!important`, which wins outright. The 2.54 was that token going un-asserted
+   for dark, which is a different fix, still in place two blocks up, and guarded
+   by test_a_root_override_does_not_silently_undo_the_dark_theme.
+
+   What this rule buys is LIGHT theme, where it wins on source order and swaps
+   #5a6168 for the darker #52585e: 6.07 worst case against 5.30 without it.
+   Both clear AA, so deleting it is a real loss of headroom and not a failure,
+   and no test goes red if it goes. Keep it, and keep the reason honest: the
+   next person to read this needs to know which half of the pair is load-bearing
+   and that the scary number belongs to the other one. */
+.page-header p.text-muted, .text-muted { color: var(--rbp-text-secondary); }
 
 /* FOCUS. One outline rule existed in the entire project, so no focus treatment
    was ever designed, on a site whose primary surface is a sortable table. */
@@ -467,42 +358,6 @@ select:focus-visible {
   border-radius: 2px;
 }
 
-/* Sorting was a click listener on a non-focusable th: seven columns unreachable
-   without a pointer (SC 2.1.1, level A), while aria-sort was maintained
-   correctly, so the state was announceable and the control was inoperable. */
-table.rbp th button.sortbtn {
-  all: unset;
-  cursor: pointer;
-  font: inherit;
-  color: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25em;
-  width: 100%;
-}
-table.rbp th button.sortbtn:hover { color: var(--rbp-link); }
-/* `all: unset` on the sort button is specificity (0,2,3) and beat the project's
-   single focus rule, so seven keyboard-operable controls had NO visible focus
-   indicator. SC 2.4.7, and it is the control a keyboard user reaches first on
-   the page the site most wants cited. Matched at the same specificity so it
-   actually applies. */
-table.rbp th button.sortbtn:focus-visible {
-  outline: 3px solid var(--rbp-link);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-table.rbp caption {
-  caption-side: top;
-  text-align: left;
-  padding: 0 0 var(--spacing-sm);
-  font-size: 0.85rem;
-  color: var(--rbp-text-secondary);
-  max-width: 90ch;
-}
-
 /* Empty is not a warning, so it does not get .caveat warn's amber. */
 .empty-state {
   border: 1px dashed var(--color-border);
@@ -514,57 +369,15 @@ table.rbp caption {
 }
 .empty-state strong { color: var(--color-text-primary); }
 
-/* BELOW 768px the table laid out at min-content 2,488px inside a 351px wrapper, a
-   7.1x overflow that `min-width: 940px` guarantees can never reflow, so 86% of
-   every row was off screen and Inferred owner was never visible on a phone. And
-   `.filters` wrapped between each label and its own control, so three visible
-   labels sat beside controls they did not describe.
-
-   rbp.css contained ZERO @media rules, so this is the first breakpoint in a layer
-   that had none. */
-/* 768, NOT 767, and the single pixel was a real failure.
+/* 768, NOT 767, and the single pixel was a real failure. It applies to the
+   reflow block further down, which is now the only 768 block in this file.
    
    style.css opens `@media (max-width: 768px)` with `table { min-width: 600px }`
-   and `th, td { white-space: nowrap }`. This block opened at 767px, so at
-   EXACTLY 768px the card layout was off while nowrap and the 600px floor were
-   on, and roughly three quarters of every row sat off screen. A viewport is not
-   an unusual width to be at: 768 is the iPad portrait width. */
+   and `th, td { white-space: nowrap }`. A block opening at 767px leaves EXACTLY
+   768px, the iPad portrait width, with both of those on and nothing undoing
+   them. Whatever else changes here, do not move the number by one. */
 @media (max-width: 768px) {
-  .filters { display: grid; grid-template-columns: 1fr; gap: var(--spacing-xs); }
-  .filters label { margin-bottom: -0.25rem; }
-  .filters input[type="search"], .filters select { width: 100%; min-width: 0; }
-
   .tablewrap { max-height: none; overflow: visible; }
-  table.rbp { min-width: 0; }
-  table.rbp thead { display: none; }
-  table.rbp, table.rbp tbody, table.rbp tr, table.rbp td { display: block; width: auto; }
-  table.rbp tr {
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    padding: var(--spacing-sm);
-    margin-bottom: var(--spacing-sm);
-  }
-  table.rbp td {
-    border: 0;
-    padding: 0.2rem 0;
-    text-align: left !important;
-    /* Explicitly undone. style.css sets `th, td { white-space: nowrap }` at this
-       same breakpoint, and the card layout never reset it, so cells that are now
-       stacked blocks still refused to wrap and pushed the page sideways. */
-    white-space: normal;
-    overflow-wrap: anywhere;
-  }
-  /* The label comes from the cell, so a hedge sits next to the claim it
-     qualifies rather than in a header row that is no longer on screen. */
-  table.rbp td[data-label]::before {
-    content: attr(data-label) ": ";
-    font-size: 0.7rem;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--rbp-text-muted);
-    display: block;
-  }
-  table.rbp td.desc { min-width: 0; }
 }
 
 /* PRINT stripped every hedge. The inherited print block forces
@@ -575,18 +388,24 @@ table.rbp caption {
    no scrollbar clipped the page. */
 @media print {
   .tablewrap { max-height: none !important; overflow: visible !important; }
-  table.rbp { min-width: 0 !important; font-size: 8pt; }
-  table.rbp thead th { position: static !important; }
+  /* AND THE TABLE'S OWN BOX, which is a separate container from the wrapper.
+     The reflow block above gives `table.table-sm` `display: block; overflow-x:
+     auto` so a wide figure table scrolls inside itself instead of scrolling the
+     page. That block carries no media type, so it matches PAPER too, where a
+     scroll container is a clip with no scrollbar and the reader loses the
+     columns silently. It also stops being a table, so the columns stop lining
+     up. The equivalent reset for the deleted `table.rbp` was here and left with
+     it; this is the same guarantee for the tables that are actually printed. */
+  table.table-sm { display: table !important; overflow-x: visible !important; }
   /* Keep the vocabulary legible in one ink by giving each chip a border and a
      visible label, rather than relying on colour that print flattens. */
   .chip { border: 1px solid #212529 !important; background: transparent !important; }
   .chip-must::after { content: " (MUST)"; }
   .chip-unmeasured::after { content: " (not measurable)"; }
-  td.unattributed::after { content: " (no owner inferred)"; font-style: normal; }
   .caveat, .empty-state, blockquote { border: 1px solid #212529 !important; }
   /* A printed page cannot be scrolled to the caveats, so keep them with the table. */
-  .caveat, .bound-strip { page-break-inside: avoid; }
-  .nav, .theme-toggle, .nav-toggle, .skip-link, .chart-export-btn { display: none !important; }
+  .caveat { page-break-inside: avoid; }
+  .nav, .theme-toggle, .nav-toggle, .skip-link { display: none !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -636,12 +455,11 @@ table.rbp caption {
 }
 
 
-/* White text on a light-blue fill is 2.51 in dark theme. These three are the
-   only rules that put `white` on --color-primary, and in dark that token is a
-   pale blue chosen for TEXT on a dark ground, not for a fill behind white. */
+/* White text on a light-blue fill is 2.51 in dark theme. These are the only
+   rules that put `white` on --color-primary, and in dark that token is a pale
+   blue chosen for TEXT on a dark ground, not for a fill behind white. */
 [data-theme="dark"] .skip-link,
-[data-theme="dark"] .page-header button:active,
-[data-theme="dark"] .chart-export-btn:hover {
+[data-theme="dark"] .page-header button:active {
   color: #0b1220;
 }
 
@@ -676,26 +494,10 @@ table.rbp caption {
    is the number of chips a reader can see without counting anything.
 */
 .where { line-height: 2; }
-a.src, span.src {
-  display: inline-block;
-  margin: 0 0.3rem 0.2rem 0;
-  padding: 0.1rem 0.5rem;
-  border: 1px solid var(--color-border);
-  border-radius: 999px;
-  font-size: 0.82rem;
-  white-space: nowrap;
-  text-decoration: none;
-}
-a.src { border-color: var(--rbp-link); color: var(--rbp-link); }
-a.src:hover, a.src:focus-visible { background: var(--rbp-link); color: var(--color-bg-content); }
-/* A feed with no per-ID page is still a place the ID is showing up. Shown, and
-   visibly not a link, rather than dropped. */
-.desc .pkg { font-family: var(--font-mono, monospace); font-size: 0.85em; opacity: 0.85; }
-
 /* THE MEASURE. Body prose ran at 140-146 characters per line against a 45-75
-   readable band, on every page, because only .lead-unit had a max-width. One
+   readable band, on every page, because only the lead had a max-width. One
    rule, applied where prose actually is. */
-.page-header p, .card-body > p, .lead-plain, .caveat p { max-width: 68ch; }
+.page-header p, .card-body > p, .caveat p { max-width: 68ch; }
 
 /* ==========================================================================
    THE LIST PAGE. The lead, the source inventory, a sticky control bar, and the
@@ -1104,8 +906,8 @@ body.locked{overflow:hidden}
   .panel{padding:20px 18px 48px}
 }
 
-/* The evidence chips on the list page. Shares its look with a.src on the old
-   table, under the class the list template uses. */
+/* The evidence chips on the list page: the pill treatment the deleted table's
+   source links used, under the class the list template actually emits. */
 .where{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center}
 .wlab{font-size:.68rem;text-transform:uppercase;letter-spacing:.09em;
   color:var(--rbp-text-muted);margin-right:2px}

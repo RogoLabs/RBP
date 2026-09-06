@@ -21,11 +21,10 @@ import pytest
 
 from rbp import breakpoints
 
-from _measure import (card_mode_disagreements, document_overflow, measure,
-                      nested_overflow, page_paths, rbp_tables_in_card_mode)
+from _measure import (document_overflow, measure, page_paths, row_overflow,
+                      rows_not_stacked, rows_refusing_to_wrap, rows_squeezed)
 
 WIDTHS = breakpoints.sweep()
-BOUNDARY = breakpoints.card_layout_boundary()
 
 
 @pytest.fixture(scope="session")
@@ -66,8 +65,7 @@ def test_no_page_scrolls_sideways_at_any_swept_width(page, server, site_dir):
 # 2. nothing hides inside a nested scroll container
 # --------------------------------------------------------------------------
 
-def test_no_row_hides_behind_a_nested_scrollbar_below_the_boundary(
-        page, server, site_dir):
+def test_no_row_hides_its_content_at_any_swept_width(page, server, site_dir):
     """The measurement the panel's reviewer made, and the reason a document-level
     assertion was rejected as sufficient.
 
@@ -75,114 +73,99 @@ def test_no_row_hides_behind_a_nested_scrollbar_below_the_boundary(
     sees it. At 768px with the pre-fix stylesheets the page reported a clean
     `scrollWidth - clientWidth` of 0 while the wrapper hid 74% of every row.
 
-    Scoped to `.rbp` tables and to widths at or below the boundary. The
-    `table.table-sm` figures tables are DESIGNED to scroll inside their own box
-    there, because a three-column figure table reads worse as stacked cards, and
-    asserting over them would be asserting against a recorded decision.
+    THE SUBJECT MOVED FROM THE TABLE TO THE ROWS. This was scoped to `.rbp`
+    tables inside a `.tablewrap`, and that component rendered on no page and has
+    been deleted. Rewritten rather than deleted with it, because the defect it
+    was written for is a property of the page and not of the markup that
+    happened to carry it: the page fits, and the column carrying the evidence
+    does not.
+
+    AND IT CLOSES TWO GAPS. `rows_not_stacked` and `rows_squeezed` existed
+    before this and were called from test_mutations.py only, which proves the
+    detectors FIRE on a page deliberately broken. Nothing asserted they stay
+    quiet on the page the site actually builds, so a real regression in the row
+    layout had no check standing in front of it at any width. `row_overflow`
+    was worse: written as the row equivalent of the nested-scrollbar
+    measurement and never called from anywhere, by this test or any other.
+
+    The figures tables are deliberately not in scope. `table.table-sm` is
+    DESIGNED to scroll inside its own box below 768, because a three-column
+    figure table reads worse as stacked cards, and asserting over it would be
+    asserting against a recorded decision.
     """
     failures = []
     for name in page_paths(site_dir):
         _load(page, server, name)
         for w in WIDTHS:
-            if w > BOUNDARY:
-                continue
-            for t in nested_overflow(measure(page, w)):
-                if t["rbp"]:
-                    failures.append(
-                        f"{name} at {w}px: table.{t['cls']} hides "
-                        f"{t['hidden_px']}px ({t['hidden_pct']}% of the row) "
-                        f"behind a nested scrollbar, with {t['visible_px']}px visible")
-    assert not failures, ("row content hidden inside a scroll container:\n  "
+            m = measure(page, w)
+            # 640 is the grid's own collapse, and it is passed in rather than
+            # read from the CSS for the same reason test_mutations.py passes it:
+            # `rows_not_stacked` answers "below THIS width, are the rows
+            # stacked", so the width is the question, not an implementation
+            # detail to be derived. It is bracketed by the sweep either way.
+            for r in rows_not_stacked(m, 640):
+                failures.append(f"{name} at {w}px: a row is still in the "
+                                "three-column desktop layout")
+            for r in rows_squeezed(m):
+                failures.append(f"{name} at {w}px: a row's content column is "
+                                f"crushed to {r['bodyWidth']}px")
+            for r in rows_refusing_to_wrap(m):
+                failures.append(f"{name} at {w}px: a row's description is set "
+                                "to nowrap and will push the page sideways")
+            for r in row_overflow(m):
+                failures.append(f"{name} at {w}px: a row's content is "
+                                f"{r['hidden_px']}px wider than the row, so it "
+                                "is clipped with nothing saying so")
+    assert not failures, ("row content is hidden or crushed:\n  "
                           + "\n  ".join(failures))
 
 
 # --------------------------------------------------------------------------
 # 3. the two stylesheets agree about which layout is running
 # --------------------------------------------------------------------------
-
-def test_the_thead_and_the_cells_agree_at_every_width(page, server, site_dir):
-    """The computed-style agreement check.
-
-    Producing this value means running the cascade, specificity resolution and
-    media-query evaluation. That is why option (b), a CSS parser, was rejected:
-    not on taste, on the fact that it cannot answer this question.
-
-    The failure it exists for: rbp.css opened the card layout at `max-width:
-    767px` while style.css opened `th, td { white-space: nowrap }` at
-    `max-width: 768px`, so at exactly 768 the thead was still displayed and the
-    cells still refused to wrap. Neither stylesheet is wrong on its own.
-    """
-    failures = []
-    for name in page_paths(site_dir):
-        _load(page, server, name)
-        for w in WIDTHS:
-            # AT OR BELOW THE BOUNDARY ONLY, which is the panel's own wording and
-            # not a convenience. Above it, style.css applies no `nowrap` at all,
-            # so `white-space` is whatever each column asked for: `.id` and `.num`
-            # are deliberately nowrap and `.desc` deliberately is not. Asserting
-            # agreement up there compares a media-query state against a per-column
-            # design decision and reports the design as a defect, which it did on
-            # /data at every width from 769px up the first time this ran.
-            if w > BOUNDARY:
-                continue
-            for cls, disp, ws in card_mode_disagreements(measure(page, w)):
-                failures.append(
-                    f"{name} at {w}px: table.{cls} has thead display:{disp} "
-                    f"with cells white-space:{ws}")
-    assert not failures, ("the card layout and the mobile cell rules disagree:\n  "
-                          + "\n  ".join(failures))
+#
+# THREE TESTS STOOD HERE AND ALL THREE HAVE BEEN DELETED, not moved.
+#
+# They asked whether `table.rbp`'s thead and its cells agreed about which layout
+# was running, which is how the 768px defect was caught: rbp.css opened the card
+# layout at `max-width: 767px` while style.css opened `th, td { white-space:
+# nowrap }` at `max-width: 768px`, so at exactly 768 the thead was displayed and
+# the cells refused to wrap, and neither stylesheet was wrong on its own.
+#
+# That component rendered on no page, live or built, and has been deleted. There
+# is no card layout left anywhere on the site: the front page is `<details>`
+# rows at every width and the remaining tables are `table.table-sm`, which stays
+# tabular and scrolls inside its own box. Kept, these three would have iterated
+# over an empty list of `.rbp` tables and reported green at every width, which
+# reads identically to coverage.
+#
+# THE DEFECT CLASS DID NOT GO WITH THEM. "A breakpoint that did not fire, so a
+# narrow viewport keeps the wide layout" is asserted for the layout that
+# actually renders, by `rows_not_stacked()` and `rows_squeezed()` in check 2
+# above, and reintroduced as `DEFECT_NO_COLLAPSE` in test_mutations.py. What is
+# genuinely no longer covered is the two-stylesheet DISAGREEMENT that made 768
+# possible, because it took two files declaring a layout mode for the same
+# element and only style.css does that now.
 
 
-def test_every_rbp_table_is_in_card_mode_at_or_below_the_boundary(
-        page, server, site_dir):
-    """Agreement alone is satisfied by BOTH being off, which is the desktop
-    layout at a phone width. So the boundary itself is asserted: at or below it,
-    the card layout must actually be running."""
-    failures = []
-    for name in page_paths(site_dir):
-        _load(page, server, name)
-        for w in WIDTHS:
-            if w > BOUNDARY:
-                continue
-            rbp, in_card = rbp_tables_in_card_mode(measure(page, w))
-            if len(rbp) != len(in_card):
-                failures.append(
-                    f"{name} at {w}px: {len(rbp) - len(in_card)} of {len(rbp)} "
-                    ".rbp tables are still in table layout")
-    assert not failures, ("the card layout is not on at or below "
-                          f"{BOUNDARY}px:\n  " + "\n  ".join(failures))
-
-
-def test_every_rbp_table_is_in_table_mode_above_the_boundary(page, server, site_dir):
-    """The other direction, so a stylesheet that switched the card layout on
-    everywhere would fail rather than pass every check above.
-
-    Keyed on the thead alone. `white-space` above the boundary is a per-column
-    decision rather than a layout mode, so it says nothing about which layout is
-    running; the thead does, because hiding it IS the card layout.
-    """
-    failures = []
-    for name in page_paths(site_dir):
-        _load(page, server, name)
-        for w in WIDTHS:
-            if w <= BOUNDARY:
-                continue
-            m = measure(page, w)
-            hidden = [t for t in m["tables"]
-                      if t["rbp"] and t["theadDisplay"] == "none"]
-            if hidden:
-                failures.append(f"{name} at {w}px: {len(hidden)} .rbp table(s) "
-                                "have their column headers hidden")
-    assert not failures, ("the card layout is on above the boundary:\n  "
-                          + "\n  ".join(failures))
-
-
-def test_the_sweep_is_not_empty_and_brackets_the_boundary(site_dir):
+def test_the_sweep_is_not_empty_and_brackets_the_joins(site_dir):
     """The false-green this whole file is most exposed to: a parser that stops
     finding breakpoints leaves three fixed widths, every check above passes, and
-    the pixel that broke is the one nobody measured."""
+    the pixel that broke is the one nobody measured.
+
+    Bracketing was asserted against `card_layout_boundary()` until that
+    derivation was deleted with the component it parsed. It is asserted against
+    the three joins the site actually has instead: the row grid's collapse at
+    640, style.css's mobile block at 768, and the nav band at 900. All come out
+    of `sweep()`, so none is typed here in the sense that matters; naming them
+    is how this test says which joins it believes exist, and it fails if any
+    stops being parsed. 640 is the one the checks above depend on: it is the
+    boundary they pass to `rows_not_stacked()`.
+    """
     assert len(WIDTHS) >= 10, f"the width sweep collapsed to {WIDTHS}"
-    assert {BOUNDARY - 1, BOUNDARY, BOUNDARY + 1} <= set(WIDTHS)
+    for b in (640, 768, 900):
+        assert {b - 1, b, b + 1} <= set(WIDTHS), (
+            f"{b} is no longer bracketed by the sweep")
     assert page_paths(site_dir), "the build produced no pages to measure"
 
 
