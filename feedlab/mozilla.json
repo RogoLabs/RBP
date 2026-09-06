@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 141,
+  "effective_n": 183,
   "feeds": [
    "alas",
    "alpine",
@@ -13,11 +13,12 @@
    "osv",
    "redhat",
    "samsung",
-   "ubuntu"
+   "ubuntu",
+   "ubuntu-osv"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
- "bytes": 823134,
+ "bytes": 824731,
  "cnas_effective_alone": 1,
  "cnas_new_effective": 0,
  "cnas_new_effective_names": [],
@@ -26,10 +27,10 @@
   "dated_n": 606,
   "lead_examples": [
    "CVE-2025-5986",
-   "CVE-2025-8042",
-   "CVE-2025-8364",
    "CVE-2025-8041",
-   "CVE-2025-54143"
+   "CVE-2025-8364",
+   "CVE-2025-8042",
+   "CVE-2025-54144"
   ],
   "lead_max_days": 29,
   "lead_median_days": 6,
@@ -37,18 +38,25 @@
   "lead_pct": 5.61,
   "mirror_n": 572,
   "undated_n": 1,
-  "unpublished_examples": [],
-  "unpublished_n": 0
+  "unpublished_examples": [
+   "CVE-2026-81267"
+  ],
+  "unpublished_n": 1
  },
  "feed": "mozilla",
  "health": {},
- "ids": 607,
- "ids_new": 20,
- "scored_at": "2026-08-28T00:44:58+00:00",
- "stability": null,
+ "ids": 608,
+ "ids_new": 19,
+ "scored_at": "2026-09-04T00:54:53+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 608,
+  "min": 607,
+  "swing_pct": 0.2
+ },
  "verdict": "corroborating",
  "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
- "wall_seconds": 5.5,
+ "wall_seconds": 5.4,
  "years": [
   2025,
   2026

@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 138,
+  "effective_n": 181,
   "feeds": [
    "alas",
    "alpine",
@@ -13,29 +13,30 @@
    "msrc",
    "redhat",
    "samsung",
-   "ubuntu"
+   "ubuntu",
+   "ubuntu-osv"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
- "bytes": 306107891,
- "cnas_effective_alone": 78,
+ "bytes": 308159066,
+ "cnas_effective_alone": 79,
  "cnas_new_effective": 11,
  "cnas_new_effective_names": [
   "Arm",
   "BombadilSystems",
   "Checkmarx",
   "ClickHouse",
-  "Google_Devices",
   "Kong",
   "LY-Corporation",
   "SEC-VLab",
   "Toreon",
-  "Zoom",
-  "naver"
+  "alibaba",
+  "naver",
+  "netapp"
  ],
- "cnas_reached": 106,
+ "cnas_reached": 108,
  "disclosure": {
-  "dated_n": 12006,
+  "dated_n": 12124,
   "lead_examples": [
    "CVE-2025-25300",
    "CVE-2026-4800",
@@ -45,9 +46,9 @@
   ],
   "lead_max_days": 1985,
   "lead_median_days": 8,
-  "lead_n": 4846,
-  "lead_pct": 40.36,
-  "mirror_n": 7160,
+  "lead_n": 4868,
+  "lead_pct": 40.15,
+  "mirror_n": 7256,
   "undated_n": 14,
   "unpublished_examples": [
    "CVE-2025-0085",
@@ -56,17 +57,22 @@
    "CVE-2025-0094",
    "CVE-2025-0095"
   ],
-  "unpublished_n": 430
+  "unpublished_n": 538
  },
  "feed": "osv",
  "health": {},
- "ids": 12450,
- "ids_new": 1083,
- "scored_at": "2026-08-28T00:44:59+00:00",
- "stability": null,
+ "ids": 12676,
+ "ids_new": 981,
+ "scored_at": "2026-09-04T00:54:54+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 12676,
+  "min": 12676,
+  "swing_pct": 0.0
+ },
  "verdict": "detecting",
- "verdict_reason": "11 marginal CNA(s) and 4846 lead / 430 unpublished references",
- "wall_seconds": 10.7,
+ "verdict_reason": "11 marginal CNA(s) and 4868 lead / 538 unpublished references",
+ "wall_seconds": 11.6,
  "years": [
   2025,
   2026

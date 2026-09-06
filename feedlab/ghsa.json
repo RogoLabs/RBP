@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 141,
+  "effective_n": 183,
   "feeds": [
    "alas",
    "alpine",
@@ -13,25 +13,27 @@
    "osv",
    "redhat",
    "samsung",
-   "ubuntu"
+   "ubuntu",
+   "ubuntu-osv"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
- "bytes": 70014525,
+ "bytes": 70951638,
  "cnas_effective_alone": 70,
- "cnas_new_effective": 7,
+ "cnas_new_effective": 8,
  "cnas_new_effective_names": [
   "Checkmarx",
   "ClickHouse",
   "LY-Corporation",
   "SEC-VLab",
   "Toreon",
-  "Zoom",
-  "naver"
+  "alibaba",
+  "naver",
+  "netapp"
  ],
  "cnas_reached": 97,
  "disclosure": {
-  "dated_n": 10472,
+  "dated_n": 10550,
   "lead_examples": [
    "CVE-2025-71332",
    "CVE-2025-71319",
@@ -41,9 +43,9 @@
   ],
   "lead_max_days": 443,
   "lead_median_days": 7,
-  "lead_n": 3800,
-  "lead_pct": 36.29,
-  "mirror_n": 6672,
+  "lead_n": 3802,
+  "lead_pct": 36.04,
+  "mirror_n": 6748,
   "undated_n": 5,
   "unpublished_examples": [
    "CVE-2025-11058",
@@ -52,17 +54,22 @@
    "CVE-2025-2792",
    "CVE-2025-28269"
   ],
-  "unpublished_n": 371
+  "unpublished_n": 424
  },
  "feed": "ghsa",
  "health": {},
- "ids": 10848,
- "ids_new": 35,
- "scored_at": "2026-08-28T00:44:57+00:00",
- "stability": null,
+ "ids": 10979,
+ "ids_new": 6,
+ "scored_at": "2026-09-04T00:54:52+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 10979,
+  "min": 10975,
+  "swing_pct": 0.0
+ },
  "verdict": "detecting",
- "verdict_reason": "7 marginal CNA(s) and 3800 lead / 371 unpublished references",
- "wall_seconds": 146.0,
+ "verdict_reason": "8 marginal CNA(s) and 3802 lead / 424 unpublished references",
+ "wall_seconds": 155.1,
  "years": [
   2025,
   2026

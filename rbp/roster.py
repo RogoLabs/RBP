@@ -3,7 +3,8 @@ The pinned CNA roster, which is the coverage denominator (review Part 2, conditi
 
 Coverage was measured against a denominator recounted from the corpus every run:
 the number of distinct assigners with at least one published CVE in a rolling
-three-year window. That number moves for reasons that have nothing to do with this
+window `coverage.WINDOW_YEARS` wide. That number moves for reasons that have
+nothing to do with this
 site's reach. It grows as CNAs publish, shrinks as the window rolls, and steps
 overnight on 1 January. A percentage trended over a base like that is weather, not
 progress, and the launch gate is a threshold on exactly that percentage.

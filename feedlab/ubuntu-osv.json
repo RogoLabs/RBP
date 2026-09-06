@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 141,
+  "effective_n": 183,
   "feeds": [
    "alas",
    "alpine",
@@ -16,7 +16,7 @@
    "samsung",
    "ubuntu"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
  "bytes": 41749480,
  "cnas_effective_alone": 85,
@@ -64,17 +64,17 @@
   "truncated": false
  },
  "ids": 15500,
- "ids_new": 461,
- "scored_at": "2026-08-31T15:38:38+00:00",
+ "ids_new": 404,
+ "scored_at": "2026-09-04T00:54:57+00:00",
  "stability": {
-  "fetches": 2,
+  "fetches": 4,
   "max": 15500,
   "min": 15500,
   "swing_pct": 0.0
  },
  "verdict": "detecting",
  "verdict_reason": "6 marginal CNA(s) and 206 lead / 189 unpublished references",
- "wall_seconds": 33.7,
+ "wall_seconds": 35.8,
  "years": [
   2025,
   2026

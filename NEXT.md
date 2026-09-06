@@ -64,18 +64,7 @@ drains, not what the site can see.
 
 ## What is open
 
-### 1. Whether three years back is far enough
-
-`coverage.WINDOW_YEARS = 3` is now the single definition, read by the feed
-gather, by the coverage figure and by feedlab. They had drifted: feeds read two
-years while coverage measured three, so every 2024 CNA counted as covered was
-measured against ids the pipeline could not surface.
-
-Going further back is a judgement about relevance, not cost. Widening from two
-to three was measured at debian +1.0s and alas +0.0s, because these feeds
-download in bulk and filter locally.
-
-### 2. The review panel's list, `docs/reviews/REVIEW-round9.md`
+### 1. The review panel's list, `docs/reviews/REVIEW-round9.md`
 
 24 FIX items and 12 DELETE items, ranked, with the refuted items recorded
 separately so they are not silently lost. F2, the blocker, is fixed.
@@ -111,6 +100,27 @@ dark-theme contrast rule, which shares one body across three selector lines.
 The panel's own balance was 21 removals against 7 additions. Prefer the DELETE
 list when in doubt; this project's documented failure mode is accreting guards
 and caveats around a list and its links.
+
+### 2. Three measured feed candidates, none merged
+
+Measured 2026-09-05 against the 2026-08-31 baseline. Scorecards and every probed
+route, failures included, in `feedlab/_candidates.json`; the reasoning and the
+traps are in FEEDS.md under "MEASURED 2026-09-05".
+
+`csaf:ncsc-nl` (+18 marginal CNAs) and `csaf:trendmicro` (+1) are each **one
+`CSAF_PROVIDERS` line and no code**. `jvn` (+9) needs a small adapter: the English
+yearly RDFs list the coordinated advisories, then one `getVulnDetailInfo` call each.
+Together they take `cnas_effective` 183 to 212 and the gate 45/50 to 47/50, clearing
+`qnap` and `juniper`.
+
+`euvd` is measured and **refused as a numerator source**: zero disclosure lead on
+9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live oracle.
+It is a publication mirror. Merging it as `corroborating` is still an open question
+and the reasons both ways are written down. **Do not merge it as detecting to pick
+up `TR-CERT` and `twcert`**, which is exactly what its CNA count invites.
+
+None of the four has a `stability` figure or has been through `feedlab score`, so
+each still wants an adapter and a real scorecard before it goes in the profile.
 
 ### 3. FEEDS.md section 3's three remaining guards
 
@@ -208,6 +218,16 @@ Each of these was decided with reasoning that is in `git log`. Re-litigating one
 costs a session.
 
 - **No attribution.** No CNA is named on any row, in any field, in any format.
+- **The window is four years, and five is the wrong way to widen it.**
+  `coverage.WINDOW_YEARS = 4` since 2026-09-05, measured with four full gathers
+  rather than argued. Four admits ~40 reserved rows over three and is the widest
+  window at which no feed truncates that is not already truncating. Five buys 13
+  rows more and breaks two feeds, and the breakage does not stay in the years
+  being added: `ubuntu-osv` returns 5,502 ids numbered 2024 at three and four
+  years, 2,375 at five and none uncapped. **If five ever looks attractive, the
+  thing to change is `ubuntu-osv`'s 8 GB ceiling and `ghsa`'s 40-page cap, not
+  the window.** Full table and reasoning in the block comment on
+  `coverage.WINDOW_YEARS`.
 - **The corroborated / independent-origin count is gone**, not repointed. It
   produced a second headline beside `summary.total`.
 - **The launch-day epoch is retired, unused.** Setting it now would take a

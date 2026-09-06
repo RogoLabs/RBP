@@ -1,0 +1,1861 @@
+{
+ "candidates": {
+  "csaf:ncsc-nl": {
+   "cost": {
+    "advisories": 1030,
+    "megabytes_cold": 111.7,
+    "requests_cold": 1031,
+    "wall_seconds_cold": 87.6,
+    "warm": "incremental: feed_csaf reads changes.csv and fetches only new or changed advisories"
+   },
+   "coverage": {
+    "absent_from_corpus": 141,
+    "cnas_new_effective": 18,
+    "cnas_reached": 127,
+    "feed": "csaf:ncsc-nl",
+    "in_window_ids": 12730,
+    "new_effective": [
+     "Anolis",
+     "Arista",
+     "BT",
+     "CIRCL",
+     "Checkmarx",
+     "ESET",
+     "Hanwha_Vision",
+     "Moxa",
+     "N-able",
+     "NCSC-NL",
+     "Tcpdump",
+     "Zohocorp",
+     "Zyxel",
+     "juniper",
+     "netapp",
+     "qnap",
+     "symantec",
+     "trendmicro"
+    ],
+    "not_in_baseline": 5967,
+    "reserved": 0,
+    "top_cnas": [
+     [
+      "microsoft",
+      3443
+     ],
+     [
+      "apple",
+      1376
+     ],
+     [
+      "oracle",
+      1306
+     ],
+     [
+      "adobe",
+      931
+     ],
+     [
+      "siemens",
+      467
+     ],
+     [
+      "sap",
+      381
+     ],
+     [
+      "google_android",
+      363
+     ],
+     [
+      "cisco",
+      362
+     ],
+     [
+      "GitLab",
+      324
+     ],
+     [
+      "ibm",
+      225
+     ],
+     [
+      "Linux",
+      224
+     ],
+     [
+      "GitHub_M",
+      211
+     ]
+    ],
+    "unpublished_or_absent": 157
+   },
+   "disclosure": {
+    "dated_n": 15260,
+    "lead_examples": [
+     "CVE-2024-40858",
+     "CVE-2024-4994",
+     "CVE-2025-21589",
+     "CVE-2024-28988",
+     "CVE-2024-7586"
+    ],
+    "lead_max_days": 519,
+    "lead_median_days": 8,
+    "lead_n": 621,
+    "lead_pct": 4.07,
+    "mirror_n": 14639,
+    "undated_n": 4,
+    "unpublished_examples": [
+     "CVE-2016-10000",
+     "CVE-2024-34735",
+     "CVE-2024-36223",
+     "CVE-2024-38393",
+     "CVE-2024-45110"
+    ],
+    "unpublished_n": 142
+   },
+   "live_reservation_sample": {
+    "PUBLISHED": 48,
+    "REJECTED": 1,
+    "RESERVED": 11,
+    "sampled": 60
+   },
+   "verdict": "detecting",
+   "why": "18 marginal CNA(s) and 621 lead / 142 unpublished references"
+  },
+  "csaf:trendmicro": {
+   "cost": {
+    "advisories": 7,
+    "megabytes_cold": 0.1,
+    "requests_cold": 8,
+    "wall_seconds_cold": 1.4,
+    "warm": "incremental, same mechanism"
+   },
+   "coverage": {
+    "absent_from_corpus": 0,
+    "cnas_new_effective": 1,
+    "cnas_reached": 2,
+    "feed": "csaf:trendmicro",
+    "in_window_ids": 27,
+    "new_effective": [
+     "trendmicro"
+    ],
+    "not_in_baseline": 26,
+    "reserved": 0,
+    "top_cnas": [
+     [
+      "trendmicro",
+      26
+     ],
+     [
+      "Chrome",
+      1
+     ]
+    ],
+    "unpublished_or_absent": 0
+   },
+   "disclosure": {
+    "dated_n": 29,
+    "lead_examples": [
+     "CVE-2025-53378",
+     "CVE-2026-10001",
+     "CVE-2025-49154",
+     "CVE-2025-49155",
+     "CVE-2025-49156"
+    ],
+    "lead_max_days": 13,
+    "lead_median_days": 7,
+    "lead_n": 17,
+    "lead_pct": 58.62,
+    "mirror_n": 12,
+    "undated_n": 0,
+    "unpublished_examples": [],
+    "unpublished_n": 0
+   },
+   "live_reservation_sample": {
+    "note": "no absent-from-corpus ids to sample",
+    "sampled": 0
+   },
+   "verdict": "detecting",
+   "why": "1 marginal CNA(s) and 17 lead / 0 unpublished references"
+  },
+  "euvd": {
+   "cost": {
+    "megabytes_cold": 23.6,
+    "records": 12000,
+    "requests_cold": 120,
+    "wall_seconds_cold": 127.2,
+    "warm": "no incremental route found; api/search is not date-ordered, so the whole window is ~150,000 records / ~1,500 requests"
+   },
+   "coverage": {
+    "absent_from_corpus": 2919,
+    "cnas_new_effective": 16,
+    "cnas_reached": 142,
+    "feed": "euvd",
+    "in_window_ids": 11599,
+    "new_effective": [
+     "BlackDuck",
+     "CIRCL",
+     "CSA",
+     "INCD",
+     "Kaspersky",
+     "LY-Corporation",
+     "Mandiant",
+     "N-able",
+     "NCSC-FI",
+     "Octopus",
+     "Secur0",
+     "THA-PSIRT",
+     "TR-CERT",
+     "WatchGuard",
+     "ZUSO_ART",
+     "twcert"
+    ],
+    "not_in_baseline": 4841,
+    "reserved": 0,
+    "top_cnas": [
+     [
+      "microsoft",
+      1522
+     ],
+     [
+      "oracle",
+      892
+     ],
+     [
+      "GitHub_M",
+      836
+     ],
+     [
+      "Linux",
+      734
+     ],
+     [
+      "adobe",
+      600
+     ],
+     [
+      "VulnCheck",
+      569
+     ],
+     [
+      "redhat",
+      480
+     ],
+     [
+      "Chrome",
+      349
+     ],
+     [
+      "Patchstack",
+      264
+     ],
+     [
+      "mitre",
+      241
+     ],
+     [
+      "VulDB",
+      185
+     ],
+     [
+      "ibm",
+      183
+     ]
+    ],
+    "unpublished_or_absent": 2931
+   },
+   "disclosure": {
+    "dated_n": 9066,
+    "lead_examples": [],
+    "lead_max_days": null,
+    "lead_median_days": null,
+    "lead_n": 0,
+    "lead_pct": 0.0,
+    "mirror_n": 9066,
+    "undated_n": 0,
+    "unpublished_examples": [
+     "CVE-2021-38489",
+     "CVE-2021-43613",
+     "CVE-2021-43614",
+     "CVE-2021-44319",
+     "CVE-2021-44320"
+    ],
+    "unpublished_n": 2934
+   },
+   "live_reservation_sample": {
+    "PUBLISHED": 60,
+    "RESERVED": 0,
+    "sampled": 60
+   },
+   "verdict": "detecting",
+   "why": "16 marginal CNA(s) and 0 lead / 2934 unpublished references"
+  },
+  "jvn": {
+   "cost": {
+    "advisories": 582,
+    "megabytes_cold": 5.3,
+    "requests_cold": 585,
+    "wall_seconds_cold": 80.2,
+    "warm": "no conditional route measured; the 3 yearly RDFs are cheap, the 582 detail calls are not incremental as probed"
+   },
+   "coverage": {
+    "absent_from_corpus": 14,
+    "cnas_new_effective": 9,
+    "cnas_reached": 48,
+    "feed": "jvn",
+    "in_window_ids": 1525,
+    "new_effective": [
+     "Canon",
+     "ESET",
+     "Hitachi",
+     "LY-Corporation",
+     "NEC",
+     "OMRON",
+     "Panasonic_Holdings_Corporation",
+     "Toshiba",
+     "trendmicro"
+    ],
+    "not_in_baseline": 987,
+    "reserved": 0,
+    "top_cnas": [
+     [
+      "jpcert",
+      716
+     ],
+     [
+      "microsoft",
+      418
+     ],
+     [
+      "trendmicro",
+      69
+     ],
+     [
+      "Toshiba",
+      43
+     ],
+     [
+      "NEC",
+      38
+     ],
+     [
+      "Canon",
+      30
+     ],
+     [
+      "redhat",
+      27
+     ],
+     [
+      "apache",
+      25
+     ],
+     [
+      "Hitachi",
+      21
+     ],
+     [
+      "GitHub_M",
+      20
+     ],
+     [
+      "oracle",
+      12
+     ],
+     [
+      "mitre",
+      11
+     ]
+    ],
+    "unpublished_or_absent": 14
+   },
+   "disclosure": {
+    "dated_n": 1631,
+    "lead_examples": [
+     "CVE-2025-4960",
+     "CVE-2024-35244",
+     "CVE-2024-28955",
+     "CVE-2024-36248",
+     "CVE-2024-29146"
+    ],
+    "lead_max_days": 226,
+    "lead_median_days": 4,
+    "lead_n": 376,
+    "lead_pct": 23.05,
+    "mirror_n": 1255,
+    "undated_n": 0,
+    "unpublished_examples": [
+     "CVE-2024-25555",
+     "CVE-2024-57391",
+     "CVE-2025-71386",
+     "CVE-2025-71387",
+     "CVE-2026-16876"
+    ],
+    "unpublished_n": 14
+   },
+   "live_reservation_sample": {
+    "PUBLISHED": 6,
+    "RESERVED": 8,
+    "sampled": 14
+   },
+   "verdict": "detecting",
+   "why": "9 marginal CNA(s) and 376 lead / 14 unpublished references"
+  }
+ },
+ "measured_against": {
+  "baseline": "data/feedlab/_baseline.json, 2026-08-31, 14 feeds, 45,895 ids, 183 effective roster CNAs",
+  "corpus": "data/all_CVEs.zip.zip dated 2026-08-20, 383,929 records",
+  "corpus_holds_no_reserved_records": "the bulk download carries PUBLISHED and REJECTED only, so `reserved` in every coverage block below is structurally 0 and `unpublished_or_absent` is really `absent`. The corpus is also 16 days older than this probe, so `absent` counts publication lag as detection. The live_reservation_sample block is the only thing here that separates the two, and for euvd it separates them decisively."
+ },
+ "probe_note": "Every route tried on 2026-09-05, kept whole including the failures, because the expensive mistake this document keeps making is re-probing a host it has already established is unreadable. `kind` is sniffed from the first bytes: a 200 with kind=html at a provider-metadata path is an error page, not a feed.",
+ "probed_at": "2026-09-05T21:26:18+00:00",
+ "probes": [
+  {
+   "bytes": 19125,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://certvde.com/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 19125,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://cert.vde.com/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://psirt.bosch.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1110,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://advisories.ncsc.nl/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, vendors",
+   "kind": "json",
+   "status": 200,
+   "url": "https://advisories.ncsc.nl/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1788,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://publisher.hitachienergy.com/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://publisher.hitachienergy.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 439,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://www.phoenixcontact.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, vendors",
+   "status": "blocked",
+   "url": "https://csaf.wago.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.pilz.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1245,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.beckhoff.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 330,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "xml",
+   "status": 404,
+   "url": "https://www.festo.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, vendors",
+   "status": "blocked",
+   "url": "https://csaf.lenovo.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 335785,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.dell.com/en-us",
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.dell.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 111,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "xml",
+   "status": 403,
+   "url": "https://www.nvidia.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://support.broadcom.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 845,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://my.f5.com/MyF5_SiteLogin?startURL=%2F.well-known%2Fcsaf%2Fprovider-metadata.json",
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://my.f5.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.f5.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 623,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 401,
+   "url": "https://supportportal.juniper.net/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.juniper.net/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1058,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.qnap.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.synology.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 199,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://www.zyxel.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 111,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "xml",
+   "status": 403,
+   "url": "https://www.netgear.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.moxa.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 851,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.trendmicro.com/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, vendors",
+   "kind": "json",
+   "status": 200,
+   "url": "https://www.trendmicro.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 3038,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.arista.com/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.arista.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1164,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://security.netapp.com/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://security.netapp.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "err": "The read operation timed out",
+   "group": "csaf well-known, vendors",
+   "status": "TimeoutError",
+   "url": "https://www.hpe.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, vendors",
+   "status": "blocked",
+   "url": "https://psirt.ibm.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.ibm.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.sap.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1450,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://www.oracle.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 90,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "other",
+   "status": 404,
+   "url": "https://www.ericsson.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 430,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://www.nokia.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1245,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.westermo.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 196,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.hikvision.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, vendors",
+   "status": "blocked",
+   "url": "https://csaf.airbus.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.acronis.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1208,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 500,
+   "url": "https://opentext.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.silabs.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 41,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, vendors",
+   "kind": "other",
+   "status": 410,
+   "url": "https://sec.cloudapps.cisco.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 391,
+   "ctype": "text/plain",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.trendmicro.com/.well-known/csaf/changes.csv",
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "other",
+   "status": 200,
+   "url": "https://www.trendmicro.com/.well-known/csaf/changes.csv"
+  },
+  {
+   "bytes": 216,
+   "ctype": "text/plain",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.trendmicro.com/.well-known/csaf/index.txt",
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "other",
+   "status": 200,
+   "url": "https://www.trendmicro.com/.well-known/csaf/index.txt"
+  },
+  {
+   "bytes": 63859,
+   "ctype": "text/csv",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://advisories.ncsc.nl/csaf/v2/changes.csv",
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "other",
+   "status": 200,
+   "url": "https://advisories.ncsc.nl/csaf/v2/changes.csv"
+  },
+  {
+   "bytes": 25749,
+   "ctype": "text/plain",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://advisories.ncsc.nl/csaf/v2/index.txt",
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "other",
+   "status": 200,
+   "url": "https://advisories.ncsc.nl/csaf/v2/index.txt"
+  },
+  {
+   "bytes": 19125,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://certvde.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 19125,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://cert.vde.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.pilz.com/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 1722,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://wid.cert-bund.de/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "json",
+   "status": 200,
+   "url": "https://wid.cert-bund.de/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 15012,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://csaf.io/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.bsi.bund.de/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 9379,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://csaf.data.security.nozominetworks.com/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://security.access.redhat.com/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "status": "blocked",
+   "url": "https://csaf.sick.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 597,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.hitachienergy.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "status": "blocked",
+   "url": "https://csaf.hitachienergy.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "status": "blocked",
+   "url": "https://psirt.hitachienergy.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 1008,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.se.com/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "json",
+   "status": 200,
+   "url": "https://www.se.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "status": "blocked",
+   "url": "https://www.austin.hitachi.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "status": "blocked",
+   "url": "https://csaf.mitsubishielectric.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.mitsubishielectric.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "status": "blocked",
+   "url": "https://csaf.omron.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.rockwellautomation.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.emerson.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.honeywell.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 394,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.yokogawa.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 55759,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.baxter.com/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.baxter.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.philips.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.bbraun.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 10,
+   "ctype": "",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "other",
+   "status": 404,
+   "url": "https://www.medtronic.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.zebra.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.genetec.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 8351,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.axis.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, ICS/medical + directory reads",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.bd.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 11528,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://cert.ssi.gouv.fr/error-404/index.html",
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.cert.ssi.gouv.fr/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 146,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://cert.at/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 146,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.cert.at/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://cert.pl/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 180102,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 1,
+   "final": "https://www.kyberturvallisuuskeskus.fi/en/",
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.ncsc.fi/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.kyberturvallisuuskeskus.fi/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 431,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://ccb.belgium.be/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 372,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://cert.be/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 10199,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.cert.se/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 874,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.ncsc.gov.uk/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 19885,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.kb.cert.org/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.jpcert.or.jp/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 13982,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 12,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://csirt.divd.nl/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 8733,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.circl.lu/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://vulnerability.circl.lu/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.enisa.europa.eu/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 3062,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://euvd.enisa.europa.eu/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://euvd.enisa.europa.eu/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 7477,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.cyber.gc.ca/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "err": "The read operation timed out",
+   "group": "csaf well-known, national CERTs + vendors",
+   "status": "TimeoutError",
+   "url": "https://www.cyber.gov.au/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.csa.gov.sg/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 321,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://advisories.ncsc.nl/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 146,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://wid.cert-bund.de/.well-known/csaf/aggregator.json"
+  },
+  {
+   "group": "csaf well-known, national CERTs + vendors",
+   "status": "blocked",
+   "url": "https://csaf.cert-bund.de/.well-known/csaf-aggregator/aggregator.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.rapid7.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 10,
+   "ctype": "",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "other",
+   "status": 404,
+   "url": "https://www.hp.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 7087,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://support.hp.com/.well-known/csaf/provider-metadata.json",
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://support.hp.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 6008,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "archive",
+   "status": 403,
+   "url": "https://www.eset.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 19,
+   "ctype": "text/plain",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "other",
+   "status": 404,
+   "url": "https://www.kaspersky.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 6376,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.zohocorp.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 327948,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.asus.com/.well-known/csaf/all-series/filter/",
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.asus.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.xerox.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 315,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.canon.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 428,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://www.nec.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 150,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "csaf well-known, national CERTs + vendors",
+   "kind": "html",
+   "status": 403,
+   "url": "https://www.toshiba.com/.well-known/csaf/provider-metadata.json"
+  },
+  {
+   "bytes": 5975,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 4,
+   "final": "https://euvdservices.enisa.europa.eu/api/lastvulnerabilities",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "json",
+   "status": 200,
+   "url": "https://euvdservices.enisa.europa.eu/api/lastvulnerabilities"
+  },
+  {
+   "bytes": 264008,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 100,
+   "final": "https://euvdservices.enisa.europa.eu/api/search?size=100",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "json",
+   "status": 200,
+   "url": "https://euvdservices.enisa.europa.eu/api/search?size=100"
+  },
+  {
+   "bytes": 3062,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://euvd.enisa.europa.eu/api/lastvulnerabilities",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 200,
+   "url": "https://euvd.enisa.europa.eu/api/lastvulnerabilities"
+  },
+  {
+   "bytes": 3000000,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 145,
+   "final": "https://vulnerability.circl.lu/api/vulnerability/last/50",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "json",
+   "status": 200,
+   "url": "https://vulnerability.circl.lu/api/vulnerability/last/50"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 404,
+   "url": "https://vulnerability.circl.lu/api/dashboard"
+  },
+  {
+   "bytes": 3000000,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 145,
+   "final": "https://cvepremium.circl.lu/api/last/50",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "json",
+   "status": 200,
+   "url": "https://cvepremium.circl.lu/api/last/50"
+  },
+  {
+   "bytes": 1179839,
+   "ctype": "application/rdf+xml",
+   "cve_ids_in_first_3MB": 1383,
+   "final": "https://jvndb.jvn.jp/en/rss/jvndb.rdf",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://jvndb.jvn.jp/en/rss/jvndb.rdf"
+  },
+  {
+   "bytes": 1251830,
+   "ctype": "application/rdf+xml",
+   "cve_ids_in_first_3MB": 505,
+   "final": "https://jvndb.jvn.jp/ja/rss/jvndb.rdf",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://jvndb.jvn.jp/ja/rss/jvndb.rdf"
+  },
+  {
+   "bytes": 250540,
+   "ctype": "text/xml",
+   "cve_ids_in_first_3MB": 50,
+   "final": "https://jvndb.jvn.jp/myjvn?method=getVulnOverviewList&feed=hnd&rangeDatePublic=n&rangeDateFirstPublished=m",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://jvndb.jvn.jp/myjvn?method=getVulnOverviewList&feed=hnd&rangeDatePublic=n&rangeDateFirstPublished=m"
+  },
+  {
+   "bytes": 22926,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 3,
+   "final": "https://www.cert.ssi.gouv.fr/avis/feed/",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.cert.ssi.gouv.fr/avis/feed/"
+  },
+  {
+   "bytes": 26132,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 29,
+   "final": "https://www.cert.ssi.gouv.fr/alerte/feed/",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.cert.ssi.gouv.fr/alerte/feed/"
+  },
+  {
+   "bytes": 10772,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 404,
+   "url": "https://cert.europa.eu/publications/security-advisories/rss"
+  },
+  {
+   "bytes": 938,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.cert-in.org.in/RSSFeed.jsp",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.cert-in.org.in/RSSFeed.jsp"
+  },
+  {
+   "bytes": 826550,
+   "ctype": "application/rss+xml",
+   "cve_ids_in_first_3MB": 12,
+   "final": "https://www.cisa.gov/cybersecurity-advisories/cybersecurity-advisories.xml",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.us-cert.gov/ncas/alerts.xml"
+  },
+  {
+   "err": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Missing Subject Key Identifier (_ssl.c:1032)>",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "status": "URLError",
+   "url": "https://www.twcert.org.tw/tw/rss-101.xml"
+  },
+  {
+   "err": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Missing Subject Key Identifier (_ssl.c:1032)>",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "status": "URLError",
+   "url": "https://www.twcert.org.tw/en/rss-101.xml"
+  },
+  {
+   "err": "<urlopen error [SSL: CERTIFICATE_VERIFY_FAILED] certificate verify failed: Missing Subject Key Identifier (_ssl.c:1032)>",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "status": "URLError",
+   "url": "https://www.twcert.org.tw/tw/cp-132-10000-c8f7d-1.html"
+  },
+  {
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "status": "blocked",
+   "url": "https://api.twcert.org.tw/api/vulnerability"
+  },
+  {
+   "bytes": 7091,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.usom.gov.tr/rss.xml",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.usom.gov.tr/rss.xml"
+  },
+  {
+   "bytes": 438,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://siberguvenlik.gov.tr/api/",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.usom.gov.tr/api/incident/index"
+  },
+  {
+   "bytes": 20000,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 404,
+   "url": "https://knvd.krcert.or.kr/rss/securityInfo.do"
+  },
+  {
+   "bytes": 3300,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.krcert.or.kr/kr/rss.do",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 200,
+   "url": "https://www.krcert.or.kr/kr/rss.do"
+  },
+  {
+   "bytes": 2287,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "html",
+   "status": 404,
+   "url": "https://www.gov.il/api/DynamicCollector"
+  },
+  {
+   "bytes": 183,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "other",
+   "status": 410,
+   "url": "https://www.wordfence.com/api/intelligence/v2/vulnerabilities/production"
+  },
+  {
+   "bytes": 26,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "json",
+   "status": 401,
+   "url": "https://patchstack.com/database/api/v2/vulnerabilities"
+  },
+  {
+   "bytes": 156196,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.zerodayinitiative.com/rss/upcoming/",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.zerodayinitiative.com/rss/upcoming/"
+  },
+  {
+   "bytes": 144594,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 172,
+   "final": "https://www.zerodayinitiative.com/rss/published/",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.zerodayinitiative.com/rss/published/"
+  },
+  {
+   "bytes": 135393,
+   "ctype": "application/rss+xml",
+   "cve_ids_in_first_3MB": 100,
+   "final": "https://vuldb.com/?rss.recent",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://vuldb.com/?rss.recent"
+  },
+  {
+   "bytes": 6528,
+   "ctype": "application/rss+xml",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://ccb.belgium.be/advisories.xml",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://cert.be/en/rss"
+  },
+  {
+   "bytes": 10070,
+   "ctype": "application/rss+xml",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.ncsc.gov.uk/api/1/services/v1/report-rss-feed.xml",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.ncsc.gov.uk/api/1/services/v1/report-rss-feed.xml"
+  },
+  {
+   "bytes": 390023,
+   "ctype": "application/rss+xml",
+   "cve_ids_in_first_3MB": 61,
+   "final": "https://www.cisa.gov/cybersecurity-advisories/all.xml",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.cisa.gov/cybersecurity-advisories/all.xml"
+  },
+  {
+   "bytes": 684,
+   "ctype": "text/plain",
+   "cve_ids_in_first_3MB": 2,
+   "final": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/delta.json",
+   "group": "non-CSAF: national CERT, aggregator and research feeds",
+   "kind": "json",
+   "status": 200,
+   "url": "https://raw.githubusercontent.com/CVEProject/cvelistV5/main/cves/delta.json"
+  },
+  {
+   "bytes": 183,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "other",
+   "status": 410,
+   "url": "https://www.wordfence.com/api/intelligence/v2/vulnerabilities/scanner"
+  },
+  {
+   "bytes": 183,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "other",
+   "status": 410,
+   "url": "https://www.wordfence.com/api/intelligence/v2/vulnerabilities/production"
+  },
+  {
+   "bytes": 180,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "json",
+   "status": 404,
+   "url": "https://www.wordfence.com/api/intelligence/v2/vulnerabilities/free"
+  },
+  {
+   "bytes": 183,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "other",
+   "status": 410,
+   "url": "https://www.wordfence.com/api/intelligence/v2/vulnerabilities"
+  },
+  {
+   "bytes": 152,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "json",
+   "status": 401,
+   "url": "https://www.wordfence.com/api/intelligence/v3/vulnerabilities/scanner"
+  },
+  {
+   "bytes": 152,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "json",
+   "status": 401,
+   "url": "https://www.wordfence.com/api/intelligence/v3/vulnerabilities/production"
+  },
+  {
+   "bytes": 0,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.wordfence.com/threat-intel/vulnerabilities/api",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "other",
+   "status": 202,
+   "url": "https://www.wordfence.com/threat-intel/vulnerabilities/api"
+  },
+  {
+   "bytes": 23865,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://patchstack.com/database/feed",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "html",
+   "status": 200,
+   "url": "https://patchstack.com/database/feed"
+  },
+  {
+   "bytes": 23856,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://patchstack.com/database/rss",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "html",
+   "status": 200,
+   "url": "https://patchstack.com/database/rss"
+  },
+  {
+   "bytes": 463024,
+   "ctype": "text/xml",
+   "cve_ids_in_first_3MB": 9,
+   "final": "https://patchstack.com/feed/1.xml",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://patchstack.com/feed"
+  },
+  {
+   "bytes": 213686,
+   "ctype": "application/rss+xml",
+   "cve_ids_in_first_3MB": 6,
+   "final": "https://wpscan.com/feed/",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://wpscan.com/feed"
+  },
+  {
+   "bytes": 114,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "json",
+   "status": 404,
+   "url": "https://wpscan.com/api/v3/wordpresses"
+  },
+  {
+   "bytes": 156196,
+   "ctype": "application/xml",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://www.zerodayinitiative.com/rss/upcoming/",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://www.zerodayinitiative.com/rss/upcoming"
+  },
+  {
+   "bytes": 133,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "json",
+   "status": 405,
+   "url": "https://api.osv.dev/v1/query"
+  },
+  {
+   "bytes": 143276,
+   "ctype": "application/json",
+   "cve_ids_in_first_3MB": 100,
+   "final": "https://euvdservices.enisa.europa.eu/api/search?size=100&page=1",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "json",
+   "status": 200,
+   "url": "https://euvdservices.enisa.europa.eu/api/search?size=100&page=1"
+  },
+  {
+   "bytes": 0,
+   "ctype": "",
+   "cve_ids_in_first_3MB": 0,
+   "final": "https://euvdservices.enisa.europa.eu/api/enisaid?id=EUVD-2025-1",
+   "group": "non-CSAF: WordPress ecosystem and ZDI",
+   "kind": "other",
+   "status": 204,
+   "url": "https://euvdservices.enisa.europa.eu/api/enisaid?id=EUVD-2025-1"
+  },
+  {
+   "bytes": 221,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: JVN routes",
+   "kind": "html",
+   "status": 404,
+   "url": "https://jvndb.jvn.jp/en/rss/jvndb_detail.rdf"
+  },
+  {
+   "bytes": 221,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: JVN routes",
+   "kind": "html",
+   "status": 404,
+   "url": "https://jvndb.jvn.jp/ja/rss/jvndb_detail.rdf"
+  },
+  {
+   "bytes": 232,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: JVN routes",
+   "kind": "html",
+   "status": 404,
+   "url": "https://jvndb.jvn.jp/en/rss/years/jvndb_detail_2026.rdf"
+  },
+  {
+   "bytes": 232,
+   "ctype": "text/html",
+   "cve_ids_in_first_3MB": 0,
+   "group": "non-CSAF: JVN routes",
+   "kind": "html",
+   "status": 404,
+   "url": "https://jvndb.jvn.jp/ja/rss/years/jvndb_detail_2026.rdf"
+  },
+  {
+   "bytes": 507869,
+   "ctype": "application/rdf+xml",
+   "cve_ids_in_first_3MB": 801,
+   "final": "https://jvndb.jvn.jp/en/rss/years/jvndb_2026.rdf",
+   "group": "non-CSAF: JVN routes",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://jvndb.jvn.jp/en/rss/years/jvndb_2026.rdf"
+  },
+  {
+   "bytes": 6756,
+   "ctype": "text/xml",
+   "cve_ids_in_first_3MB": 4,
+   "final": "https://jvndb.jvn.jp/myjvn?method=getVulnDetailInfo&feed=hnd&vulnId=JVNDB-2026-000128",
+   "group": "non-CSAF: JVN routes",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://jvndb.jvn.jp/myjvn?method=getVulnDetailInfo&feed=hnd&vulnId=JVNDB-2026-000128"
+  },
+  {
+   "bytes": 250582,
+   "ctype": "text/xml",
+   "cve_ids_in_first_3MB": 50,
+   "final": "https://jvndb.jvn.jp/myjvn?method=getVulnOverviewList&feed=hnd&rangeDatePublic=n&rangeDateFirstPublished=n&datePublicStartY=2026&maxCountItem=50",
+   "group": "non-CSAF: JVN routes",
+   "kind": "xml",
+   "status": 200,
+   "url": "https://jvndb.jvn.jp/myjvn?method=getVulnOverviewList&feed=hnd&rangeDatePublic=n&rangeDateFirstPublished=n&datePublicStartY=2026&maxCountItem=50"
+  }
+ ],
+ "what_this_is": "CANDIDATE scorecards. None of these feeds is merged and none has an adapter in rbp/feeds.py except the two CSAF ones, which need a CSAF_PROVIDERS line and no code. Written under an underscore so nothing globbing feedlab/*.json for a merged feed's verdict picks them up."
+}

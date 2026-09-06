@@ -1,25 +1,27 @@
 {
- "baseline_scored_at": "2026-08-28T00:43:40+00:00",
+ "baseline_scored_at": "2026-08-31T20:23:00+00:00",
  "feeds": {
   "alas": {
-   "cnas_new_effective": 1,
+   "cnas_new_effective": 2,
    "cnas_new_effective_names": [
-    "Tcpdump"
+    "Tcpdump",
+    "alibaba"
    ],
    "lead_n": 394,
-   "unpublished_n": 78,
+   "unpublished_n": 164,
    "verdict": "detecting",
-   "wall_seconds": 0.8
+   "wall_seconds": 0.9
   },
   "alpine": {
-   "cnas_new_effective": 1,
+   "cnas_new_effective": 2,
    "cnas_new_effective_names": [
+    "ESET",
     "naver"
    ],
    "lead_n": 0,
-   "unpublished_n": 103,
+   "unpublished_n": 131,
    "verdict": "detecting",
-   "wall_seconds": 5.7
+   "wall_seconds": 5.4
   },
   "arch": {
    "cnas_new_effective": 0,
@@ -27,97 +29,138 @@
    "lead_n": 0,
    "unpublished_n": 0,
    "verdict": "unmeasurable",
-   "wall_seconds": 3.0
+   "wall_seconds": 2.3
   },
   "csaf": {
-   "cnas_new_effective": 13,
+   "cnas_new_effective": 60,
    "cnas_new_effective_names": [
     "ABB",
+    "Absolute",
+    "Axis",
     "CERTVDE",
+    "Citrix",
+    "Commvault",
     "CyberDanube",
+    "DEVOLUTIONS",
+    "DIVD",
+    "Danfoss",
+    "Deltaww",
+    "ESET",
+    "Esri",
+    "Foxit",
+    "GE_Vernova",
+    "GitHub_P",
+    "HCL",
+    "Hitachi_Energy",
+    "Honeywell",
+    "Insyde",
+    "JetBrains",
+    "Medtronic",
     "Mitsubishi",
+    "NI",
+    "NetScaler",
+    "PTC",
+    "Pega",
+    "ProgressSoftware",
     "Rockwell",
+    "SEC-VLab",
     "SICK_AG",
+    "SN",
+    "Salesforce",
+    "SolarWinds",
+    "TPLink",
+    "Tanium",
+    "Tcpdump",
+    "Toreon",
     "Ubiquiti",
     "WPScan",
+    "YokogawaGroup",
+    "Zoom",
+    "Zscaler",
+    "atlassian",
+    "autodesk",
+    "brocade",
+    "checkpoint",
+    "dell",
     "fortinet",
+    "freebsd",
+    "hpe",
+    "ivanti",
     "jci",
+    "lenovo",
+    "naver",
     "palo_alto",
+    "sap",
     "schneider",
-    "siemens"
+    "siemens",
+    "sonicwall"
    ],
-   "lead_n": 610,
-   "unpublished_n": 61,
+   "lead_n": 4090,
+   "unpublished_n": 533,
    "verdict": "detecting",
-   "wall_seconds": 163.2
+   "wall_seconds": 1111.1
   },
   "debian": {
-   "cnas_new_effective": 11,
+   "cnas_new_effective": 6,
    "cnas_new_effective_names": [
     "ClickHouse",
-    "CyberArk",
-    "ENISA",
-    "GandC",
     "Gridware",
-    "PRJBLK",
-    "Patchstack",
     "Perforce",
+    "SEC-VLab",
     "Tcpdump",
-    "debian",
-    "tenable"
+    "Toreon"
    ],
    "lead_n": 0,
-   "unpublished_n": 230,
+   "unpublished_n": 469,
    "verdict": "detecting",
-   "wall_seconds": 1.5
+   "wall_seconds": 1.6
   },
   "ghsa": {
-   "cnas_new_effective": 7,
+   "cnas_new_effective": 8,
    "cnas_new_effective_names": [
     "Checkmarx",
     "ClickHouse",
     "LY-Corporation",
     "SEC-VLab",
     "Toreon",
-    "Zoom",
-    "naver"
+    "alibaba",
+    "naver",
+    "netapp"
    ],
-   "lead_n": 3800,
-   "unpublished_n": 371,
+   "lead_n": 3802,
+   "unpublished_n": 424,
    "verdict": "detecting",
-   "wall_seconds": 146.0
+   "wall_seconds": 155.1
   },
   "ghsa-repos": {
-   "cnas_new_effective": 4,
+   "cnas_new_effective": 3,
    "cnas_new_effective_names": [
     "ClickHouse",
     "Gridware",
-    "ThinkstAppliedResearch",
-    "zephyr"
+    "ThinkstAppliedResearch"
    ],
-   "lead_n": 5771,
-   "unpublished_n": 1231,
+   "lead_n": 5787,
+   "unpublished_n": 1299,
    "verdict": "detecting",
-   "wall_seconds": 146.7
+   "wall_seconds": 132.3
   },
   "mozilla": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "lead_n": 34,
-   "unpublished_n": 0,
+   "unpublished_n": 1,
    "verdict": "corroborating",
-   "wall_seconds": 5.5
+   "wall_seconds": 5.4
   },
   "msrc": {
-   "cnas_new_effective": 2,
+   "cnas_new_effective": 1,
    "cnas_new_effective_names": [
-    "Patchstack",
     "Tcpdump"
    ],
-   "lead_n": 4810,
-   "unpublished_n": 2,
+   "lead_n": 5105,
+   "unpublished_n": 11,
    "verdict": "detecting",
-   "wall_seconds": 5.5
+   "wall_seconds": 6.8
   },
   "osv": {
    "cnas_new_effective": 11,
@@ -126,54 +169,63 @@
     "BombadilSystems",
     "Checkmarx",
     "ClickHouse",
-    "Google_Devices",
     "Kong",
     "LY-Corporation",
     "SEC-VLab",
     "Toreon",
-    "Zoom",
-    "naver"
+    "alibaba",
+    "naver",
+    "netapp"
    ],
-   "lead_n": 4846,
-   "unpublished_n": 430,
+   "lead_n": 4868,
+   "unpublished_n": 538,
    "verdict": "detecting",
-   "wall_seconds": 10.7
+   "wall_seconds": 11.6
   },
   "redhat": {
    "cnas_new_effective": 3,
    "cnas_new_effective_names": [
     "BombadilSystems",
     "Yugabyte",
-    "hp"
+    "alibaba"
    ],
-   "lead_n": 1527,
-   "unpublished_n": 67,
+   "lead_n": 1528,
+   "unpublished_n": 133,
    "verdict": "detecting",
-   "wall_seconds": 16.1
+   "wall_seconds": 14.3
   },
   "samsung": {
-   "cnas_new_effective": 1,
-   "cnas_new_effective_names": [
-    "Samsung_Mobile"
-   ],
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
    "lead_n": 260,
    "unpublished_n": 76,
-   "verdict": "detecting",
+   "verdict": "corroborating",
    "wall_seconds": 1.5
   },
   "ubuntu": {
-   "cnas_new_effective": 3,
-   "cnas_new_effective_names": [
-    "Checkmk",
-    "ENISA",
-    "Jaspersoft"
-   ],
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
    "lead_n": 20,
-   "unpublished_n": 102,
+   "unpublished_n": 315,
+   "verdict": "corroborating",
+   "wall_seconds": 93.1
+  },
+  "ubuntu-osv": {
+   "cnas_new_effective": 6,
+   "cnas_new_effective_names": [
+    "ClickHouse",
+    "Gridware",
+    "SEC-VLab",
+    "Tcpdump",
+    "Toreon",
+    "naver"
+   ],
+   "lead_n": 206,
+   "unpublished_n": 189,
    "verdict": "detecting",
-   "wall_seconds": 1070.6
+   "wall_seconds": 35.8
   }
  },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-08-28T00:45:01+00:00"
+ "scored_at": "2026-09-04T00:54:57+00:00"
 }

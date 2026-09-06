@@ -55,6 +55,22 @@ sight.
 | window 2020-2026 | 390 | 72.4% |
 | unbounded window, every CVE ever | 392 | **72.7%** |
 
+> **The window widened to four years on 2026-09-05, so "what the site uses" is now the
+> 2023-2026 row, which this table does not have.** Re-measured against the corpus of that
+> date: 2024-2026 scores 373 (69.2%), **2023-2026 scores 382 (70.9%)**, 2022-2026 387,
+> 2020-2026 393, unbounded 395. Do not difference those against the table above; the
+> corpus has grown since it was taken, which is why the old window re-measures at 373
+> rather than 371. Read the shape, which is unchanged: the ceiling is flat past about
+> four years, and widening to the beginning of the CVE Program still buys under three
+> points.
+>
+> **Ceiling B is therefore 70.9%, not 68.8%**, and every figure in the sections below is
+> measured against the three-year window and has NOT been re-derived: the 68.8%, the 371,
+> the 117 of 371, and section 1's volume distribution. Re-derive them from a live run
+> rather than from the corpus, because the reachable count is a corpus property and the
+> position within it is not. The reasoning for four years is in the block comment on
+> `coverage.WINDOW_YEARS`.
+
 128 roster CNAs published nothing at all in the current window. 147 have never published
 three CVEs under any assigner string that matches their roster short name. A perfect
 omniscient feed inventory scores 68.8%, and widening the window to the beginning of the
@@ -916,6 +932,140 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > `TR-CERT` and `sap` are each ONE sighting short of the floor rather than unsighted,
 > so two more sightings apiece is worth three parsers. `python -m rbp.feedlab
 > near-floor` reports it.
+
+> ### MEASURED 2026-09-05. The national-CERT row was dismissed on the wrong arithmetic, and re-running it finds three feeds worth 29 CNAs.
+>
+> The re-probe above closed the national CERTs with: *"JVN and MyJVN map to `jpcert`,
+> already effective at 12 sightings; CERT-FR maps to ANSSI, which appears nowhere in
+> the top-50 miss list."*
+>
+> **That sentence prices a feed at the CNA that publishes it. The site does not
+> count feeds that way.** `coverage.compute` credits a sighting to
+> `assigner[cve_id]`, the CNA that owns the referenced ID, and never to the feed
+> that carried the reference. A coordinator feed is therefore an AGGREGATE feed:
+> one fetch of JVN credits Toshiba, NEC, Canon and Hitachi, none of which is
+> jpcert. Every merged feed here already works this way. `debian` is not merged
+> for the `debian` CNA.
+>
+> This is the same shape as the GIT trap and the `+0` distro row: an estimate
+> reached by reasoning about a feed rather than by running its ids through the
+> arithmetic that actually scores it. Scorecards in `feedlab/_candidates.json`.
+>
+> **Measured against the 2026-08-31 baseline (14 feeds, 45,895 ids, 183 effective
+> roster CNAs), reading each source's STRUCTURED id field, not a full-text regex:**
+>
+> | candidate | in-window ids | marginal CNAs | lead / dated | absent | cold cost | verdict |
+> |---|---:|---:|---|---:|---|---|
+> | `csaf:ncsc-nl` | 12,730 | **+18** | 621 / 15,260 | 142 | 87.6s, 111.7 MB, 1,030 advisories | detecting |
+> | `jvn` | 1,525 | **+9** | 376 / 1,631 | 14 | 80.2s, 5.3 MB, 585 requests | detecting |
+> | `csaf:trendmicro` | 27 | **+1** | 17 / 29 | 0 | 1.4s, 0.1 MB, 7 advisories | detecting |
+> | `euvd` | 11,599 | +16 | **0 / 9,066** | 2,934 | 127.2s, 23.6 MB, 12,000 of 386,041 records | **mirror, see below** |
+>
+> **The three detecting sources take `cnas_effective` from 183 to 212 and the gate
+> from 45/50 to 47/50.** They clear two of the five remaining top-50 misses,
+> `qnap` and `juniper`, both from NCSC-NL. The union is worth more than the parts:
+> `ASUS`, `Xerox`, `synology` and `symantec` cross the floor only when the sources
+> are combined, because each supplies one or two sightings of them.
+>
+> **`csaf:ncsc-nl` and `csaf:trendmicro` need no adapter.** Both serve valid
+> provider metadata at the well-known path and a readable directory behind it, so
+> each is one `CSAF_PROVIDERS` line. NCSC-NL's 87.6s cold sweep fits inside
+> `CSAF_PROVIDER_BUDGET_S` (300) and is incremental afterwards. It is a coordinator
+> with 1,030 advisories spanning 2024 to 2026, refreshed the day before this was
+> written. Twenty national-CERT hosts were probed at the well-known path and it is
+> the only one that answers with CSAF: CERT-FR, CERT-AT, CERT-PL, NCSC-FI, CCB,
+> CERT-BE, CERT-SE, NCSC-UK, JPCERT, CERT/CC, DIVD, CIRCL, ENISA, cyber.gc.ca,
+> cyber.gov.au and CSA Singapore do not. CISA and BSI CERT-Bund do, and both are
+> already configured.
+>
+> **`jvn` needs an adapter and it is a small one.** The English yearly RDFs
+> (`/en/rss/years/jvndb_<year>.rdf`) list the JVN-COORDINATED advisories only,
+> 582 across 2024 to 2026, against 29,231 in the Japanese feed for 2024 alone,
+> which is the iPedia mirror of NVD and is not what this buys. Each advisory then
+> needs one `getVulnDetailInfo` call. It is the best DETECTOR of the four:
+> 23.1% of its dated references lead publication, median 4 days, and 8 of the 14
+> ids absent from the corpus were RESERVED at the live oracle.
+>
+> ### EUVD LOOKS LIKE THE BIGGEST WIN ON THIS TABLE AND IS THE ONE TO REFUSE.
+>
+> ENISA's European Vulnerability Database is a real, free, structured API
+> (`euvdservices.enisa.europa.eu/api/search`), it carries the CVE id in `aliases`
+> and the CNA in `assigner`, and 12,000 records reach 16 marginal CNAs including
+> **`TR-CERT` and `twcert`, two of the three top-50 misses the other candidates do
+> not clear**. On CNA count alone it is the best row in this document since Tier 0.
+>
+> **It has zero disclosure lead on 9,066 dated references.** Not a low rate. Zero.
+> Its `datePublished` is the EUVD record's own date and it trails the CVE record
+> every single time.
+>
+> That left `unpublished_n` = 2,934 as its only route through admissibility test 2,
+> and this is where the corpus's own shape has to be said out loud: **the bulk
+> download holds PUBLISHED and REJECTED records only**, 383,929 of them with no
+> RESERVED among them, so `unpublished_n` is really `absent_from_corpus`, and the
+> corpus is dated 2026-08-20 while this probe ran on 09-05. Sixteen days of
+> ordinary publication lag arrive counted as detection.
+>
+> So all three candidates had their absent ids sampled against the live
+> reservation oracle, which is the only thing that separates the two:
+>
+> | | sampled | RESERVED now | PUBLISHED now |
+> |---|---:|---:|---:|
+> | `csaf:ncsc-nl` | 60 | **11** | 48 (+1 REJECTED) |
+> | `jvn` | 14 | **8** | 6 |
+> | `euvd` | 60 | **0** | **60** |
+>
+> **60 of 60. EUVD is a publication mirror**, and section 2's rule is that it may
+> be merged, tagged `corroborating`, and excluded from the coverage numerator. Its
+> 16 CNAs then count for nothing at the gate, `TR-CERT` and `twcert` included. A
+> version of this table that ignored the rule would read 49/50; that number is the
+> one to distrust, and it is written here only so nobody arrives at it later and
+> thinks it was missed.
+>
+> Whether to merge it as `corroborating` anyway is a real question and is not
+> answered here. Against: no incremental route was found, `api/search` is not
+> date-ordered, and covering the window means roughly 150,000 records and 1,500
+> requests for rows that corroborate. For: it is the only source measured here
+> that references `TR-CERT` and `twcert` at all.
+>
+> **Three traps, recorded because each cost time and each would cost it again.**
+>
+> 1. **MyJVN answers 200 with the failure inside the document.** `vulnId` takes
+>    one id, and a comma-separated list returns HTTP 200, a well-formed
+>    `VULDEF-Document`, and `retCd="1" errCd="VD01020607"` in a `status:Status`
+>    element. The first pass batched ten ids per call, parsed 0 CVE ids from 59
+>    batches, and recorded that as a feed with nothing in it. Read the document,
+>    not the status code. This repository's own note is "read the log rather than
+>    the exit status" and this is the same error one layer down.
+> 2. **JVN's RDF is the GIT trap again, and it happens to be harmless.** The CVE
+>    ids in `jvndb.rdf` sit inside HTML-escaped prose in `<description>`, not in
+>    any structured field: a full-text regex over the yearly RDFs finds 1,572 ids
+>    and `<sec:identifier>` finds JVNDB ids only. The structured route through
+>    `getVulnDetailInfo` returns 1,564, so the two agree here and the probe can be
+>    banked. **It agrees by luck rather than by construction**, and the 8-id gap is
+>    the part a full-text probe would have over-claimed.
+> 3. **A 200 is still not a feed.** 103 well-known CSAF paths were probed and
+>    exactly two new providers came back: NCSC-NL and Trend Micro. **Eleven
+>    answered 200 with a non-CSAF body**, all of them HTML: `www.dell.com`
+>    (335 KB of it), `www.asus.com`, `www.ncsc.fi`, `www.baxter.com`,
+>    `www.cert.ssi.gouv.fr`, `support.hp.com`, `euvd.enisa.europa.eu`,
+>    `www.arista.com`, `publisher.hitachienergy.com`, `security.netapp.com`,
+>    `my.f5.com`. This table has now been wrong about a bare 200 three times.
+>
+> **What is NOT established.** None of these has a `stability` figure, because that
+> needs three fetches 24 hours apart. None has been through `feedlab score`, which
+> is what puts a scorecard on the standard footing; `_candidates.json` carries the
+> same fields computed by the same functions, but through a probe rather than
+> through an adapter, and this document's own history says that gap is where the
+> value goes. The JVN adapter does not exist. Nothing here is merged.
+>
+> **The residual gap, after the three detecting sources, in volume order:**
+> `TR-CERT` (534), `huawei` (444, CLOSED, see the block comment in `feeds.py`),
+> `twcert` (431), `OpenHarmony` (133), `INCD` (122), `SEC-VLab` (118), `CERT-In`
+> (103), `OpenText` (101), `Acronis` (90), `Silabs` (78). The two Turkish and
+> Taiwanese CERTs remain unreachable by any route probed: `usom.gov.tr` still
+> serves the same 7,091-byte HTML document at `/rss.xml`, and every
+> `twcert.org.tw` path now fails TLS verification outright rather than returning
+> the Chinese-locale HTML it returned in August.
 
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated

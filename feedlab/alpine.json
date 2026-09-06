@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 141,
+  "effective_n": 183,
   "feeds": [
    "alas",
    "arch",
@@ -13,17 +13,19 @@
    "osv",
    "redhat",
    "samsung",
-   "ubuntu"
+   "ubuntu",
+   "ubuntu-osv"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
- "bytes": 681850,
+ "bytes": 683889,
  "cnas_effective_alone": 42,
- "cnas_new_effective": 1,
+ "cnas_new_effective": 2,
  "cnas_new_effective_names": [
+  "ESET",
   "naver"
  ],
- "cnas_reached": 59,
+ "cnas_reached": 60,
  "disclosure": {
   "dated_n": 0,
   "lead_examples": [],
@@ -32,25 +34,30 @@
   "lead_n": 0,
   "lead_pct": 0.0,
   "mirror_n": 0,
-  "undated_n": 2453,
+  "undated_n": 2520,
   "unpublished_examples": [
    "CVE-2025-141765",
    "CVE-2026-12184",
    "CVE-2026-22802",
    "CVE-2026-25832",
-   "CVE-2026-291i67"
+   "CVE-2026-27852"
   ],
-  "unpublished_n": 103
+  "unpublished_n": 131
  },
  "feed": "alpine",
  "health": {},
- "ids": 2556,
- "ids_new": 67,
- "scored_at": "2026-08-28T00:44:55+00:00",
- "stability": null,
+ "ids": 2651,
+ "ids_new": 45,
+ "scored_at": "2026-09-04T00:54:50+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 2651,
+  "min": 2651,
+  "swing_pct": 0.0
+ },
  "verdict": "detecting",
- "verdict_reason": "1 marginal CNA(s) and 0 lead / 103 unpublished references",
- "wall_seconds": 5.7,
+ "verdict_reason": "2 marginal CNA(s) and 0 lead / 131 unpublished references",
+ "wall_seconds": 5.4,
  "years": [
   2025,
   2026

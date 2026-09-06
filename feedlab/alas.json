@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 141,
+  "effective_n": 183,
   "feeds": [
    "alpine",
    "arch",
@@ -13,19 +13,21 @@
    "osv",
    "redhat",
    "samsung",
-   "ubuntu"
+   "ubuntu",
+   "ubuntu-osv"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
- "bytes": 9863685,
+ "bytes": 9963071,
  "cnas_effective_alone": 56,
- "cnas_new_effective": 1,
+ "cnas_new_effective": 2,
  "cnas_new_effective_names": [
-  "Tcpdump"
+  "Tcpdump",
+  "alibaba"
  ],
  "cnas_reached": 74,
  "disclosure": {
-  "dated_n": 11596,
+  "dated_n": 11778,
   "lead_examples": [
    "CVE-2025-0577",
    "CVE-2025-1272",
@@ -36,8 +38,8 @@
   "lead_max_days": 387,
   "lead_median_days": 10,
   "lead_n": 394,
-  "lead_pct": 3.4,
-  "mirror_n": 11202,
+  "lead_pct": 3.35,
+  "mirror_n": 11384,
   "undated_n": 0,
   "unpublished_examples": [
    "CVE-2025-30156",
@@ -46,17 +48,22 @@
    "CVE-2026-14957",
    "CVE-2026-15578"
   ],
-  "unpublished_n": 78
+  "unpublished_n": 164
  },
  "feed": "alas",
  "health": {},
- "ids": 11674,
- "ids_new": 39,
- "scored_at": "2026-08-28T00:44:54+00:00",
- "stability": null,
+ "ids": 11942,
+ "ids_new": 4,
+ "scored_at": "2026-09-04T00:54:49+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 11942,
+  "min": 11942,
+  "swing_pct": 0.0
+ },
  "verdict": "detecting",
- "verdict_reason": "1 marginal CNA(s) and 394 lead / 78 unpublished references",
- "wall_seconds": 0.8,
+ "verdict_reason": "2 marginal CNA(s) and 394 lead / 164 unpublished references",
+ "wall_seconds": 0.9,
  "years": [
   2025,
   2026

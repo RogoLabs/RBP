@@ -302,7 +302,8 @@
       <strong>{{ summary.coverage.total_cnas }} certified CNAs</strong>, pinned in this
       repository and refreshed deliberately. It used to be the
       {{ summary.coverage.get('total_assigners_in_window') }} distinct assigners seen
-      publishing in a rolling three-year window, which moves as CNAs publish, shrinks
+      publishing in a rolling {{ summary.coverage.window|length }}-year window, which
+      moves as CNAs publish, shrinks
       as the window rolls and steps overnight on 1 January: a percentage trended over
       a base like that is weather, not progress. Measuring against the roster
       <em>lowers</em> every figure below, because a CNA that has published nothing is
