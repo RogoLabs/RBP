@@ -1093,19 +1093,59 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > so the delta is like-for-like. A live `cli run` reads a fresher corpus and will
 > not reproduce these exactly; the delta is the claim here, not the absolute.
 >
-> **THE PROBE OVER-COUNTED `jvn` BY READING THE WRONG WINDOW.** It scored nine
-> marginal CNAs. The adapter scores **six**: Canon, Hitachi, LY-Corporation, NEC,
-> OMRON and trendmicro. The difference is not drift and not the adapter. The probe
-> read the 2024 yearly RDF as well as 2025 and 2026, which is `coverage_years` and
-> not the years the pipeline gathers, and `ESET`, `Toshiba` and
-> `Panasonic_Holdings_Corporation` cross the floor only on 2024 ids this profile
-> never fetches. `in_window_ids` 1,525 against the adapter's 1,117 is the same
-> error showing up in the row count.
+> **AND THE FIRST LIVE RUN DID NOT REPRODUCE THEM, BY A LOT.** Run `34056560707`,
+> `source_commit 3a9cf9a`, the push build of this merge:
 >
-> This is `test_the_baseline_gathers_the_years_the_pipeline_gathers`'s defect,
-> arriving in a candidate scorecard instead of in a baseline, where no test was
-> looking. The two windows are one function call apart and this document has now
-> confused them twice.
+> | | offline, 2-year baseline | live run, 4-year gather |
+> |---|---:|---:|
+> | `cnas_sighted` | 259 | 305 |
+> | `cnas_effective` | 208 | **263** |
+> | top-50 at the floor | 46 / 50 | **49 / 50** |
+> | top-50 misses | TR-CERT, huawei, @huntrdev, twcert | **huawei alone** |
+>
+> All fifteen feeds returned `ok` except `ubuntu`, `capped` on its standing
+> configured cap, and `[jvn] 1968` against the scorecard's 1,117.
+>
+> **The gap is the window, not the feeds**, and the correction below is the whole
+> explanation: the offline figures were computed on a 2-year baseline and the
+> pipeline gathers 4. `TR-CERT` and `twcert` crossing the floor live is the part
+> worth noticing, because the block above spends four paragraphs on their being
+> unreachable by any route probed. They were reachable by reading more years of the
+> feeds already merged. **Do not read this as euvd being needed for them.**
+>
+> **THE PROBE AND THE ADAPTER DISAGREE ON `jvn`, 9 MARGINAL CNAS AGAINST 6, AND
+> THE WINDOW IS WHY.** The probe scored it over 2024-2026 and `feedlab score` over
+> 2025-2026, so `ESET`, `Toshiba` and `Panasonic_Holdings_Corporation` cross the
+> floor in one and not the other, and `in_window_ids` reads 1,525 against 1,117.
+>
+> > **CORRECTION, 2026-09-06, written the same day and after the merge deployed.**
+> > This block first said the probe had read `coverage_years` "and not the years
+> > the pipeline gathers", and called the probe over-counted. **That is backwards,
+> > and the number to distrust is the 6.**
+> >
+> > `coverage.WINDOW_YEARS` became 4 on 2026-09-05, one day before this merge, and
+> > `a6332c0` UNIFIED the two windows: `cli.run` now gathers
+> > `coverage.window(year)` and so does `feedlab.coverage_years`. The pipeline
+> > gathers **2023, 2024, 2025 and 2026**. The first live run of this merge says so
+> > in its own header and returned `[jvn] 1968 referenced IDs in scope, 2023-01-06
+> > to 2026-09-04` against the adapter scorecard's 1,117.
+> >
+> > So the probe's three years were CLOSER to the pipeline than the scorecard's
+> > two, and 6 understates `jvn` rather than 9 overstating it. Neither figure is
+> > the live one.
+> >
+> > What is actually broken is the harness: `feedlab`'s three `--years` defaults
+> > are still the literal `"2025,2026"` and
+> > `test_the_baseline_gathers_the_years_the_pipeline_gathers` still asserts
+> > `{now, now - 1}`, neither updated when the window became four. The test passes
+> > because the baseline was built with the stale default, so it pins the wrong
+> > invariant rather than catching it. **Every committed scorecard, this merge's
+> > two included, is measured over two years while the pipeline reads four.**
+> > NEXT.md item 1 carries the fix.
+> >
+> > The lesson survives its own correction, one layer up: this document reasoned
+> > about which window was which instead of reading what the pipeline printed, and
+> > the live log settled in one line what two paragraphs had got wrong.
 >
 > **THE PROBE UNDER-COUNTED THE COST SAVING, AND THE ADAPTER IS 2 REQUESTS RATHER
 > THAN 585.** The 585-request design followed from trap 2 above: the CVE ids are in
