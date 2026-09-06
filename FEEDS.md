@@ -1067,6 +1067,114 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > `twcert.org.tw` path now fails TLS verification outright rather than returning
 > the Chinese-locale HTML it returned in August.
 
+> ### MERGED 2026-09-06. All three detecting candidates, and the probe was wrong about two things in opposite directions.
+>
+> `csaf:ncsc-nl`, `csaf:trendmicro` and `jvn` are in the profile. `euvd` is not, and
+> the refusal above stands unchanged. Baseline rebuilt over all fifteen feeds
+> (`feedlab/_baseline.json`), `feedlab/jvn.json` written by `feedlab score`,
+> `feedlab/csaf.json` re-scored offline against the other fourteen.
+>
+> **What it actually bought, measured rather than predicted:**
+>
+> | | pre-merge, 14 feeds | post-merge, 15 feeds |
+> |---|---:|---:|
+> | ids | 45,895 | 51,070 |
+> | `cnas_sighted` | 232 | 259 |
+> | `cnas_effective` | 183 | **208** |
+> | top-50 at the sighting floor | 44 / 50 | **46 / 50** |
+> | gate margin | +4 | **+6** |
+>
+> The two that crossed are `qnap` and `juniper`, which is exactly what the table
+> above predicted, both from NCSC-NL. `TR-CERT`, `huawei`, `@huntrdev` and `twcert`
+> remain the top-50 misses.
+>
+> **Both figures are computed the same way**, offline from each recorded baseline
+> through `coverage.compute` and `site._gate_status` against the 2026-08-20 corpus,
+> so the delta is like-for-like. A live `cli run` reads a fresher corpus and will
+> not reproduce these exactly; the delta is the claim here, not the absolute.
+>
+> **THE PROBE OVER-COUNTED `jvn` BY READING THE WRONG WINDOW.** It scored nine
+> marginal CNAs. The adapter scores **six**: Canon, Hitachi, LY-Corporation, NEC,
+> OMRON and trendmicro. The difference is not drift and not the adapter. The probe
+> read the 2024 yearly RDF as well as 2025 and 2026, which is `coverage_years` and
+> not the years the pipeline gathers, and `ESET`, `Toshiba` and
+> `Panasonic_Holdings_Corporation` cross the floor only on 2024 ids this profile
+> never fetches. `in_window_ids` 1,525 against the adapter's 1,117 is the same
+> error showing up in the row count.
+>
+> This is `test_the_baseline_gathers_the_years_the_pipeline_gathers`'s defect,
+> arriving in a candidate scorecard instead of in a baseline, where no test was
+> looking. The two windows are one function call apart and this document has now
+> confused them twice.
+>
+> **THE PROBE UNDER-COUNTED THE COST SAVING, AND THE ADAPTER IS 2 REQUESTS RATHER
+> THAN 585.** The 585-request design followed from trap 2 above: the CVE ids are in
+> HTML-escaped prose with no structured field. That is true of `<sec:identifier>`
+> and false of the item as a whole. Every item also carries
+> `<sec:references source="CVE" id="CVE-...">`, typed and structured, which is the
+> field `feed_jvn` reads.
+>
+> Verified against `getVulnDetailInfo` before the calls were dropped, because
+> reasoning about a feed instead of running it is this document's own documented
+> failure mode: **on 30 advisories sampled across the three years the two CVE sets
+> agreed 30 times out of 30**, and the dates agreed 29 times, the exception
+> differing by one day in the direction that makes a row look older. Measured cost
+> is now **25.0s and 0.9 MB over two requests**, against 80.2s and 585.
+>
+> The full-text route stays refused and the reason is sharper than "it agrees by
+> luck": over the three yearly documents a regex finds 1,580 ids against the
+> structured 1,573, and the seven extra are prose mentions of related or superseded
+> work including one malformed id. Narrower is the direction this project wants.
+>
+> **The two CSAF lines, attributed exactly.** `feed_csaf` dedupes across providers
+> and the baseline stores no `source_ref`, so the two new providers were attributed
+> from `data/csaf_state.json`, which is keyed by provider host, and scored against
+> the pre-merge baseline with feedlab's own functions:
+>
+> | provider | advisories | in-window ids | new effective CNAs | lead / dated | unpublished |
+> |---|---:|---:|---:|---|---:|
+> | `advisories.ncsc.nl` | 746 | 9,407 | **13** | 294 / 9,273 | 130 |
+> | `www.trendmicro.com` | 7 | 27 | 1 | 17 / 27 | 0 |
+> | union | 753 | 9,425 | **13** | 304 / 9,291 | 130 |
+>
+> The 13: `Arista`, `BT`, `CIRCL`, `ESET`, `Hanwha_Vision`, `Moxa`, `N-able`,
+> `NCSC-NL`, `Zohocorp`, `juniper`, `netapp`, `qnap`, `trendmicro`. The table above
+> predicted 18 for NCSC-NL and the same window error accounts for the gap.
+>
+> **Trend Micro's one CNA is Trend Micro, and NCSC-NL already supplies it.** Its
+> marginal contribution to the effective set is zero, and it is kept anyway: 1.4s
+> and 27 ids for the vendor's OWN channel, which is the only thing that can ever
+> distinguish self-disclosure from a coordinator reporting on it. That is a
+> different question from the gate and the gate is not the only question here. Said
+> out loud because "13 either way" is what the union row reads, and a reader
+> checking whether the line earns its place should not have to rediscover why.
+>
+> **NEITHER HOST WAS ALREADY BEING READ, and that was checked before the lines went
+> in.** The SICK duplicate cost two contradictory rows on a public page and 120
+> duplicate fetches a run, because a configured line named a publisher the BSI
+> aggregator already supplied. `data/csaf_state.json` from the pre-merge run lists
+> the sixteen hosts actually read and neither `advisories.ncsc.nl` nor
+> `www.trendmicro.com` is among them. It is eighteen now.
+>
+> **`csaf`'s `stability` now reads a 29.3% swing and it is not volatility.** The two
+> recorded fetches are 22,334 ids over sixteen providers and 31,598 over eighteen,
+> so the swing is the config change and not the feed moving under us. Read it the
+> way NEXT.md says to read `ubuntu`'s 98%: real, recorded, and not a shrink
+> baseline. The first fetch after this one is the first comparable pair.
+>
+> **NCSC-NL is now the second-largest thing `csaf` reads** (9,407 in scope, behind
+> `wid.cert-bund.de`'s 24,203), so a single provider failing takes a visible bite
+> out of the feed total. That is `compare_magnitudes` working as intended rather
+> than a problem, but it changes what a csaf drop means: it is now more likely to
+> be one provider than a systemic failure, and `/status` publishes the per-provider
+> lines that tell them apart.
+>
+> **What is still NOT established, unchanged from the block above.** `jvn` has one
+> recorded fetch, so its `stability` is null and will stay null until a second real
+> gather. The other thirteen scorecards still describe the pre-jvn baseline;
+> refreshing them is `feedlab audit`, which rewrites all fifteen and belongs in its
+> own commit, as NEXT.md item 4a already says.
+
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated
 4 to 6 CNAs, and it needed an HTML scraper walking a monthly index whose dated URL already

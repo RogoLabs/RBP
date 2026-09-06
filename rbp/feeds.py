@@ -22,6 +22,7 @@ import zipfile
 import urllib.error
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
 from urllib.parse import urlparse
 
 # The parenthesised URL is not decoration and it is not a disguise.
@@ -2315,6 +2316,26 @@ CSAF_PROVIDERS = (
     # are high-volume CNAs in their own right.
     "https://www.cisco.com/.well-known/csaf/provider-metadata.json",              # Cisco PSIRT
     "https://www.suse.com/.well-known/csaf/provider-metadata.json",               # SUSE
+    # Added 2026-09-06 off the 103-path well-known sweep recorded in
+    # feedlab/_candidates.json. These two were the ONLY new providers it found;
+    # eleven other hosts answered 200 with an HTML error page, which is why the
+    # probe sniffs the body rather than trusting the status.
+    #
+    # NCSC-NL is a coordinator, so it is an AGGREGATE feed and is worth far more
+    # than the CNA whose name is on it: 1,030 advisories spanning 2024 to 2026,
+    # reaching 127 CNAs, of which 18 cross the sighting floor nothing else
+    # crosses. Two of those, qnap and juniper, are top-50 misses. Its cold sweep
+    # was 87.6s against a CSAF_PROVIDER_BUDGET_S of 300 and is incremental after.
+    #
+    # Twenty other national CERTs were probed at the same path and none of them
+    # answers with CSAF: CERT-FR, CERT-AT, CERT-PL, NCSC-FI, CCB, CERT-BE,
+    # CERT-SE, NCSC-UK, JPCERT, CERT/CC, DIVD, CIRCL, ENISA, cyber.gc.ca,
+    # cyber.gov.au and CSA Singapore among them. CISA and BSI CERT-Bund do and
+    # are already configured above. That list is recorded so the sweep is not
+    # repeated: re-probing hosts already established as unreadable is the
+    # expensive mistake this file keeps making.
+    "https://advisories.ncsc.nl/.well-known/csaf/provider-metadata.json",         # NCSC-NL (coordinator)
+    "https://www.trendmicro.com/.well-known/csaf/provider-metadata.json",         # Trend Micro
 )
 
 # CLOSED, DO NOT RE-PROBE: Huawei. It is reachable and unreadable, which is not
@@ -3434,12 +3455,114 @@ def feed_samsung(years, url="https://security.samsungmobile.com/securityUpdate.s
     return out
 
 
+# JVN's RDF namespaces. `sec` here is mod_sec 1.0, which is what the RSS
+# carries; getVulnDetailInfo answers in mod_sec 3.0 under a different URI, and
+# mixing the two finds nothing.
+_JVN_NS = {"rss": "http://purl.org/rss/1.0/",
+           "sec": "http://jvn.jp/rss/mod_sec/",
+           "dcterms": "http://purl.org/dc/terms/"}
+_JVN_RDF = "https://jvndb.jvn.jp/en/rss/years/jvndb_{year}.rdf"
+_CVE_ID_RE = re.compile(r"CVE-\d{4}-\d{4,7}")
+
+
+def feed_jvn(years):
+    """JVN iPedia's English yearly RDFs: the advisories JPCERT/CC coordinated.
+
+    A COORDINATOR FEED IS AN AGGREGATE FEED, and that is the whole reason this
+    is here. An earlier pass closed the national CERTs with "JVN maps to jpcert,
+    already effective at 12 sightings", which prices a feed at the CNA that
+    publishes it. The site does not count feeds that way: `coverage.compute`
+    credits a sighting to the CNA that owns the referenced ID, never to the feed
+    that carried the reference, so two fetches here reach 43 CNAs and push Canon,
+    Hitachi, LY-Corporation, NEC, OMRON and trendmicro over the sighting floor,
+    none of which is jpcert. `debian` is not merged for the `debian` CNA either.
+
+    THE ENGLISH YEARLY RDF, NOT `jvndb.rdf`. The yearly documents carry the
+    JVN-coordinated advisories only, a few hundred a year. The undated
+    `jvndb.rdf` and the Japanese tree are the iPedia mirror of NVD, 29,231
+    entries for 2024 alone, which is a republication of records this site
+    already reads from the corpus and is not what this buys.
+
+    ONE FETCH PER YEAR, AND THE 582 DETAIL CALLS ARE NOT NEEDED. The probe that
+    scored this feed read the yearly RDFs for the advisory list and then made one
+    `getVulnDetailInfo` call per advisory, 585 requests and 80.2s, because
+    FEEDS.md recorded that the CVE ids sit in HTML-escaped prose inside
+    `<description>` with no structured field. That is true of `<sec:identifier>`,
+    which carries JVNDB ids, and false of the document as a whole: each item also
+    carries `<sec:references source="CVE" id="CVE-...">`, which is structured,
+    typed and exactly the field we want.
+
+    Measured before deleting the calls, on 2026-09-06, because this file's
+    documented failure mode is reasoning about a feed instead of running it: on
+    30 advisories sampled across the three years, the RDF's CVE set and
+    `getVulnDetailInfo`'s `RelatedItem type="advisory"` set agreed 30 times out
+    of 30, and the dates agreed 29 times, the exception differing by one day in
+    the direction that makes a row look older. So the detail call is a second
+    request for a field we have already been given.
+
+    THE FULL-TEXT ROUTE IS THE GIT TRAP AGAIN and it is refused here. A regex
+    over the same three documents finds 1,580 ids against the structured 1,573;
+    the extra seven are CVE ids mentioned in prose as related or superseded
+    work, including one malformed id, and none of them is an advisory this feed
+    is actually publishing. Reading the typed attribute is both cheaper and
+    narrower, and narrower is the direction this project wants when a number
+    ends up on a public page.
+
+    UNDATED IS NOT AN OPTION HERE. `dcterms:issued` is the advisory's own
+    publication date, so a 2025 advisory is dated 2025 rather than dated today,
+    which is the clock error that would otherwise credit this feed with
+    disclosure lead it has not earned.
+    """
+    out, seen, read_ok, failed = [], set(), [], []
+    for year in sorted(years):
+        url = _JVN_RDF.format(year=year)
+        try:
+            raw = _get_text(url, timeout=60)
+            root = ET.fromstring(raw)
+        except Exception as e:
+            failed.append(f"{year}: {str(e)[:60]}")
+            print(f"  [jvn] {year} FAILED: {e}", file=sys.stderr)
+            continue
+        read_ok.append(str(year))
+        for item in root.findall("rss:item", _JVN_NS):
+            vid = item.findtext("sec:identifier", namespaces=_JVN_NS) or ""
+            title = (item.findtext("rss:title", namespaces=_JVN_NS) or "").strip()
+            date = _d(item.findtext("dcterms:issued", namespaces=_JVN_NS))
+            for ref in item.findall("sec:references", _JVN_NS):
+                if (ref.get("source") or "") != "CVE":
+                    continue
+                cid = ref.get("id") or ""
+                # The attribute is typed but not validated upstream, so the
+                # shape is still checked here rather than trusted.
+                if not _CVE_ID_RE.fullmatch(cid):
+                    continue
+                if _year(cid) not in years or cid in seen:
+                    continue
+                seen.add(cid)
+                out.append({"cve_id": cid, "source": "jvn",
+                            "source_ref": vid, "public_date": date,
+                            "product": "", "description": title[:400]})
+
+    # A YEAR THAT DID NOT LOAD IS SAID OUT LOUD. Returning the other year's rows
+    # with an `ok` beside them is the shape of failure this site cannot tolerate:
+    # the count halves, every downstream check passes, and by the next run the
+    # halved value is the baseline.
+    if not read_ok:
+        record_feed("jvn", FAILED, f"no yearly RDF loaded ({'; '.join(failed)})"[:120])
+        return []
+    if failed:
+        record_feed("jvn", TRUNCATED,
+                    f"read {'+'.join(read_ok)}; failed {'; '.join(failed)}"[:120],
+                    rows=len(out))
+    return out
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
             "arch": feed_arch, "samsung": feed_samsung,
-            "ubuntu-osv": feed_ubuntu_osv}
+            "ubuntu-osv": feed_ubuntu_osv, "jvn": feed_jvn}
 
 
 def gather(sources, years):
