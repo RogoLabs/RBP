@@ -339,14 +339,26 @@ def test_the_feeds_read_every_year_the_coverage_figure_is_measured_over():
     from rbp import coverage
     y = _dt.date.today().year
     assert feedlab.coverage_years() == coverage.window(y)
-    assert coverage.window(2026) == (2024, 2025, 2026)
+
+    # DERIVED FROM THE CONSTANT, not written out. These assertions used to pin
+    # the literal (2024, 2025, 2026), which meant widening the window failed the
+    # test that exists to check the two sides agree -- the test reported a
+    # disagreement that was not there, and the real property it names in its own
+    # docstring, "whatever window coverage measures, the feeds read the same
+    # one", is independent of how wide that window is.
+    def expect(end):
+        return tuple(range(end - coverage.WINDOW_YEARS + 1, end + 1))
+
+    assert coverage.window(2026) == expect(2026)
     assert len(coverage.window(2026)) == coverage.WINDOW_YEARS
+    assert coverage.window(2026)[-1] == 2026
     # A YEAR THAT IS NOT THIS ONE, because the assertions above cannot tell a
-    # derived window from a hardcoded (2024, 2025, 2026) while the current year
-    # is 2026. Replacing feedlab's body with that literal left them all green.
-    # Confirmed by mutation on 2026-08-30.
-    assert feedlab.coverage_years("2031-04-01") == (2029, 2030, 2031)
-    assert feedlab.coverage_years("2024-12-31") == (2022, 2023, 2024)
+    # derived window from one hardcoded to the current year. Replacing feedlab's
+    # body with such a literal left them all green. Confirmed by mutation on
+    # 2026-08-30, and the reason these two stay even though they now derive their
+    # expectation: what they catch is feedlab ignoring its argument.
+    assert feedlab.coverage_years("2031-04-01") == expect(2031)
+    assert feedlab.coverage_years("2024-12-31") == expect(2024)
 
 
 def test_cli_gathers_the_same_years_it_measures_coverage_over():
@@ -360,7 +372,11 @@ def test_cli_gathers_the_same_years_it_measures_coverage_over():
         "cli.run no longer derives its coverage window from the shared definition")
     assert "_coverage.window(int(today[:4]))" in src, (
         "cli.run no longer derives its FEED window from the shared definition")
-    assert coverage.window(2026) == (2024, 2025, 2026)
+    # The shared definition produces a contiguous window ending at the year asked
+    # for. Not a literal: the width is `coverage.WINDOW_YEARS`'s business, and
+    # this test is about the seam between cli and coverage, not about the width.
+    assert coverage.window(2026) == tuple(
+        range(2026 - coverage.WINDOW_YEARS + 1, 2027))
 
 
 def test_only_published_cves_in_the_window_can_credit_a_cna():

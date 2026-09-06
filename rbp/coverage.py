@@ -44,10 +44,48 @@ MIN_SIGHTINGS = 3
 # feed window, including every one over 700 days: CVE-2024-31884 at 971 days and
 # CVE-2024-0234 at 968, against a then-oldest visible row of 572.
 #
-# Widening further is a judgement about relevance rather than cost. Three years
-# is what coverage already claimed, so this makes the site honest about the
-# window it was already reporting.
-WINDOW_YEARS = 3
+# FOUR SINCE 2026-09-05, and not five, measured rather than argued. Four full
+# gathers of the weekly profile, one per candidate window, each resolved against
+# the reservation endpoint in a single pass so the four are scored on one set of
+# answers:
+#
+#     window     referenced   RBP held   rows the window admits   oldest row
+#     3 years        60,512      2,172   baseline                    975 days
+#     4 years        69,957      2,183   +40                       1,243 days
+#     5 years        82,611      2,225   +53                       1,557 days
+#     uncapped      138,756      2,294   +122                      3,819 days
+#
+# Read the ADMITS column, not the difference of the totals. `csaf` is incremental
+# and time-budgeted, so it drains a different amount of backlog every run: the
+# 3y and 4y gathers disagreed by 29 rows on the years they SHARE, which is most
+# of the way to the +40 the window change is worth. The admits figure is counted
+# inside the single run that admitted it and does not move when the shared years
+# do.
+#
+# Why four and not three. The reserved-and-public population is 90% current-year
+# (2,065 of 2,294 uncapped), so no window choice moves the headline much. But the
+# decay is a cliff followed by a plateau, not a slope, and three years cuts into
+# the middle of the plateau: by CVE id year the uncapped sweep found 2023=44,
+# 2024=36, 2025=71, 2026=2,065. The year immediately OUTSIDE the old window held
+# more reserved rows than the newest year inside it. Three was not a boundary the
+# data supports; it was the number coverage already happened to claim.
+#
+# Why four and not five, which is the load-bearing half. Four is the widest
+# window at which no feed truncates that is not already truncating: at three and
+# at four the only incomplete feeds are `csaf` and `ubuntu`, the same two. At
+# five, `feed_ubuntu_osv` passes its 8 GB decompression ceiling and `feed_ghsa`
+# hits its 40-page cap, and the ubuntu-osv loss does NOT land on the years being
+# added. Ids it returns numbered 2024: 5,502 at three years, 5,502 at four, 2,375
+# at five, and zero uncapped, while 2025 and 2026 come back whole. Widening past
+# four makes that feed read less of a year already inside the window, for 13 more
+# rows. It cost nothing measurable on the day because other feeds carry the same
+# ids, which is redundancy hiding a silent shrink rather than the shrink not
+# happening. Five needs those two limits raised first; the window is not the
+# thing to change.
+#
+# So the sentence this replaces, that going further back is a judgement about
+# relevance rather than cost, is true up to four and false after it.
+WINDOW_YEARS = 4
 
 
 def window(today_year):

@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 139,
+  "effective_n": 182,
   "feeds": [
    "alas",
    "alpine",
@@ -13,22 +13,22 @@
    "osv",
    "redhat",
    "samsung",
-   "ubuntu"
+   "ubuntu",
+   "ubuntu-osv"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
- "bytes": 6392211,
+ "bytes": 6912965,
  "cnas_effective_alone": 20,
- "cnas_new_effective": 4,
+ "cnas_new_effective": 3,
  "cnas_new_effective_names": [
   "ClickHouse",
   "Gridware",
-  "ThinkstAppliedResearch",
-  "zephyr"
+  "ThinkstAppliedResearch"
  ],
  "cnas_reached": 43,
  "disclosure": {
-  "dated_n": 8590,
+  "dated_n": 8607,
   "lead_examples": [
    "CVE-2025-68469",
    "CVE-2025-24531",
@@ -38,9 +38,9 @@
   ],
   "lead_max_days": 901,
   "lead_median_days": 7,
-  "lead_n": 5771,
-  "lead_pct": 67.18,
-  "mirror_n": 2819,
+  "lead_n": 5787,
+  "lead_pct": 67.24,
+  "mirror_n": 2820,
   "undated_n": 64,
   "unpublished_examples": [
    "CVE-2025-20570",
@@ -49,17 +49,22 @@
    "CVE-2025-41419",
    "CVE-2025-47425"
   ],
-  "unpublished_n": 1231
+  "unpublished_n": 1299
  },
  "feed": "ghsa-repos",
  "health": {},
- "ids": 9885,
- "ids_new": 5640,
- "scored_at": "2026-08-28T00:44:58+00:00",
- "stability": null,
+ "ids": 9970,
+ "ids_new": 5410,
+ "scored_at": "2026-09-04T00:54:53+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 9970,
+  "min": 9938,
+  "swing_pct": 0.3
+ },
  "verdict": "detecting",
- "verdict_reason": "4 marginal CNA(s) and 5771 lead / 1231 unpublished references",
- "wall_seconds": 146.7,
+ "verdict_reason": "3 marginal CNA(s) and 5787 lead / 1299 unpublished references",
+ "wall_seconds": 132.3,
  "years": [
   2025,
   2026

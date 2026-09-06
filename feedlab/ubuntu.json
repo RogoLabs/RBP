@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 138,
+  "effective_n": 183,
   "feeds": [
    "alas",
    "alpine",
@@ -13,21 +13,18 @@
    "msrc",
    "osv",
    "redhat",
-   "samsung"
+   "samsung",
+   "ubuntu-osv"
   ],
-  "scored_at": "2026-08-28T00:43:40+00:00"
+  "scored_at": "2026-08-31T20:23:00+00:00"
  },
- "bytes": 355075478,
- "cnas_effective_alone": 46,
- "cnas_new_effective": 3,
- "cnas_new_effective_names": [
-  "Checkmk",
-  "ENISA",
-  "Jaspersoft"
- ],
+ "bytes": 331872958,
+ "cnas_effective_alone": 49,
+ "cnas_new_effective": 0,
+ "cnas_new_effective_names": [],
  "cnas_reached": 59,
  "disclosure": {
-  "dated_n": 3892,
+  "dated_n": 3653,
   "lead_examples": [
    "CVE-2026-53587",
    "CVE-2026-53586",
@@ -38,34 +35,39 @@
   "lead_max_days": 20,
   "lead_median_days": 17,
   "lead_n": 20,
-  "lead_pct": 0.51,
-  "mirror_n": 3872,
+  "lead_pct": 0.55,
+  "mirror_n": 3633,
   "undated_n": 0,
   "unpublished_examples": [
    "CVE-2025-30156",
+   "CVE-2025-70291",
+   "CVE-2025-70292",
    "CVE-2026-12061",
-   "CVE-2026-12072",
-   "CVE-2026-12074",
-   "CVE-2026-12841"
+   "CVE-2026-12072"
   ],
-  "unpublished_n": 102
+  "unpublished_n": 315
  },
  "feed": "ubuntu",
  "health": {
   "capped": true,
-  "detail": "hit the 200-page cap at 4,000 records of 76,753 (5.2%); read back to 2026-07-25, a 33-day window; the configured window opens 2025-01-01, so most of it was not read; recovered 1 page(s) on retry",
+  "detail": "hit the 200-page cap at 4,000 records of 76,753 (5.2%); read back to 2026-07-27, a 35-day window; the configured window opens 2025-01-01, so most of it was not read",
   "ok": false,
   "rows": null,
   "status": "capped",
   "truncated": true
  },
- "ids": 3994,
- "ids_new": 54,
- "scored_at": "2026-08-28T00:45:01+00:00",
- "stability": null,
- "verdict": "detecting",
- "verdict_reason": "3 marginal CNA(s) and 20 lead / 102 unpublished references",
- "wall_seconds": 1070.6,
+ "ids": 3968,
+ "ids_new": 19,
+ "scored_at": "2026-09-04T00:54:56+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 3968,
+  "min": 80,
+  "swing_pct": 98.0
+ },
+ "verdict": "corroborating",
+ "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
+ "wall_seconds": 93.1,
  "years": [
   2025,
   2026
