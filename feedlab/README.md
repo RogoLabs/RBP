@@ -62,6 +62,18 @@ put twelve more fetches on twelve third parties.
 asks for three fetches 24 hours apart. A single invocation cannot produce that
 number, and returning one anyway is how a scorecard field becomes decoration.
 
+The 24 hours is now enforced rather than only asked for, and so is a second
+condition FEEDS.md did not think to state: the fetches must have read the SAME
+WINDOW. Both were violated on committed cards. Ten of the fifteen carried a 0.0%
+swing measured four hours apart, `jvn`'s two fetches were thirty minutes apart in
+one session, and the day the gather window went from two years to four every
+feed's next reading would have been a 20-50% swing that was the window moving and
+not the feed. `csaf` had already shown that shape one level down: its 29.3% is
+sixteen CSAF providers against eighteen, recorded before there was anywhere to
+say so. So each fetch now records the window it read, `stability` compares only
+fetches of the newest one, and it reports null until two of those are a day
+apart.
+
 It WAS decoration on every merged feed until 2026-08-27, and for a reason worth
 recording: only `score` called `record_fetch`, and every merged feed had been
 scored by `audit`, which is offline by design. Observations now accrue in

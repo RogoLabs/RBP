@@ -157,6 +157,19 @@ def _cve_year(cid):
         return None
 
 
+def _corpus_newest(corpus_df):
+    """The newest publication date the corpus knows, as its own freshness mark.
+
+    A feed row can only credit a CNA if the corpus has the record it names, so a
+    baseline is measured against TWO moving things and only recorded one of them.
+    """
+    try:
+        v = corpus_df["date_published"].max()
+    except KeyError:
+        return None
+    return str(v)[:10] or None
+
+
 def eligible_published(corpus_df, recent_years):
     """Published CVEs inside the coverage window, exactly as coverage.compute
     selects them.
@@ -401,7 +414,7 @@ def build_baseline(sources, years, corpus_df):
         # A baseline rebuild is a real fetch of every feed, so each one
         # contributes one honest observation and the field fills in over
         # successive rebuilds rather than being asserted.
-        record_fetch(name, {r["cve_id"] for r in rows if r.get("cve_id")})
+        record_fetch(name, {r["cve_id"] for r in rows if r.get("cve_id")}, years)
         per_feed[name] = {
             "rows": [{"cve_id": r["cve_id"], "public_date": r.get("public_date") or ""}
                      for r in rows if r.get("cve_id")],
@@ -417,6 +430,14 @@ def build_baseline(sources, years, corpus_df):
         "failed": failed,
         "coverage_years": list(coverage_years()),
         "years": sorted(years),
+        # WHICH CORPUS THIS WAS MEASURED AGAINST, because a sighting is a feed
+        # row meeting a corpus record and the corpus half was invisible. Built
+        # 2026-09-06 against an index ten days old, this baseline reached 247
+        # effective CNAs where the live run of the same fifteen feeds over the
+        # same window reached 263: 3,696 of the 77,219 referenced ids, 4.8%, were
+        # not in the index at all, so they credited nobody. `twcert` was 15 live
+        # and 0 here for exactly that reason and nothing on either side said why.
+        "corpus_newest": _corpus_newest(corpus_df),
         "scored_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "ids": ids,
         "per_feed": per_feed,
@@ -426,6 +447,42 @@ def build_baseline(sources, years, corpus_df):
         "bytes": sum(f["stats"].get("bytes") or 0 for f in per_feed.values()),
         "health": {k: dict(v["stats"].get("health") or {}) for k, v in per_feed.items()},
     }
+
+
+def rescore_baseline(corpus_df, base=None):
+    """Recompute a recorded baseline's derived fields against the CURRENT corpus,
+    from the rows it already stored.
+
+    Same reasoning as `audit` being offline: "re-scoring against a changed corpus
+    or a changed floor must not cost twelve more fetches at twelve third
+    parties." A corpus refresh changes which referenced ids are PUBLISHED and who
+    they belong to, which changes `sightings` and `effective`, and none of that
+    is a reason to pull seven gigabytes off fifteen third parties a second time.
+
+    It records no fetch, for the same reason `audit` does not: nothing was
+    fetched, and a fabricated observation is worse than none. `scored_at` stays
+    the time the ROWS were read, because that is what it means and what
+    `test_the_recorded_baseline_describes_the_profile_that_actually_runs` reads.
+    """
+    base = base if base is not None else load_baseline()
+    if base is None or not base.get("per_feed"):
+        raise SystemExit(
+            "no recorded baseline with per-feed rows to re-score. Run "
+            "`python -m rbp.feedlab baseline` first; there is nothing offline "
+            "to recompute from.")
+    assigner, _state, _published = _corpus_maps(corpus_df)
+    roster_index = roster_mod.index(roster_mod.load())
+    eligible = eligible_published(corpus_df, coverage_years())
+    ids = sorted({r["cve_id"] for f in base["per_feed"].values() for r in f["rows"]})
+    sight = sightings_by_cna(ids, assigner, roster_index, eligible)
+    return {**base,
+            "ids": ids,
+            "sightings": sight,
+            "effective": sorted(effective(sight)),
+            "coverage_years": list(coverage_years()),
+            "corpus_newest": _corpus_newest(corpus_df),
+            "rescored_at": dt.datetime.now(dt.timezone.utc)
+                             .isoformat(timespec="seconds")}
 
 
 def baseline_summary(base):
@@ -461,13 +518,28 @@ def write(obj, path):
 # stability, which accrues across runs and cannot be faked in one
 # --------------------------------------------------------------------------
 
-def record_fetch(name, ids, path=None):
-    """Append one fetch's id count, so a later run can compute the swing.
+# FEEDS.md asks for "ids on 3 fetches 24h apart" and `stability` enforced only
+# "more than one". Two fetches in one session are one observation of a feed, so
+# the interval the document asks for is applied when the history is READ, not
+# when it is written: the file keeps every fetch, and the swing is computed over
+# the spaced subset.
+MIN_FETCH_INTERVAL_H = 24
+
+
+def record_fetch(name, ids, years=None, path=None):
+    """Append one fetch's id count AND the window it was fetched over.
 
     FEEDS.md asks for "ids on 3 fetches 24h apart". A single invocation cannot
     produce that number, and returning one anyway is how a scorecard field
     becomes decoration. So each run appends, and `stability` reports None until
-    there are at least two.
+    there are at least two comparable ones.
+
+    THE WINDOW IS PART OF THE OBSERVATION. This file used to record `{at, ids}`
+    with nowhere to say which config produced the count, so widening
+    `coverage.WINDOW_YEARS` from 2 to 4 put counts from two different windows in
+    one list and every feed's swing became the width of the window rather than
+    the movement of the feed. `csaf` had already shown the shape one level down,
+    at the provider set: its 29.3% is sixteen providers against eighteen.
     """
     # Working state, not a scorecard: it is one line per fetch and it
     # accrues, so it belongs beside the baseline rather than in the diff.
@@ -476,8 +548,11 @@ def record_fetch(name, ids, path=None):
     if os.path.exists(path):
         with open(path, encoding="utf-8") as fh:
             hist = json.load(fh)
-    hist.append({"at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
-                 "ids": len(ids)})
+    entry = {"at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+             "ids": len(ids)}
+    if years:
+        entry["years"] = sorted(years)
+    hist.append(entry)
     write(hist, path)
     return hist
 
@@ -492,14 +567,69 @@ def _read_fetches(name, path=None):
         return []
 
 
+def _fetch_window(entry):
+    """The window one recorded fetch was taken over, or None for a fetch
+    recorded before the field existed."""
+    y = entry.get("years")
+    return tuple(y) if isinstance(y, list) else None
+
+
+def _spaced(hist, hours=MIN_FETCH_INTERVAL_H):
+    """The fetches at least `hours` apart, oldest first, keeping the earliest of
+    each cluster. An entry with no readable timestamp is always kept."""
+    kept, last = [], None
+    for h in hist:
+        try:
+            at = dt.datetime.fromisoformat(h["at"])
+        except (KeyError, TypeError, ValueError):
+            kept.append(h)
+            continue
+        if last is not None and at - last < dt.timedelta(hours=hours):
+            continue
+        kept.append(h)
+        last = at
+    return kept
+
+
 def stability(hist):
-    """Widest swing between recorded fetches, as a fraction of the largest."""
-    counts = [h["ids"] for h in (hist or []) if isinstance(h.get("ids"), int)]
+    """Widest swing between comparable recorded fetches, as a fraction of the
+    largest. Two fetches are comparable when they read the SAME WINDOW and are
+    at least `MIN_FETCH_INTERVAL_H` apart.
+
+    Both filters exist because the field lied in both directions on committed
+    cards. `jvn` was fetched twice thirty minutes apart, in one session, and the
+    next audit would have written `swing_pct: 0.0` -- measured, and perfect,
+    over a feed nobody had watched for a day. Ten of the fifteen cards carried a
+    0.0% from a pair four hours apart. And the moment the gather window went from
+    two years to four, every feed's next reading would have been a 20-50% swing
+    that is the window moving, not the feed.
+
+    Null when fewer than two survive. Null says "not measured"; a number says
+    "measured", and the whole reason this field exists is that a feed which
+    swings on its own has no usable shrink baseline.
+    """
+    hist = [h for h in (hist or []) if isinstance(h.get("ids"), int)]
+    if not hist:
+        return None
+    # The newest window, because that is the one the pipeline reads now. A swing
+    # measured over a window the site no longer gathers is not the number a
+    # shrink baseline needs, however many observations went into it.
+    #
+    # It is the LAST fetch's window, not `coverage_years()`, so this stays a pure
+    # function of the history a card was written from. The cost is that a
+    # deliberate `--years` experiment reads as a new window and returns null
+    # until the next real fetch, which is the safe direction: null says not
+    # measured. What it must never do is average a one-year probe into the
+    # four-year readings and call the difference volatility.
+    win = _fetch_window(hist[-1])
+    counts = [h["ids"] for h in _spaced([h for h in hist
+                                         if _fetch_window(h) == win])]
     if len(counts) < 2:
         return None
     hi, lo = max(counts), min(counts)
     return {"fetches": len(counts), "min": lo, "max": hi,
-            "swing_pct": round(100 * (hi - lo) / hi, 1) if hi else 0.0}
+            "swing_pct": round(100 * (hi - lo) / hi, 1) if hi else 0.0,
+            "years": list(win) if win else None}
 
 
 # --------------------------------------------------------------------------
@@ -640,6 +770,26 @@ def _years(s):
     return {int(y) for y in str(s).split(",") if y.strip()}
 
 
+def _default_years():
+    """The gather window the pipeline actually reads, as the CLI's default.
+
+    This was the literal "2025,2026" in three subcommands, and it stayed that way
+    when `coverage.WINDOW_YEARS` became 4 and `a6332c0` unified the gather and
+    coverage windows. So the harness fetched two years, `cli.run` fetched four,
+    and every scorecard's `cnas_new_effective` was marginal to a merged set
+    smaller than the live one: `jvn` scored 1,117 ids here against 1,968 in the
+    first live run of its merge.
+
+    An argparse default is a second definition of the window and nothing was
+    reading the first one. Overriding it is still allowed, because measuring what
+    a wider window costs a feed is how WINDOW_YEARS was chosen, but a baseline
+    recorded off-window fails
+    `test_the_baseline_gathers_the_years_the_pipeline_gathers` rather than
+    quietly becoming what later candidates are marginal to.
+    """
+    return ",".join(str(y) for y in coverage_years())
+
+
 def _render(card):
     d = card["disclosure"]
     L = [f"\n{card['feed']}  ({', '.join(str(y) for y in card['years'])})",
@@ -743,7 +893,11 @@ def _near_floor_report(args):
     return 0
 
 
-def main(argv=None):
+def _build_parser():
+    """The parser, separated from the dispatch so a test can read a default
+    without running a fetch. `--years` defaulting to a stale literal is the one
+    defect this module has shipped twice; the assertion that catches it has to be
+    cheaper than half an hour of third-party fetches."""
     ap = argparse.ArgumentParser(
         prog="python -m rbp.feedlab",
         description="Score one candidate feed against the corpus and the merged set.")
@@ -752,17 +906,26 @@ def main(argv=None):
 
     b = sub.add_parser("baseline", help="record the merged set, once, before scoring")
     b.add_argument("--sources", default="", help="comma-separated; default is the weekly profile")
-    b.add_argument("--years", default="2025,2026")
+    b.add_argument("--rescore", action="store_true",
+                   help="recompute the recorded baseline against the current "
+                        "corpus, from the rows it already stored; no fetch")
+    b.add_argument("--years", default=_default_years(),
+                   help="comma-separated; default is the window the pipeline "
+                        "gathers, %(default)s")
 
     s = sub.add_parser("score", help="score one candidate against the baseline")
     s.add_argument("name")
-    s.add_argument("--years", default="2025,2026")
+    s.add_argument("--years", default=_default_years(),
+                   help="comma-separated; default is the window the pipeline "
+                        "gathers, %(default)s")
     s.add_argument("--no-write", action="store_true")
 
-    a = sub.add_parser("audit",
-                       help="score every merged feed against all the others, "
-                            "offline, from the recorded baseline")
-    a.add_argument("--years", default="2025,2026")
+    # `audit` takes no --years. It replays the baseline's stored rows and scores
+    # them over `base["years"]`, so the argument it used to accept reached
+    # nothing: passing it changed no output. Deleted rather than derived.
+    sub.add_parser("audit",
+                   help="score every merged feed against all the others, "
+                        "offline, from the recorded baseline")
 
     n = sub.add_parser("near-floor",
                        help="roster CNAs sighted but short of the sighting "
@@ -782,7 +945,11 @@ def main(argv=None):
                    help="a summary.json whose coverage.top_missed_effective "
                         "supplies the list")
 
-    args = ap.parse_args(argv)
+    return ap
+
+
+def main(argv=None):
+    args = _build_parser().parse_args(argv)
     if args.cmd == "probe-csaf":
         names = [x for x in args.cnas.split(",") if x.strip()]
         if not names and args.missed_from:
@@ -818,17 +985,24 @@ def main(argv=None):
         return _near_floor_report(args)
 
     corpus = _corpus(args.index)
-    years = _years(args.years)
 
     if args.cmd == "baseline":
         from .cli import PROFILES
+        years = _years(args.years)
         srcs = [x for x in (args.sources or PROFILES["weekly"]).split(",") if x]
-        base = build_baseline(srcs, years, corpus)
+        base = (rescore_baseline(corpus) if args.rescore
+                else build_baseline(srcs, years, corpus))
         write(base, BASELINE)
         write(baseline_summary(base), os.path.join(LAB, "_baseline.json"))
         print(f"baseline: {len(base['ids']):,} ids, {len(base['effective'])} "
               f"effective roster CNAs, {base['wall_seconds']}s, "
               f"{base['bytes'] / 1e6:.1f} MB")
+        # The corpus half of a sighting, printed because it was invisible: this
+        # baseline reached 247 effective CNAs against the live run's 263 on the
+        # same feeds and window, and the whole difference was an index ten days
+        # behind the one the gate uses.
+        print(f"  corpus newest {base.get('corpus_newest')}"
+              + ("  (re-scored, no fetch)" if args.rescore else ""))
         print(f"  working state -> {BASELINE} (gitignored)")
         print(f"  summary       -> {os.path.join(LAB, '_baseline.json')} (committed)")
         if base["failed"]:
@@ -842,10 +1016,11 @@ def main(argv=None):
             raise SystemExit(
                 "no baseline recorded, so 'marginal' has nothing to be marginal "
                 "to. Run `python -m rbp.feedlab baseline` first.")
+        years = _years(args.years)
         rows, stats = fetch(args.name, years)
         card = scorecard(args.name, years, corpus, base=base, rows=rows, stats=stats)
         card["stability"] = stability(record_fetch(
-            args.name, {r["cve_id"] for r in rows if r.get("cve_id")}))
+            args.name, {r["cve_id"] for r in rows if r.get("cve_id")}, years))
         if not args.no_write:
             write(card, os.path.join(LAB, f"{args.name}.json"))
         print(_render(card))
