@@ -399,7 +399,7 @@ def test_a_magnitude_drop_marks_the_run_degraded_in_the_cli():
     # search over source, which passes on code that never runs.
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=[], dropped=0,
-        shrunk=["osv: 11,000 -> 400 ids (96% fewer)"], stale=[], withdrawn=[])
+        shrunk=["osv: 11,000 -> 400 ids (96% fewer)"], stale=[], withdrawn=[], bearing=[])
     assert on is True and any("fewer ids" in r for r in reasons), (
         "a magnitude drop does not reach degraded, so no banner renders")
 
@@ -411,7 +411,7 @@ def test_a_configured_cap_alone_does_not_degrade_the_run():
     from rbp import cli
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ubuntu: hit the 200-page cap"],
-        dropped=0, shrunk=[], stale=[], withdrawn=[])
+        dropped=0, shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False and reasons == []
 
 
@@ -428,9 +428,13 @@ def test_every_other_signal_still_degrades_the_run():
                # 2026-09-02; without it this loop asserted that five of six
                # signals still degrade, which is the shape of the omission it
                # was written to catch in the first place.
-               {"withdrawn": ["msrc: newest advisory moved BACKWARD"]}):
+               {"withdrawn": ["msrc: newest advisory moved BACKWARD"]},
+               # A failed feed the published coverage figure rested on. Added
+               # 2026-09-07, FEEDS.md section 3's failure budget: the count of
+               # failures was already a signal, the weight of one was not.
+               {"bearing": ["csaf: failed this run, and 41 effective CNA(s)"]}):
         args = {"failures": [], "truncated": [], "capped": [], "dropped": 0,
-                "shrunk": [], "stale": [], "withdrawn": [], **kw}
+                "shrunk": [], "stale": [], "withdrawn": [], "bearing": [], **kw}
         on, reasons = cli.degraded_state(**args)
         assert on is True and reasons, kw
 
@@ -796,7 +800,7 @@ def test_a_cap_is_a_standing_limit_and_not_a_degraded_run():
     which is furniture rather than a warning."""
     on, _reasons = cli.degraded_state(
         failures=[], truncated=[], capped=["ghsa: hit the 40-page cap"],
-        dropped=0, shrunk=[], stale=[], withdrawn=[])
+        dropped=0, shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False
 
 
@@ -851,7 +855,7 @@ def test_one_unreachable_provider_among_working_ones_is_a_limit_not_a_banner(
     assert capped and not truncated and not failures
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
                                      capped=capped, dropped=0,
-                                     shrunk=[], stale=[], withdrawn=[])
+                                     shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False, (
         f"a standing WAF block is being reported as a degraded run: {reasons}")
 
@@ -866,7 +870,7 @@ def test_a_provider_that_stops_working_is_caught_by_the_shrink_guard():
     assert shrunk, "a 87% collapse in csaf rows was not reported"
     on, _reasons = cli.degraded_state(failures=[], truncated=[], capped=[],
                                       dropped=0,
-                                      shrunk=shrunk, stale=[], withdrawn=[])
+                                      shrunk=shrunk, stale=[], withdrawn=[], bearing=[])
     assert on is True
 
 
@@ -1214,7 +1218,7 @@ def test_a_permanently_unreachable_csaf_provider_does_not_degrade_the_run(monkey
     assert failures == [], failures
     assert truncated == [], truncated
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
-                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[])
+                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False, reasons
     # It is still published, by name, as a standing limitation.
     assert any("gone.example" in c for c in capped), capped
@@ -1421,12 +1425,12 @@ def test_staleness_degrades_the_run_and_unmeasurable_does_not():
     loud until fixed, which is not the same as a cap that fires by design."""
     on, reasons = cli.degraded_state(
         failures=[], truncated=[], capped=[], dropped=0, shrunk=[],
-        stale=["mozilla: newest advisory is 2026-05-01, 118 days old"], withdrawn=[])
+        stale=["mozilla: newest advisory is 2026-05-01, 118 days old"], withdrawn=[], bearing=[])
     assert on is True
     assert any("stopped returning recent advisories" in r for r in reasons), reasons
 
     off, _ = cli.degraded_state(failures=[], truncated=[], capped=[], dropped=0,
-                                shrunk=[], stale=[], withdrawn=[])
+                                shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert off is False
 
 
@@ -1565,7 +1569,7 @@ def test_the_wall_clock_budget_is_a_standing_limit_not_a_degradation(monkeypatch
     assert truncated == [], "a configured time budget degraded the run"
     assert any("ubuntu" in c for c in capped), capped
     on, _ = cli.degraded_state(failures=[], truncated=truncated, capped=capped,
-                               dropped=0, shrunk=[], stale=[], withdrawn=[])
+                               dropped=0, shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False, "spending the time budget put the site in a degraded posture"
 
 
@@ -1582,7 +1586,7 @@ def test_the_page_cap_is_still_reported_as_a_standing_limit(monkeypatch):
     assert h.get("capped") is True
     on, _ = cli.degraded_state(failures=[], truncated=[],
                                capped=["ubuntu: capped"], dropped=0,
-                               shrunk=[], stale=[], withdrawn=[])
+                               shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False, "a standing cap degraded the run"
 
 
@@ -1647,7 +1651,7 @@ def test_the_advisory_cap_does_not_put_the_site_in_a_degraded_state(monkeypatch)
     assert capped, "the cap was not recorded as a standing limit"
     assert not truncated and not failures, (failures, truncated)
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
-                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[])
+                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False, f"a standing advisory cap is degrading the run: {reasons}"
 
 
@@ -1845,7 +1849,7 @@ def test_a_stalled_provider_does_not_put_the_site_in_a_degraded_state(monkeypatc
     failures, truncated, _n, capped = feeds.health_summary()
     assert capped and not failures and not truncated
     on, reasons = cli.degraded_state(failures=failures, truncated=truncated,
-                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[])
+                                     capped=capped, dropped=0, shrunk=[], stale=[], withdrawn=[], bearing=[])
     assert on is False, f"a slow third party is degrading the run: {reasons}"
 
 

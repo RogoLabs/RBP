@@ -253,6 +253,45 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
     off_roster = sorted({n for n in covered
                          if roster_mod.normalise(n) not in roster_index})
 
+    # WHICH FEEDS THE EFFECTIVE SET RESTS ON, per feed, as a count of CNAs.
+    #
+    # FEEDS.md section 3's failure budget. With forty feeds, three failing is a
+    # rounding error in the log and a hole in coverage, so a failure has to be
+    # weighed rather than counted, and this is the weight: for each feed, the
+    # number of effective CNAs that would fall below the sighting floor if its
+    # sightings were removed. An exact recomputation, not a share. An id seen
+    # through two feeds is lost with neither of them, so a feed that only ever
+    # corroborates weighs nothing however many rows it returns.
+    #
+    # Computed on `gate_sightings` so the corroborating exclusion applies here
+    # exactly as it applies to `cnas_effective`, and counted over roster CNAs so
+    # it is in the same units as the figure it explains. Every requested feed
+    # gets a key, zero included: a feed absent from this map would read as "not
+    # measured", which is the wrong answer for a feed the figure does not need.
+    #
+    # Read by the NEXT run: `bearing_failures` weighs a feed that failed today
+    # against what it carried in the last published run, because a feed that
+    # returned nothing carries nothing in this one.
+    by_feed = {f: 0 for f in requested}
+    if isinstance(refs, dict):
+        sole = {}
+        for c in surfaced_ids:
+            a = assigner.get(c)
+            if not a:
+                continue
+            srcs = set((refs.get(c) or {}).get("sources") or ()) - corrob
+            if len(srcs) == 1:
+                (f,) = srcs
+                per = sole.setdefault(a, {})
+                per[f] = per.get(f, 0) + 1
+        for a in effective:
+            if roster_mod.normalise(a) not in roster_index:
+                continue
+            n = gate_sightings.get(a, 0)
+            for f, alone in sole.get(a, {}).items():
+                if n - alone < MIN_SIGHTINGS:
+                    by_feed[f] = by_feed.get(f, 0) + 1
+
     return {
         # The gate denominator. `total_assigners_in_window` is kept beside it so
         # the two are never confused and neither can be quoted as the other.
@@ -300,6 +339,9 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
         # Empty means the verdicts were unreadable and NOTHING was excluded,
         # which is the permissive direction and has to be visible.
         "corroborating_feeds": sorted(corrob),
+        # The weight of each feed in `cnas_effective`, see above. Feed names,
+        # not CNAs, like `corroborating_feeds` beside it.
+        "effective_by_feed": by_feed,
         "pct_volume_attributable": round(100 * covered_vol / max(total_vol, 1), 1),
         "observed_pct": round(100 * len(surfaced_ids) / max(total_vol, 1), 2),
         "observed_ids": len(surfaced_ids),
@@ -336,6 +378,59 @@ def compute(corpus_df, refs, recent_years=(2024, 2025, 2026), top_n=50,
         "near_floor": _near_floor(sightings, roster_index, roster_mod),
         "recent_years": list(recent_years),
     }
+
+
+# The status word `feeds.record_feed` writes for an adapter that raised. A
+# literal rather than an import, as `verify.EXPLAINS_A_SHORTFALL` is and for the
+# same reason: this module is on the publish path and should not pull in the one
+# that opens sockets. tests/test_section3_guards.py checks it against
+# `feeds.FAILED`.
+FAILED = "failed"
+
+
+def bearing_failures(detail, previous_by_feed):
+    """Feeds FAILED this run that the last published effective set rested on.
+
+    `detail` is this run's `feeds.health_detail()`; `previous_by_feed` is the
+    previous snapshot's `coverage.effective_by_feed`. Returns human-readable
+    findings, one per feed. Empty means no failed feed carried any CNA.
+
+    THE LAST PUBLISHED RUN, deliberately, and not this one. This run's
+    `effective_by_feed` cannot say what a failed feed carried, because the feed
+    returned nothing and so carries nothing; the question is what the site was
+    claiming while the feed still worked. Silent until the previous snapshot has
+    the field, which is the same self-seeding first run `withdrawn_history` has.
+
+    WHAT THIS DOES NOT DO: block. FEEDS.md section 3's bullet says the gate must
+    fail on this. The gate is unchanged, for a reason decided after that bullet
+    was written: on 2026-08-31 one feed's bad afternoon froze the site for two
+    runs, and `verify` was changed so a shortfall the run has recorded publishes
+    as degraded rather than publishing nothing. A failed feed's sightings are
+    absent from THIS run's figure, so `publish gate` already fails on a loss that
+    takes the site below the gate. What was missing was legibility: which of the
+    failures moved the figure, and by how much. That is what this supplies, as
+    its own degraded reason, weighed rather than counted.
+
+    FAILED only. A truncated feed returned part of its rows, so its sightings are
+    partly present and the loss is bounded by nothing this function can read;
+    that case sets `degraded` already through `truncated`. Parts are skipped
+    because the weight is recorded per feed, and a csaf provider going dark is
+    recorded and disclosed by the adapter on the provider's own row.
+    """
+    out = []
+    prev = previous_by_feed if isinstance(previous_by_feed, dict) else {}
+    for name, rec in sorted((detail or {}).items()):
+        if ":" in name or not isinstance(rec, dict):
+            continue
+        if rec.get("status") != FAILED:
+            continue
+        n = prev.get(name)
+        if isinstance(n, int) and n > 0:
+            out.append(
+                f"{name}: failed this run, and {n} effective CNA(s) in the last "
+                f"published run rested on it alone; cnas_effective is a lower "
+                f"floor than usual by up to {n}")
+    return out
 
 
 def _near_floor(sightings, roster_index, roster_mod):

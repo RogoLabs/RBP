@@ -367,6 +367,12 @@ _NAME_OK_PATHS = (
     # entry in it today is `mozilla`, and "the mozilla FEED cannot credit a CNA
     # as observable" is a fact about our feed set, not about who reserved a CVE.
     ".coverage.corroborating_feeds",
+    # `effective_by_feed` is KEYED by feed name, for the same reason and with
+    # the same collision: "the redhat FEED holds three effective CNAs at the
+    # sighting floor" is a fact about how much of our coverage rests on one
+    # source, which is what FEEDS.md section 3's failure budget weighs. It maps
+    # feed names to counts and carries no CNA in either position.
+    ".coverage.effective_by_feed",
     ".feeds.",              # feed health, keyed by feed
     ".sources",             # which feeds saw this row
     ".requested",           # the configured feed list

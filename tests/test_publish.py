@@ -71,6 +71,22 @@ def test_check_passes_on_a_clean_tree(tmp_path):
     assert publish.check(str(st)) == []
 
 
+def test_check_allows_the_per_feed_weight_and_refuses_the_same_names_elsewhere(tmp_path):
+    """`coverage.effective_by_feed` is keyed by FEED name, and `redhat` is both a
+    feed and a certified CNA. The allowlist entry has to exist or the first run
+    that publishes the field is refused; and it has to be THAT entry doing the
+    work, so the same map under an unlisted key is still refused."""
+    def tree(key):
+        st = tmp_path / f".state-{key}"
+        (st / "snapshots" / "2026-09-07").mkdir(parents=True)
+        (st / "snapshots" / "2026-09-07" / "summary.json").write_text(json.dumps(
+            {"total": 1, "coverage": {key: {"redhat": 3, "debian": 0}}}))
+        return str(st)
+    assert publish.check(tree("effective_by_feed")) == []
+    problems = publish.check(tree("weight_by_feed"))
+    assert any("redhat" in p and "certified CNA" in p for p in problems), problems
+
+
 def test_check_refuses_a_file_off_the_allowlist(tmp_path):
     st = tmp_path / ".state"
     (st / "snapshots" / "2026-08-20").mkdir(parents=True)

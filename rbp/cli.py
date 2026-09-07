@@ -87,7 +87,7 @@ BASELINE = os.path.join(DATA, "all_CVEs.zip.zip")
 
 
 def degraded_state(*, failures, truncated, capped, dropped, shrunk, stale,
-                   withdrawn):
+                   withdrawn, bearing):
     """One flag a consumer can branch on, plus the reasons. `(bool, [str])`.
 
     EXTRACTED FROM cli.run so it can be tested. It could not be before, and the
@@ -148,7 +148,15 @@ def degraded_state(*, failures, truncated, capped, dropped, shrunk, stale,
         # different failures and a reader who sees one must not be told the
         # other. See `feeds.withdrawn_history`.
         + [f"{len(withdrawn)} feed(s) withdrew history they had already served"
-           for _ in [0] if withdrawn])
+           for _ in [0] if withdrawn]
+        # WEIGHT, NOT COUNT. The first reason above says how many feeds failed;
+        # this one says whether any of them was holding up the coverage figure
+        # the site publishes against, so three failures out of forty read as the
+        # coverage they carried rather than as a count. FEEDS.md section 3's
+        # failure budget. See `coverage.bearing_failures`.
+        + [f"{len(bearing)} failed feed(s) carried effective CNAs in the last "
+           f"published run"
+           for _ in [0] if bearing])
     return bool(reasons), reasons
 
 
@@ -660,16 +668,25 @@ def cmd_run(args):
     # A feed can shrink hard without failing or truncating, which is the
     # silent-shrink signature and is invisible to a status field. Compared against
     # the previous snapshot's per-feed id counts.
-    _prev_detail = {}
+    _prev_detail, _prev_by_feed = {}, {}
     try:
         _pd = sorted(d for d in glob.glob(os.path.join(SNAPS, "*"))
                      if os.path.isdir(d) and os.path.basename(d) < today)
         if _pd:
-            _prev_detail = ((json.load(open(os.path.join(_pd[-1], "summary.json")))
-                             .get("feeds") or {}).get("detail") or {})
+            _prev = json.load(open(os.path.join(_pd[-1], "summary.json")))
+            _prev_detail = (_prev.get("feeds") or {}).get("detail") or {}
+            # What each feed carried in the last PUBLISHED effective set, read
+            # for `bearing_failures` below.
+            _prev_by_feed = ((_prev.get("coverage") or {})
+                             .get("effective_by_feed") or {})
     except Exception:
-        _prev_detail = {}
-    shrunk = feeds.compare_magnitudes(_prev_detail, feed_detail)
+        _prev_detail, _prev_by_feed = {}, {}
+    # A FEED WITH NO PREVIOUS COUNT IS COMPARED AGAINST ITS SCORECARD. A new
+    # feed's first run, or its run after a failure, had nothing to compare
+    # against and was skipped; if that run was the bad one, the bad count became
+    # the baseline for ever. FEEDS.md section 3. See `feeds.scorecard_baselines`.
+    _seeds = feeds.scorecard_baselines(sources)
+    shrunk = feeds.compare_magnitudes(_prev_detail, feed_detail, seeds=_seeds)
     if shrunk:
         print("  DEGRADED: a feed returned far fewer ids than last run, without "
               "failing or truncating. This is the silent shrink; the count below "
@@ -677,6 +694,14 @@ def cmd_run(args):
         for line in shrunk:
             print(f"    - {line}")
     stats["feeds"]["shrunk"] = shrunk
+    # ...and a feed the guard STILL cannot see, on a run where it should, is a
+    # warning rather than a degradation: nothing has been measured as worse,
+    # something has not been measured. Published beside `freshness_unmeasurable`
+    # for the same reason that is.
+    unbaselined = feeds.baseline_gaps(_prev_detail, feed_detail, _seeds)
+    for line in unbaselined:
+        print(f"  WARNING: {line}")
+    stats["feeds"]["unbaselined"] = unbaselined
     # Freshness, which the row count is structurally blind to. `unmeasurable` is
     # published beside it rather than folded in: a feed returning no dates at all
     # cannot be checked by any threshold, and letting that read as "checked and
@@ -704,6 +729,20 @@ def cmd_run(args):
         for line in withdrawn:
             print(f"    - {line}")
     stats["feeds"]["withdrawn"] = withdrawn
+    # The fourth question, and the one that weighs a failure instead of counting
+    # it: did a feed the published coverage figure RESTS ON fail this run.
+    # FEEDS.md section 3's failure budget. The gate is unchanged and still reads
+    # this run's recomputed figure, so a loss that takes the site below it
+    # already fails `publish gate`; this names the feeds whose loss moved the
+    # figure at all, and by how many CNAs. See `coverage.bearing_failures`.
+    bearing = coverage.bearing_failures(feed_detail, _prev_by_feed)
+    if bearing:
+        print("  DEGRADED: a feed the published coverage figure rested on failed "
+              "this run. cnas_effective is a lower floor than usual by the CNAs "
+              "that feed alone supplied.")
+        for line in bearing:
+            print(f"    - {line}")
+    stats["feeds"]["failed_bearing"] = bearing
     stats["oracle"] = oracle
     stats["corpus_lag_days"] = corpus_lag
     # One flag any consumer can branch on, rather than three they have to combine
@@ -711,7 +750,7 @@ def cmd_run(args):
     stats["degraded"], stats["degraded_reasons"] = degraded_state(
         failures=failures, truncated=truncated, capped=capped,
         dropped=oracle["dropped"], shrunk=shrunk, stale=stale,
-        withdrawn=withdrawn)
+        withdrawn=withdrawn, bearing=bearing)
     stats["limitations"] = capped
     # item 14: coverage was computed every run, printed to a build log, and
     # reached no artefact and no template. The launch gate depends on it.

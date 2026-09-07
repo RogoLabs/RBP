@@ -64,50 +64,30 @@ drains, not what the site can see.
 
 ## What is open
 
-Four items, and they are not the same KIND of thing, which is worth knowing
+Three items, and they are not the same KIND of thing, which is worth knowing
 before reading them in order:
 
-- **two are decisions, not work.** 3a (`feed_ubuntu`: keep it or delete it) and 4
+- **two are decisions, not work.** 2a (`feed_ubuntu`: keep it or delete it) and 3
   (`euvd`: leave it out) are both measured, both carry a recommendation, and
   neither needs code. Taking them is how this list gets shorter today.
-- **two are waiting on accumulated data, not on effort.** 2 drains over
-  successive runs by design. The `months` half of 1 wants a few weeks of
-  snapshots to backtest its thresholds, and picking them early is the exact
-  mistake that entry exists to prevent.
+- **one is waiting on accumulated data, not on effort.** 1 drains over
+  successive runs by design.
 
-Those two kinds cover all four. There is no item here waiting on effort alone.
+Those two kinds cover all three. There is no item here waiting on effort alone.
+One thing that is not an item belongs in the same "waiting on data" class:
+`withdrawn_history`'s bucket thresholds (`MONTH_MIN_ROWS`, `MONTH_DROP`) were
+picked, not measured, and the block comment on them in `rbp/feeds.py` says what
+to measure once a few weeks of `months` snapshots exist and why picking earlier
+is the mistake it exists to prevent.
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
-### 1. FEEDS.md section 3's three remaining guards
-
-Per-feed shrink baselines surviving a profile change; a failure budget expressed
-as a fraction rather than a count; `gather` parallelised while preserving
-per-feed health recording exactly.
-
-**A fourth guard landed 2026-09-02 and one half of it is unfinished.**
-`feeds.withdrawn_history` catches a feed that stops evidencing a period it had
-ALREADY served, which is the case none of the count guards could see: Microsoft
-withdrew `2026-Aug` from its CVRF index, msrc lost 1,637 ids, and 10.9% cleared
-both `MAGNITUDE_DROP` (0.40) and `verify.MAX_ROW_DROP` (0.25). `stale_feeds`
-caught it only because the withdrawn month happened to be the newest one.
-
-The horizon half is measured and needs nothing: zero backward steps across the 12
-snapshots on the data branch except the event itself. **The bucket half is not.**
-`MONTH_MIN_ROWS` and `MONTH_DROP` were picked to fire only on wholesale
-withdrawal because `months` was a new field with no history to backtest, and both
-halves therefore report on the degraded path rather than the blocking one. Once a
-few weeks of `months` have accumulated in the snapshots, measure the real
-per-month variation and tighten them, the way `FRESHNESS_FLOOR_DAYS` was derived
-from the feeds' own cadences rather than picked. Until that is done, do not
-promote either half into `verify`.
-
-### 2. Loose threads from the uncapping
+### 1. Loose threads from the uncapping
 
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.
 
-### 3. `ubuntu-osv`: a decision (a) and a measurement (b)
+### 2. `ubuntu-osv`: a decision (a) and a measurement (b)
 
 `feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
 recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
@@ -254,12 +234,13 @@ So the histories restart at this window. The first rebuild at least a day after
 answer. The raw files keep every fetch, including `ubuntu`'s 80-row outage: the
 filtering happens when the history is read, so nothing was deleted to get here.
 
-This was item 1's "per-feed shrink baselines surviving a profile change" one
-level down, at the harness rather than at `verify`. It is done HERE and not
-there: `feeds.py` and `verify` still compare row counts across runs with nowhere
-to record which profile or window produced them.
+This was FEEDS.md section 3's "per-feed shrink baselines surviving a profile
+change" one level down, at the harness rather than at `verify`. It is done HERE
+and not there: `feeds.py` now seeds a missing baseline from the scorecard
+(2026-09-07), but neither it nor `verify` records which profile or window
+produced the count it compares against.
 
-### 4. `euvd`: the one argument for it is gone
+### 3. `euvd`: the one argument for it is gone
 
 `euvd` is measured and **refused as a numerator source**: zero disclosure lead on
 9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live

@@ -352,6 +352,62 @@ auditable from outside, in the same way the launch checklist is.
   prerequisite for the count going past ~15, and it must preserve per-feed health
   recording exactly as it is, because that recording is the shrink guard's input.
 
+> **BUILT 2026-09-07, all three, and the second is narrower than its bullet asks for.**
+>
+> **Seeded baselines.** `feeds.scorecard_baselines` reads `ids` from the committed
+> `feedlab/<name>.json` for every feed in the profile, and `compare_magnitudes` compares
+> against it whenever the previous run recorded no positive count: a first run, or the run
+> after a failure, which was the exempt-for-ever case. A real previous count always
+> outranks the card, because the card is one measurement and can sit above what the
+> profile reads. Checked before trusting it, against the 2026-09-07 live run: fourteen of
+> fifteen cards are within 1% of the live row count; `csaf`'s card is 42,659 against a
+> live 63,184, which understates and is therefore lenient, and `ubuntu` was truncated
+> that day. `feeds.baseline_gaps` publishes `feeds.unbaselined`: a feed on its second
+> run or later with no previous count and no card. A warning beside
+> `freshness_unmeasurable`, not a degradation, because nothing has been measured as
+> worse; something has not been measured.
+>
+> **The failure budget weighs, and does not block.** `coverage.compute` publishes
+> `effective_by_feed`: for each feed, the number of effective roster CNAs that fall below
+> the sighting floor without its sightings, an exact recomputation rather than a share,
+> so a feed that only corroborates weighs nothing however many rows it returns.
+> `coverage.bearing_failures` names any feed FAILED this run that carried a positive
+> weight in the LAST PUBLISHED run, as its own degraded reason and its own block on
+> `/status`. The bullet says the gate must fail. It does not, for a reason decided after
+> the bullet was written: on 2026-08-31 one feed's bad afternoon froze the site for two
+> runs, and `verify` was changed so a shortfall the run has recorded publishes as
+> degraded rather than publishing nothing. A failed feed's sightings are absent from THIS
+> run's figure, so `publish gate` already fails on a loss that takes the site below the
+> gate. What was missing was legibility, three failures out of forty reading as the
+> coverage they carried rather than as a count, and that is what shipped. The map is
+> keyed by feed name, several of which are also CNA short names, so it needed its own
+> entry in `publish._NAME_OK_PATHS`; any future field holding feed names will too.
+>
+> **`gather` runs adapters on four worker threads and records on one.** The split is at
+> the adapter call: fetching and parsing are concurrent, and the status stamp, the
+> freshness fields, the month buckets and the merge into `refs` all run on the calling
+> thread in profile order, so "first source wins" for product and description means what
+> it meant. `FETCH_BYTES` is locked. Every feed records `seconds`, and the run prints the
+> wall clock beside the per-feed sum. **Measured once, on this machine, 2026-09-07, full
+> weekly profile, four workers:**
+>
+> | | seconds |
+> |---|---:|
+> | wall clock | 1,073 |
+> | summed across the fifteen feeds | 1,548 |
+> | `csaf` alone (3 providers on budget, 3 catching up) | 986 |
+> | `ghsa`, the next longest | 207 |
+>
+> Read the third row before the first two. The wall clock is now the longest single feed
+> and everything else finished underneath it, which means the gain is bounded by `csaf`
+> and a fifth worker would buy nothing until `csaf` itself is shorter: its providers are
+> read serially inside the adapter, each bounded by `CSAF_PROVIDER_BUDGET_S`. On the
+> runner, where the read marks are warm and `csaf` takes a few minutes, the bound moves to
+> `ghsa` and the same fourteen other feeds hide under it. Four is a ceiling on concurrent
+> downloads and was picked rather than measured: the runner's memory under fifteen
+> adapters at once has not been observed, and the `seconds` field is what the next change
+> to `GATHER_WORKERS` should be made from.
+
 > **Two silent-shrink defects were found by building the harness, and both are fixed.**
 > Neither is in the list above, and both are the same shape as the ones that are: a state
 > an adapter recorded and something else discarded.
@@ -1268,7 +1324,7 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > recorded fetch, so its `stability` is null and will stay null until a second real
 > gather. The other thirteen scorecards still describe the pre-jvn baseline;
 > refreshing them is `feedlab audit`, which rewrites all fifteen and belongs in its
-> own commit, as NEXT.md item 3a already says.
+> own commit, as NEXT.md item 2a already says.
 
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated

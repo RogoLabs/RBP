@@ -76,6 +76,14 @@ def _degrade(summary):
         "msrc: 2026-08 held 1,637 ids and holds 0 now (100% of that month "
         "withdrawn)"]
     summary["feeds"]["failures"] = ["ubuntu: HTTP 503"]
+    summary["feeds"]["failed_bearing"] = [
+        "ubuntu: failed this run, and 7 effective CNA(s) in the last published "
+        "run rested on it alone; cnas_effective is a lower floor than usual by "
+        "up to 7"]
+    summary["feeds"]["unbaselined"] = [
+        "debian: no usable shrink baseline after two runs (the previous run "
+        "recorded None and there is no scorecard under feedlab/), so "
+        "compare_magnitudes cannot see this feed"]
     summary["feeds"]["detail"] = {
         "osv": {"status": "ok", "detail": "", "rows": 1200, "ok": True},
         "ghsa": {"status": "capped", "detail": "40-page cap", "rows": 41, "ok": False},
@@ -305,6 +313,25 @@ def test_withdrawn_history_is_named_not_just_counted(degraded_build):
     assert "2026-08 held 1,637 ids and holds 0 now" in body, (
         "the withdrawn month is counted but not named")
     assert "withdrew history it had already served" in body
+
+
+def test_a_weighed_failure_is_named_not_just_counted(degraded_build):
+    """FEEDS.md section 3's failure budget. The failures block says how many
+    feeds failed; a reader also needs which of them the coverage figure rested
+    on and by how many CNAs, or three failures out of forty read as a count."""
+    body = (degraded_build / "status.html").read_text()
+    assert "A failed feed was carrying coverage" in body
+    assert "7 effective CNA(s)" in body
+    # And the count is still there beside it: one reason counts, one weighs.
+    assert "feed fetches failed" in body
+
+
+def test_a_feed_the_shrink_guard_cannot_see_is_disclosed_as_unmeasured(degraded_build):
+    """Same footing as the undated-feed line: a gap in what was measured is not a
+    degradation, and it is not a pass either."""
+    body = (degraded_build / "status.html").read_text()
+    assert "silent-shrink check cannot see them yet" in body
+    assert "no usable shrink baseline after two runs" in body
 
 
 def test_a_configured_cap_is_reported_apart_from_a_degradation(degraded_build):
