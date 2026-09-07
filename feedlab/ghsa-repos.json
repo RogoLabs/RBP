@@ -21,13 +21,13 @@
  },
  "bytes": 218405,
  "cnas_effective_alone": 24,
- "cnas_new_effective": 3,
+ "cnas_new_effective": 2,
  "cnas_new_effective_names": [
-  "Gridware",
   "ThinkstAppliedResearch",
   "netflix"
  ],
  "cnas_reached": 57,
+ "combine": "union",
  "disclosure": {
   "dated_n": 11379,
   "lead_examples": [
@@ -56,10 +56,26 @@
  "health": {},
  "ids": 12784,
  "ids_new": 6446,
- "scored_at": "2026-09-06T21:17:14+00:00",
+ "live": {
+  "already_merged": true,
+  "cnas_new_effective": null,
+  "cnas_new_effective_names": null,
+  "effective_n": 263,
+  "fetched": "2026-09-06",
+  "generated_at": "2026-09-06T20:51:44+00:00",
+  "ids_short": 20141,
+  "pinned": true,
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "rows_short": {
+   "csaf": 20141
+  },
+  "source_commit": "9a1bba54ceaf",
+  "upper_bound": null
+ },
+ "scored_at": "2026-09-07T01:00:56+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "3 marginal CNA(s) and 6587 lead / 1338 unpublished references",
+ "verdict_reason": "2 marginal CNA(s) and 6587 lead / 1338 unpublished references",
  "wall_seconds": 121.7,
  "years": [
   2023,

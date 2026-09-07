@@ -76,10 +76,46 @@ def test_a_feed_that_pushes_a_cna_over_the_floor_does_count():
     combination is recomputed rather than differenced. The baseline sees `apache`
     twice, below the floor; one more sighting makes it observable, and the feed
     that supplied it is why."""
-    base = {**EMPTY_BASE, "sightings": {"apache": FLOOR - 1}, "effective": []}
-    card = feedlab.scorecard("x", {2025}, CORPUS, base=base,
+    base = {**EMPTY_BASE, "ids": ["CVE-2025-1001", "CVE-2025-1002"],
+            "sightings": {"apache": FLOOR - 1}, "effective": []}
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=base, live=None,
                              rows=[row("CVE-2025-1000")], stats={})
     assert card["cnas_new_effective_names"] == ["apache"]
+    assert card["combine"] == "union"
+
+
+def test_a_reference_the_baseline_already_has_does_not_manufacture_a_sighting():
+    """THE MIRROR THAT ADMISSIBILITY TEST 1 EXISTS TO REFUSE, admitted by the
+    arithmetic that measured it.
+
+    A sighting is a PUBLISHED CVE THIS SITE SAW. `coverage.compute` counts
+    distinct ids, so two feeds referencing the same CVE are ONE sighting there.
+    The combination here added the two per-CNA counts instead, so a feed that
+    re-referenced what the merged set already had was credited with pushing a CNA
+    over the floor: `apache` at 2 in the baseline, one duplicate row from the
+    candidate, and the harness reported a marginal CNA that no id had earned.
+
+    Measured on the 2026-09-06 baseline, ten of the fifteen committed cards
+    carried marginal CNAs manufactured this way: `alas` 2 -> 0, `debian` 4 -> 0,
+    `ubuntu-osv` 4 -> 0, `ghsa` 3 -> 0, `alpine` 1 -> 0, `osv` 5 -> 1, `redhat`
+    6 -> 3, `csaf` 84 -> 80. Every one of them in the permissive direction.
+    """
+    base = {**EMPTY_BASE, "ids": ["CVE-2025-1001", "CVE-2025-1002"],
+            "sightings": {"apache": FLOOR - 1}, "effective": []}
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=base, live=None,
+                             rows=[row("CVE-2025-1001")], stats={})
+    assert card["cnas_new_effective_names"] == [], (
+        "a duplicate of an id the baseline already holds is not a new sighting")
+
+
+def test_a_baseline_that_kept_no_ids_says_how_it_was_combined():
+    """The union needs the baseline's ids. A base carrying only counts cannot be
+    combined that way, and the card records which arithmetic ran rather than
+    presenting two different numbers under one name."""
+    base = {**EMPTY_BASE, "sightings": {"apache": FLOOR - 1}, "effective": []}
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=base, live=None,
+                             rows=[row("CVE-2025-1000")], stats={})
+    assert card["combine"] == "sum"
 
 
 def test_sightings_below_the_floor_do_not_credit_a_cna():
@@ -94,6 +130,163 @@ def test_the_floor_is_the_same_one_inference_uses_to_name_a_cna():
     to name is a gate measuring something else."""
     from rbp import inference
     assert feedlab.MIN_SIGHTINGS is inference.MIN_SIGHTINGS
+
+
+# --------------------------------------------------------------------------
+# the pinned live profile: marginal to the set the SITE has
+# --------------------------------------------------------------------------
+#
+# The harness reads what this machine can reach. The site reads what every run
+# before it banked, and on 2026-09-06 that was 20,141 more `csaf` ids and 16 more
+# effective roster CNAs. A card measured only against the local baseline credits
+# a candidate for making a CNA observable that the site has been reading for
+# weeks, and nothing on the card said so.
+
+LIVE = {"sources": ["alas"],
+        "fetched": "2026-09-06",
+        "generated_at": "2026-09-06T20:51:44+00:00",
+        "source_commit": "9a1bba54ceaf",
+        "sightings": {"apache": FLOOR},
+        "effective": ["apache"],
+        "feed_rows": {"alas": 100}}
+
+
+def test_a_card_with_no_pin_reports_nothing_rather_than_zero():
+    """"Not measured" and "measured zero" are the same value and must not be the
+    same outcome. The same distinction `unmeasurable` exists to draw."""
+    rows = [row(f"CVE-2025-1{n:03d}") for n in range(FLOOR)]
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=EMPTY_BASE, rows=rows,
+                             stats={}, live=None)
+    assert card["live"]["pinned"] is False
+    assert card["live"]["cnas_new_effective"] is None
+    assert "pin-live" in card["live"]["reason"]
+
+
+def test_a_cna_the_live_run_already_covers_is_not_marginal():
+    """THE DEFECT ITEM 1 NAMES, at the size it was measured.
+
+    Thirteen roster CNAs sat below the sighting floor in the 2026-09-06 baseline
+    and were already effective in the live run, because the live `csaf` state is
+    as deep as every run before it and a local state is as deep as the runs that
+    happened locally. A candidate reaching one of those twelve scored a marginal
+    CNA here and would have added nothing at all to the site.
+    """
+    rows = [row(f"CVE-2025-1{n:03d}") for n in range(FLOOR)]
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=EMPTY_BASE, rows=rows,
+                             stats={}, live=LIVE)
+    assert card["cnas_new_effective"] == 1, "marginal to what this machine saw"
+    assert card["live"]["cnas_new_effective"] == 0, (
+        "and marginal to nothing at all, against the set the site has")
+
+
+def test_the_verdict_follows_the_live_figure_when_there_is_one():
+    """The verdict is a claim about what merging this feed would do to the SITE.
+    A feed that adds a CNA here and none there is not detecting."""
+    rows = [row(f"CVE-2025-1{n:03d}") for n in range(FLOOR)] + [row("CVE-2025-9000")]
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=EMPTY_BASE, rows=rows,
+                             stats={}, live=LIVE)
+    assert card["verdict"] == "redundant"
+    without = feedlab.scorecard("x", {2025}, CORPUS, base=EMPTY_BASE, rows=rows,
+                                stats={}, live=None)
+    assert without["verdict"] == "detecting", (
+        "with no pin the local figure decides, which is the state the harness "
+        "was in for its whole life")
+
+
+def test_a_feed_already_in_the_live_profile_has_no_live_marginal_figure():
+    """It cannot be marginal to a set that contains it. Every card `audit`
+    produces is in this state, and reporting 0 there would read as "adds
+    nothing" rather than "the question does not apply"."""
+    card = feedlab.scorecard("alas", {2025}, CORPUS, base=EMPTY_BASE,
+                             rows=[row("CVE-2025-1000")], stats={}, live=LIVE)
+    assert card["live"]["already_merged"] is True
+    assert card["live"]["cnas_new_effective"] is None
+
+
+def test_only_ids_the_baseline_has_never_seen_can_add_a_live_sighting():
+    """The live half publishes counts, not ids, so the candidate's overlap with
+    the live set cannot be removed exactly. Its overlap with the LOCAL baseline
+    can be, and is: an id the baseline already holds has already been counted on
+    the live side too, because the live set is deeper than the local one."""
+    base = {**EMPTY_BASE, "ids": [f"CVE-2025-2{n:03d}" for n in range(FLOOR)],
+            "sightings": {"redhat": FLOOR}, "effective": ["redhat"]}
+    live = {**LIVE, "sightings": {"redhat": FLOOR - 1}, "effective": []}
+    rows = [row(f"CVE-2025-2{n:03d}") for n in range(FLOOR)]
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=base, rows=rows,
+                             stats={}, live=live)
+    assert card["live"]["cnas_new_effective"] == 0, (
+        "every id in this feed is one the baseline already had, so none of them "
+        "is a sighting the live run is missing")
+
+
+def test_a_baseline_colder_than_the_live_run_says_so_on_the_card():
+    """WHAT NOTHING SAID BEFORE. The feed list matched the pipeline and the state
+    behind one of those feeds did not, so the figure was an upper bound and the
+    card presented it as a measurement."""
+    base = {**EMPTY_BASE, "per_feed_rows": {"csaf": 42659}}
+    live = {**LIVE, "feed_rows": {"csaf": 62800}}
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=base,
+                             rows=[row("CVE-2025-1000")], stats={}, live=live)
+    assert card["live"]["upper_bound"] is True
+    assert card["live"]["ids_short"] == 20141
+    assert card["live"]["rows_short"] == {"csaf": 20141}
+    assert "20,141" in card["live"]["reason"]
+
+
+def test_a_baseline_deeper_than_the_live_run_is_not_a_shortfall():
+    """A feed drains and a local read can be ahead of the last published run:
+    `ghsa-repos` was 12,784 here against 12,774 live. Only the permissive
+    direction is a finding."""
+    base = {**EMPTY_BASE, "per_feed_rows": {"ghsa-repos": 12784}}
+    live = {**LIVE, "feed_rows": {"ghsa-repos": 12774}}
+    card = feedlab.scorecard("x", {2025}, CORPUS, base=base,
+                             rows=[row("CVE-2025-1000")], stats={}, live=live)
+    assert card["live"]["rows_short"] == {}
+    assert card["live"]["upper_bound"] is False
+
+
+def test_the_pin_rekeys_the_live_sightings_onto_the_roster(monkeypatch):
+    """Two alphabets. The live artefact counts by corpus assigner string and this
+    harness counts by roster short name, so `Hitachi Energy` upstream is
+    `Hitachi_Energy` here. Compared raw, eight CNAs read as "effective locally,
+    missing live" that were the same eight CNAs spelled twice."""
+    body = {"generated_at": "t", "source_commit": "c", "source_dirty": False,
+            "feeds": {"detail": {"alas": {"rows": 5}}},
+            "coverage": {"sightings": {"Hitachi Energy": 4, "JFROG": 2,
+                                       "not a cna at all": 99},
+                         "sources": ["alas"], "recent_years": [2026],
+                         "min_sightings": 3, "cnas_effective": 1}}
+    monkeypatch.setattr(feedlab.feeds, "_get", lambda *a, **k: (body, 200, {}))
+    pinned = feedlab.pin_live("https://example.invalid/summary.json")
+    assert pinned["sightings"] == {"Hitachi_Energy": 4, "JFrog": 2}, (
+        "off-roster assigners are dropped exactly as sightings_by_cna drops them")
+    assert pinned["effective"] == ["Hitachi_Energy"]
+    assert pinned["source_commit"] == "c"
+
+
+def test_a_published_summary_with_no_sightings_is_refused_rather_than_pinned(
+        monkeypatch):
+    """An empty pin would be indistinguishable from a live run that covers
+    nothing, and every candidate scored against it would look marginal to
+    everything."""
+    monkeypatch.setattr(feedlab.feeds, "_get",
+                        lambda *a, **k: ({"coverage": {}}, 200, {}))
+    with pytest.raises(SystemExit):
+        feedlab.pin_live("https://example.invalid/summary.json")
+
+
+def test_the_csaf_depth_is_counts_rather_than_a_sentence(tmp_path):
+    """`_record_csaf_health` already said "3 still catching up" in a health
+    string, which no test can read and no card can subtract."""
+    p = tmp_path / "csaf_state.json"
+    p.write_text(json.dumps({
+        "_version": 3,
+        "a.example": {"refs": {"CVE-1": "x", "CVE-2": "x"}, "listed": 2, "behind": 0},
+        "b.example": {"refs": {"CVE-2": "x"}, "listed": 900, "behind": 899}}))
+    d = feedlab.csaf_depth(str(p))
+    assert d["providers"] == 2
+    assert d["ids"] == 2, "unique across providers, which is what a feed row is"
+    assert d["behind"] == 899 and d["providers_behind"] == ["b.example"]
 
 
 # --------------------------------------------------------------------------
@@ -193,9 +386,39 @@ def test_coverage_without_detection_is_corroborating_not_detecting():
     assert "mirror" in why
 
 
-def test_detection_without_coverage_is_still_corroborating():
-    v, _why = feedlab.classify(0, _lead(lead_n=3, unpublished_n=1))
-    assert v == "corroborating"
+def test_detection_without_coverage_is_redundant_not_corroborating():
+    """THE WORD THAT WAS DOING TWO JOBS, and the pipeline read the wrong one.
+
+    FEEDS.md section 2 defines the exclusion on one combination: "A feed that
+    clears (1) and fails (2) ... is then tagged `corroborating` and excluded from
+    the coverage numerator." This is the OPPOSITE shape, fails (1) and clears
+    (2), and the same document already said what happens to it: "`mozilla` is
+    corroborating rather than mirroring ... it clears admissibility test 2, so it
+    stays in the numerator."
+
+    It did not stay in the numerator. `corroborating_feeds` reads the verdict
+    string, so `mozilla`, `samsung` and `ubuntu` were all in the live run's
+    published exclusion list on 2026-09-06 with lead references apiece and not a
+    mirror among them.
+    """
+    v, why = feedlab.classify(0, _lead(lead_n=3, unpublished_n=1))
+    assert v == "redundant"
+    assert "mirror" in why and "NUMERATOR" in why
+
+
+def test_only_a_mirror_leaves_the_coverage_numerator(tmp_path):
+    """The exclusion set is read from the verdicts, so the split has to reach it.
+
+    Both feeds here add no marginal CNA. One references unpublished ids and one
+    never has, and only the second is a publication mirror. Excluding the first
+    is how five of the site's largest feeds nearly dropped out of its own
+    coverage numerator when the marginal figures were corrected.
+    """
+    p = tmp_path / "_audit.json"
+    p.write_text(json.dumps({"feeds": {
+        "detects": {"verdict": feedlab.classify(0, _lead(unpublished_n=4))[0]},
+        "mirrors": {"verdict": feedlab.classify(2, _lead())[0]}}}))
+    assert feedlab.corroborating_feeds(str(p)) == {"mirrors"}
 
 
 def test_neither_is_a_reject():
@@ -674,7 +897,7 @@ def test_the_floor_the_report_uses_is_the_one_inference_uses():
 # Round 7 B1 and B2: the harness has to describe the feed set that actually runs
 # --------------------------------------------------------------------------
 #
-# THE FOUR TESTS BELOW ARE MARKED `harness_artefact` AND THAT IS A DEPLOY
+# THE TESTS BELOW ARE MARKED `harness_artefact` AND THAT IS A DEPLOY
 # DECISION, not a hint about strength. Each compares a committed artefact under
 # `feedlab/` to the code, so each fails on a change that is CORRECT but
 # unaccompanied by a 26-minute rebuild: a feed added to the profile, a window
@@ -774,6 +997,103 @@ def test_the_recorded_baseline_describes_the_profile_that_actually_runs():
         f"  in the profile, not the baseline: {sorted(profile - recorded)}\n"
         f"  in the baseline, not the profile: {sorted(recorded - profile)}\n"
         "Re-run `python -m rbp.feedlab baseline`.")
+
+
+def _live():
+    return json.loads((_lab() / "_live.json").read_text())
+
+
+@pytest.mark.harness_artefact
+def test_the_pinned_live_run_is_the_profile_the_pipeline_runs():
+    """THE TEST ABOVE, ONE LEVEL DOWN, WHICH IS WHERE THE DEFECT WAS.
+
+    The feed LIST matched the pipeline and the STATE behind one of those feeds
+    did not: `csaf` returned 42,659 rows here against the live run's 62,800 on
+    the same commit and the same window, worth 16 effective roster CNAs, and the
+    test above passed throughout because it compares names.
+
+    A pin taken from a run with a different feed set cannot be subtracted from
+    this baseline at all, so that is what this checks. HOW MUCH colder the
+    baseline is, is recorded on every card rather than asserted here: a local
+    state drains over successive runs by design, and failing on a legitimate
+    backlog would make the fix be "stop running the harness".
+    """
+    live = _live()
+    pinned, profile = set(live.get("sources") or []), set(_profile_feeds())
+    assert pinned == profile, (
+        f"the pinned live run reads a different feed set than this repo runs.\n"
+        f"  in the profile, not the pin: {sorted(profile - pinned)}\n"
+        f"  in the pin, not the profile: {sorted(pinned - profile)}\n"
+        "Re-pin after the merge lands live: `python -m rbp.feedlab pin-live`.")
+    recorded = json.loads((_lab() / "_baseline.json").read_text())
+    assert sorted(live.get("years") or []) == sorted(recorded.get("years") or []), (
+        f"the pin measures {sorted(live.get('years') or [])} and the baseline "
+        f"gathered {sorted(recorded.get('years') or [])}. A marginal figure "
+        "across two windows is the window moving, not the feed.")
+    assert live.get("min_sightings") == FLOOR, (
+        f"the pinned run counts a CNA effective at {live.get('min_sightings')} "
+        f"sightings and this harness at {FLOOR}. Two floors is two questions.")
+
+
+@pytest.mark.harness_artefact
+def test_the_pinned_live_run_is_not_stale():
+    """A pin that silently ages is the roster problem again: a number nobody is
+    measuring, believed because it is committed. The site rebuilds four times a
+    day, so a fortnight is a release cycle rather than a moved figure."""
+    live = _live()
+    age = feedlab.live_age_days(live)
+    assert age is not None, "the pin carries no fetch date"
+    assert age <= feedlab.LIVE_MAX_AGE_DAYS, (
+        f"the pinned live run is {age} days old, above "
+        f"{feedlab.LIVE_MAX_AGE_DAYS}. Re-pin: `python -m rbp.feedlab "
+        "pin-live`. Every scorecard is marginal to it.")
+
+
+@pytest.mark.harness_artefact
+def test_the_recorded_baseline_records_how_cold_its_csaf_read_was():
+    """The depth, as counts, in the artefact that carries the figures it bounds.
+
+    `_record_csaf_health` has always said "3 still catching up" in a health
+    string. A sentence in a health record is not something a card can subtract or
+    a test can read, which is why the gap survived a rebuild, an audit and a
+    passing suite.
+    """
+    depth = json.loads((_lab() / "_baseline.json").read_text()).get("csaf_state")
+    assert depth, (
+        "the baseline records no csaf read depth. Re-run `python -m rbp.feedlab "
+        "baseline --rescore`, which is offline and fills it in from the read "
+        "marks without refetching anything.")
+    for k in ("providers", "ids", "behind", "providers_behind"):
+        assert k in depth, f"csaf_state records no {k}"
+
+
+@pytest.mark.harness_artefact
+def test_every_committed_scorecard_declares_the_depth_it_was_measured_at():
+    """"AND NOTHING SAID SO" is the half of item 1 a test can hold.
+
+    A local state is as deep as the runs that happened locally, and that is not a
+    defect. Presenting a figure measured against it as though it were measured
+    against the site IS. So every committed card carries the pin it was scored
+    with and the shortfall at the time, and the two have to agree with the
+    artefacts beside them, or the cards are describing a baseline that is no
+    longer the one on disk.
+    """
+    live = _live()
+    base = json.loads((_lab() / "_baseline.json").read_text())
+    want = {k: v for k, v in feedlab.depth_shortfall(base, live).items() if v > 0}
+    stale = []
+    for feed in _profile_feeds():
+        card = json.loads((_lab() / f"{feed}.json").read_text())
+        blk = card.get("live") or {}
+        if not blk.get("pinned"):
+            stale.append(f"{feed}: scored with no pinned live run")
+        elif blk.get("rows_short") != want:
+            stale.append(f"{feed}: says {blk.get('rows_short')}, the artefacts "
+                         f"say {want}")
+    assert not stale, (
+        "these scorecards do not declare the depth the baseline beside them was "
+        f"measured at: {stale}. Re-run `python -m rbp.feedlab audit`, which is "
+        "offline.")
 
 
 @pytest.mark.harness_artefact

@@ -1987,6 +1987,13 @@ def feed_alpine(years, branches=("v3.21", "v3.20", "edge"), repos=("main", "comm
 #   disclosure lead on 24 of 51 dated references (median 13d, max 97d),
 #   1.1s and 0.3 MB.  VERDICT: corroborating.
 #
+# THAT VERDICT IS NOW SPELLED `redundant`, and the committed card still says
+# `corroborating` because it is a record of a run on 2026-08-28 and not a claim
+# about today. One word was doing two jobs: fails test 1 and clears test 2, which
+# is this feed, and clears test 1 and fails test 2, which is a publication
+# mirror. Only the second leaves the coverage numerator. FEEDS.md section 2,
+# "CORRECTED 2026-09-06".
+#
 # Merged on the strength of test 2, which FEEDS.md section 2 explicitly permits:
 # "corroborating is not a soft rejection. It means the feed may be merged." Zero
 # marginal CNAs means this buys NO coverage and no gate movement, and it is not

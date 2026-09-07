@@ -233,6 +233,50 @@ expansion, so the expansion is never measured against a base that flattered it.
 > test 2 only on `unpublished_n`. The distro trackers are the shape this measure is weakest
 > on, and the site's largest single source of rows is one of them.
 
+> ### CORRECTED 2026-09-06. The exclusion was firing on the wrong verdict, and the marginal
+> ### figures above were arithmetic the pipeline does not use.
+>
+> Three findings, in the order they fell out of each other. All three are in the same
+> direction: **the harness was reporting a candidate as better than it is.**
+>
+> **1. Sightings were combined by adding per-CNA counts.** A sighting is a published CVE the
+> site saw, and `coverage.compute` counts DISTINCT ids, so two feeds referencing one CVE are
+> one sighting. The harness added the two counts, which credited a feed for re-referencing
+> what the merged set already had: precisely the mirror test 1 exists to refuse. Combining
+> on the union of ids instead, ten of the fifteen committed cards lose marginal CNAs no id
+> had earned: `alas` 2 -> 0, `debian` 4 -> 0, `ubuntu-osv` 4 -> 0, `ghsa` 3 -> 0, `alpine`
+> 1 -> 0, `osv` 5 -> 1, `redhat` 6 -> 3, `csaf` 84 -> 80.
+>
+> **2. `corroborating` was one word doing two jobs, and `cli.run` read the wrong one.** This
+> section defines the exclusion on one combination: clears (1), FAILS (2). A publication
+> mirror. `classify` returned the same word for the opposite shape, fails (1) and clears
+> (2), and `corroborating_feeds` reads the verdict string, so `mozilla`, `samsung` and
+> `ubuntu` were all in the live run's published `corroborating_feeds` on 2026-09-06 with
+> lead references apiece and not a mirror among them. The correct answer was already in the
+> table above: "`mozilla` ... clears admissibility test 2, **so it stays in the numerator**."
+> It did not stay in the numerator.
+>
+> It cost nothing while the marginal figures were inflated, because a feed with a wrongly
+> marginal CNA never reached that branch. Fixing (1) put five of the site's largest feeds on
+> it, which would have dropped `alas`, `debian`, `ghsa`, `alpine` and `ubuntu-osv` out of the
+> site's own coverage numerator on a rule that was never about them.
+>
+> Now five verdicts: `detecting`, `redundant`, `corroborating`, `unmeasurable`, `reject`, and
+> **only `corroborating` leaves the numerator.** Re-audited, the exclusion set is EMPTY, which
+> is the same answer this section reached on 2026-08-24 for a better reason than it had:
+> there is no publication mirror in the profile. `cnas_effective` is 263 with the exclusion
+> and 263 without it, so no published figure moves.
+>
+> **3. The baseline those figures are marginal to was colder than the site.** Same commit,
+> same window, same fifteen feeds: `csaf` returned 42,659 rows here against the live run's
+> 62,800, worth 16 effective roster CNAs, because `deploy.yml` caches `data/csaf_state.json`
+> and a local state is only as deep as the runs that happened locally. Thirteen roster CNAs
+> sat below the sighting floor here and were already effective live, three more were unsighted
+> here entirely, and 247 + 16 = 263. The live run publishes the
+> answer four times a day, so it is now PINNED in `feedlab/_live.json` the way the roster is,
+> every card carries `live.cnas_new_effective` beside the local figure, and the verdict
+> follows the live one. Full reasoning in `feedlab/README.md`.
+
 ---
 
 ## 3. The harness, which is built before the second feed
@@ -260,7 +304,9 @@ emits, for a single candidate, against the live corpus and the current merged se
 | field | why it is there |
 |---|---|
 | `ids` | referenced IDs in scope |
-| `cnas_new_effective` | roster CNAs crossing 3 sightings that nothing else covers. **The number that justifies the merge.** |
+| `cnas_new_effective` | roster CNAs crossing 3 sightings that nothing else covers, against the baseline THIS MACHINE recorded |
+| `live.cnas_new_effective` | the same question against the set the SITE has, from the pinned live run. **The number that justifies the merge**, and the one the verdict follows. `live.rows_short` says how much colder this machine was when the card was written |
+| `combine` | `union` or `sum`: which arithmetic produced the figure above. Only `union` matches what `coverage.compute` counts |
 | `rbp_rows`, `rbp_sole_source` | did it find anything, and anything nobody else found |
 | `disclosure_lead_n`, `disclosure_lead_pct` | admissibility test 2 |
 | `wall_seconds`, `bytes` | against the 15-minute warm-run budget |

@@ -2,36 +2,34 @@
  "baseline_scored_at": "2026-09-06T21:08:54+00:00",
  "feeds": {
   "alas": {
-   "cnas_new_effective": 2,
-   "cnas_new_effective_names": [
-    "Trellix",
-    "alibaba"
-   ],
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 992,
    "unpublished_n": 121,
-   "verdict": "detecting",
+   "verdict": "redundant",
    "wall_seconds": 1.0
   },
   "alpine": {
-   "cnas_new_effective": 1,
-   "cnas_new_effective_names": [
-    "Trellix"
-   ],
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 0,
    "unpublished_n": 158,
-   "verdict": "detecting",
+   "verdict": "redundant",
    "wall_seconds": 5.6
   },
   "arch": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 0,
    "unpublished_n": 0,
    "verdict": "unmeasurable",
    "wall_seconds": 1.6
   },
   "csaf": {
-   "cnas_new_effective": 84,
+   "cnas_new_effective": 80,
    "cnas_new_effective_names": [
     "ASUS",
     "Absolute",
@@ -60,7 +58,6 @@
     "GEN",
     "GE_Vernova",
     "GitHub_P",
-    "Gridware",
     "HCL",
     "Hanwha_Vision",
     "Hitachi_Energy",
@@ -87,8 +84,6 @@
     "Salesforce",
     "SolarWinds",
     "Tanium",
-    "Toreon",
-    "Trellix",
     "Ubiquiti",
     "WatchGuard",
     "Xerox",
@@ -97,7 +92,6 @@
     "Zoom",
     "Zscaler",
     "Zyxel",
-    "alibaba",
     "atlassian",
     "brocade",
     "checkpoint",
@@ -118,43 +112,37 @@
     "symantec",
     "synology"
    ],
+   "combine": "union",
    "lead_n": 7970,
    "unpublished_n": 512,
    "verdict": "detecting",
    "wall_seconds": 1044.7
   },
   "debian": {
-   "cnas_new_effective": 4,
-   "cnas_new_effective_names": [
-    "Gridware",
-    "Toreon",
-    "Trellix",
-    "odoo"
-   ],
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 0,
    "unpublished_n": 300,
-   "verdict": "detecting",
+   "verdict": "redundant",
    "wall_seconds": 1.3
   },
   "ghsa": {
-   "cnas_new_effective": 3,
-   "cnas_new_effective_names": [
-    "Swift",
-    "Toreon",
-    "alibaba"
-   ],
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 4308,
    "unpublished_n": 345,
-   "verdict": "detecting",
+   "verdict": "redundant",
    "wall_seconds": 220.1
   },
   "ghsa-repos": {
-   "cnas_new_effective": 3,
+   "cnas_new_effective": 2,
    "cnas_new_effective_names": [
-    "Gridware",
     "ThinkstAppliedResearch",
     "netflix"
    ],
+   "combine": "union",
    "lead_n": 6587,
    "unpublished_n": 1338,
    "verdict": "detecting",
@@ -170,6 +158,7 @@
     "Panasonic_Holdings_Corporation",
     "Toshiba"
    ],
+   "combine": "union",
    "lead_n": 658,
    "unpublished_n": 9,
    "verdict": "detecting",
@@ -178,43 +167,40 @@
   "mozilla": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 169,
    "unpublished_n": 0,
-   "verdict": "corroborating",
+   "verdict": "redundant",
    "wall_seconds": 6.1
   },
   "msrc": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 7445,
    "unpublished_n": 8,
-   "verdict": "corroborating",
+   "verdict": "redundant",
    "wall_seconds": 10.3
   },
   "osv": {
-   "cnas_new_effective": 5,
+   "cnas_new_effective": 1,
    "cnas_new_effective_names": [
-    "BombadilSystems",
-    "Kong",
-    "Swift",
-    "Toreon",
-    "alibaba"
+    "Kong"
    ],
+   "combine": "union",
    "lead_n": 6614,
    "unpublished_n": 414,
    "verdict": "detecting",
    "wall_seconds": 11.0
   },
   "redhat": {
-   "cnas_new_effective": 6,
+   "cnas_new_effective": 3,
    "cnas_new_effective_names": [
-    "BombadilSystems",
     "CSA",
     "Payara",
-    "Trellix",
-    "Yugabyte",
-    "alibaba"
+    "Yugabyte"
    ],
+   "combine": "union",
    "lead_n": 2718,
    "unpublished_n": 93,
    "verdict": "detecting",
@@ -223,33 +209,42 @@
   "samsung": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 262,
    "unpublished_n": 77,
-   "verdict": "corroborating",
+   "verdict": "redundant",
    "wall_seconds": 1.4
   },
   "ubuntu": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 15,
    "unpublished_n": 135,
-   "verdict": "corroborating",
+   "verdict": "redundant",
    "wall_seconds": 88.0
   },
   "ubuntu-osv": {
-   "cnas_new_effective": 4,
-   "cnas_new_effective_names": [
-    "Gridware",
-    "Toreon",
-    "Trellix",
-    "odoo"
-   ],
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "combine": "union",
    "lead_n": 546,
    "unpublished_n": 255,
-   "verdict": "detecting",
+   "verdict": "redundant",
    "wall_seconds": 32.6
   }
  },
+ "live": {
+  "effective_n": 263,
+  "fetched": "2026-09-06",
+  "generated_at": "2026-09-06T20:51:44+00:00",
+  "ids_short": 20141,
+  "pinned": true,
+  "rows_short": {
+   "csaf": 20141
+  },
+  "source_commit": "9a1bba54ceaf"
+ },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-09-06T21:17:19+00:00"
+ "scored_at": "2026-09-07T01:01:01+00:00"
 }

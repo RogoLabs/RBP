@@ -74,56 +74,47 @@ reading them in order:
   successive runs by design. The `months` half of 2 wants a few weeks of
   snapshots to backtest its thresholds, and picking them early is the exact
   mistake that entry exists to prevent.
-- **and two are real work.** 1 is the largest, because it is the harness
-  disagreeing with the pipeline about what the merged set IS. 3 is a rehearsal
-  that has to touch a real run.
+- **one is closed, and kept for its residue.** 1 was the largest, because it was
+  the harness disagreeing with the pipeline about what the merged set IS. It is
+  fixed; what is left is a bound to watch and a pin to refresh.
+- **and one is real work.** 3 is a rehearsal that has to touch a real run.
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
-### 1. The harness's `csaf` is colder than the pipeline's, and nothing said so
+### 1. The harness scores against the live run now. What is left is a residue.
 
-**Found 2026-09-06 by fixing the window below, rebuilding the baseline at four
-years, and then failing to reproduce the live run's numbers with it.**
+**Closed 2026-09-06.** The finding was that the harness's `csaf` was 20,141 rows
+colder than the pipeline's, worth 16 effective roster CNAs, and that nothing on
+any card said so. Chasing it turned up two more defects in the same permissive
+direction, all three fixed together; the reasoning is in FEEDS.md section 2's
+`CORRECTED 2026-09-06` block and in `feedlab/README.md`.
 
-The rebuild read the same fifteen feeds over the same four years as the live run
-of the same commit, and fourteen of them returned the same row count to the id:
-`alas` 19,976, `ubuntu` 3,993, `jvn` 1,968, `msrc` 17,397. `csaf` returned
-**42,659 against the live run's 62,800**. That one feed is the entire difference
-between the harness's 247 effective roster CNAs and the live run's 263, and it is
-why `twcert` is sighted 15 times live and **zero** times here, with 550 of its
-ids sitting in the window waiting to be sighted.
+The live run publishes what the harness needed, four times a day, at
+`https://rbptracker.org/data/summary.json`: per-CNA sightings and rows per feed.
+So it is pinned in `feedlab/_live.json` the way the roster is, every card carries
+`live.cnas_new_effective` beside the local figure, and the verdict follows the
+live one. `python -m rbp.feedlab pin-live`, and re-pin before believing a card.
 
-Neither half is broken. `deploy.yml` caches `data/csaf_state.json` across runs
-and a provider emits everything it has ever seen, so the live state is as deep as
-every run before it, while a local state is as deep as the runs that happened
-locally: three providers were still catching up in this one and three more
-stopped on the time budget. The consequence is one-directional and it is the
-permissive one. **A candidate scored against this baseline looks better than it
-is**, because the CNAs `csaf` already covers are missing from the set it is
-marginal to. That is exactly what
-`test_the_recorded_baseline_describes_the_profile_that_actually_runs` exists to
-prevent, arriving one level below where it looks: the feed LIST matches the
-pipeline and the STATE behind one of those feeds does not.
+**What is actually left, and it is small.**
 
-It also means the harness cannot answer a question the site answers four times a
-day, which is what makes it worth fixing rather than annotating forever. Three
-routes, none scoped: publish the read marks where the harness can fetch them, the
-way the roster is pinned; drain the backlog locally over successive runs and
-accept that a baseline is only as good as the last drain; or record the depth in
-the baseline and subtract it when reading a card. The third costs nothing and is
-half done, in that `health.csaf` in `feedlab/_baseline.json` now carries the
-provider count and the two catching-up figures.
+`live.cnas_new_effective` is still an UPPER BOUND, and the card says so. Only
+counts are published, not ids, so a candidate's overlap with the local baseline
+can be removed exactly and its overlap with the live-only ids cannot. The residue
+is bounded by `live.rows_short` and shrinks to nothing as the local `csaf` state
+drains. There is nothing to build here; there is a number to watch.
 
-**Until one of them lands, read `cnas_new_effective` as an upper bound.** The
-fifteen committed cards are now measured over the right window, which they were
-not before, and they are still marginal to a merged set 20,141 `csaf` ids short
-of the live one.
+**The pin ages out at 14 days** and `test_the_pinned_live_run_is_not_stale` goes
+red on the commit path, deliberately, the way the roster's does at 120. Re-pinning
+is one fetch.
 
-The corpus half of the same question was measured at the same time and is NOT a
-gap: the index was ten days stale, refreshing it moved 3,696 referenced ids into
-the corpus, and it changed the effective count by nothing. `corpus_newest` is
-recorded in the baseline now so the next reader does not have to re-measure that
-to rule it out.
+**`csaf` locally is 125,588 advisories behind at three providers** (`suse`,
+`redhat`, `cert-bund`), recorded as counts in `_baseline.json:csaf_state`. It
+drains on its own over successive rebuilds. Nothing depends on it any more.
+
+The corpus half was measured at the same time and is NOT a gap: refreshing a
+ten-day-old index moved 3,696 referenced ids into the corpus and changed the
+effective count by nothing. `corpus_newest` is in the baseline so nobody
+re-measures it to rule it out.
 
 ### 2. FEEDS.md section 3's three remaining guards
 
@@ -379,7 +370,7 @@ costs a session.
   pre-launch conditions reads as a site that has not launched.
 - **UI chrome is title case.** Control labels, options, optgroups, buttons.
 - **The About/panel duplication stays**, on measured evidence.
-- **A harness-artefact test may not stop a publication.** The four tests marked
+- **A harness-artefact test may not stop a publication.** The tests marked
   `harness_artefact` compare a committed `feedlab/` artefact to the code, and
   `deploy.yml` deselects them because `rbp/feedlab.py` is imported by nothing the
   site builds: a stale scorecard cannot make a page wrong, and a cron tick cannot
@@ -391,7 +382,19 @@ costs a session.
   act on them. This is the same rule `deploy.yml` already applied to the render
   suite, and the reasoning is in `pyproject.toml` beside the marker. **Deleting
   the marker re-arms the tripwire**; verified by moving `WINDOW_YEARS` to 5 with
-  no rebuild, which fails the commit path and publishes anyway.
+  no rebuild, which fails the commit path and publishes anyway. Four more joined
+  them on 2026-09-06, covering the pinned live run and the depth every card was
+  measured at; the same reasoning applies unchanged, and one of them goes red on
+  a calendar at 14 days rather than on 1 January.
+- **The CSAF read marks are not published for the harness to fetch.** It was one
+  of three routes considered for the harness's cold `csaf` state, and it is
+  refused by a rule this repo already applies to `ghsa_repos_state.json`: counts,
+  never identifiers, because that state holds every CVE id every provider has
+  ever referenced, and putting it anywhere public (a data-branch commit, an
+  Actions artifact on a public repo) publishes the exact list the withhold lever
+  exists to remove. The harness pins the live run's PUBLISHED coverage instead,
+  which is counts, and gets a tighter answer for one fetch. Draining the backlog
+  locally was the third route and is what the local state does on its own.
 - **CSAF provider identity is DERIVED, not in `sources`.** `?src=csaf:cisa` is
   built in the template from `refs`. Putting the host in `sources` breaks
   `origin_kind` (an unmapped slug reads as a tracker and silently stops the
