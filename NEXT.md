@@ -64,57 +64,65 @@ drains, not what the site can see.
 
 ## What is open
 
-Six items, and they are not the same KIND of thing, which is worth knowing before
-reading them in order:
+Five items, and they are not the same KIND of thing, which is worth knowing
+before reading them in order:
 
-- **two are decisions, not work.** 5a (`feed_ubuntu`: keep it or delete it) and 6
+- **two are decisions, not work.** 4a (`feed_ubuntu`: keep it or delete it) and 5
   (`euvd`: leave it out) are both measured, both carry a recommendation, and
   neither needs code. Taking them is how this list gets shorter today.
-- **two are waiting on accumulated data, not on effort.** 4 drains over
+- **two are waiting on accumulated data, not on effort.** 3 drains over
   successive runs by design. The `months` half of 2 wants a few weeks of
   snapshots to backtest its thresholds, and picking them early is the exact
   mistake that entry exists to prevent.
-- **one is closed, and kept for its residue.** 1 was the largest, because it was
-  the harness disagreeing with the pipeline about what the merged set IS. It is
-  fixed; what is left is a bound to watch and a pin to refresh.
-- **and one is real work.** 3 is a rehearsal that has to touch a real run.
+- **and one is real work.** 1 is a deletion that reaches the published copy.
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
-### 1. The harness scores against the live run now. What is left is a residue.
+### 1. Remove the withhold routine
 
-**Closed 2026-09-06.** The finding was that the harness's `csaf` was 20,141 rows
-colder than the pipeline's, worth 16 effective roster CNAs, and that nothing on
-any card said so. Chasing it turned up two more defects in the same permissive
-direction, all three fixed together; the reasoning is in FEEDS.md section 2's
-`CORRECTED 2026-09-06` block and in `feedlab/README.md`.
+**Decided 2026-09-07: take the whole mechanism out.** `RBP_WITHHOLD` is not
+wanted, and removing it is the consistent extension of retiring the removal
+channel on 2026-08-27. That entry's reasoning already reaches this far: "every
+row here is a CVE ID already referenced in a public advisory, held for the
+reportable buffer, on a site that names no CNA. There is nothing to withhold that
+is not already public."
 
-The live run publishes what the harness needed, four times a day, at
-`https://rbptracker.org/data/summary.json`: per-CNA sightings and rows per feed.
-So it is pinned in `feedlab/_live.json` the way the roster is, every card carries
-`live.cnas_new_effective` beside the local figure, and the verdict follows the
-live one. `python -m rbp.feedlab pin-live`, and re-pin before believing a card.
+**It is an embargo lever, not a naming one, and the difference decides what the
+copy has to say afterwards.** It drops IDS, and `NAMING_ENABLED = False` is what
+drops names. `7c502b6`, the one time it ran against production: "Neither named a
+CNA, so this was never a misattribution. But for an embargo report the id IS the
+sensitive fact, which is the entire reason a withheld row leaves rather than
+merely losing its owner." So the cost of removing it is that an embargo request
+arriving by email has no hand to apply, only a commit. **State that cost; do not
+soften it**, the way the removal-channel entry states its own.
 
-**What is actually left, and it is small.**
+The surface, measured 2026-09-07:
 
-`live.cnas_new_effective` is still an UPPER BOUND, and the card says so. Only
-counts are published, not ids, so a candidate's overlap with the local baseline
-can be removed exactly and its overlap with the live-only ids cannot. The residue
-is bounded by `live.rows_short` and shrinks to nothing as the local `csaf` state
-drains. There is nothing to build here; there is a number to watch.
+- `rbp/publish.py`: `SUPPRESS_ENV`, `SUPPRESSED_FILE`, `suppressed_ids`,
+  `_scrub` and its call in `stage`, and the suppressed-row arm of `check`.
+- `rbp/site.py:820` `withheld_ids`, which already delegates, and its caller.
+- `rbp/cli.py`: the `.suppressed.json` handoff writer, and
+  `ResolutionLedger.track`'s suppression argument.
+- `.github/workflows/deploy.yml:83`, the `RBP_WITHHOLD` line in `env:`.
+- `tests/_sitefixture.py:59` env list, `tests/test_end_to_end.py` (the fixture at
+  225 and the two `.suppressed.json` cases at 546 and 590),
+  `tests/test_copy.py:859`, `tests/test_sitefixture.py:193`.
 
-**The pin ages out at 14 days** and `test_the_pinned_live_run_is_not_stale` goes
-red on the commit path, deliberately, the way the roster's does at 120. Re-pinning
-is one fetch.
+**The published claim goes with it.** `_panel.html` tells every reader "If a row
+is ever withheld, it is withheld from every published artefact including the
+dated archive, so a figure cited today can go *down* later." That paragraph was
+written on 2026-09-01 BECAUSE the channel went and the mechanism stayed, and its
+own comment says so: "THE PROMISE UNDERNEATH IT IS REAL AND IS KEPT." Leaving it
+up over a deleted mechanism repeats the exact defect round 9 spent nine rounds
+retiring, one layer down. `method.html:571` and `base.html:306` carry the same
+sentence in comments and are cheaper.
 
-**`csaf` locally is 125,588 advisories behind at three providers** (`suse`,
-`redhat`, `cert-bund`), recorded as counts in `_baseline.json:csaf_state`. It
-drains on its own over successive rebuilds. Nothing depends on it any more.
-
-The corpus half was measured at the same time and is NOT a gap: refreshing a
-ten-day-old index moved 3,696 referenced ids into the corpus and changed the
-effective count by nothing. `corpus_newest` is in the baseline so nobody
-re-measures it to rule it out.
+**Two rules currently point at this lever to justify themselves** and need
+restating on their own terms rather than deleting: the ghsa-repos cache
+(`deploy.yml:250`) and the csaf read marks (the settled entry below) are both
+"counts, never identifiers, because committing ids to a public branch publishes
+the exact list the withhold lever exists to remove." The rule survives the
+lever's removal; the sentence does not.
 
 ### 2. FEEDS.md section 3's three remaining guards
 
@@ -139,17 +147,12 @@ per-month variation and tighten them, the way `FRESHNESS_FLOOR_DAYS` was derived
 from the feeds' own cadences rather than picked. Until that is done, do not
 promote either half into `verify`.
 
-### 3. Rehearse the withhold lever end to end
-
-`RBP_WITHHOLD` drops rows from every published artefact and is tested, but has
-never been exercised against a real run.
-
-### 4. Loose threads from the uncapping
+### 3. Loose threads from the uncapping
 
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.
 
-### 5. `ubuntu-osv`: a decision (a) and a measurement (b)
+### 4. `ubuntu-osv`: a decision (a) and a measurement (b)
 
 `feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
 recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
@@ -163,9 +166,16 @@ than the exit status when you do.
 
 **a. THE AUDIT HAS RUN, 2026-09-06, at the four-year window, and it says
 `feed_ubuntu` earns nothing on coverage.** `cnas_new_effective` **0**, 16 of its
-3,993 ids not already seen by the other fourteen feeds, verdict **corroborating**
+3,993 ids not already seen by the other fourteen feeds, verdict **`redundant`**
 rather than detecting. Its cost that run was 88.0s, against 1,070s on 2026-08-27,
 93.1s on 2026-08-31 and 257.5s earlier on 2026-09-06; price the bad case.
+
+**That verdict read `corroborating` when this was written, and the word mattered
+to the decision.** `corroborating` meant "excluded from the coverage numerator",
+which reads as an argument for deleting the feed. It was the wrong word:
+`feed_ubuntu` references ids that were unpublished at the time, so it clears
+admissibility test 2 and **stays in the numerator**. What it does not do is reach
+a CNA the other fourteen miss. FEEDS.md section 2, "CORRECTED 2026-09-06".
 
 **The three reasons for keeping it were then priced, and two of them changed.**
 
@@ -197,10 +207,12 @@ independent failure is the second reason and it is unchanged. If it goes, the
 diff should say it is trading 7 rows for 18 bad-case minutes, because that is
 what it is.
 
-Read that 0 against item 1: the merged set it is marginal to is 20,141 `csaf` ids
-short of the live one, and that error runs the other way, making a feed look
-BETTER than it is. `ubuntu` scoring zero against an understated baseline is a
-stronger result than the same zero against a complete one, not a weaker one.
+Read that 0 against the depth the card records. The merged set it is marginal to
+was 20,141 `csaf` ids short of the live run, and that error runs the other way,
+making a feed look BETTER than it is. `ubuntu` scoring zero against an
+understated baseline is a stronger result than the same zero against a complete
+one, not a weaker one. Every card now carries `live.rows_short`, so the next
+reader does not have to know this to read the number.
 
 All fifteen cards now describe one baseline, recorded at one moment, over the
 window the pipeline actually gathers. Before this pass they did not: two were
@@ -292,7 +304,7 @@ level down, at the harness rather than at `verify`. It is done HERE and not
 there: `feeds.py` and `verify` still compare row counts across runs with nowhere
 to record which profile or window produced them.
 
-### 6. `euvd`: the one argument for it is gone
+### 5. `euvd`: the one argument for it is gone
 
 `euvd` is measured and **refused as a numerator source**: zero disclosure lead on
 9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
@@ -309,7 +321,8 @@ as `huawei` alone. Neither CNA needs euvd and neither ever needed a new parser;
 they needed more years of the feeds already in the profile.
 
 The harness reproduces `TR-CERT` at exactly 6 and sights `twcert` **zero** times,
-which is item 1 and not a contradiction of this: fourteen feeds returned
+which is the harness's colder `csaf` state and not a contradiction of this:
+fourteen feeds returned
 identical row counts in both runs and `csaf` did not, so every id the live run
 had and the harness lacked came from `csaf`. Which locates `twcert` for anyone
 who needs it later: it is reached through a CSAF provider, by a feed already
@@ -385,7 +398,8 @@ costs a session.
   no rebuild, which fails the commit path and publishes anyway. Four more joined
   them on 2026-09-06, covering the pinned live run and the depth every card was
   measured at; the same reasoning applies unchanged, and one of them goes red on
-  a calendar at 14 days rather than on 1 January.
+  a calendar at 14 days rather than on 1 January: re-pin the live run with
+  `python -m rbp.feedlab pin-live`, which is one fetch.
 - **The CSAF read marks are not published for the harness to fetch.** It was one
   of three routes considered for the harness's cold `csaf` state, and it is
   refused by a rule this repo already applies to `ghsa_repos_state.json`: counts,

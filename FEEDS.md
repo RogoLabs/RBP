@@ -1193,7 +1193,8 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > > because the baseline was built with the stale default, so it pins the wrong
 > > invariant rather than catching it. **Every committed scorecard, this merge's
 > > two included, is measured over two years while the pipeline reads four.**
-> > NEXT.md item 1 carries the fix.
+> > Fixed the same day: the three `--years` defaults derive from
+> > `coverage.window()` now, and the baseline was rebuilt at four years.
 > >
 > > The lesson survives its own correction, one layer up: this document reasoned
 > > about which window was which instead of reading what the pipeline printed, and
