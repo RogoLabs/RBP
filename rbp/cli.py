@@ -320,7 +320,7 @@ def _no_attribution_validation(k=DEFAULT_K, today=None):
         "run_coverage": 0.0,
         "leave_one_out": dict(empty),
         "live": {**empty, "graded": 0, "outstanding": 0},
-        "newly_graded": 0, "withdrawn": 0, "suppressed": 0,
+        "newly_graded": 0, "withdrawn": 0,
         "not_run": True,
         "not_run_reason": "v1 publishes no attribution; inference is not run",
     }
@@ -493,10 +493,16 @@ def cmd_run(args):
     # withhold that is not already public, and the machinery cost more than the
     # risk it covered.
     #
-    # WHAT REPLACES IT: an email address in /.well-known/security.txt and on
-    # /method, read by a person. Zero running cost, no credential, no API call,
-    # and no fourth thing that can silently stop working. Launch condition 4 is
-    # retired rather than met; see rbp/launch.py.
+    # NOTHING REPLACES IT. The email address that stood here for a day went with
+    # the advertised removal channel on 2026-08-27, and the hand lever behind it,
+    # RBP_WITHHOLD, went on 2026-09-07 on the same reasoning carried one step
+    # further. Launch condition 4 is retired rather than met; see rbp/launch.py.
+    #
+    # THE COST, stated rather than softened. The case this answered was the
+    # EMBARGO rather than the error: a row that is entirely accurate and whose
+    # listing still cuts across a live multi-party disclosure. That case now has
+    # no route at all, not even a private one: an embargo request arriving by
+    # email has no hand to apply, only a commit.
     if NAMING:
         from . import attribution, inference
         validation = inference.apply_to_backlog(backlog, corpus, PRECISION,
@@ -535,16 +541,17 @@ def cmd_run(args):
     print(f"  CNA coverage: {cov['covered_cnas']}/{cov['total_cnas']} CNAs "
           f"({cov['pct_cnas']}%); observed {cov['observed_pct']}% of CVEs")
     # One population, computed once, then passed to every writer. Buffer, then
-    # epoch, then suppression. report.build no longer derives its own.
+    # epoch. report.build no longer derives its own.
     #
-    # Suppression belongs HERE and not only inside report.build. It was applied
-    # only there, so backlog.json lost the withheld row while clock.summary still
-    # counted it, and _assert_consistent refused to publish 521 rows under a
-    # headline of 522. That guard did its job: the numbers were contradictory and
-    # the build failed closed rather than publishing them. But the cause was this
-    # comment's own rule being broken, one writer filtering a population the
-    # others did not, which is the fifth time in this project that two stages have
-    # disagreed about which rows exist.
+    # EVERY FILTER BELONGS HERE, not inside one writer. The suppression filter was
+    # applied only inside report.build, so backlog.json lost a row while
+    # clock.summary still counted it, and _assert_consistent refused to publish
+    # 521 rows under a headline of 522. That guard did its job: the numbers were
+    # contradictory and the build failed closed rather than publishing them. But
+    # the cause was this comment's own rule being broken, one writer filtering a
+    # population the others did not, which is the fifth time in this project that
+    # two stages have disagreed about which rows exist. The rule outlived that
+    # filter; a new one goes here beside the buffer and the epoch.
     reportable = [r for r in backlog
                   if isinstance(r.get("days_public"), int)
                   and r["days_public"] >= args.min_age_days
@@ -699,9 +706,6 @@ def cmd_run(args):
     stats["feeds"]["withdrawn"] = withdrawn
     stats["oracle"] = oracle
     stats["corpus_lag_days"] = corpus_lag
-    # Counts only, never ids. Publishing which rows are withheld would undo the
-    # withholding; publishing nothing would make the lever a quiet way to shrink
-    # the count, which is exactly what the site promised it was not.
     # One flag any consumer can branch on, rather than three they have to combine
     # correctly. True whenever this run's count is a lower floor than usual.
     stats["degraded"], stats["degraded_reasons"] = degraded_state(

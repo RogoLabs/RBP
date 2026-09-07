@@ -153,7 +153,6 @@ change a test result.
 | `RBP_EPOCH` | `YYYY-MM-DD`. Counts only IDs that went public on or after this date. **Retired unused 2026-08-27**: the launch-day reset it existed for passed without being used, and setting it now would take a publicly indexed count to zero. The lever works and is kept as insurance. See `PLAN.md`. |
 | `RBP_PAUSE` | `1` runs the pipeline and publishes nothing. |
 | `RBP_MIN_AGE_DAYS` | the reportable buffer, in days. |
-| `RBP_WITHHOLD` | comma-separated CVE IDs to drop from every page and artefact. |
 
 ---
 
@@ -195,8 +194,12 @@ embargo rather than the error: a row that is entirely accurate and whose listing
 still cuts across a live multi-party disclosure. Verification does not reach that
 case, because the row being correct is its premise. That case has no route here.
 
-`RBP_WITHHOLD` still exists, still drops rows from every published artefact and is
-still tested. The capability is kept and simply not advertised.
+**And there is no lever behind the scenes either.** `RBP_WITHHOLD` outlived the
+channel by eleven days on the distinction between a capability and an
+advertisement. Removed 2026-09-07: the reasoning above does not stop at the
+advertisement, and a site that can quietly drop a row is a site whose published
+count can change without a commit. Nothing on this list can now be removed except
+by editing the code that produces it, in public.
 
 To report a vulnerability in this site's own code, open a [private security
 advisory](https://github.com/RogoLabs/RBP/security/advisories/new). That is the

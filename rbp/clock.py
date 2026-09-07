@@ -453,40 +453,24 @@ class ResolutionLedger:
             except Exception:
                 pass
 
-    def track(self, rows, suppressed=()):
+    def track(self, rows):
         """Remember when each currently-open RBP was first seen public.
 
-        `suppressed` both stops new entries and REMOVES existing ones. This ledger
-        is published at the root of the data branch, so a withheld id sitting in
-        `open` keeps it listed after every other artefact has dropped it. Found by
-        checking the branch rather than the site after the first live withhold: the
-        row was gone from rbp.json, rbp.csv, summary.json, cnas.json and
-        precision.json, and still in resolutions.json.
-
-        No CNA name was attached there, so this was never a misattribution. But for
-        an embargo the id IS the sensitive fact, which is the whole reason the row
-        leaves rather than merely losing its owner.
+        THIS LEDGER IS PUBLISHED AT THE ROOT OF THE DATA BRANCH, which is what
+        makes it a writer in its own right rather than a cache. An id sitting in
+        `open` stays listed after every other artefact has dropped it, and that
+        was found by checking the branch rather than the site: a row can be gone
+        from rbp.json, rbp.csv, summary.json, cnas.json and precision.json and
+        still be in resolutions.json. Anything that stops publishing a row has to
+        reach here too.
         """
-        # MEMBERSHIP ONLY, never iteration. `suppressed` is usually a
-        # suppress.Suppressions, whose committed half holds keyed hashes rather
-        # than CVE IDs precisely so it CANNOT be enumerated. Iterating it raised
-        # `TypeError: 'Suppressions' object is not iterable` in production while
-        # the test passed, because the test handed in a plain set. Test with the
-        # type the caller actually passes.
-        sup = suppressed if suppressed is not None else ()
-        drop = {cid for cid in list(self.state["open"]) if cid in sup}
-        for cid in drop:
-            del self.state["open"][cid]
         for r in rows:
             cid = r["cve_id"]
-            if cid in sup or r.get("suppressed"):
-                continue
             if cid not in self.state["open"]:
                 self.state["open"][cid] = {
                     "first_public": r.get("public_date"),
                     "owner": r.get("owner"),
                 }
-        return len(drop)
 
     def reconcile(self, corpus_df, today=None):
         """Close out every tracked ID that now has a published record."""

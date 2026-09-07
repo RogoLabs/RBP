@@ -425,11 +425,13 @@ auditable from outside, in the same way the launch checklist is.
 > does not decrement the rate limit (measured). Wall clock is the real cost here, not quota.
 >
 > **The state file is a cache and not durable state, which is the opposite of the obvious
-> choice.** It holds CVE ids by construction, and `publish.suppressed_ids` states the rule
-> that settles it: counts, never identifiers, because committing ids to a public branch
-> publishes the exact list the withhold lever exists to remove. Scrubbing the staged copy
-> is not an escape either, because the feed reads its rows back from that file and a
-> scrubbed copy would permanently drop those rows on the next 304. The cost, stated: an
+> choice.** It holds CVE ids by construction: every id every provider has ever referenced,
+> a far larger set than the site publishes and one nothing has validated as publishable.
+> The data branch is public and carries only what `publish.ALLOWED_ROOT` names, so
+> committing this there would publish a list the site never decided to publish. Counts,
+> never identifiers. Scrubbing the staged copy is not an escape either, because the feed
+> reads its rows back from that file and a scrubbed copy would permanently drop those rows
+> on the next 304. The cost, stated: an
 > evicted cache is a cold start spanning two runs, disclosed as `CAPPED` with the repo
 > counts and the resume point rather than as a quiet shrink.
 >
@@ -1266,7 +1268,7 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > recorded fetch, so its `stability` is null and will stay null until a second real
 > gather. The other thirteen scorecards still describe the pre-jvn baseline;
 > refreshing them is `feedlab audit`, which rewrites all fifteen and belongs in its
-> own commit, as NEXT.md item 4a already says.
+> own commit, as NEXT.md item 3a already says.
 
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated

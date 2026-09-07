@@ -204,33 +204,32 @@
      with that page, leaving `stable_not_immutable: true` in archive.json as the
      only place the site said so. A promise about permanence that lives only in a
      JSON key is not a promise anyone has been told about. #}
-  {# F1 FROM docs/reviews/REVIEW-round9.md, fixed 2026-09-01.
+  {# F1 FROM docs/reviews/REVIEW-round9.md, fixed 2026-09-01, and REWRITTEN AGAIN
+     ON 2026-09-07 when the mechanism it rested on was deleted.
 
-     This paragraph promised a correction route on the one page everybody reads,
-     while `.well-known/security.txt` on the same origin says "This site does not
-     operate a removal channel for listed CVE IDs" and the README has a section
-     titled "There is no removal channel". It described "a request to remove a
-     row", "the entire point of having a correction route", "someone asking to be
-     delisted" and "rows a CNA had contested": four separate invitations to use a
-     channel that was retired on 2026-08-27.
+     The 09-01 version said the archive property was real "because RBP_WITHHOLD
+     still drops rows from every published artefact including the dated archive".
+     That lever is gone. Leaving the sentence up would have repeated, one layer
+     down, the exact defect round 9 spent nine rounds retiring: copy that
+     describes a capability the code no longer has.
 
-     A CNA reading the panel would have believed they could ask, found no address
-     anywhere on the site, and concluded the site was either careless or hiding
-     the address. On a project whose whole claim is careful measurement, that is
-     the most expensive kind of wrong sentence.
+     THE PROPERTY SURVIVES THE LEVER, on two structural reasons that are checkable
+     from outside. A dated file is REBUILT from that day's snapshot on every run,
+     so it carries today's rules rather than the bytes it was first written with.
+     And retention is bounded by publish.KEEP_SNAPSHOTS, so a dated URL outside
+     that window stops resolving. Neither reason needs anybody to be able to ask
+     for anything, which is what makes them safe to publish now.
 
-     THE PROMISE UNDERNEATH IT IS REAL AND IS KEPT. `RBP_WITHHOLD` still drops
-     rows from every published artefact including the dated archive, and is still
-     tested. What is retired is the advertised channel, not the mechanism, so
-     this now states the archive property and stops describing a request nobody
-     can make. The embargo case still has no route here; that cost is stated in
-     the README and is not softened by pretending otherwise. #}
-  <p><strong>Stable, not immutable, and the difference is deliberate.</strong> If
-     a row is ever withheld, it is withheld from every published artefact
-     including the dated archive, so a figure cited today can go <em>down</em>
-     later. This site does not operate a removal channel and publishes no address
-     to request one: a row appears only after the CVE Services reservation
-     endpoint confirms the ID is reserved and unpublished, and every row is an ID
-     already referenced in a public advisory. What the archive will not do is
-     keep serving a row the live list has dropped.</p>
+     The embargo case has no route here and no lever behind the scenes either;
+     that cost is stated in the README and is not softened by pretending
+     otherwise. #}
+  <p><strong>Stable, not immutable, and the difference is deliberate.</strong>
+     Each dated file is rebuilt from that day&rsquo;s snapshot on every run rather
+     than written once, and the archive keeps {{ keep_snapshots }} days of dailies
+     and then one snapshot per month, so a dated entry can eventually go away.
+     This site does not operate a removal channel, publishes no address to request
+     one, and has no lever to apply one: a row appears only after the CVE Services
+     reservation endpoint confirms the ID is reserved and unpublished, and every
+     row is an ID already referenced in a public advisory. What the archive will
+     not do is keep serving a row the live list has dropped.</p>
 </aside>

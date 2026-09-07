@@ -46,10 +46,19 @@ def _live_pages(built):
             if p.name not in ("about-this-count.html", "index.html")]
 
 
+def _text_of(fragment):
+    """The same treatment, applied to a string rather than to a file.
+
+    For assertions that must not be satisfiable by another part of the page. The
+    whole-page version keeps <script> bodies, so a phrase in the front page's
+    filter JavaScript can satisfy an assertion written about the prose.
+    """
+    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", fragment)))
+
+
 def _text(path):
     """Tags stripped, whitespace collapsed, entities resolved."""
-    raw = pathlib.Path(path).read_text()
-    return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", raw)))
+    return _text_of(pathlib.Path(path).read_text())
 
 
 @pytest.fixture
@@ -312,22 +321,44 @@ def test_no_page_offers_a_route_that_security_txt_denies(built, built_launched):
 
 
 def test_the_panel_states_the_archive_property_it_used_to_justify(built_launched):
-    """The paragraph F1 lived in was carrying a real promise, so the fix had to
-    keep it: a withheld row leaves the dated archive too.
-
-    Asserted because the obvious way to fix F1 is to delete the paragraph, and
+    """The paragraph F1 lived in carries a real promise, so no fix may delete it:
     that would take `stable_not_immutable` back to being a JSON key nobody has
     been told about, which is the exact reason the prose was written.
+
+    REKEYED 2026-09-07 FROM THE MECHANISM TO THE PROPERTY. It used to demand the
+    sentence "withheld from every published artefact", which named RBP_WITHHOLD's
+    behaviour. The lever is gone and the property is not: the archive is rebuilt
+    every run rather than appended, and retention is bounded. A test keyed to a
+    deleted mechanism is a test that forces the copy to keep describing it.
+
+    THE RETENTION NUMBER IS ASSERTED AGAINST THE CONSTANT, not against a literal.
+    `publish.KEEP_SNAPSHOTS` moved from 2 to 90 once already, and the version of
+    this claim that lived on /data said "the current snapshot, the previous one,
+    and one per month" for as long as nobody re-read it.
     """
+    from rbp.publish import KEEP_SNAPSHOTS
+    raw = (built_launched / "index.html").read_text()
     page = _text(built_launched / "index.html").lower()
     assert "stable, not immutable" in page, (
         "the archive-mutability promise is gone from the front page")
-    assert "dated archive" in page or "archive" in page
-    # The mechanism, stated without inviting a request for it.
-    assert "withheld from every published artefact" in page or \
-           "withheld, it is withheld from every published artefact" in page, (
-        "the panel no longer says a withheld row leaves the archive, which is "
-        "the whole content of 'stable, not immutable'")
+
+    # SCOPED TO THE PARAGRAPH, not to the page, and this is not fussiness.
+    # `_text` strips tags but keeps <script> bodies, and the front page's age
+    # filter carries the string "90 days" in five places because the default
+    # window happens to be 90 and `publish.KEEP_SNAPSHOTS` happens to be 90 too.
+    # Asserted against the whole page, the retention half of this test passed
+    # with the number deleted from the copy, and passed again with
+    # `_publish_keep` returning None so the paragraph read "None days". Both
+    # mutations survived. The unit was proved and the seam was not.
+    para = re.search(r"<p>(?:(?!</p>).)*?Stable, not immutable.*?</p>", raw, re.S)
+    assert para, "the stable/immutable paragraph is not a <p> any more"
+    claim = _text_of(para.group(0)).lower()
+    assert "rebuilt" in claim, (
+        "the panel no longer says a dated file is rebuilt rather than written "
+        f"once, which is half of what 'stable, not immutable' means: {claim}")
+    assert f"{KEEP_SNAPSHOTS} days" in claim, (
+        "the retention bound is not in the paragraph as a number, so the other "
+        f"half of 'stable, not immutable' is an adjective again: {claim}")
 
 
 # --------------------------------------------------------------------------
@@ -856,9 +887,13 @@ def test_no_surface_offers_a_removal_channel():
     still cuts across a live coordinated disclosure. Verification does not reach
     that case. It now has no route on this site.
 
-    `RBP_WITHHOLD` is deliberately NOT asserted absent. The lever still exists,
-    still drops rows from every artefact and is still tested; it is simply not
-    advertised, which is the distinction Jerry drew.
+    THE LEVER WENT TOO, on 2026-09-07. `RBP_WITHHOLD` was kept on 08-27 on the
+    distinction between a capability and an advertisement; the reasoning above
+    does not stop at the advertisement, so the mechanism went with it. It is
+    still not asserted absent from the templates, for a different reason now:
+    three of them carry a COMMENT recording that it was removed and what that
+    cost, and a test that forbade the name would delete exactly the record that
+    stops this being rediscovered rather than argued with.
     """
     for path in sorted(TEMPLATES.glob("*.html")) + [PLACEHOLDER]:
         body = path.read_text()

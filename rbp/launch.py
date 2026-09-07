@@ -139,14 +139,15 @@ _DECLARED = [
     # 2026-08-26: "if it's public after 72 hours it's public. That is too much
     # overhead for a side project."
     #
-    # WHAT REMAINS: an email address in /.well-known/security.txt and on /method,
-    # read by a person. No credential, no API call, no scheduled component that
-    # can silently stop working, which is the failure mode the original channel
-    # actually suffered.
+    # WHAT REMAINED, briefly: an email address in /.well-known/security.txt and on
+    # /method read by a person, then just the hand lever behind it once the
+    # address went on 2026-08-27, then nothing once RBP_WITHHOLD went on
+    # 2026-09-07. Each step took the same argument one notch further, and the
+    # last one is the notch that also removes the capability.
     #
-    # WHAT THIS COSTS, stated rather than hidden: there is now no automatic route
-    # and no published withheld count, so a removal is a human decision with no
-    # audit trail on the site. If the site ever names a party again, this
+    # WHAT THIS COSTS, stated rather than hidden: there is no route, no lever and
+    # no published withheld count. A removal is now a commit, in public, against
+    # the code that produces the list. If the site ever names a party again, this
     # condition comes back with it and is not optional.
     {
         "n": 5,
@@ -204,11 +205,12 @@ _DECLARED = [
         "title": "A dated immutable archive, resolvable after the epoch flip",
         "detail": ("Anything cited before launch stays resolvable afterwards at "
                    "/data/archive/<date>/rbp.json, with /data/archive.json as the "
-                   "index. Stable rather than immutable: a withhold removes a row "
-                   "from the archive too, and /data states that rather than promising "
-                   "permanence this project would not honour. Retention is 90 "
-                   "days of dailies, then one snapshot per month indefinitely, "
-                   "and /data states that as a number rather than an adjective."),
+                   "index. Stable rather than immutable: each dated file is "
+                   "rebuilt from that day's snapshot on every run, and retention "
+                   "is publish.KEEP_SNAPSHOTS days of dailies then one snapshot "
+                   "per month indefinitely, so a dated URL outside that window "
+                   "stops resolving. The slide-over states the bound as a number "
+                   "rather than an adjective."),
         # Was FALSIFIED on 2026-08-23 and fixed the same day. prune_snapshots ran
         # with keep=2 on every six-hourly tick, so the branch held exactly two
         # dated snapshots and a URL cited on Monday stopped resolving by
@@ -216,12 +218,12 @@ _DECLARED = [
         # 2026-08-23 and nothing else.
         #
         # MET is claimed on a BOUNDED promise, which is the only kind this can
-        # honestly be. A dated URL resolves for 90 days; after that the exact
-        # date resolves only if it was its month's last. The condition's title
-        # says "immutable" and the archive is not, deliberately, because a
-        # withhold must be able to reach it. What changed is that the window is
-        # now longer than the time it takes to write something citing it, and it
-        # is published rather than implied.
+        # honestly be. A dated URL resolves for publish.KEEP_SNAPSHOTS days;
+        # after that the exact date resolves only if it was its month's last. The
+        # condition's title says "immutable" and the archive is not, because it
+        # is rebuilt rather than appended and retention is bounded. What changed
+        # is that the window is now longer than the time it takes to write
+        # something citing it, and it is published rather than implied.
         "status": MET,
         "blocks": None,
         # /data/archive/<YYYY-MM-DD>/rbp.json per retained snapshot, plus
@@ -230,11 +232,11 @@ _DECLARED = [
         # envelope and the same assert_artefact invariants as every other artefact:
         # an archive is not a place where the naming rules stop applying.
         #
-        # Described as STABLE rather than immutable, deliberately. A withhold request
-        # removes a row from every published artefact including these, so a dated
-        # figure can go down. Promising permanence would mean either breaking the
-        # promise on the first withhold, or letting the archive become the reason the
-        # withhold does not work. /data says which of those this project chose.
+        # Described as STABLE rather than immutable, deliberately, and on reasons
+        # that need nobody to be able to ask for anything: the file is rebuilt by
+        # today's code from that day's snapshot, and retention is bounded, so a
+        # dated entry can go away. Promising permanence would mean breaking the
+        # promise the first time either of those bit. The slide-over says so.
         "item": "2, 14",
     },
     {
