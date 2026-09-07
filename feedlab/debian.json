@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 182,
+  "effective_n": 247,
   "feeds": [
    "alas",
    "alpine",
@@ -8,6 +8,7 @@
    "csaf",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,20 +17,18 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 87602370,
- "cnas_effective_alone": 76,
- "cnas_new_effective": 6,
+ "bytes": 72916673,
+ "cnas_effective_alone": 93,
+ "cnas_new_effective": 4,
  "cnas_new_effective_names": [
-  "ClickHouse",
   "Gridware",
-  "Perforce",
-  "SEC-VLab",
-  "Tcpdump",
-  "Toreon"
+  "Toreon",
+  "Trellix",
+  "odoo"
  ],
- "cnas_reached": 109,
+ "cnas_reached": 124,
  "disclosure": {
   "dated_n": 0,
   "lead_examples": [],
@@ -38,31 +37,28 @@
   "lead_n": 0,
   "lead_pct": 0.0,
   "mirror_n": 0,
-  "undated_n": 17704,
+  "undated_n": 27762,
   "unpublished_examples": [
-   "CVE-2025-26843",
-   "CVE-2025-30156",
-   "CVE-2025-55662",
-   "CVE-2025-59490",
-   "CVE-2025-70291"
+   "CVE-2023-24283",
+   "CVE-2023-24284",
+   "CVE-2023-24285",
+   "CVE-2023-24286",
+   "CVE-2023-24287"
   ],
-  "unpublished_n": 469
+  "unpublished_n": 300
  },
  "feed": "debian",
  "health": {},
- "ids": 18173,
- "ids_new": 61,
- "scored_at": "2026-09-04T00:54:51+00:00",
- "stability": {
-  "fetches": 2,
-  "max": 18173,
-  "min": 18167,
-  "swing_pct": 0.0
- },
+ "ids": 28062,
+ "ids_new": 241,
+ "scored_at": "2026-09-06T21:17:13+00:00",
+ "stability": null,
  "verdict": "detecting",
- "verdict_reason": "6 marginal CNA(s) and 0 lead / 469 unpublished references",
- "wall_seconds": 1.6,
+ "verdict_reason": "4 marginal CNA(s) and 0 lead / 300 unpublished references",
+ "wall_seconds": 1.3,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

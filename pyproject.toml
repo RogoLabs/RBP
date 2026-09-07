@@ -45,3 +45,28 @@ select = ["F", "E9", "E741", "B007", "B002", "B018"]
 # suite imports from _measure the same way, so the usual "unused import" reading
 # does not apply to their re-exports.
 "tests/render/test_mutations.py" = ["F401"]
+
+# ONE MARKER, and it exists to keep a harness test from stopping a publication.
+#
+# `deploy.yml` gates the four-times-daily publish on the offline suite, and that
+# file already refuses to let the RENDER suite do it: "a layout suite must not be
+# able to stop the site publishing." Four assertions in tests/test_feedlab.py are
+# the same category and were not given the same treatment. They compare a
+# COMMITTED HARNESS ARTEFACT to the code: that `feedlab/_baseline.json` names the
+# profile the pipeline runs, gathers the window the pipeline gathers, and that
+# every merged feed has a scorecard measured over that window.
+#
+# They are true when they fire and they are not weakened. What they are not is
+# publish-path: `rbp/feedlab.py` is imported by nothing the site builds, so a
+# stale scorecard cannot make a page wrong. Three of the four resolve against
+# `coverage.window(TODAY'S YEAR)`, so they go red on 1 January and the fix is a
+# 26-minute rebuild plus an audit; without this marker that would halt the live
+# site until somebody was free to run it.
+#
+# ci.yml runs the whole suite, unfiltered, on every pull request and every push to
+# main. So the commit path still enforces all four and nothing is merged past
+# them; only the cron publish, which cannot fix a scorecard anyway, skips them.
+[tool.pytest.ini_options]
+markers = [
+    "harness_artefact: asserts a committed feedlab artefact is in step with the code. Enforced on the commit path by ci.yml; deselected in deploy.yml so it cannot stop a publication.",
+]

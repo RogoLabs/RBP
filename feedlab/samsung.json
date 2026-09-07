@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 247,
   "feeds": [
    "alas",
    "alpine",
@@ -9,6 +9,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,7 +17,7 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
  "bytes": 117682,
  "cnas_effective_alone": 10,
@@ -24,39 +25,41 @@
  "cnas_new_effective_names": [],
  "cnas_reached": 11,
  "disclosure": {
-  "dated_n": 344,
+  "dated_n": 347,
   "lead_examples": [
-   "CVE-2025-48616",
-   "CVE-2025-22426",
-   "CVE-2026-0079",
-   "CVE-2026-0044",
-   "CVE-2025-48595"
+   "CVE-2026-0048",
+   "CVE-2026-0052",
+   "CVE-2026-0056",
+   "CVE-2026-0018",
+   "CVE-2025-48616"
   ],
   "lead_max_days": 61,
   "lead_median_days": 6,
-  "lead_n": 260,
-  "lead_pct": 75.58,
-  "mirror_n": 84,
+  "lead_n": 262,
+  "lead_pct": 75.5,
+  "mirror_n": 85,
   "undated_n": 0,
   "unpublished_examples": [
+   "CVE-2023-20713",
    "CVE-2026-0001",
    "CVE-2026-0022",
    "CVE-2026-0054",
-   "CVE-2026-0058",
-   "CVE-2026-0062"
+   "CVE-2026-0058"
   ],
-  "unpublished_n": 76
+  "unpublished_n": 77
  },
  "feed": "samsung",
  "health": {},
- "ids": 420,
- "ids_new": 201,
- "scored_at": "2026-09-04T00:54:55+00:00",
+ "ids": 424,
+ "ids_new": 97,
+ "scored_at": "2026-09-06T21:17:18+00:00",
  "stability": null,
  "verdict": "corroborating",
  "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
- "wall_seconds": 1.5,
+ "wall_seconds": 1.4,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

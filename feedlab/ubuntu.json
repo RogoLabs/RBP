@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 247,
   "feeds": [
    "alas",
    "alpine",
@@ -9,6 +9,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,59 +17,56 @@
    "samsung",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 331872958,
- "cnas_effective_alone": 49,
+ "bytes": 338871530,
+ "cnas_effective_alone": 51,
  "cnas_new_effective": 0,
  "cnas_new_effective_names": [],
- "cnas_reached": 59,
+ "cnas_reached": 63,
  "disclosure": {
-  "dated_n": 3653,
+  "dated_n": 3858,
   "lead_examples": [
    "CVE-2026-53587",
    "CVE-2026-53586",
    "CVE-2026-53585",
    "CVE-2026-53584",
-   "CVE-2026-53583"
+   "CVE-2026-62292"
   ],
   "lead_max_days": 20,
-  "lead_median_days": 17,
-  "lead_n": 20,
-  "lead_pct": 0.55,
-  "mirror_n": 3633,
+  "lead_median_days": 4,
+  "lead_n": 15,
+  "lead_pct": 0.39,
+  "mirror_n": 3843,
   "undated_n": 0,
   "unpublished_examples": [
-   "CVE-2025-30156",
    "CVE-2025-70291",
    "CVE-2025-70292",
    "CVE-2026-12061",
-   "CVE-2026-12072"
+   "CVE-2026-12072",
+   "CVE-2026-12074"
   ],
-  "unpublished_n": 315
+  "unpublished_n": 135
  },
  "feed": "ubuntu",
  "health": {
   "capped": true,
-  "detail": "hit the 200-page cap at 4,000 records of 76,753 (5.2%); read back to 2026-07-27, a 35-day window; the configured window opens 2025-01-01, so most of it was not read",
+  "detail": "hit the 200-page cap at 4,000 records of 77,321 (5.2%); read back to 2026-07-30, a 36-day window; the configured window opens 2023-01-01, so most of it was not read",
   "ok": false,
   "rows": null,
   "status": "capped",
   "truncated": true
  },
- "ids": 3968,
- "ids_new": 19,
- "scored_at": "2026-09-04T00:54:56+00:00",
- "stability": {
-  "fetches": 2,
-  "max": 3968,
-  "min": 80,
-  "swing_pct": 98.0
- },
+ "ids": 3993,
+ "ids_new": 16,
+ "scored_at": "2026-09-06T21:17:18+00:00",
+ "stability": null,
  "verdict": "corroborating",
  "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
- "wall_seconds": 93.1,
+ "wall_seconds": 88.0,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

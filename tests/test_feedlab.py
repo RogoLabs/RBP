@@ -291,11 +291,73 @@ def test_stability_reports_the_widest_swing():
 
 
 def test_a_fetch_history_accumulates_across_runs(tmp_path):
+    """The FILE keeps every fetch. What `stability` may read from it is a
+    separate question, asserted below: these two are recorded in the same
+    instant, so they are one observation and the swing between them is null
+    rather than 50%."""
     path = tmp_path / "x.fetches.json"
-    feedlab.record_fetch("x", {"a", "b"}, path=str(path))
-    hist = feedlab.record_fetch("x", {"a"}, path=str(path))
+    feedlab.record_fetch("x", {"a", "b"}, years={2026}, path=str(path))
+    hist = feedlab.record_fetch("x", {"a"}, years={2026}, path=str(path))
     assert [h["ids"] for h in hist] == [2, 1]
-    assert feedlab.stability(hist)["swing_pct"] == 50.0
+    assert [h["years"] for h in hist] == [[2026], [2026]]
+    assert feedlab.stability(hist) is None
+
+
+def test_two_fetches_in_one_session_are_one_observation(tmp_path):
+    """`feedlab score jvn` and a baseline rebuild ran thirty minutes apart in one
+    session, both returned 1,117, and the next `audit` would have committed
+    `swing_pct: 0.0` to jvn's card. Ten of the fifteen committed cards already
+    carried a 0.0% from a pair four hours apart.
+
+    build_baseline's own comment says why that is worse than null: "null says
+    not measured, and 0% says measured, and perfect". FEEDS.md asks for three
+    fetches 24 hours apart and nothing enforced the interval.
+    """
+    w = [2025, 2026]
+    same_session = [{"at": "2026-09-06T18:05:00+00:00", "ids": 1117, "years": w},
+                    {"at": "2026-09-06T18:35:00+00:00", "ids": 1117, "years": w}]
+    assert feedlab.stability(same_session) is None
+    # A day later is the observation FEEDS.md asks for, and it reports.
+    spaced = same_session + [{"at": "2026-09-07T19:00:00+00:00", "ids": 1000,
+                              "years": w}]
+    got = feedlab.stability(spaced)
+    assert got["fetches"] == 2 and got["swing_pct"] == 10.5
+
+
+def test_a_swing_across_two_windows_is_the_window_moving_not_the_feed(tmp_path):
+    """The defect this whole change is about, arriving in the one field that
+    would have recorded it as feed volatility.
+
+    Every `*.fetches.json` was written while the harness gathered two years. The
+    first rebuild at four gathers roughly twice the ids, and against an unstamped
+    history that reads as a 43% swing -- past FEEDS.md's 40% "no usable shrink
+    baseline" line, for a feed that did not move at all. `csaf` had already shown
+    the shape one level down: its committed 29.3% is sixteen CSAF providers
+    against eighteen.
+    """
+    hist = [{"at": "2026-08-31T15:42:00+00:00", "ids": 1117, "years": [2025, 2026]},
+            {"at": "2026-09-06T18:07:00+00:00", "ids": 1968,
+             "years": [2023, 2024, 2025, 2026]}]
+    assert feedlab.stability(hist) is None, (
+        "a count from a two-year gather and one from a four-year gather were "
+        "compared as if they measured the same thing")
+    hist.append({"at": "2026-09-08T18:00:00+00:00", "ids": 1900,
+                 "years": [2023, 2024, 2025, 2026]})
+    got = feedlab.stability(hist)
+    assert got["fetches"] == 2 and got["swing_pct"] == 3.5
+    assert got["years"] == [2023, 2024, 2025, 2026], (
+        "the swing does not say which window it was measured over, which is how "
+        "this went unnoticed the first time")
+
+
+def test_an_unstamped_history_is_still_readable(tmp_path):
+    """Every fetch recorded before the window was stamped has no `years`. They
+    are comparable to each other -- they were all gathered at two years -- and
+    must not be silently dropped or silently mixed with stamped ones."""
+    old = [{"at": "2026-08-31T15:42:00+00:00", "ids": 100},
+           {"at": "2026-09-06T18:07:00+00:00", "ids": 90}]
+    got = feedlab.stability(old)
+    assert got["swing_pct"] == 10.0 and got["years"] is None
 
 
 def test_a_scorecard_round_trips_as_json(tmp_path):
@@ -611,6 +673,17 @@ def test_the_floor_the_report_uses_is_the_one_inference_uses():
 # --------------------------------------------------------------------------
 # Round 7 B1 and B2: the harness has to describe the feed set that actually runs
 # --------------------------------------------------------------------------
+#
+# THE FOUR TESTS BELOW ARE MARKED `harness_artefact` AND THAT IS A DEPLOY
+# DECISION, not a hint about strength. Each compares a committed artefact under
+# `feedlab/` to the code, so each fails on a change that is CORRECT but
+# unaccompanied by a 26-minute rebuild: a feed added to the profile, a window
+# widened, a calendar year turning over. `deploy.yml` gates the live site's
+# four-times-daily publish on this suite, and `rbp/feedlab.py` is imported by
+# nothing the site builds, so without the marker a stale scorecard could halt
+# publication while being unable to make any page wrong. ci.yml runs them
+# unfiltered on every pull request and every push to main, which is where the
+# staleness is actually someone's to fix. Reasoning in full in pyproject.toml.
 
 def _lab():
     import pathlib
@@ -622,6 +695,7 @@ def _profile_feeds():
     return [x for x in PROFILES["weekly"].split(",") if x]
 
 
+@pytest.mark.harness_artefact
 def test_every_feed_in_the_running_profile_has_a_scorecard():
     """feedlab/README.md, line 3: "no feed is merged without its scorecard in
     the diff."
@@ -643,6 +717,40 @@ def test_every_feed_in_the_running_profile_has_a_scorecard():
         "baseline and run `audit`, and commit the result.")
 
 
+@pytest.mark.harness_artefact
+def test_every_committed_scorecard_measures_the_window_the_pipeline_reads():
+    """The DAMAGE from a stale `--years`, as opposed to its cause.
+
+    `test_the_harness_cli_defaults_to_the_window_it_measures` catches the next
+    one at the argparse default and this catches the fifteen cards already on
+    disk. Nothing compared a card's own `years` field to `coverage.window()`, so
+    every scorecard in the repo sat at [2025, 2026] for a day after the pipeline
+    went to four years, each one internally consistent and every marginal figure
+    in them an understatement: `jvn` 1,117 ids where the live run read 1,968.
+
+    Scoped to feeds the profile actually runs. A card for a candidate that was
+    measured and NOT merged is a record of what was measured then, and rewriting
+    it would cost a fetch to say nothing new.
+    """
+    import datetime as dt
+    from rbp import coverage
+    want = sorted(coverage.window(dt.date.today().year))
+    stale = {}
+    for feed in _profile_feeds():
+        path = _lab() / f"{feed}.json"
+        if not path.exists():
+            continue  # the scorecard's own test above owns that failure
+        got = sorted(json.loads(path.read_text()).get("years") or [])
+        if got != want:
+            stale[feed] = got
+    assert not stale, (
+        f"these merged feeds are scored over a window the pipeline does not "
+        f"read (it reads {want}): {stale}. Their marginal figures are marginal "
+        "to the wrong merged set. Rebuild the baseline and re-run "
+        "`python -m rbp.feedlab audit`.")
+
+
+@pytest.mark.harness_artefact
 def test_the_recorded_baseline_describes_the_profile_that_actually_runs():
     """A stale baseline does not make the harness cautious. It makes it permissive.
 
@@ -668,22 +776,69 @@ def test_the_recorded_baseline_describes_the_profile_that_actually_runs():
         "Re-run `python -m rbp.feedlab baseline`.")
 
 
+@pytest.mark.harness_artefact
 def test_the_baseline_gathers_the_years_the_pipeline_gathers():
-    """`coverage_years` (2024-2026) and the GATHER years (2025-2026) are different
-    windows and it is easy to pass one for the other.
+    """THE RECORDED BASELINE READS THE PIPELINE'S WINDOW, whatever it is.
 
-    Done exactly once while rebuilding this baseline: `--years 2024,2025,2026`
-    looked like the site's window, took alas from 11,674 rows to 16,026, and would
-    have recorded a merged set the pipeline never reads. Which is B2's defect
-    arriving inside B2's fix.
+    The previous version asserted the hand-written pair `{now, now - 1}` and it
+    PASSED THROUGH the defect it was written to catch. `coverage.WINDOW_YEARS`
+    became 4 on 2026-09-05, `a6332c0` unified the gather and coverage windows,
+    and `feedlab`'s three `--years` defaults stayed at the literal "2025,2026".
+    The baseline was rebuilt with that stale default, so the assertion agreed
+    with it: two files internally consistent, the contradiction only between
+    them and the pipeline. Measured on the same commit, the harness saw 1,117
+    `jvn` ids and 208 effective CNAs where the live run saw 1,968 and 263.
+
+    So this derives the expectation instead, from the one definition both sides
+    read. A hand-written window here is the defect, not the test.
     """
     import datetime as dt
+    from rbp import coverage
     recorded = json.loads((_lab() / "_baseline.json").read_text())
-    years = set(recorded.get("years") or [])
-    now = dt.date.today().year
-    assert years == {now, now - 1}, (
-        f"baseline gathered {sorted(years)}; the pipeline gathers "
-        f"{sorted({now, now - 1})}. coverage_years is the other window.")
+    years = sorted(recorded.get("years") or [])
+    want = sorted(coverage.window(dt.date.today().year))
+    assert years == want, (
+        f"the baseline gathered {years}; the pipeline gathers {want}. Every "
+        "marginal figure scored against it is marginal to the wrong merged "
+        "set. Re-run `python -m rbp.feedlab baseline`.")
+
+    # THE SAME CONTRADICTION, VISIBLE INSIDE ONE FILE. The stale baseline
+    # recorded years [2025, 2026] beside coverage_years [2023, 2024, 2025, 2026]
+    # and nothing compared the two, which is the whole defect sitting in a
+    # committed artefact in plain sight. There is one window now; a baseline
+    # whose own two fields disagree was gathered by something that still thinks
+    # there are two.
+    assert sorted(recorded.get("coverage_years") or []) == years, (
+        f"the baseline gathered {years} and measured coverage over "
+        f"{sorted(recorded.get('coverage_years') or [])}. Those are one window "
+        "since a6332c0.")
+
+
+def test_the_harness_cli_defaults_to_the_window_it_measures():
+    """The seam the test above sits downstream of.
+
+    The baseline assertion can only fail AFTER a wrong baseline has been
+    gathered, which costs half an hour and fifteen third-party fetches. This one
+    fails on the argparse default itself, and it is the thing that was actually
+    wrong: `--years` was a literal in three subcommands, so widening the window
+    in `coverage.py` left the harness reading the old one with no test between
+    them.
+
+    `audit` is absent on purpose: it scores `base["years"]` from the recorded
+    baseline, so the `--years` it used to accept reached no code at all.
+    """
+    import datetime as dt
+    from rbp import coverage, feedlab as fl
+    want = sorted(coverage.window(dt.date.today().year))
+    assert sorted(fl._years(fl._default_years())) == want
+
+    ap = fl._build_parser()
+    for argv in (["baseline"], ["score", "x"]):
+        got = sorted(fl._years(ap.parse_args(argv).years))
+        assert got == want, (
+            f"`feedlab {argv[0]}` defaults to {got}, not the pipeline's {want}")
+    with pytest.raises(SystemExit):
+        ap.parse_args(["audit", "--years", "2025,2026"])
 
 
 def test_deep_is_an_alias_of_weekly_not_a_copy_of_it():
@@ -825,15 +980,27 @@ def test_the_audit_reads_the_fetch_history_and_never_appends_to_it():
         "real fetch")
 
 
-def test_a_baseline_rebuild_records_one_observation_per_feed():
+def test_a_baseline_rebuild_records_one_observation_per_feed(tmp_path, monkeypatch):
     """The only place a real fetch of every feed happens, so the only place an
-    honest observation can come from."""
-    import pathlib
-    src = (pathlib.Path(feedlab.__file__)).read_text()
-    build = src[src.index("def build_baseline("):src.index("def baseline_summary(")]
-    assert "record_fetch(" in build, (
-        "a baseline rebuild fetches every feed for real and records none of it, "
-        "so stability can never accrue")
+    honest observation can come from -- AND the window it happened over.
+
+    Run rather than read. The source-text version of this test passed while
+    `build_baseline` recorded a bare `{at, ids}`, which is the seam that let two
+    windows' counts into one history: `record_fetch` was proved and its only
+    real caller was not. Deleting the argument here leaves every other assertion
+    in this file green.
+    """
+    from rbp import feeds
+    monkeypatch.setattr(feedlab, "STATE", str(tmp_path))
+    monkeypatch.setitem(feeds.ADAPTERS, "fake",
+                        lambda years: [row(f"CVE-{y}-1000") for y in sorted(years)])
+    base = feedlab.build_baseline(["fake"], {2023, 2024, 2025, 2026}, CORPUS)
+    assert base["feeds"] == ["fake"]
+    hist = json.loads((tmp_path / "fake.fetches.json").read_text())
+    assert [h["ids"] for h in hist] == [4]
+    assert hist[0]["years"] == [2023, 2024, 2025, 2026], (
+        "the rebuild recorded a count with no window beside it, so the next "
+        "window change reads as the feed swinging")
 
 
 def test_reading_a_missing_fetch_history_is_empty_not_an_error(tmp_path):

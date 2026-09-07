@@ -246,8 +246,14 @@ likely to be somewhere nobody is looking.
 **`rbp/feedlab.py`, a scoring harness. One command, one candidate, one verdict.**
 
 ```
-python -m rbp.feedlab score <name> --years 2025,2026
+python -m rbp.feedlab score <name>
 ```
+
+`--years` defaults to the window `cli.run` gathers, read from
+`coverage.WINDOW_YEARS` rather than typed here. It was the literal `2025,2026` in
+three subcommands and stayed that way when the window became four years, so every
+scorecard committed before 2026-09-06 measures a candidate over two years against
+a pipeline that reads four.
 
 emits, for a single candidate, against the live corpus and the current merged set:
 
@@ -258,7 +264,7 @@ emits, for a single candidate, against the live corpus and the current merged se
 | `rbp_rows`, `rbp_sole_source` | did it find anything, and anything nobody else found |
 | `disclosure_lead_n`, `disclosure_lead_pct` | admissibility test 2 |
 | `wall_seconds`, `bytes` | against the 15-minute warm-run budget |
-| `stability` | ids on 3 fetches 24h apart; a feed whose count swings 40% on its own has no usable shrink baseline |
+| `stability` | ids on 3 fetches 24h apart, over ONE window; a feed whose count swings 40% on its own has no usable shrink baseline |
 
 The harness writes `feedlab/<name>.json`, and the merge commit includes it. **No feed
 is merged without its scorecard in the diff.** That is the artefact that makes this plan

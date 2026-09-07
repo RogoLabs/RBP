@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 247,
   "feeds": [
    "alas",
    "alpine",
@@ -8,6 +8,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,13 +17,13 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 896876,
+ "bytes": 897033,
  "cnas_effective_alone": 10,
  "cnas_new_effective": 0,
  "cnas_new_effective_names": [],
- "cnas_reached": 18,
+ "cnas_reached": 19,
  "disclosure": {
   "dated_n": 0,
   "lead_examples": [],
@@ -31,25 +32,22 @@
   "lead_n": 0,
   "lead_pct": 0.0,
   "mirror_n": 0,
-  "undated_n": 62,
+  "undated_n": 95,
   "unpublished_examples": [],
   "unpublished_n": 0
  },
  "feed": "arch",
  "health": {},
- "ids": 62,
+ "ids": 95,
  "ids_new": 0,
- "scored_at": "2026-09-04T00:54:50+00:00",
- "stability": {
-  "fetches": 2,
-  "max": 62,
-  "min": 62,
-  "swing_pct": 0.0
- },
+ "scored_at": "2026-09-06T21:17:12+00:00",
+ "stability": null,
  "verdict": "unmeasurable",
- "verdict_reason": "every one of its 62 references is undated and none is currently unpublished, so admissibility test 2 could not be run. Not a mirror; not measured. It must not be excluded from the coverage numerator on this evidence",
- "wall_seconds": 2.3,
+ "verdict_reason": "every one of its 95 references is undated and none is currently unpublished, so admissibility test 2 could not be run. Not a mirror; not measured. It must not be excluded from the coverage numerator on this evidence",
+ "wall_seconds": 1.6,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

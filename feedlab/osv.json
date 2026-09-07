@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 181,
+  "effective_n": 246,
   "feeds": [
    "alas",
    "alpine",
@@ -9,6 +9,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "redhat",
@@ -16,64 +17,55 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 308159066,
- "cnas_effective_alone": 79,
- "cnas_new_effective": 11,
+ "bytes": 309575253,
+ "cnas_effective_alone": 104,
+ "cnas_new_effective": 5,
  "cnas_new_effective_names": [
-  "Arm",
   "BombadilSystems",
-  "Checkmarx",
-  "ClickHouse",
   "Kong",
-  "LY-Corporation",
-  "SEC-VLab",
+  "Swift",
   "Toreon",
-  "alibaba",
-  "naver",
-  "netapp"
+  "alibaba"
  ],
- "cnas_reached": 108,
+ "cnas_reached": 137,
  "disclosure": {
-  "dated_n": 12124,
+  "dated_n": 19936,
   "lead_examples": [
    "CVE-2025-25300",
    "CVE-2026-4800",
-   "CVE-2026-76844",
-   "CVE-2025-27098",
-   "CVE-2025-71407"
+   "CVE-2024-22050",
+   "CVE-2023-54354",
+   "CVE-2023-54356"
   ],
   "lead_max_days": 1985,
-  "lead_median_days": 8,
-  "lead_n": 4868,
-  "lead_pct": 40.15,
-  "mirror_n": 7256,
-  "undated_n": 14,
+  "lead_median_days": 10,
+  "lead_n": 6614,
+  "lead_pct": 33.18,
+  "mirror_n": 13322,
+  "undated_n": 16,
   "unpublished_examples": [
-   "CVE-2025-0085",
-   "CVE-2025-0088",
-   "CVE-2025-0091",
-   "CVE-2025-0094",
-   "CVE-2025-0095"
+   "CVE-2023-21119",
+   "CVE-2023-32198",
+   "CVE-2023-37366",
+   "CVE-2023-37465",
+   "CVE-2023-45023"
   ],
-  "unpublished_n": 538
+  "unpublished_n": 414
  },
  "feed": "osv",
  "health": {},
- "ids": 12676,
- "ids_new": 981,
- "scored_at": "2026-09-04T00:54:54+00:00",
- "stability": {
-  "fetches": 2,
-  "max": 12676,
-  "min": 12676,
-  "swing_pct": 0.0
- },
+ "ids": 20366,
+ "ids_new": 1761,
+ "scored_at": "2026-09-06T21:17:17+00:00",
+ "stability": null,
  "verdict": "detecting",
- "verdict_reason": "11 marginal CNA(s) and 4868 lead / 538 unpublished references",
- "wall_seconds": 11.6,
+ "verdict_reason": "5 marginal CNA(s) and 6614 lead / 414 unpublished references",
+ "wall_seconds": 11.0,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

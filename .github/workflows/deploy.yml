@@ -123,7 +123,18 @@ jobs:
       # job, and this job gates a four-times-daily publication. So the browser
       # directory is not merely un-run here, it is not collected: a layout suite
       # must not be able to stop the site publishing.
-      - run: python -m pytest tests/ -q --ignore=tests/render
+      #
+      # AND `harness_artefact` IS DESELECTED, for the same reason one paragraph
+      # up. Four tests in tests/test_feedlab.py compare a committed artefact
+      # under `feedlab/` to the code, and fail on a change that is correct but
+      # not yet accompanied by a 26-minute baseline rebuild: a feed added to the
+      # profile, the coverage window widened, or the calendar year turning over,
+      # which three of them resolve against. `rbp/feedlab.py` is imported by
+      # nothing the site builds, so a stale scorecard cannot make a page wrong,
+      # and a cron tick cannot rebuild a baseline. ci.yml runs the suite
+      # unfiltered on every pull request and every push to main, so all four are
+      # still enforced where somebody is present to act on them.
+      - run: python -m pytest tests/ -q --ignore=tests/render -m "not harness_artefact"
 
   build:
     needs: test

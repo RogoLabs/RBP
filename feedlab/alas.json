@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 183,
+  "effective_n": 247,
   "feeds": [
    "alpine",
    "arch",
@@ -8,6 +8,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,55 +17,52 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 9963071,
- "cnas_effective_alone": 56,
+ "bytes": 10124878,
+ "cnas_effective_alone": 68,
  "cnas_new_effective": 2,
  "cnas_new_effective_names": [
-  "Tcpdump",
+  "Trellix",
   "alibaba"
  ],
- "cnas_reached": 74,
+ "cnas_reached": 86,
  "disclosure": {
-  "dated_n": 11778,
+  "dated_n": 19840,
   "lead_examples": [
-   "CVE-2025-0577",
-   "CVE-2025-1272",
-   "CVE-2025-24528",
-   "CVE-2025-24531",
-   "CVE-2025-22873"
+   "CVE-2023-3867",
+   "CVE-2023-3865",
+   "CVE-2023-3866",
+   "CVE-2023-27539",
+   "CVE-2023-4134"
   ],
-  "lead_max_days": 387,
-  "lead_median_days": 10,
-  "lead_n": 394,
-  "lead_pct": 3.35,
-  "mirror_n": 11384,
-  "undated_n": 0,
+  "lead_max_days": 703,
+  "lead_median_days": 13,
+  "lead_n": 992,
+  "lead_pct": 5.0,
+  "mirror_n": 18848,
+  "undated_n": 15,
   "unpublished_examples": [
-   "CVE-2025-30156",
-   "CVE-2026-12184",
-   "CVE-2026-13606",
-   "CVE-2026-14957",
-   "CVE-2026-15578"
+   "CVE-2023-32803",
+   "CVE-2024-12455",
+   "CVE-2024-13745",
+   "CVE-2024-1627",
+   "CVE-2024-31884"
   ],
-  "unpublished_n": 164
+  "unpublished_n": 121
  },
  "feed": "alas",
  "health": {},
- "ids": 11942,
- "ids_new": 4,
- "scored_at": "2026-09-04T00:54:49+00:00",
- "stability": {
-  "fetches": 2,
-  "max": 11942,
-  "min": 11942,
-  "swing_pct": 0.0
- },
+ "ids": 19976,
+ "ids_new": 24,
+ "scored_at": "2026-09-06T21:17:11+00:00",
+ "stability": null,
  "verdict": "detecting",
- "verdict_reason": "2 marginal CNA(s) and 394 lead / 164 unpublished references",
- "wall_seconds": 0.9,
+ "verdict_reason": "2 marginal CNA(s) and 992 lead / 121 unpublished references",
+ "wall_seconds": 1.0,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]

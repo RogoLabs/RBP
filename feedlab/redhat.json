@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 182,
+  "effective_n": 244,
   "feeds": [
    "alas",
    "alpine",
@@ -9,6 +9,7 @@
    "debian",
    "ghsa",
    "ghsa-repos",
+   "jvn",
    "mozilla",
    "msrc",
    "osv",
@@ -16,56 +17,56 @@
    "ubuntu",
    "ubuntu-osv"
   ],
-  "scored_at": "2026-08-31T20:23:00+00:00"
+  "scored_at": "2026-09-06T21:08:54+00:00"
  },
- "bytes": 14331544,
- "cnas_effective_alone": 82,
- "cnas_new_effective": 3,
+ "bytes": 22262324,
+ "cnas_effective_alone": 92,
+ "cnas_new_effective": 6,
  "cnas_new_effective_names": [
   "BombadilSystems",
+  "CSA",
+  "Payara",
+  "Trellix",
   "Yugabyte",
   "alibaba"
  ],
- "cnas_reached": 107,
+ "cnas_reached": 122,
  "disclosure": {
-  "dated_n": 16634,
+  "dated_n": 25451,
   "lead_examples": [
-   "CVE-2026-0871",
-   "CVE-2025-0577",
-   "CVE-2026-18917",
-   "CVE-2025-1272",
-   "CVE-2026-4633"
+   "CVE-2023-20576",
+   "CVE-2023-20577",
+   "CVE-2023-32255",
+   "CVE-2023-32253",
+   "CVE-2023-32256"
   ],
-  "lead_max_days": 410,
-  "lead_median_days": 2,
-  "lead_n": 1528,
-  "lead_pct": 9.19,
-  "mirror_n": 15106,
-  "undated_n": 0,
+  "lead_max_days": 932,
+  "lead_median_days": 3,
+  "lead_n": 2718,
+  "lead_pct": 10.68,
+  "mirror_n": 22733,
+  "undated_n": 14,
   "unpublished_examples": [
-   "CVE-2025-30156",
-   "CVE-2025-61620",
-   "CVE-2025-9141",
-   "CVE-2026-11053",
-   "CVE-2026-11099"
+   "CVE-2023-7122",
+   "CVE-2024-0234",
+   "CVE-2024-10039",
+   "CVE-2024-12455",
+   "CVE-2024-31884"
   ],
-  "unpublished_n": 133
+  "unpublished_n": 93
  },
  "feed": "redhat",
  "health": {},
- "ids": 16767,
- "ids_new": 271,
- "scored_at": "2026-09-04T00:54:55+00:00",
- "stability": {
-  "fetches": 2,
-  "max": 16767,
-  "min": 16767,
-  "swing_pct": 0.0
- },
+ "ids": 25558,
+ "ids_new": 321,
+ "scored_at": "2026-09-06T21:17:17+00:00",
+ "stability": null,
  "verdict": "detecting",
- "verdict_reason": "3 marginal CNA(s) and 1528 lead / 133 unpublished references",
- "wall_seconds": 14.3,
+ "verdict_reason": "6 marginal CNA(s) and 2718 lead / 93 unpublished references",
+ "wall_seconds": 19.6,
  "years": [
+  2023,
+  2024,
   2025,
   2026
  ]
