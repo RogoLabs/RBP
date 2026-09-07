@@ -6546,9 +6546,6 @@
   "CVE-2026-68955": {
    "first_public": "2026-08-27"
   },
-  "CVE-2026-16876": {
-   "first_public": "2026-08-21"
-  },
   "CVE-2025-71386": {
    "first_public": "2026-07-31"
   },
@@ -9299,6 +9296,15 @@
    "published": "2026-09-04",
    "days_to_publish": 16,
    "closed_on": "2026-09-05"
+  },
+  {
+   "cve_id": "CVE-2026-16876",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-21",
+   "published": "2026-09-07",
+   "days_to_publish": 17,
+   "closed_on": "2026-09-07"
   }
  ]
 }

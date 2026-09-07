@@ -2,20 +2,19 @@
  {
   "cve_id": "CVE-2026-81738",
   "state": "RESERVED",
-  "public_date": "2026-09-04",
-  "sources": "alas,debian,ubuntu",
-  "feed_count": 3,
+  "public_date": "2026-09-05",
+  "sources": "alas,debian",
+  "feed_count": 2,
   "dates": {
-   "alas": "2026-09-05",
-   "ubuntu": "2026-09-04"
+   "alas": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-81738;debian:openvpn;ubuntu:CVE-2026-81738",
+  "refs": "alas:CVE-2026-81738;debian:openvpn",
   "description": "OpenVPN on Windows contains an off-by-one error in the write_dhcp_search_str() function used to build DHCP options for the Windows TUN/TAP adapter (the DHCP masquerade path).",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
-  "days_public": 3,
+  "days_public": 2,
   "clock_known": true,
-  "hours_public": 72,
+  "hours_public": 48,
   "clock_origin": "advisory",
   "advisory_date": "2026-09-05",
   "advisory_days_public": 2,
@@ -30,8 +29,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-81738.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81738",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-81738"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81738"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -119,20 +117,19 @@
  {
   "cve_id": "CVE-2026-82312",
   "state": "RESERVED",
-  "public_date": "2026-09-04",
-  "sources": "alas,debian,ubuntu",
-  "feed_count": 3,
+  "public_date": "2026-09-05",
+  "sources": "alas,debian",
+  "feed_count": 2,
   "dates": {
-   "alas": "2026-09-05",
-   "ubuntu": "2026-09-04"
+   "alas": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-82312;debian:openvpn;ubuntu:CVE-2026-82312",
+  "refs": "alas:CVE-2026-82312;debian:openvpn",
   "description": "OpenVPN 2.x on Windows created the --service exit event and the netsh.exe guard semaphore with a NULL DACL, which allows a local user to interfere with other users' openvpn processes by blocking the netsh semaphore or by signalling the exit event, leading to a local denial of service.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
-  "days_public": 3,
+  "days_public": 2,
   "clock_known": true,
-  "hours_public": 72,
+  "hours_public": 48,
   "clock_origin": "advisory",
   "advisory_date": "2026-09-05",
   "advisory_days_public": 2,
@@ -147,8 +144,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-82312.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82312",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-82312"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82312"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -159,14 +155,15 @@
   "cve_id": "CVE-2026-85498",
   "state": "RESERVED",
   "public_date": "2026-09-04",
-  "sources": "alas,csaf,debian,redhat",
-  "feed_count": 4,
+  "sources": "alas,csaf,debian,redhat,ubuntu",
+  "feed_count": 5,
   "dates": {
    "alas": "2026-09-05",
+   "ubuntu": "2026-09-07",
    "redhat": "2026-09-04",
    "csaf": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-85498;csaf:SUSE Product Security Team\tCVE-2026-85498\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85498.json;debian:policykit-1;redhat:CVE-2026-85498",
+  "refs": "alas:CVE-2026-85498;csaf:SUSE Product Security Team\tCVE-2026-85498\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85498.json;debian:policykit-1;redhat:CVE-2026-85498;ubuntu:CVE-2026-85498",
   "description": "A flaw was found in polkit.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -189,7 +186,8 @@
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-85498.html",
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85498.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-85498",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-85498"
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-85498",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-85498"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -200,14 +198,13 @@
   "cve_id": "CVE-2026-65165",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-05",
-   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65165;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65165;ubuntu:CVE-2026-65165",
+  "refs": "alas:CVE-2026-65165;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65165",
   "description": "Fix various issues around job steps and node count discrepancies",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -229,7 +226,6 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65165.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65165",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-65165",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65165"
   },
   "veto_evaluated": false,
@@ -240,20 +236,19 @@
  {
   "cve_id": "CVE-2026-84226",
   "state": "RESERVED",
-  "public_date": "2026-09-04",
-  "sources": "alas,debian,ubuntu",
-  "feed_count": 3,
+  "public_date": "2026-09-05",
+  "sources": "alas,debian",
+  "feed_count": 2,
   "dates": {
-   "alas": "2026-09-05",
-   "ubuntu": "2026-09-04"
+   "alas": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-84226;debian:openvpn;ubuntu:CVE-2026-84226",
+  "refs": "alas:CVE-2026-84226;debian:openvpn",
   "description": "OpenVPN before 2.7.7 on Windows: the tapctl utility invokes netsh via CreateProcess() with a NULL application name, so the executable is resolved through the Windows search path.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
-  "days_public": 3,
+  "days_public": 2,
   "clock_known": true,
-  "hours_public": 72,
+  "hours_public": 48,
   "clock_origin": "advisory",
   "advisory_date": "2026-09-05",
   "advisory_days_public": 2,
@@ -268,8 +263,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-84226.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84226",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-84226"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84226"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -357,20 +351,19 @@
  {
   "cve_id": "CVE-2026-84256",
   "state": "RESERVED",
-  "public_date": "2026-09-04",
-  "sources": "alas,debian,ubuntu",
-  "feed_count": 3,
+  "public_date": "2026-09-05",
+  "sources": "alas,debian",
+  "feed_count": 2,
   "dates": {
-   "alas": "2026-09-05",
-   "ubuntu": "2026-09-04"
+   "alas": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-84256;debian:openvpn;ubuntu:CVE-2026-84256",
+  "refs": "alas:CVE-2026-84256;debian:openvpn",
   "description": "OpenVPN on Windows before versions 2.6.14 and 2.7.5 is affected by an OS command injection issue.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
-  "days_public": 3,
+  "days_public": 2,
   "clock_known": true,
-  "hours_public": 72,
+  "hours_public": 48,
   "clock_origin": "advisory",
   "advisory_date": "2026-09-05",
   "advisory_days_public": 2,
@@ -385,8 +378,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-84256.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84256",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-84256"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84256"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -397,14 +389,13 @@
   "cve_id": "CVE-2026-65109",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-04",
-   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65109;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65109;ubuntu:CVE-2026-65109",
+  "refs": "alas:CVE-2026-65109;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65109",
   "description": "Fix slurmstepd removing files outside the container spool directory when cleaning up an OCI containe, Fix slurmstepd leaving OCI container spool directories behind when ContainerPath contains a task id pattern",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -426,7 +417,6 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65109.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65109",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-65109",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65109"
   },
   "veto_evaluated": false,
@@ -438,15 +428,16 @@
   "cve_id": "CVE-2026-85218",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,csaf,debian,ghsa-repos,redhat",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,redhat,ubuntu",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-07",
    "ghsa-repos": "2026-09-03",
    "redhat": "2026-09-03",
    "csaf": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-85218;csaf:SUSE Product Security Team\tCVE-2026-85218\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85218.json;debian:bluez;ghsa-repos:bluez/bluez\tGHSA-m2vx-pw5f-rc8v;redhat:CVE-2026-85218",
+  "refs": "alas:CVE-2026-85218;csaf:SUSE Product Security Team\tCVE-2026-85218\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85218.json;debian:bluez;ghsa-repos:bluez/bluez\tGHSA-m2vx-pw5f-rc8v;redhat:CVE-2026-85218;ubuntu:CVE-2026-85218",
   "description": "A double stack-based buffer overflow was found in the BlueZ AVRCP controller implementation.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -470,7 +461,8 @@
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85218.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-85218",
    "ghsa-repos": "https://github.com/bluez/bluez/security/advisories/GHSA-m2vx-pw5f-rc8v",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-85218"
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-85218",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-85218"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -481,14 +473,13 @@
   "cve_id": "CVE-2026-84450",
   "state": "RESERVED",
   "public_date": "2026-09-01",
-  "sources": "alas,debian,ghsa-repos,ubuntu",
-  "feed_count": 4,
+  "sources": "alas,debian,ghsa-repos",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-04",
-   "ubuntu": "2026-09-04",
    "ghsa-repos": "2026-09-01"
   },
-  "refs": "alas:CVE-2026-84450;debian:libheif;ghsa-repos:strukturag/libheif\tGHSA-gh5q-69gg-c964;ubuntu:CVE-2026-84450",
+  "refs": "alas:CVE-2026-84450;debian:libheif;ghsa-repos:strukturag/libheif\tGHSA-gh5q-69gg-c964",
   "description": "Incomplete fix for GHSA-73p7-m7gg-w2jv leaves libheif 1.23.1 vulnerable to an out-of-bounds read",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -510,8 +501,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-84450.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84450",
-   "ghsa-repos": "https://github.com/strukturag/libheif/security/advisories/GHSA-gh5q-69gg-c964",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-84450"
+   "ghsa-repos": "https://github.com/strukturag/libheif/security/advisories/GHSA-gh5q-69gg-c964"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -522,14 +512,13 @@
   "cve_id": "CVE-2026-65139",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-04",
-   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65139;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65139;ubuntu:CVE-2026-65139",
+  "refs": "alas:CVE-2026-65139;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65139",
   "description": "Fix various issues in unsafe operation/queries to the slurmdbd",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -551,7 +540,6 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65139.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65139",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-65139",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65139"
   },
   "veto_evaluated": false,
@@ -563,14 +551,13 @@
   "cve_id": "CVE-2026-65108",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-04",
-   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65108;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65108;ubuntu:CVE-2026-65108",
+  "refs": "alas:CVE-2026-65108;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65108",
   "description": "Fix a slurmstepd stack overflow when a job environment contains an oversized SPANK option variable",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -592,7 +579,6 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65108.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65108",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-65108",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65108"
   },
   "veto_evaluated": false,
@@ -604,14 +590,15 @@
   "cve_id": "CVE-2026-71223",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,csaf,debian,redhat",
-  "feed_count": 4,
+  "sources": "alas,csaf,debian,redhat,ubuntu",
+  "feed_count": 5,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-07",
    "redhat": "2026-09-03",
    "csaf": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-71223;csaf:SUSE Product Security Team\tCVE-2026-71223\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-71223.json;debian:gfs2-utils;redhat:CVE-2026-71223",
+  "refs": "alas:CVE-2026-71223;csaf:SUSE Product Security Team\tCVE-2026-71223\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-71223.json;debian:gfs2-utils;redhat:CVE-2026-71223;ubuntu:CVE-2026-71223",
   "description": "An integer overflow vulnerability was found in gfs2-utils.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -634,7 +621,8 @@
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-71223.html",
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-71223.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-71223",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-71223"
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-71223",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-71223"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -645,14 +633,13 @@
   "cve_id": "CVE-2026-65138",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-04",
-   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65138;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65138;ubuntu:CVE-2026-65138",
+  "refs": "alas:CVE-2026-65138;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65138",
   "description": "Fix heap over-read when unpacking a malformed forward data RPC in slurmd.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -674,7 +661,6 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65138.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65138",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-65138",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65138"
   },
   "veto_evaluated": false,
@@ -686,14 +672,13 @@
   "cve_id": "CVE-2026-84451",
   "state": "RESERVED",
   "public_date": "2026-09-01",
-  "sources": "alas,debian,ghsa-repos,ubuntu",
-  "feed_count": 4,
+  "sources": "alas,debian,ghsa-repos",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-04",
-   "ubuntu": "2026-09-04",
    "ghsa-repos": "2026-09-01"
   },
-  "refs": "alas:CVE-2026-84451;debian:libheif;ghsa-repos:strukturag/libheif\tGHSA-hh47-fhqr-cj2r;ubuntu:CVE-2026-84451",
+  "refs": "alas:CVE-2026-84451;debian:libheif;ghsa-repos:strukturag/libheif\tGHSA-hh47-fhqr-cj2r",
   "description": "Incomplete fix for GHSA-73p7-m7gg-w2jv leaves libheif 1.23.1 vulnerable to an out-of-bounds read",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -715,8 +700,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-84451.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84451",
-   "ghsa-repos": "https://github.com/strukturag/libheif/security/advisories/GHSA-hh47-fhqr-cj2r",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-84451"
+   "ghsa-repos": "https://github.com/strukturag/libheif/security/advisories/GHSA-hh47-fhqr-cj2r"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -850,13 +834,12 @@
   "cve_id": "CVE-2026-65140",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "debian,ubuntu,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "debian,ubuntu-osv",
+  "feed_count": 2,
   "dates": {
-   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65140;ubuntu:CVE-2026-65140",
+  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65140",
   "description": "[Fix a privilege escalation where an operator could alter Administrator accounts through the accounting database]",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -877,7 +860,6 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65140",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-65140",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65140"
   },
   "veto_evaluated": false,
@@ -889,13 +871,12 @@
   "cve_id": "CVE-2026-65107",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "debian,ubuntu,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "debian,ubuntu-osv",
+  "feed_count": 2,
   "dates": {
-   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65107;ubuntu:CVE-2026-65107",
+  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65107",
   "description": "[Fix sbcast shared objects skipping credential verification, Fix possible slurmd crash on invalid sbcast filenames]",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -916,7 +897,6 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65107",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-65107",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65107"
   },
   "veto_evaluated": false,
