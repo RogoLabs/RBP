@@ -74,9 +74,8 @@ before reading them in order:
   successive runs by design. The `months` half of 1 wants a few weeks of
   snapshots to backtest its thresholds, and picking them early is the exact
   mistake that entry exists to prevent.
-- **and none is blocked on a decision nobody has taken.** The withhold removal
-  was the one piece of real work on this list and it shipped 2026-09-07; the
-  settled entry below is what is left of it.
+
+Those two kinds cover all four. There is no item here waiting on effort alone.
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
