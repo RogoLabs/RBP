@@ -101,8 +101,16 @@ def run(tmp_path, monkeypatch):
                         lambda: {s: {"status": "ok", "detail": "", "rows": 1,
                                      "ok": True, "truncated": False,
                                      "newest": "2026-08-26",
-                                     "oldest": "2025-01-04", "dated_rows": 1}
+                                     "oldest": "2025-01-04", "dated_rows": 1,
+                                     "seconds": 0.1}
                                  for s in ("debian", "osv", "ghsa")})
+    # THE COMMITTED SCORECARDS ARE THE OUTSIDE WORLD TOO. `compare_magnitudes`
+    # seeds a feed with no previous run from `feedlab/<name>.json` since
+    # 2026-09-07, and this fixture's feeds return one row each against cards
+    # measuring tens of thousands, so without this the clean run reads as three
+    # silent shrinks. The seed itself is exercised below, on purpose, with a card
+    # the test supplies.
+    monkeypatch.setattr(feeds, "scorecard_baselines", lambda names, lab=None: {})
     # Every referenced id is RESERVED with the assigner redacted, which is the
     # live endpoint's actual behaviour for the reserved population.
     monkeypatch.setattr(classify, "_get",
@@ -344,3 +352,32 @@ def test_health_recorded_after_the_fetches_still_reaches_the_degraded_flag(
     assert stats["degraded"] is True, \
         "a feed that failed after the early read did not degrade the run"
     assert stats["feeds"]["failures"] == ["ubuntu:dates: 12 lookup(s) failed"]
+
+
+def test_the_summary_carries_the_section_3_guards(run):
+    """FEEDS.md section 3, built 2026-09-07: the seeded shrink guard's gaps, the
+    weighed failure, and the per-feed weight the NEXT run weighs a failure
+    against. All three are empty or zero on a clean fixture run, and all three
+    have to be PRESENT, because to every consumer an absent key reads as "not
+    measured" rather than as "nothing found"."""
+    s = json.loads((run() / "summary.json").read_text())
+    assert s["feeds"]["unbaselined"] == []
+    assert s["feeds"]["failed_bearing"] == []
+    assert s["coverage"]["effective_by_feed"] == {"debian": 0, "ghsa": 0, "osv": 0}
+
+
+def test_a_first_run_is_measured_against_its_scorecard(run, monkeypatch):
+    """FEEDS.md section 3's first guard, through cmd_run: no previous snapshot,
+    a card saying debian measured 28,000 ids, a run returning 1. Before the seed
+    this was a new feed with nothing to compare against and the 1 was the
+    baseline from then on; now it is the silent shrink, named, and degraded."""
+    monkeypatch.setattr(feeds, "scorecard_baselines",
+                        lambda names, lab=None: {
+                            "debian": {"rows": 28000, "scored_at": "2026-09-06"}})
+    s = json.loads((run() / "summary.json").read_text())
+    assert s["degraded"] is True, s["degraded_reasons"]
+    assert len(s["feeds"]["shrunk"]) == 1, s["feeds"]["shrunk"]
+    line = s["feeds"]["shrunk"][0]
+    assert line.startswith("debian: 28,000 -> 1 ids") and "scorecard" in line, line
+    # osv and ghsa had no card and no previous run: first run, no warning yet.
+    assert s["feeds"]["unbaselined"] == []

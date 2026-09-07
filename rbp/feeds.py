@@ -254,11 +254,20 @@ MAGNITUDE_DROP = 0.4
 PART_DROP = 0.7
 
 
-def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
+def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP, seeds=None):
     """Feeds whose id count fell sharply since the previous run.
 
     Takes two `health_detail()`-shaped dicts and returns a list of human-readable
     findings. Empty means no feed shrank beyond the threshold.
+
+    `seeds` is `{feed: {"rows": n, "scored_at": date}}` from
+    `scorecard_baselines`, and it stands in for the previous run ONLY when the
+    previous run recorded no positive count for the feed. FEEDS.md section 3:
+    adding feeds to the profile created feeds with no baseline, and a feed whose
+    first run was the bad one had no baseline for ever, because `was <= 0` is
+    skipped on every later run too. The card is a one-off measurement and may
+    sit above what the profile reads (`csaf`'s is 42,659 against a live 63,184),
+    so it never outranks a real previous count: it is a stand-in, not a floor.
 
     This is the guard the review asked for and I deferred, on the reasoning that it
     needed per-feed id-set recording that did not exist. It did exist:
@@ -290,7 +299,16 @@ def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
             continue                      # raw-shape sub-fetch; handled below
         prev_feed = (previous or {}).get(name) or {}
         if _is_coverage(cur):
-            hit = _cmp(name, prev_feed.get("rows"), cur.get("rows"), threshold)
+            was, seeded = prev_feed.get("rows"), None
+            if not (isinstance(was, int) and was > 0):
+                seeded = (seeds or {}).get(name) or None
+                if seeded:
+                    was = seeded.get("rows")
+            hit = _cmp(name, was, cur.get("rows"), threshold)
+            if hit and seeded:
+                hit += (f"; compared against its scorecard of "
+                        f"{seeded.get('scored_at') or 'unknown date'} because "
+                        f"the previous run recorded no count for it")
             if hit:
                 out.append(hit)
 
@@ -317,6 +335,69 @@ def compare_magnitudes(previous, current, threshold=MAGNITUDE_DROP):
                 out.append(hit)
     return out
 
+
+
+def scorecard_baselines(names, lab=None):
+    """`{feed: {"rows", "scored_at", "years"}}` from the committed scorecards.
+
+    The stand-in baseline for a feed with no previous count, read from
+    `feedlab/<name>.json`, which FEEDS.md section 3 requires in the diff that
+    merges the feed. `ids` on the card is referenced ids in scope over the card's
+    window, which is the same quantity `rows` records here: on the 2026-09-07
+    live run fourteen of fifteen cards were within 1% of the live count.
+
+    A card that is missing, unreadable or records no ids yields nothing, and
+    `baseline_gaps` is what says so. Failing here would stop a publication over
+    a JSON file, for a guard that is a refinement to a degraded-path check.
+    """
+    lab = lab or os.path.join(os.path.dirname(_HERE), "feedlab")
+    out = {}
+    for name in names:
+        try:
+            with open(os.path.join(lab, f"{name}.json"), encoding="utf-8") as fh:
+                card = json.load(fh)
+        except (OSError, ValueError):
+            continue
+        ids = card.get("ids") if isinstance(card, dict) else None
+        if isinstance(ids, int) and ids > 0:
+            out[name] = {"rows": ids,
+                         "scored_at": str(card.get("scored_at") or "")[:10],
+                         "years": card.get("years")}
+    return out
+
+
+def baseline_gaps(previous, current, seeds=None):
+    """Feeds the shrink guard cannot see, on a run where it should be able to.
+
+    A feed on its first run has nothing to compare against and that is expected.
+    A feed on its SECOND run or later that still has no positive previous count
+    and no scorecard to stand in for one is exempt from `compare_magnitudes` and
+    will stay exempt until something gives it a baseline. FEEDS.md section 3
+    calls that a build warning, and this returns the lines for it.
+
+    NOT a degradation. Nothing has been measured as worse than usual; something
+    has not been measured. It is published beside `freshness_unmeasurable` for
+    the reason that field exists: "cannot be checked" must not read as "checked
+    and fine".
+    """
+    out = []
+    for name, cur in sorted((current or {}).items()):
+        if ":" in name or not isinstance(cur, dict):
+            continue
+        if cur.get("counts_coverage") is False:
+            continue                       # a resolver; never compared anyway
+        if name not in (previous or {}):
+            continue                       # first run, by design
+        was = ((previous or {}).get(name) or {}).get("rows")
+        if isinstance(was, int) and was > 0:
+            continue
+        seed = ((seeds or {}).get(name) or {}).get("rows")
+        if isinstance(seed, int) and seed > 0:
+            continue
+        out.append(f"{name}: no usable shrink baseline after two runs (the "
+                   f"previous run recorded {was!r} and there is no scorecard "
+                   f"under feedlab/), so compare_magnitudes cannot see this feed")
+    return out
 
 # A feed frozen at a constant is invisible to `compare_magnitudes`, which only
 # ever asks whether a number went DOWN. `mozilla` returned exactly 607 ids on six
@@ -573,7 +654,7 @@ def _stream_zip(url):
                         "refusing to truncate it into an invalid zip")
                 tmp.write(chunk)
         tmp.close()
-        FETCH_BYTES["total"] += total
+        _count_bytes(total)
         return zipfile.ZipFile(tmp.name), tmp.name, total
     except Exception:
         tmp.close()
@@ -634,7 +715,7 @@ def _stream_tar_xz(url, want, stats):
                         "refusing to truncate it into an invalid tarball")
                 tmp.write(chunk)
         tmp.close()
-        FETCH_BYTES["total"] += total
+        _count_bytes(total)
         stats["bytes"] = total
         unpacked = 0
         with tarfile.open(tmp.name, "r|xz") as tf:
@@ -748,6 +829,19 @@ _OPENER = urllib.request.build_opener(_PinnedHTTPSHandler, _SafeRedirect)
 # on a schedule. Reset by reset_health(), so a scorecard measures one run.
 FETCH_BYTES = {"total": 0}
 
+# `gather` runs adapters on worker threads since 2026-09-07, so this counter is
+# written from several threads at once. `+=` on a dict item is a read, an add
+# and a write, and two threads interleaving them lose one of the reads. The
+# loss is small and silent, which on a field the scorecard publishes as a
+# measurement is the wrong kind of small. Every increment goes through here;
+# tests/test_section3_guards.py asserts nothing increments it directly.
+_BYTES_LOCK = threading.Lock()
+
+
+def _count_bytes(n):
+    with _BYTES_LOCK:
+        FETCH_BYTES["total"] += n
+
 
 def _get(url, timeout=90, retries=3, headers=None):
     if not _url_ok(url):
@@ -760,7 +854,7 @@ def _get(url, timeout=90, retries=3, headers=None):
         try:
             with _OPENER.open(urllib.request.Request(url, headers=h), timeout=timeout) as r:
                 raw = r.read(MAX_BYTES)
-                FETCH_BYTES["total"] += len(raw)
+                _count_bytes(len(raw))
                 return json.loads(raw), getattr(r, "status", 200), dict(r.headers)
         except urllib.error.HTTPError as e:
             if e.code == 404:
@@ -804,7 +898,7 @@ def _get_text(url, timeout=30):
         raise ValueError(f"blocked non-https/internal URL: {url}")
     with _OPENER.open(urllib.request.Request(url, headers=UA), timeout=timeout) as r:
         raw = r.read(MAX_BYTES)
-        FETCH_BYTES["total"] += len(raw)
+        _count_bytes(len(raw))
         return raw.decode("utf-8", "replace")
 
 
@@ -1598,7 +1692,7 @@ def _get_cond(url, headers=None, timeout=60):
     try:
         with _OPENER.open(urllib.request.Request(url, headers=h), timeout=timeout) as r:
             raw = r.read(MAX_BYTES)
-            FETCH_BYTES["total"] += len(raw)
+            _count_bytes(len(raw))
             return (getattr(r, "status", 200), json.loads(raw),
                     {k.lower(): v for k, v in r.headers.items()})
     except urllib.error.HTTPError as e:
@@ -3572,7 +3666,12 @@ ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ubuntu-osv": feed_ubuntu_osv, "jvn": feed_jvn}
 
 
-def gather(sources, years):
+# How many adapters download at once. A ceiling on concurrent fetches, not a
+# target: see the note in `gather` on why it was picked rather than measured.
+GATHER_WORKERS = 4
+
+
+def gather(sources, years, workers=GATHER_WORKERS):
     """Collect referenced CVE IDs from every configured feed.
 
     Health is recorded here rather than inside each adapter, so instrumentation
@@ -3580,105 +3679,153 @@ def gather(sources, years):
     recorded as a failure and the run reports degraded coverage; a feed that
     returns nothing is recorded as a success with zero rows, which is a
     materially different thing and must not read the same way.
+
+    THE ADAPTERS RUN CONCURRENTLY, AND NOTHING ELSE DOES. FEEDS.md section 3
+    names the serial loop this was as the prerequisite for the feed count going
+    past about fifteen, and names the condition on changing it: per-feed health
+    recording has to survive exactly as it is, because that recording is the
+    shrink guard's input. So the split is drawn at the adapter call. Fetching
+    and parsing happen on a worker thread; everything that RECORDS runs on this
+    thread, in the order `sources` lists the feeds, once the adapter has
+    returned:
+
+      - the status stamp, which keeps an adapter's own account of itself and
+        fills in `rows` (the CAPPED and OK defects noted below are unchanged);
+      - `newest`, `oldest`, `dated_rows` and `months`, which are the freshness
+        and withdrawal guards' inputs;
+      - the merge into `refs`, whose "first source wins" rule for product and
+        description would otherwise depend on which download finished first.
+
+    What the workers share: FEED_HEALTH, keyed by feed name and by `feed:part`,
+    so two adapters never write one key; FETCH_BYTES, which is locked; and the
+    per-feed state files, which are one file per feed. An adapter that runs a
+    pool of its own (ubuntu) nests it inside this one.
+
+    Four workers is a ceiling on concurrent downloads and was PICKED, not
+    measured. Three of these feeds stream archives of hundreds of megabytes and
+    one unpacks 4.77 GB, and a runner's memory under all fifteen at once has not
+    been observed. Every feed now records `seconds`, and the line this prints
+    puts the wall clock beside the per-feed sum, so the next change to this
+    number can be made from the published artefact rather than from a feeling.
     """
     reset_health()
     refs = {}
-    for s in sources:
+    started = time.monotonic()
+    spent = {}
+
+    def _run(s):
+        t0 = time.monotonic()
         try:
-            rows = ADAPTERS[s](years)
-        except Exception as e:
-            record_feed(s, False, str(e)[:120])
-            print(f"  [{s}] FAILED: {e}", file=sys.stderr)
-            continue
-        # Do not overwrite an incomplete state an adapter already recorded for
-        # itself.
-        #
-        # CAPPED was MISSING from this tuple, and the omission erased the state
-        # in the same call that recorded it. `feed_ghsa` records CAPPED when it
-        # runs out of pages rather than out of data, and this branch then
-        # overwrote it with OK on every single run, so `health_summary`'s
-        # `capped` list could never be non-empty and `stats["limitations"]`, the
-        # field the site publishes to say which feeds are read over a shorter
-        # window than the trackers, was permanently empty. The live snapshot for
-        # 2026-08-20 reads `ghsa ok 3321 ids` for exactly this reason.
-        #
-        # Same shape as the bug that made this branch necessary in the first
-        # place: a state recorded by an adapter and discarded by the caller. The
-        # fix is the membership test, and the test that catches it is a mutation
-        # test, because every assertion about ghsa's row count passes either way.
-        #
-        # AND THE SAME BUG SURVIVED IN THE `ok` HALF OF IT, found 2026-08-26 by
-        # reading the published artefact of a green run instead of the log.
-        # Testing the STATUS keeps an adapter's account of itself only when that
-        # account is bad news. `feed_csaf` records OK with a detail naming which
-        # of its 17 providers were read, which had nothing to say, and which were
-        # reached by a route other than the one in the config; every word of that
-        # was overwritten with "2732 ids" on any run where nothing went wrong.
-        #
-        # So CISA being read through pinned feeds rather than www.cisa.gov, the
-        # one fact on that line a reader most needs and the one the site promised
-        # to disclose, appeared in the build log and reached no page. A
-        # disclosure that only survives when a run is ALSO degraded is not a
-        # disclosure. Test for a detail, not for bad news.
-        h = FEED_HEALTH.get(s) or {}
-        if h.get("status") in (TRUNCATED, FAILED, CAPPED) or h.get("detail"):
-            FEED_HEALTH[s]["rows"] = len(rows)
-        else:
-            record_feed(s, OK, f"{len(rows)} ids", rows=len(rows))
-        # HOW FAR BACK, AND HOW RECENT, recorded here rather than per adapter so
-        # thirteen adapters cannot drift out of step on it, which is the same
-        # reasoning that put health recording in this function.
-        #
-        # `newest` is the one that catches the failure a row count cannot see. A
-        # feed frozen at a constant reads as perfectly healthy to
-        # `compare_magnitudes`, which only ever asks whether a number went DOWN:
-        # `mozilla` returned exactly 607 on six consecutive published snapshots,
-        # `arch` exactly 62, `samsung` exactly 420 on five. If any of those had
-        # stopped updating on day one, every guard on this site would still have
-        # been green. `tests/test_ghsa_feeds.py` already named this shape for
-        # ghsa and called it a standing truncation that reads as a healthy feed.
-        #
-        # `oldest` is how the Ubuntu cap gets stated in days instead of pages.
-        dates = sorted(r["public_date"] for r in rows if r.get("public_date"))
-        FEED_HEALTH[s]["newest"] = dates[-1] if dates else ""
-        FEED_HEALTH[s]["oldest"] = dates[0] if dates else ""
-        FEED_HEALTH[s]["dated_rows"] = len(dates)
-        # PER-MONTH COUNTS, so a source that deletes a month from the MIDDLE of
-        # the window is visible at all. `newest` moves only when the withdrawn
-        # month is the most recent one, and `rows` moves only when the loss is
-        # large enough to trip a proportional threshold; a month bucket moves
-        # whenever the evidence for that month goes away, which is the thing
-        # being checked. See `withdrawn_history` for the run that forced this.
-        #
-        # Top-level feeds only. A csaf provider or an osv ecosystem is recorded
-        # by its own adapter and never reaches this loop, which keeps this to
-        # about 500 integers across the whole run rather than several thousand.
-        months = {}
-        for d in dates:
-            months[d[:7]] = months.get(d[:7], 0) + 1
-        FEED_HEALTH[s]["months"] = months
-        print(f"  [{s}] {len(rows)} referenced IDs in scope"
-              + (f", {dates[0]} to {dates[-1]}" if dates else ", undated"))
-        for r in rows:
-            cid = r["cve_id"]
-            e = refs.setdefault(cid, {"sources": set(), "refs": set(), "public_date": "",
-                                      "product": "", "description": "",
-                                      # Per-source dates, kept so the MUST clock
-                                      # can ask who published FIRST rather than
-                                      # only who published. Collapsing to the
-                                      # minimum discarded exactly that.
-                                      "dates": {}})
-            e["sources"].add(s)
-            if r["source_ref"]:
-                e["refs"].add(f'{s}:{r["source_ref"]}')
-            if r["public_date"]:
-                if not e["public_date"] or r["public_date"] < e["public_date"]:
-                    e["public_date"] = r["public_date"]
-                prev = e["dates"].get(s)
-                if not prev or r["public_date"] < prev:
-                    e["dates"][s] = r["public_date"]
-            if r["product"] and not e["product"]:
-                e["product"] = r["product"]
-            if r["description"] and not e["description"]:
-                e["description"] = r["description"]
+            return ADAPTERS[s](years)
+        finally:
+            spent[s] = round(time.monotonic() - t0, 1)
+
+    n_workers = max(1, min(int(workers or 1), len(sources) or 1))
+    with concurrent.futures.ThreadPoolExecutor(
+            max_workers=n_workers, thread_name_prefix="gather") as pool:
+        futures = [(s, pool.submit(_run, s)) for s in sources]
+        for s, fut in futures:
+            try:
+                rows = fut.result()
+            except Exception as e:
+                record_feed(s, False, str(e)[:120])
+                FEED_HEALTH[s]["seconds"] = spent.get(s)
+                print(f"  [{s}] FAILED: {e}", file=sys.stderr)
+                continue
+            # Do not overwrite an incomplete state an adapter already recorded for
+            # itself.
+            #
+            # CAPPED was MISSING from this tuple, and the omission erased the state
+            # in the same call that recorded it. `feed_ghsa` records CAPPED when it
+            # runs out of pages rather than out of data, and this branch then
+            # overwrote it with OK on every single run, so `health_summary`'s
+            # `capped` list could never be non-empty and `stats["limitations"]`, the
+            # field the site publishes to say which feeds are read over a shorter
+            # window than the trackers, was permanently empty. The live snapshot for
+            # 2026-08-20 reads `ghsa ok 3321 ids` for exactly this reason.
+            #
+            # Same shape as the bug that made this branch necessary in the first
+            # place: a state recorded by an adapter and discarded by the caller. The
+            # fix is the membership test, and the test that catches it is a mutation
+            # test, because every assertion about ghsa's row count passes either way.
+            #
+            # AND THE SAME BUG SURVIVED IN THE `ok` HALF OF IT, found 2026-08-26 by
+            # reading the published artefact of a green run instead of the log.
+            # Testing the STATUS keeps an adapter's account of itself only when that
+            # account is bad news. `feed_csaf` records OK with a detail naming which
+            # of its 17 providers were read, which had nothing to say, and which were
+            # reached by a route other than the one in the config; every word of that
+            # was overwritten with "2732 ids" on any run where nothing went wrong.
+            #
+            # So CISA being read through pinned feeds rather than www.cisa.gov, the
+            # one fact on that line a reader most needs and the one the site promised
+            # to disclose, appeared in the build log and reached no page. A
+            # disclosure that only survives when a run is ALSO degraded is not a
+            # disclosure. Test for a detail, not for bad news.
+            h = FEED_HEALTH.get(s) or {}
+            if h.get("status") in (TRUNCATED, FAILED, CAPPED) or h.get("detail"):
+                FEED_HEALTH[s]["rows"] = len(rows)
+            else:
+                record_feed(s, OK, f"{len(rows)} ids", rows=len(rows))
+            # HOW FAR BACK, AND HOW RECENT, recorded here rather than per adapter so
+            # thirteen adapters cannot drift out of step on it, which is the same
+            # reasoning that put health recording in this function.
+            #
+            # `newest` is the one that catches the failure a row count cannot see. A
+            # feed frozen at a constant reads as perfectly healthy to
+            # `compare_magnitudes`, which only ever asks whether a number went DOWN:
+            # `mozilla` returned exactly 607 on six consecutive published snapshots,
+            # `arch` exactly 62, `samsung` exactly 420 on five. If any of those had
+            # stopped updating on day one, every guard on this site would still have
+            # been green. `tests/test_ghsa_feeds.py` already named this shape for
+            # ghsa and called it a standing truncation that reads as a healthy feed.
+            #
+            # `oldest` is how the Ubuntu cap gets stated in days instead of pages.
+            dates = sorted(r["public_date"] for r in rows if r.get("public_date"))
+            FEED_HEALTH[s]["newest"] = dates[-1] if dates else ""
+            FEED_HEALTH[s]["oldest"] = dates[0] if dates else ""
+            FEED_HEALTH[s]["dated_rows"] = len(dates)
+            # PER-MONTH COUNTS, so a source that deletes a month from the MIDDLE of
+            # the window is visible at all. `newest` moves only when the withdrawn
+            # month is the most recent one, and `rows` moves only when the loss is
+            # large enough to trip a proportional threshold; a month bucket moves
+            # whenever the evidence for that month goes away, which is the thing
+            # being checked. See `withdrawn_history` for the run that forced this.
+            #
+            # Top-level feeds only. A csaf provider or an osv ecosystem is recorded
+            # by its own adapter and never reaches this loop, which keeps this to
+            # about 500 integers across the whole run rather than several thousand.
+            months = {}
+            for d in dates:
+                months[d[:7]] = months.get(d[:7], 0) + 1
+            FEED_HEALTH[s]["months"] = months
+            FEED_HEALTH[s]["seconds"] = spent.get(s)
+            print(f"  [{s}] {len(rows)} referenced IDs in scope"
+                  + (f", {dates[0]} to {dates[-1]}" if dates else ", undated"))
+            for r in rows:
+                cid = r["cve_id"]
+                e = refs.setdefault(cid, {"sources": set(), "refs": set(), "public_date": "",
+                                          "product": "", "description": "",
+                                          # Per-source dates, kept so the MUST clock
+                                          # can ask who published FIRST rather than
+                                          # only who published. Collapsing to the
+                                          # minimum discarded exactly that.
+                                          "dates": {}})
+                e["sources"].add(s)
+                if r["source_ref"]:
+                    e["refs"].add(f'{s}:{r["source_ref"]}')
+                if r["public_date"]:
+                    if not e["public_date"] or r["public_date"] < e["public_date"]:
+                        e["public_date"] = r["public_date"]
+                    prev = e["dates"].get(s)
+                    if not prev or r["public_date"] < prev:
+                        e["dates"][s] = r["public_date"]
+                if r["product"] and not e["product"]:
+                    e["product"] = r["product"]
+                if r["description"] and not e["description"]:
+                    e["description"] = r["description"]
+    wall = time.monotonic() - started
+    summed = sum(v for v in spent.values() if v)
+    print(f"  gather: {len(sources)} feed(s) in {wall:.0f}s wall, {summed:.0f}s "
+          f"summed across feeds, {n_workers} worker(s)")
     return refs

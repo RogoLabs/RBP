@@ -443,6 +443,18 @@
       <span class="mono">{{ summary.feeds.freshness_unmeasurable | join('; ') }}</span>
     </p>
     {% endif %}
+    {% if summary.feeds and summary.feeds.get('unbaselined') %}
+    {# Same footing as the freshness line above: not a degradation, a gap in what
+       was measured. A feed with no count from a previous run and no scorecard
+       to stand in for one is exempt from the silent-shrink check until it has
+       one, and "exempt" must not read as "passed". #}
+    <p class="small text-muted">
+      These feeds have no count from a previous run and no scorecard to stand in
+      for one, so the silent-shrink check cannot see them yet. That is not the
+      same as checked and fine:
+      <span class="mono">{{ summary.feeds.unbaselined | join('; ') }}</span>
+    </p>
+    {% endif %}
     {% else %}
     {# The pre-first-run and legacy-snapshot state. A snapshot written before
        per-feed health existed has a `requested` list and no detail, and an empty
@@ -458,6 +470,22 @@
       <p class="mb-0"><strong>{{ summary.feeds.failures | length }} of
         {{ summary.feeds.attempts }} feed fetches failed.</strong></p>
       <ul class="mb-0">{% for f in summary.feeds.failures %}<li class="mono small">{{ f }}</li>{% endfor %}</ul>
+    </div>
+    {% endif %}
+    {% if summary.feeds and summary.feeds.get('failed_bearing') %}
+    {# THE WEIGHT OF A FAILURE, beside its count. The block above says how many
+       feeds failed; this one says whether the number of CNAs this site reports
+       it can see rested on any of them, and by how many. Same chrome as the
+       other findings, for the reason given at the stale block. #}
+    <div class="caveat warn">
+      <p class="mb-0">
+        <strong>A failed feed was carrying coverage.</strong> The number of CNAs
+        this site can see is recomputed every run, so that figure has already
+        moved. This says which feed moved it, and by how much:
+      </p>
+      <ul class="mb-0">
+        {% for line in summary.feeds.failed_bearing %}<li class="mono small">{{ line }}</li>{% endfor %}
+      </ul>
     </div>
     {% endif %}
   </div>
