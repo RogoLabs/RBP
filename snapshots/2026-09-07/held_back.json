@@ -87,13 +87,14 @@
   "cve_id": "CVE-2026-84471",
   "state": "RESERVED",
   "public_date": "2026-09-04",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-05",
+   "ubuntu": "2026-09-04",
    "ubuntu-osv": "2026-09-04"
   },
-  "refs": "alas:CVE-2026-84471;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-84471",
+  "refs": "alas:CVE-2026-84471;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-84471;ubuntu:CVE-2026-84471",
   "description": "openvpn",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -115,6 +116,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-84471.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84471",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-84471",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-84471"
   },
   "veto_evaluated": false,
