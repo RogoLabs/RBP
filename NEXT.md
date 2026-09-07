@@ -64,30 +64,63 @@ drains, not what the site can see.
 
 ## What is open
 
-Three items, and they are not the same KIND of thing, which is worth knowing
+Four items, and they are not the same KIND of thing, which is worth knowing
 before reading them in order:
 
-- **two are decisions, not work.** 2a (`feed_ubuntu`: keep it or delete it) and 3
+- **one is work, and small.** 1 is a false positive the live site published as
+  `degraded: true` on 2026-09-07, with its fix specified.
+- **two are decisions, not work.** 3a (`feed_ubuntu`: keep it or delete it) and 4
   (`euvd`: leave it out) are both measured, both carry a recommendation, and
   neither needs code. Taking them is how this list gets shorter today.
-- **one is waiting on accumulated data, not on effort.** 1 drains over
+- **one is waiting on accumulated data, not on effort.** 2 drains over
   successive runs by design.
 
-Those two kinds cover all three. There is no item here waiting on effort alone.
-One thing that is not an item belongs in the same "waiting on data" class:
-`withdrawn_history`'s bucket thresholds (`MONTH_MIN_ROWS`, `MONTH_DROP`) were
-picked, not measured, and the block comment on them in `rbp/feeds.py` says what
-to measure once a few weeks of `months` snapshots exist and why picking earlier
-is the mistake it exists to prevent.
+Those three kinds cover all four.
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
-### 1. Loose threads from the uncapping
+### 1. `withdrawn_history`'s bucket half reads the ubuntu cap's trailing edge as a withdrawal
+
+**Measured 2026-09-07, on the first run after #37 merged, and it is a false
+positive.** The run published `degraded: true` with one reason: `ubuntu: 2026-07
+held 321 ids and holds 100 now (69% of that month withdrawn)`. Ubuntu withdrew
+nothing. `feed_ubuntu` reads the newest 4,000 records and stops. 221 new records
+landed between the 09-06 and 09-07 runs (September went 253 to 474), so the same
+4,000-record window gave up 221 from its oldest end, and every one of them was
+July. The 09-05 and 09-06 snapshots both hold July at 321 because two records
+landed between them.
+
+The horizon half cannot see this and is right not to: `oldest` stayed
+2026-07-30 and `newest` moved forward. The bucket half has no notion of a cap
+trimming the old end. The comment on `withdrawn_history` states that fact for the
+horizon ("the caps on these feeds trim the old end too") and did not carry it
+into the buckets. It will fire again on any day a burst of Ubuntu records lands
+while the trailing month sits between `MONTH_MIN_ROWS` and its half-life, so for
+a few days around the turn of every month.
+
+**The fix is narrow.** In the bucket loop, skip a month at or before the month of
+`cur["oldest"]` when the feed's status is CAPPED: for a newest-first capped feed
+that month is the cap's edge, not evidence withdrawn. Two things must keep
+firing, and each needs a test beside the replay of today's numbers: a capped feed
+losing a month from the MIDDLE of its window, and the msrc-shaped event (uncapped,
+middle month) that the guard exists for. `_explains_a_gap` deliberately excludes
+CAPPED and stays that way. This is not "a cap excuses everything"; it is "a cap's
+own edge is not a withdrawal".
+
+**The thresholds themselves are still unmeasured**, and this is the first datum.
+`MONTH_MIN_ROWS` and `MONTH_DROP` were picked to fire only on wholesale
+withdrawal because `months` was a new field with no history. The snapshots now
+carry enough days of `months` to measure the real per-month variation and tighten
+them the way `FRESHNESS_FLOOR_DAYS` was derived from the feeds' own cadences.
+Until that is done, do not promote either half into `verify`. What today says is
+that the first thing the bucket half needed was not a threshold but an exemption.
+
+### 2. Loose threads from the uncapping
 
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.
 
-### 2. `ubuntu-osv`: a decision (a) and a measurement (b)
+### 3. `ubuntu-osv`: a decision (a) and a measurement (b)
 
 `feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
 recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
@@ -240,7 +273,7 @@ and not there: `feeds.py` now seeds a missing baseline from the scorecard
 (2026-09-07), but neither it nor `verify` records which profile or window
 produced the count it compares against.
 
-### 3. `euvd`: the one argument for it is gone
+### 4. `euvd`: the one argument for it is gone
 
 `euvd` is measured and **refused as a numerator source**: zero disclosure lead on
 9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live

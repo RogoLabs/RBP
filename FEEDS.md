@@ -1324,7 +1324,7 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > recorded fetch, so its `stability` is null and will stay null until a second real
 > gather. The other thirteen scorecards still describe the pre-jvn baseline;
 > refreshing them is `feedlab audit`, which rewrites all fifteen and belongs in its
-> own commit, as NEXT.md item 2a already says.
+> own commit, as NEXT.md item 3a already says.
 
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated
