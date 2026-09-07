@@ -64,67 +64,23 @@ drains, not what the site can see.
 
 ## What is open
 
-Five items, and they are not the same KIND of thing, which is worth knowing
+Four items, and they are not the same KIND of thing, which is worth knowing
 before reading them in order:
 
-- **two are decisions, not work.** 4a (`feed_ubuntu`: keep it or delete it) and 5
+- **two are decisions, not work.** 3a (`feed_ubuntu`: keep it or delete it) and 4
   (`euvd`: leave it out) are both measured, both carry a recommendation, and
   neither needs code. Taking them is how this list gets shorter today.
-- **two are waiting on accumulated data, not on effort.** 3 drains over
-  successive runs by design. The `months` half of 2 wants a few weeks of
+- **two are waiting on accumulated data, not on effort.** 2 drains over
+  successive runs by design. The `months` half of 1 wants a few weeks of
   snapshots to backtest its thresholds, and picking them early is the exact
   mistake that entry exists to prevent.
-- **and one is real work.** 1 is a deletion that reaches the published copy.
+- **and none is blocked on a decision nobody has taken.** The withhold removal
+  was the one piece of real work on this list and it shipped 2026-09-07; the
+  settled entry below is what is left of it.
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
-### 1. Remove the withhold routine
-
-**Decided 2026-09-07: take the whole mechanism out.** `RBP_WITHHOLD` is not
-wanted, and removing it is the consistent extension of retiring the removal
-channel on 2026-08-27. That entry's reasoning already reaches this far: "every
-row here is a CVE ID already referenced in a public advisory, held for the
-reportable buffer, on a site that names no CNA. There is nothing to withhold that
-is not already public."
-
-**It is an embargo lever, not a naming one, and the difference decides what the
-copy has to say afterwards.** It drops IDS, and `NAMING_ENABLED = False` is what
-drops names. `7c502b6`, the one time it ran against production: "Neither named a
-CNA, so this was never a misattribution. But for an embargo report the id IS the
-sensitive fact, which is the entire reason a withheld row leaves rather than
-merely losing its owner." So the cost of removing it is that an embargo request
-arriving by email has no hand to apply, only a commit. **State that cost; do not
-soften it**, the way the removal-channel entry states its own.
-
-The surface, measured 2026-09-07:
-
-- `rbp/publish.py`: `SUPPRESS_ENV`, `SUPPRESSED_FILE`, `suppressed_ids`,
-  `_scrub` and its call in `stage`, and the suppressed-row arm of `check`.
-- `rbp/site.py:820` `withheld_ids`, which already delegates, and its caller.
-- `rbp/cli.py`: the `.suppressed.json` handoff writer, and
-  `ResolutionLedger.track`'s suppression argument.
-- `.github/workflows/deploy.yml:83`, the `RBP_WITHHOLD` line in `env:`.
-- `tests/_sitefixture.py:59` env list, `tests/test_end_to_end.py` (the fixture at
-  225 and the two `.suppressed.json` cases at 546 and 590),
-  `tests/test_copy.py:859`, `tests/test_sitefixture.py:193`.
-
-**The published claim goes with it.** `_panel.html` tells every reader "If a row
-is ever withheld, it is withheld from every published artefact including the
-dated archive, so a figure cited today can go *down* later." That paragraph was
-written on 2026-09-01 BECAUSE the channel went and the mechanism stayed, and its
-own comment says so: "THE PROMISE UNDERNEATH IT IS REAL AND IS KEPT." Leaving it
-up over a deleted mechanism repeats the exact defect round 9 spent nine rounds
-retiring, one layer down. `method.html:571` and `base.html:306` carry the same
-sentence in comments and are cheaper.
-
-**Two rules currently point at this lever to justify themselves** and need
-restating on their own terms rather than deleting: the ghsa-repos cache
-(`deploy.yml:250`) and the csaf read marks (the settled entry below) are both
-"counts, never identifiers, because committing ids to a public branch publishes
-the exact list the withhold lever exists to remove." The rule survives the
-lever's removal; the sentence does not.
-
-### 2. FEEDS.md section 3's three remaining guards
+### 1. FEEDS.md section 3's three remaining guards
 
 Per-feed shrink baselines surviving a profile change; a failure budget expressed
 as a fraction rather than a count; `gather` parallelised while preserving
@@ -147,12 +103,12 @@ per-month variation and tighten them, the way `FRESHNESS_FLOOR_DAYS` was derived
 from the feeds' own cadences rather than picked. Until that is done, do not
 promote either half into `verify`.
 
-### 3. Loose threads from the uncapping
+### 2. Loose threads from the uncapping
 
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.
 
-### 4. `ubuntu-osv`: a decision (a) and a measurement (b)
+### 3. `ubuntu-osv`: a decision (a) and a measurement (b)
 
 `feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
 recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
@@ -299,12 +255,12 @@ So the histories restart at this window. The first rebuild at least a day after
 answer. The raw files keep every fetch, including `ubuntu`'s 80-row outage: the
 filtering happens when the history is read, so nothing was deleted to get here.
 
-This was item 2's "per-feed shrink baselines surviving a profile change" one
+This was item 1's "per-feed shrink baselines surviving a profile change" one
 level down, at the harness rather than at `verify`. It is done HERE and not
 there: `feeds.py` and `verify` still compare row counts across runs with nowhere
 to record which profile or window produced them.
 
-### 5. `euvd`: the one argument for it is gone
+### 4. `euvd`: the one argument for it is gone
 
 `euvd` is measured and **refused as a numerator source**: zero disclosure lead on
 9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
@@ -376,6 +332,29 @@ costs a session.
   reads the built artefacts against each other in BOTH directions, so
   reinstating the channel fails the suite until that test is rewritten
   deliberately. That is the intended cost, not an obstacle to route around.
+- **And there is no lever behind the scenes either.** `RBP_WITHHOLD` outlived the
+  advertised channel by eleven days on the distinction between a capability and
+  an advertisement, and went on 2026-09-07 because the reasoning that retired the
+  channel does not stop at the advertisement. It was an EMBARGO lever, not a
+  naming one: it dropped ids, and `NAMING_ENABLED` is what drops names. **So the
+  cost is one notch worse than the channel's and is stated rather than softened:**
+  an embargo request arriving by email now has no hand to apply, only a commit,
+  in public, against the code that produces the list. What the site gains is that
+  a published count can no longer change without one. Removed from
+  `publish`/`site`/`cli`/`clock`/`inference`/`report`, from `deploy.yml`'s `env:`,
+  and from the four surfaces that described it. The repository variable can stay
+  set and does nothing.
+- **The archive is stable rather than immutable on reasons that need no lever.**
+  The claim was justified by the withhold lever until 2026-09-07 and would have
+  become a promise about a deleted mechanism. It rests on two structural facts
+  instead: a dated file is REBUILT from that day's snapshot by today's code on
+  every run rather than appended once, and retention is bounded by
+  `publish.KEEP_SNAPSHOTS`, so a dated URL outside that window stops resolving.
+  The slide-over renders the bound as a number read from the constant, which is
+  what `site._publish_keep` was written for and had had no reader since /data was
+  deleted. `tests/test_copy.py` asserts it inside the paragraph rather than
+  anywhere on the page, because the front page's age filter carries "90 days" in
+  its JavaScript and the retention window happens to be 90 too.
 - **The hedge above the rows is gone.** A reader who copies rows into a ticket
   carries the rows and none of the qualification. Stated because it is a real
   reduction in disclosure.
@@ -403,12 +382,17 @@ costs a session.
 - **The CSAF read marks are not published for the harness to fetch.** It was one
   of three routes considered for the harness's cold `csaf` state, and it is
   refused by a rule this repo already applies to `ghsa_repos_state.json`: counts,
-  never identifiers, because that state holds every CVE id every provider has
-  ever referenced, and putting it anywhere public (a data-branch commit, an
-  Actions artifact on a public repo) publishes the exact list the withhold lever
-  exists to remove. The harness pins the live run's PUBLISHED coverage instead,
-  which is counts, and gets a tighter answer for one fetch. Draining the backlog
-  locally was the third route and is what the local state does on its own.
+  never identifiers. That state holds every CVE id every provider has ever
+  referenced, which is a far larger set than the site publishes and one nothing
+  has validated as publishable, and the data branch carries only what
+  `publish.ALLOWED_ROOT` names. Putting it anywhere public (a data-branch commit,
+  an Actions artifact on a public repo) publishes a list the site never decided to
+  publish. **The rule used to be stated as "the exact list the withhold lever
+  exists to remove"**; the lever went on 2026-09-07 and the rule did not, because
+  it never rested on the lever, only borrowed it as the nearest example. The
+  harness pins the live run's PUBLISHED coverage instead, which is counts, and
+  gets a tighter answer for one fetch. Draining the backlog locally was the third
+  route and is what the local state does on its own.
 - **CSAF provider identity is DERIVED, not in `sources`.** `?src=csaf:cisa` is
   built in the template from `refs`. Putting the host in `sources` breaks
   `origin_kind` (an unmapped slug reads as a tracker and silently stops the
@@ -523,6 +507,16 @@ Real examples, all from 2026-08-29:
   feed name satisfied it;
 - the render fixture carried `csaf` in `sources` with no CSAF ref at all, so
   every assertion about the publisher filter would have passed on an empty list.
+
+And one from 2026-09-07, because the seam was the HELPER rather than the fixture:
+a new copy assertion checked that the retention bound appears on the front page
+as a number, using the file-wide `_text()`. That helper strips tags and keeps
+`<script>` bodies, and the age filter's JavaScript says "90 days" in five places
+while `publish.KEEP_SNAPSHOTS` is also 90. Deleting the number from the copy left
+the test green, and so did making `_publish_keep` return None so the paragraph
+read "None days". Two mutations, both survived, on an assertion written the same
+hour. Scoped to the paragraph it is about, both fail. **An assertion about one
+sentence has to be evaluated against that sentence.**
 
 **So: reintroduce the defect and confirm a test fails.** First passes typically
 catch about half. When a mutation survives, the usual fix is the fixture, not

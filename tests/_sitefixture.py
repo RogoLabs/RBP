@@ -56,13 +56,17 @@ POSTURE_VARS = (
     "RBP_EPOCH",        # zeroes the count from a date
     "RBP_PAUSE",        # incident switch
     "RBP_MIN_AGE_DAYS",  # the reportable buffer
-    "RBP_WITHHOLD",     # the withhold lever: ids dropped from every artefact
     # Withdrawn levers, kept here so a stale value in an operator's shell cannot
     # resurface as behaviour. RBP_SUPPRESS_KEY keyed the HMAC suppression list and
     # RBP_ADVISORY_TOKEN authenticated the issue reader; both went with the
-    # automated withhold channel on 2026-08-26.
+    # automated withhold channel on 2026-08-26. RBP_WITHHOLD was the hand lever
+    # that outlived them, dropping named ids from every artefact, and went on
+    # 2026-09-07. Nothing reads any of the three now; they are cleared anyway,
+    # because the cost of clearing a dead name is nothing and the cost of a
+    # resurrected reader finding a stale shell value is a silently shorter list.
     "RBP_SUPPRESS_KEY",
     "RBP_ADVISORY_TOKEN",
+    "RBP_WITHHOLD",
     "GITHUB_TOKEN",     # the corpus fetch, and the live oracle tests
 )
 

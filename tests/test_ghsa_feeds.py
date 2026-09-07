@@ -353,12 +353,19 @@ def test_the_shipped_watchlist_is_readable_and_well_formed():
 
 
 def test_the_poller_state_never_reaches_the_public_branch():
-    """The state file holds CVE ids by construction, and publish.suppressed_ids
-    states the rule: counts, never identifiers, because committing ids to a
-    public branch publishes the exact list the withhold lever exists to remove.
+    """The state file holds CVE ids by construction: every id every provider has
+    ever referenced, a far larger set than the site publishes and one nothing has
+    validated as publishable. The data branch is public and carries only what
+    publish.ALLOWED_ROOT names, so committing this there would publish a list the
+    site never decided to publish. Counts, never identifiers.
+
     Scrubbing the staged copy is not an escape, because the feed reads its rows
     back from this file and a scrubbed copy would permanently drop them on the
-    next 304. So it lives under gitignored data/ and is cached, not staged."""
+    next 304. So it lives under gitignored data/ and is cached, not staged.
+
+    The rule used to be stated as "the exact list the withhold lever exists to
+    remove". That lever went on 2026-09-07 and the rule did not: it never rested
+    on the lever, only borrowed it as the nearest example."""
     from rbp import publish
     assert "ghsa_repos_state.json" not in publish.ALLOWED_ROOT
     assert feeds.GHSA_REPOS_STATE.endswith("data/ghsa_repos_state.json")

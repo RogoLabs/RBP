@@ -109,9 +109,9 @@ def built_site(tmp_path_factory):
     /overview.html, robots.txt disallows everything.
 
     The default because it is the posture the site is actually in today, and
-    because it is the one the copy and suppression assertions were written
-    against: they glob the dashboard pages excluding index.html, which only means
-    what they intend when index.html is the holding page.
+    because it is the one the copy assertions were written against: they glob the
+    dashboard pages excluding index.html, which only means what they intend when
+    index.html is the holding page.
     """
     return _sitefixture.build(tmp_path_factory.mktemp("prelaunch"), launched=False)
 

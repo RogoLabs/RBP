@@ -25,7 +25,6 @@ import argparse
 import glob
 import json
 import os
-import re
 import shutil
 import sys
 
@@ -41,132 +40,11 @@ ALLOWED_SNAPSHOT = {"backlog.json", "backlog.csv", "cnas.json", "summary.json",
                     "held_back.json", "resolved.json"}
 
 # The dated archive at /data/archive/<date>/ is built by rbp.site from these same
-# staged snapshots, so scrubbing them here is what makes a withhold reach the
-# archive. Nothing extra to allowlist: the archive is a site artefact, not a branch
-# one, and it is regenerated from the staged snapshots on every build. Worth stating
-# because "the archive is immutable" and "a withhold removes a row from it" are in
-# tension, and the resolution is that the archive is rebuilt rather than appended.
-
-
-# A runner-local JSON array of ids. Never published, and never seeded from the
-# data branch: see WHERE IT COMES FROM below.
-SUPPRESSED_FILE = ".suppressed.json"
-
-# The production source. A repository variable, the same lever RBP_LAUNCHED,
-# RBP_EPOCH and RBP_PAUSE already use.
-SUPPRESS_ENV = "RBP_WITHHOLD"
-
-_ID_SPLIT = re.compile(r"[\s,;]+")
-
-
-def suppressed_ids(data_dir):
-    """Ids withheld from publication, from the repository variable and the file.
-
-    THE ONE IMPLEMENTATION. `site.withheld_ids` was a second copy of this
-    function, reading the same file, in the module that builds the pages, while
-    this one is read by the module that stages the data branch. Two readers of one
-    file that must agree, and nothing making them agree.
-
-    WHERE IT COMES FROM. `RBP_WITHHOLD`, a repository variable holding a
-    comma-separated list of CVE IDs. A person sets it; the next build drops those
-    rows from every page and every artefact, and `check` refuses to stage them.
-    /method promises exactly that: "a person reads it, applied by hand, takes
-    effect on the next build". This is the hand.
-
-    NOT THE DATA BRANCH, and the reason is worth keeping. The obvious durable home
-    for a hand-maintained list is the branch that already carries the other
-    hand-maintained state, and it is the wrong one: that branch is public, so
-    committing the ids there publishes the exact list the lever exists to remove.
-    "Counts, never identifiers" is the rule, and a git history of removals is
-    identifiers. A repository variable is not public and needs no allowlist entry.
-
-    Both sources are UNIONED rather than ranked. A precedence chain drops one
-    source silently when the other is set, and for a withhold the only safe
-    direction to fail is more withheld rather than fewer. The file stays because a
-    local build and the tests need a way in that does not involve the environment.
-
-    THIS WAS UNREACHABLE FOR FOUR DAYS. `cli.py` stopped writing the file with the
-    channel that produced it on 2026-08-26, nothing replaced the writer, and
-    `data/` is gitignored and recreated empty on every runner. So the lever the
-    site promised in writing read an absent file on every run, while both readers,
-    both guards and every test around them passed.
-
-    Normalised on read: stripped and upper-cased, so a hand-typed lower-case id or
-    one with stray whitespace still withholds.
-
-    Empty on any problem, and that is the safe direction here: an unreadable
-    source means nothing is withheld from the SITE, while `check` still refuses to
-    stage a suppressed row, so the failure cannot reach the data branch.
-    """
-    ids = set()
-    for tok in _ID_SPLIT.split(os.environ.get(SUPPRESS_ENV) or ""):
-        if tok.strip():
-            ids.add(tok.strip().upper())
-    try:
-        raw = json.load(open(os.path.join(data_dir, SUPPRESSED_FILE)))
-    except Exception:
-        raw = []
-    if isinstance(raw, list):
-        ids |= {str(i).strip().upper() for i in raw if str(i).strip()}
-    return ids
-
-
-def _scrub(path, ids):
-    """Remove withheld ids from one staged artefact. Returns rows removed.
-
-    Applied to EVERY staged snapshot, not just the newest. The first live withhold
-    left the row absent from rbp.json, rbp.csv, summary.json, cnas.json and
-    precision.json, and still present in the previous day's snapshot on the data
-    branch, where retention keeps it for up to a month. A withhold that only
-    applies going forward is not a withhold: the id stays fetchable from yesterday.
-    """
-    if not ids or not os.path.exists(path):
-        return 0
-    if path.endswith(".json"):
-        try:
-            rows = json.load(open(path))
-        except Exception:
-            return 0
-        if isinstance(rows, list):
-            keep = [r for r in rows
-                    if not (isinstance(r, dict) and r.get("cve_id") in ids)]
-            if len(keep) != len(rows):
-                _schema.write_json(path, keep)
-                return len(rows) - len(keep)
-        elif isinstance(rows, dict):
-            # resolutions.json shape: {"open": {cve_id: {...}}, "resolved": [...]}
-            n = 0
-            op = rows.get("open")
-            if isinstance(op, dict):
-                for cid in [c for c in op if c in ids]:
-                    del op[cid]
-                    n += 1
-            res = rows.get("resolved")
-            if isinstance(res, list):
-                keep = [r for r in res
-                        if not (isinstance(r, dict) and r.get("cve_id") in ids)]
-                n += len(res) - len(keep)
-                rows["resolved"] = keep
-            preds = rows.get("predictions")
-            if isinstance(preds, dict):
-                for cid in [c for c in preds if c in ids]:
-                    del preds[cid]
-                    n += 1
-            if n:
-                _schema.write_json(path, rows)
-            return n
-        return 0
-    # CSV: drop any line containing a withheld id. Crude and correct, because the
-    # id is the first column and appears nowhere else in a row.
-    try:
-        lines = open(path).read().splitlines(keepends=True)
-    except Exception:
-        return 0
-    keep = [ln for ln in lines if not any(i in ln for i in ids)]
-    if len(keep) != len(lines):
-        _schema.write_text(path, "".join(keep))
-        return len(lines) - len(keep)
-    return 0
+# staged snapshots. Nothing extra to allowlist: the archive is a site artefact, not
+# a branch one, and it is regenerated from the staged snapshots on every build.
+# Worth stating because "the archive is immutable" is not quite what this offers:
+# a dated file is rebuilt by today's code from that day's snapshot, and retention
+# below decides how long the snapshot behind it survives at all.
 
 
 # Fields in the ROOT LEDGERS that carry an inferred CNA name.
@@ -279,7 +157,6 @@ def stage(snap_root, state_dir, data_dir):
     dest_root = os.path.join(state_dir, "snapshots")
     os.makedirs(dest_root, exist_ok=True)
     copied = 0
-    withheld = suppressed_ids(data_dir)
     for d in sorted(glob.glob(os.path.join(snap_root, "*"))):
         if not os.path.isdir(d):
             continue
@@ -294,8 +171,7 @@ def stage(snap_root, state_dir, data_dir):
     # from report.build, but the ones already on the branch were written before
     # that existed and retention keeps them for up to a month, so de-naming only
     # what this run wrote would leave named history published and slowly ageing
-    # out. Same reasoning as the withhold scrub directly below, which had to be
-    # widened to prior snapshots for exactly this reason.
+    # out.
     renamed = 0
     for base, _d, files in os.walk(state_dir):
         if ".git" in base.split(os.sep):
@@ -314,20 +190,6 @@ def stage(snap_root, state_dir, data_dir):
                 renamed += 1
     if renamed:
         print(f"de-named {renamed} staged file(s); v1 publishes no attribution")
-
-    # Scrub AFTER copying, over every staged file including the root ledgers and
-    # every retained prior snapshot, so a withhold reaches history and not only
-    # today.
-    scrubbed = 0
-    if withheld:
-        targets = [os.path.join(state_dir, n)
-                   for n in ("precision.json", "resolutions.json")]
-        targets += glob.glob(os.path.join(dest_root, "*", "*"))
-        for t in targets:
-            scrubbed += _scrub(t, withheld)
-        if scrubbed:
-            print(f"scrubbed {scrubbed} withheld row(s) from staged artefacts, "
-                  "including prior snapshots")
     return copied
 
 
@@ -336,8 +198,9 @@ def prune_ledger(state_dir, snap_root):
 
     The ledger sits at the branch ROOT, so every snapshot-scoped cleanup rule
     missed it, and it once held 366 CVE-to-CNA name pairs including rows the site
-    withholds. The pipeline now only records published rows; this is the backstop
-    for entries written before that, and for a row whose name was later withdrawn.
+    does not count. The pipeline now only records published rows; this is the
+    backstop for entries written before that, and for a row whose name was later
+    withdrawn.
 
     Graded verdicts are never touched: those rest on an authoritative assigner
     from the published CVE record rather than on inference.
@@ -379,9 +242,12 @@ def prune_ledger(state_dir, snap_root):
 # guidance, and it makes a citation good for a quarter, which covers any
 # realistic press or research cycle.
 #
-# Still STABLE rather than immutable: a withhold removes a row from every
-# retained snapshot, so a figure can go down. That is the point of the lever and
-# /data says so rather than promising a permanence this project will not honour.
+# Still STABLE rather than immutable, and this number is half the reason: a dated
+# URL resolves for exactly this many days, after which the exact date resolves
+# only if it was its month's last. The other half is that a dated file is rebuilt
+# by today's code rather than appended once. The site renders this constant in
+# the slide-over rather than restating it, so the bound is a number a reader can
+# check rather than a permanence this project does not offer.
 KEEP_SNAPSHOTS = 90
 
 

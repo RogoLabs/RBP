@@ -283,19 +283,31 @@ def test_a_dated_file_carries_that_days_numbers_not_todays(built):
 
 
 def test_the_archive_is_described_as_stable_not_immutable(built):
-    """A withhold removes a row from every published artefact including these, so a
-    dated figure can go down. Promising permanence would mean either breaking the
-    promise on the first withhold or letting the archive defeat the withhold."""
+    """A dated file is rebuilt from that day's snapshot on every run rather than
+    written once, and retention is bounded, so a dated entry can go away.
+    Promising permanence would mean breaking the promise the first time either of
+    those bit.
+
+    The justification used to be the withhold lever, removed 2026-09-07. The
+    property is older than the lever and outlives it; what changed is that the
+    note may no longer describe a request nobody can make."""
     idx = json.loads((built / "archive.json").read_text())
     assert idx["stable_not_immutable"] is True
-    assert "can go down" in idx["note"] or "stable, not immutable" in idx["note"].lower()
+    assert "stable, not immutable" in idx["note"].lower()
+    assert "rebuilt" in idx["note"] and "retention" in idx["note"], idx["note"]
+    # The note may not describe a route this site does not operate. It said "A
+    # request to remove a row removes it from every published artefact" for
+    # eleven days after the request channel was retired.
+    for gone in ("request", "withheld", "withhold"):
+        assert gone not in idx["note"].lower(), (
+            f"archive.json's note says {gone!r}; there is no removal route and "
+            "no lever behind one")
     # The human-readable half. Moved into the slide-over on 2026-08-26 when /data
     # was deleted: without it the only place the site said so was the JSON key
     # asserted above, and a promise about permanence that lives only in a JSON key
     # is not a promise anyone has been told about.
     page = (ROOT / "templates" / "_panel.html").read_text()
     assert "Stable, not immutable" in page
-    assert "can go" in page and "down" in page
 
 
 def test_the_archive_obeys_the_same_naming_invariants(built):

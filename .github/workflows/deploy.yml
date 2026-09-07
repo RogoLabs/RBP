@@ -67,20 +67,13 @@ env:
   # the count retroactively. Held-back rows stay in the raw data and their count
   # is shown on /method.
   RBP_EPOCH: ${{ (inputs.dry_run == true && inputs.rehearse_epoch != '') && inputs.rehearse_epoch || (vars.RBP_EPOCH || '') }}
-  # THE WITHHOLD LEVER, and it was unreachable in production for four days.
-  #
-  # /method promises that emailing a CVE ID gets the row removed by a person on the
-  # next build. rbp/publish.py reads this list: the site drops those rows before
-  # rendering and `publish check` refuses to stage them. Nothing supplied it. The
-  # automated writer went with the issue-reading channel on 2026-08-26, nothing
-  # replaced it, and `data/` is gitignored and recreated empty on every runner, so
-  # the lever read an absent file on every run while every test around it passed.
-  #
-  # A repository variable rather than a file on the `data` branch, deliberately.
-  # That branch is public, so committing the ids there would publish the exact list
-  # the lever exists to remove; "counts, never identifiers" is the rule and a git
-  # history of removals is identifiers. Comma-separated CVE IDs.
-  RBP_WITHHOLD: ${{ vars.RBP_WITHHOLD || '' }}
+  # RBP_WITHHOLD STOOD HERE and was removed on 2026-09-07 with the mechanism
+  # behind it. It dropped named CVE IDs from every page and artefact. The
+  # advertised removal channel went on 2026-08-27 and the hand lever outlived it
+  # by eleven days; the reasoning that retired the channel reaches this far, so
+  # the site now has one fewer way to make a published count change without a
+  # commit. The repository variable can stay set and does nothing. THE COST: an
+  # embargo request arriving by email has no hand to apply, only a commit.
   # Incident switch. Set the repository variable RBP_PAUSE to 1 and the pipeline
   # still runs and still reports, but nothing is published and no state advances.
   # There was previously no lever at all: no `if:` on any job, no dry run and no
@@ -246,13 +239,14 @@ jobs:
       # conditionally and a 304 costs no rate-limit quota.
       #
       # A CACHE AND NOT DURABLE STATE, which is a deliberate choice against the
-      # obvious one. This file contains CVE IDs by construction, the data branch
-      # is public, and `publish.suppressed_ids` states the rule that settles it:
-      # counts, never identifiers, because committing ids to a public branch
-      # publishes the exact list the withhold lever exists to remove. Scrubbing
-      # withheld ids out of the staged copy is not an escape either: the feed
-      # reads its rows back from this file, so a scrubbed copy would silently and
-      # permanently drop those rows on the next 304.
+      # obvious one. This file contains CVE IDs by construction: every id every
+      # provider has ever referenced, which is a far larger set than the site
+      # publishes and one nothing has ever validated as publishable. The data
+      # branch is public and carries only what `publish.ALLOWED_ROOT` names, so
+      # committing this there would publish a list the site never decided to
+      # publish. Counts, never identifiers. Scrubbing the staged copy is not an
+      # escape either: the feed reads its rows back from this file, so a scrubbed
+      # copy would silently and permanently drop those rows on the next 304.
       #
       # THE COST, stated rather than hidden. An evicted cache is a cold start:
       # about 1,900 requests against a 1,000/hour token, so two runs before the

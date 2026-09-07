@@ -479,7 +479,7 @@ class Grader:
 
 def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K,
                      record_for=None, covered=None, sightings=None,
-                     bulk_reporters=frozenset(), suppressed=()):
+                     bulk_reporters=frozenset()):
     """Name what can be named, grade what can be graded, and report both.
 
     Mutates each backlog row in place with `owner` / `owner_tier` /
@@ -499,27 +499,7 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
 
     named = collections.Counter()
     vetoed = 0
-    n_suppressed = 0
     for row in backlog:
-        # Checked FIRST, before inference runs on the row at all.
-        #
-        # This must not be only in report._gated. The grader ledger is a published
-        # artefact on the data branch, so gating display alone would withhold the
-        # row from the site while writing the inferred CNA name into
-        # precision.json: a row withheld because someone reported it as under
-        # embargo would be named in public anyway. That is the exact
-        # one-stage-writes-another-reads shape that has already bitten
-        # days_public, self_disclosed, feed health, the epoch and PAGES-at-import.
-        #
-        # The row keeps no owner fields at all rather than an unattributed
-        # placeholder, so no artefact can carry a name for it even by accident.
-        if row["cve_id"] in suppressed:
-            row["suppressed"] = True
-            row["owner"], row["owner_tier"] = None, "suppressed"
-            row["owner_method"] = "suppressed-on-report"
-            row["veto_evaluated"] = False
-            n_suppressed += 1
-            continue
         owner, tier, method = inferencer.attribute(
             row["cve_id"],
             product_map_owner=row.get("product_map_owner"),
@@ -529,7 +509,6 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
         # owner_contested shipped false on every row as though it were measured.
         row["veto_evaluated"] = bool(row.get("product_map_owner"))
         row["owner"], row["owner_tier"], row["owner_method"] = owner, tier, method
-        row["suppressed"] = False
         named[tier] += 1
         if "vetoed" in method:
             vetoed += 1
@@ -546,10 +525,7 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
     live_score = grader.summary()
     loo = inferencer.validate_loo(year=today[:4], k=k)
 
-    # Suppressed rows are out of both halves of this ratio. Leaving them in the
-    # denominator would make a withhold look like an abstention and quietly drag
-    # the published naming rate down; leaving them in the numerator would be worse.
-    total = (len(backlog) - n_suppressed) or 1
+    total = len(backlog) or 1
     run_coverage = round((total - named[TIER_NONE]) / total, 4) if backlog else 0.0
     print(f"  attribution: {named[TIER_CORROBORATED]} corroborated + "
           f"{named[TIER_BLOCK]} block = "
@@ -581,8 +557,6 @@ def apply_to_backlog(backlog, corpus_df, precision_path, today=None, k=DEFAULT_K
         "live": live_score,
         "newly_graded": newly_graded,
         "withdrawn": len(withdrawn),
-        # Counted so the lever cannot be used quietly. Never the ids.
-        "suppressed": n_suppressed,
     }
 
 
@@ -617,7 +591,6 @@ def unattributed_validation(k=DEFAULT_K, today=None):
         "live": {**empty, "graded": 0, "outstanding": 0},
         "newly_graded": 0,
         "withdrawn": 0,
-        "suppressed": 0,
         # So a reader of summary.json can tell "this site does not attribute"
         # from "this site attributes and got nothing this run".
         "not_run": True,

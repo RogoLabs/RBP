@@ -336,21 +336,6 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     else:
         reportable = list(rows)
 
-    # Suppressed rows leave the published set entirely, and are counted only in an
-    # aggregate. Not merely un-named: for an embargo report the listing itself is
-    # the disclosure, because "CVE-2026-X is reserved and referenced publicly" is
-    # the sensitive fact whether or not a CNA is named beside it. Removing the name
-    # and keeping the row would honour the letter of the request and miss its
-    # point.
-    #
-    # Deliberately applied to `reportable` regardless of which branch built it, so
-    # the legacy test path cannot publish a row the production path withholds.
-    n_suppressed = sum(1 for r in reportable if r.get("suppressed"))
-    if n_suppressed:
-        reportable = [r for r in reportable if not r.get("suppressed")]
-        print(f"  withheld {n_suppressed} suppressed row(s) from every published "
-              "artefact; the count is published, the ids are not")
-
     within_buffer = [r for r in backlog if isinstance(r["days_public"], int) and r["days_public"] < min_age]
     undated = [r for r in backlog if not isinstance(r["days_public"], int)]
 
@@ -448,15 +433,13 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
         w.writerows(schema.csv_row(r) for r in
                     _site_csv._denamed([_gated(r) for r in reportable],
                                        "backlog.csv"))
-    # Suppressed rows are excluded from the ungated audit file too.
+    # THE UNGATED AUDIT FILE IS DE-NAMED LIKE EVERY OTHER WRITER.
     #
     # This file is NOT on publish.ALLOWED_SNAPSHOT, so it never reaches the data
     # branch and no reader can fetch it. That is exactly the reasoning that would
-    # justify leaving suppressed rows in it, and it is wrong twice over: this is
-    # the file whose earlier version WAS on the branch and had to be removed by a
-    # history rewrite, and a withhold means the id does not get written down, not
-    # that it gets written somewhere currently unreachable. An allowlist is one
-    # commit away from including a filename.
+    # justify skipping the de-namer here, and it is wrong: this is the file whose
+    # earlier version WAS on the branch and had to be removed by a history
+    # rewrite, and an allowlist is one commit away from including a filename.
     #
     # Found by running the real snapshot through this path rather than by a unit
     # test: the unit tests used a two-row fixture and checked backlog.json and
@@ -464,8 +447,7 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     from . import site as _site_full
     schema.write_json(
         os.path.join(sdir, "backlog_full.json"),
-        _site_full._denamed([r for r in backlog if not r.get("suppressed")],
-                            "backlog_full.json"))
+        _site_full._denamed(backlog, "backlog_full.json"))
     # Excluded rows, with the reason. An epoch that removes the oldest and
     # strongest evidence has to read as deliberate conservatism, not be
     # discovered later as a discrepancy between two numbers.
@@ -474,14 +456,11 @@ def build(backlog, fresh_resolved, snap_root, today, years, sources, cov=None,
     for r in backlog:
         if r["cve_id"] in counted:
             continue
-        # A suppressed row is not "held back", it is withheld, and this file
-        # publishes the CVE ID. Dropping suppressed rows from `reportable` above
-        # removed them from `counted`, which would have dropped every one of them
-        # straight into held_back.json with a made-up reason: the exact file whose
-        # earlier leak proved that a single-artefact assertion is not an assertion.
-        # Caught by writing the test before trusting the change.
-        if r.get("suppressed"):
-            continue
+        # EVERY ROW EXCLUDED FROM `counted` LANDS HERE WITH A REASON, and this
+        # file publishes the CVE ID. So anything that removes a row upstream of
+        # `counted` without a matching arm below drops it into held_back.json
+        # under a made-up reason: the exact file whose earlier leak proved that a
+        # single-artefact assertion is not an assertion.
         if not isinstance(r.get("days_public"), int):
             reason = "undated"
         elif r["days_public"] < min_age:
