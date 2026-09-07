@@ -82,6 +82,45 @@ LAB = os.path.join(ROOT, "feedlab")
 STATE = os.path.join(ROOT, "data", "feedlab")
 BASELINE = os.path.join(STATE, "_baseline.json")
 
+# --------------------------------------------------------------------------
+# the live run's own profile, pinned
+# --------------------------------------------------------------------------
+#
+# THE HARNESS AND THE PIPELINE DISAGREED ABOUT WHAT THE MERGED SET IS, and the
+# harness was the permissive half.
+#
+# Measured 2026-09-06. A baseline rebuilt on the same commit, over the same
+# window, read the same fifteen feeds as the live run and fourteen returned the
+# same row count to the id. `csaf` returned 42,659 against the live run's 62,800,
+# and that one feed was the whole difference between 247 effective roster CNAs
+# here and 263 there.
+#
+# Neither half was broken. `deploy.yml` caches `data/csaf_state.json` and a
+# provider emits everything it has ever seen, so the live state is as deep as
+# every run before it and a local state is as deep as the runs that happened
+# locally. The consequence is one-directional: a candidate scored against a cold
+# baseline LOOKS BETTER THAN IT IS, because the CNAs `csaf` already covers are
+# missing from the set it is supposed to be marginal to.
+#
+# The fix is not to drain the backlog locally, which is 125,588 advisories behind
+# at three providers and would make every baseline only as good as its last
+# drain. The live run already publishes the answer four times a day, at a public
+# URL, in the artefact the site serves: `coverage.sightings` is per-CNA counts
+# over the merged set the site actually has, and `feeds.detail.<name>.rows` is
+# how deep each feed read. So it is PINNED, the way the roster is pinned in
+# `roster_data/cna_roster.json`: fetched deliberately, committed with a visible
+# diff, and drift-tested rather than polled.
+LIVE = os.path.join(LAB, "_live.json")
+
+# The published summary of the newest live run. Not an API to poll: one fetch,
+# recorded, and refreshed when a scorecard is about to be believed.
+LIVE_URL = "https://rbptracker.org/data/summary.json"
+
+# How stale a pin may be before the drift test complains. The site rebuilds four
+# times a day and feeds are merged in batches, so a fortnight is "nobody has
+# refreshed this in a release cycle" rather than "this moved yesterday".
+LIVE_MAX_AGE_DAYS = 14
+
 # Advisory dates more than this far before the CVE's publication are treated as
 # a data error rather than as evidence of lead. Feeds carry wrong dates: a
 # changelog entry dated by the package release rather than the advisory, or a
@@ -259,12 +298,44 @@ def disclosure_lead(rows, published, state):
 
 
 def classify(marginal_cnas, lead):
-    """detecting | corroborating | unmeasurable | reject, with the reason in words.
+    """detecting | redundant | corroborating | unmeasurable | reject, with the
+    reason in words.
 
     `corroborating` is not a soft rejection. It means the feed may be merged and
     must be excluded from the coverage numerator, because crediting a CNA as
     observable on a feed that cannot surface an unpublished ID is how a launch
     gate clears while the site's actual claim gets weaker.
+
+    `redundant` was split out of `corroborating` on 2026-09-06, because ONE WORD
+    WAS DOING TWO JOBS AND THE PIPELINE READ THE WRONG ONE.
+
+    FEEDS.md section 2 defines the exclusion on one combination and one only: "A
+    feed that clears (1) and fails (2) ... is then tagged `corroborating` and
+    excluded from the coverage numerator." Clears the marginal test, FAILS the
+    disclosure test. A publication mirror. This function also returned that word
+    for the opposite shape, a feed that fails (1) and CLEARS (2), and
+    `corroborating_feeds` fed both to `coverage.compute`.
+
+    The same document had already written down what should happen to the second
+    shape, about the only feed then in it: "`mozilla` is corroborating rather
+    than mirroring ... it clears admissibility test 2, SO IT STAYS IN THE
+    NUMERATOR." It did not stay in the numerator. `mozilla`, `samsung` and
+    `ubuntu` are all in the live run's published `corroborating_feeds`, all three
+    on this branch, none of them a mirror.
+
+    It cost nothing while the marginal figures were inflated, because a feed with
+    a wrongly-marginal CNA never reached this branch. Fixing the combine to a
+    union of ids put `alas`, `debian`, `ghsa`, `alpine` and `ubuntu-osv` on it,
+    which would have dropped five of the site's largest feeds out of its own
+    coverage numerator on a rule that was never about them.
+
+    Measured, the correction moves the published figure by zero CNAs today: the
+    exclusion set becomes empty, and `cnas_effective` computed with and without
+    it is 263 either way. That is the same answer FEEDS.md recorded on
+    2026-08-24 ("the split would exclude nothing ... no merged feed is a proven
+    publication mirror") and the same one `coverage.compute` measured for
+    `mozilla` alone. The number does not move; what changes is that the rule now
+    fires on the case it describes.
 
     `unmeasurable` was added on 2026-08-24, when the first real audit made this
     function commit exactly the error the rest of this repository is built to
@@ -295,9 +366,10 @@ def classify(marginal_cnas, lead):
         return "reject", ("no marginal CNA and no disclosure lead: it raises "
                           "neither coverage nor detection")
     if marginal_cnas < 1:
-        return "corroborating", ("no marginal CNA, but it does reference "
-                                 "unpublished ids, so it can strengthen a row it "
-                                 "did not find")
+        return "redundant", ("no marginal CNA, but it references ids that were "
+                             "unpublished at the time, so it clears "
+                             "admissibility test 2 and STAYS IN THE NUMERATOR: "
+                             "redundant on coverage, not a publication mirror")
     if not detects:
         return "corroborating", ("it crosses the sighting floor for "
                                  f"{marginal_cnas} new CNA(s) but has never "
@@ -308,7 +380,106 @@ def classify(marginal_cnas, lead):
                          "unpublished references")
 
 
-def scorecard(name, years, corpus_df, base=None, rows=None, stats=None):
+def live_marginal(name, ids, base_ids, assigner, roster_index, eligible,
+                  base=None, live=None):
+    """What this feed would add to the merged set THE SITE ACTUALLY HAS.
+
+    The local baseline is the set this machine could reach. The pinned live
+    profile is the set the published run reached, which is deeper by every id
+    every previous run banked, and the gap is not small: 20,141 `csaf` ids on
+    2026-09-06, worth 13 roster CNAs that sit below the floor here and are
+    already effective there, and three more this baseline has not sighted at all.
+    A card scored only against the local baseline can credit a candidate for
+    making one of those sixteen observable when the site has been reading it for
+    weeks.
+
+    THREE STATES, AND THEY ARE DIFFERENT STATEMENTS:
+
+      no pin              `pinned` false, figures None. Score against the local
+                          baseline and say so; do not report a live number
+                          nobody measured.
+      already merged      the feed is in the live profile. It cannot be marginal
+                          to a set that already contains it, so the figure is
+                          None with a reason rather than a meaningless 0. This
+                          is every card `audit` produces.
+      a real candidate    the figure, with `upper_bound` set when the baseline is
+                          colder than live.
+
+    WHY IT IS STILL AN UPPER BOUND. Only counts are published, not ids, so the
+    candidate's own overlap with the live set cannot be removed exactly. What CAN
+    be removed exactly is its overlap with the local baseline, and that is done
+    here: only ids this baseline has never seen are allowed to add a sighting.
+    The residue is a candidate id that the live run has and this baseline does
+    not, which is bounded by `rows_short` and shrinks to nothing as the local
+    state drains. It is the same direction as before and a far smaller number.
+    """
+    # `live` is the pinned profile or None. Resolving the pin is the caller's
+    # job, so "no pin on disk" and "do not use the pin" arrive here as one state
+    # and this function has one behaviour for it.
+    if not live:
+        return {
+            "pinned": False,
+            "cnas_new_effective": None,
+            "cnas_new_effective_names": None,
+            "reason": ("no pinned live profile; run `python -m rbp.feedlab "
+                       "pin-live`. This card is marginal to the local baseline "
+                       "only, which is the permissive direction."),
+        }
+    live_sight = live.get("sightings") or {}
+    live_eff = effective(live_sight)
+    short = {k: v for k, v in depth_shortfall(base, live).items() if v > 0}
+    common = {
+        "pinned": True,
+        "fetched": live.get("fetched"),
+        "generated_at": live.get("generated_at"),
+        "source_commit": live.get("source_commit"),
+        "effective_n": len(live_eff),
+        "rows_short": short,
+        "ids_short": sum(short.values()),
+    }
+    if name in (live.get("sources") or ()):
+        return {**common,
+                "already_merged": True,
+                "cnas_new_effective": None,
+                "cnas_new_effective_names": None,
+                "upper_bound": None,
+                "reason": ("already in the live profile, so it cannot be "
+                           "marginal to a set that contains it; the figure "
+                           "above is the leave-one-out one, against this "
+                           "machine's baseline"
+                           + (", and is an upper bound while that baseline is "
+                              f"{sum(short.values()):,} rows colder than the "
+                              "live run" if short else ""))}
+    unseen = [c for c in ids if c not in base_ids]
+    add = sightings_by_cna(unseen, assigner, roster_index, eligible)
+    combined = dict(live_sight)
+    for c, n in add.items():
+        combined[c] = combined.get(c, 0) + n
+    names = sorted(effective(combined) - live_eff)
+    return {**common,
+            "already_merged": False,
+            "ids_not_in_baseline": len(unseen),
+            "cnas_new_effective": len(names),
+            "cnas_new_effective_names": names,
+            "upper_bound": bool(short),
+            "reason": (("an upper bound: this baseline is "
+                        f"{sum(short.values()):,} rows colder than the live run "
+                        f"at {', '.join(sorted(short))}")
+                       if short else
+                       "measured against a baseline no colder than the live run")}
+
+
+# `live=PINNED` means "read the committed pin". Passing `live=None` means "there
+# is no live run to compare against" and is a different statement, which is why
+# this is a sentinel rather than a None default: a test scoring a synthetic feed
+# against a synthetic corpus must be able to say the second without the committed
+# pin leaking into it, and `audit` must be able to read the pin once rather than
+# fifteen times.
+PINNED = object()
+
+
+def scorecard(name, years, corpus_df, base=None, rows=None, stats=None,
+              live=PINNED):
     """The whole verdict for one candidate, as the dict written to disk."""
     assigner, state, published = _corpus_maps(corpus_df)
     roster_index = roster_mod.index(roster_mod.load())
@@ -329,15 +500,47 @@ def scorecard(name, years, corpus_df, base=None, rows=None, stats=None):
     # THE NUMBER THAT JUSTIFIES THE MERGE. Not "CNAs this feed reaches", which
     # counts the 53 that every distro feed already covers, and not "CNAs it
     # reaches alone", which misses the CNA that this feed pushes over the floor.
-    # Recomputed on the COMBINED sightings, because a CNA at 2 sightings in the
+    # Recomputed on the COMBINED set, because a CNA at 2 sightings in the
     # baseline and 1 here is a CNA this feed makes observable.
-    combined = dict(base_sight)
-    for c, n in sight.items():
-        combined[c] = combined.get(c, 0) + n
+    #
+    # COMBINED BY THE UNION OF IDS, NOT BY SUMMING SIGHTINGS, and the difference
+    # is not academic. A sighting is a PUBLISHED CVE THIS SITE SAW: `coverage.
+    # compute` counts distinct ids (`surfaced_ids`), so two feeds referencing the
+    # same CVE are one sighting there and were two here. Adding the counts
+    # credited a feed for re-referencing what the merged set already had, which
+    # is precisely the mirror that admissibility test 1 exists to refuse.
+    #
+    # Measured on the 2026-09-06 baseline, summing against union: `alas` 2 -> 0,
+    # `debian` 4 -> 0, `ubuntu-osv` 4 -> 0, `ghsa` 3 -> 0, `alpine` 1 -> 0,
+    # `osv` 5 -> 1, `redhat` 6 -> 3, `csaf` 84 -> 80. Ten of the fifteen
+    # committed cards carried marginal CNAs that no id in the feed had earned,
+    # and every one of them was in the permissive direction.
+    if base_ids or not base_sight:
+        combine = "union"
+        combined = sightings_by_cna(sorted(base_ids | set(ids)), assigner,
+                                    roster_index, eligible)
+    else:
+        # A baseline that recorded counts but not ids cannot be combined this
+        # way. Recorded on the card rather than silently scored, because the two
+        # methods disagree and the reader is entitled to know which one ran.
+        combine = "sum"
+        combined = dict(base_sight)
+        for c, n in sight.items():
+            combined[c] = combined.get(c, 0) + n
     new_effective = sorted(effective(combined) - base_effective)
 
+    live_block = live_marginal(name, ids, base_ids, assigner, roster_index,
+                               eligible, base=base,
+                               live=load_live() if live is PINNED else live)
+
     lead = disclosure_lead(rows, published, state)
-    verdict, why = classify(len(new_effective), lead)
+    # THE LIVE FIGURE DECIDES WHEN THERE IS ONE. The verdict is a claim about
+    # what merging this feed would do to the site, and the site is the live run,
+    # not a local baseline that is 20,141 `csaf` ids behind it.
+    marginal = (live_block["cnas_new_effective"]
+                if live_block.get("cnas_new_effective") is not None
+                else len(new_effective))
+    verdict, why = classify(marginal, lead)
 
     return {
         "feed": name,
@@ -354,6 +557,11 @@ def scorecard(name, years, corpus_df, base=None, rows=None, stats=None):
         "cnas_effective_alone": len(mine),
         "cnas_new_effective": len(new_effective),
         "cnas_new_effective_names": new_effective,
+        "combine": combine,
+        # What the same question answers against the set the SITE has. Null-safe:
+        # `pinned` false means no pin was available and every figure under it is
+        # None, which is a different statement from zero.
+        "live": live_block,
         "disclosure": lead,
         "verdict": verdict,
         "verdict_reason": why,
@@ -446,6 +654,13 @@ def build_baseline(sources, years, corpus_df):
         "wall_seconds": round(wall, 1),
         "bytes": sum(f["stats"].get("bytes") or 0 for f in per_feed.values()),
         "health": {k: dict(v["stats"].get("health") or {}) for k, v in per_feed.items()},
+        # HOW COLD THE CSAF HALF WAS, as counts. The health record says "3 still
+        # catching up" in a sentence, which no test can read and no card can
+        # subtract. This is the same fact as numbers, recorded beside the rows it
+        # explains: a baseline whose `csaf` is 20,141 ids short of the live run's
+        # is not a baseline a candidate can be honestly marginal to, and until
+        # this field existed nothing in the artefact said so.
+        "csaf_state": csaf_depth(),
     }
 
 
@@ -481,6 +696,14 @@ def rescore_baseline(corpus_df, base=None):
             "effective": sorted(effective(sight)),
             "coverage_years": list(coverage_years()),
             "corpus_newest": _corpus_newest(corpus_df),
+            # Re-read here as well as at fetch time, so a baseline recorded
+            # before this field existed gains it for the cost of an offline
+            # rescore rather than a 26-minute refetch. It describes the read
+            # marks AS OF THE RESCORE. That is the same state the rows came
+            # from, only ever deeper: `feed_csaf` never forgets a reference, so
+            # this can overstate how cold the baseline was and cannot understate
+            # it.
+            "csaf_state": csaf_depth(),
             "rescored_at": dt.datetime.now(dt.timezone.utc)
                              .isoformat(timespec="seconds")}
 
@@ -512,6 +735,194 @@ def write(obj, path):
         json.dump(obj, fh, indent=1, sort_keys=True)
         fh.write("\n")
     return path
+
+
+# --------------------------------------------------------------------------
+# the pinned live profile: what the site's own run can see
+# --------------------------------------------------------------------------
+
+def _roster_sightings(raw, roster_index):
+    """Published per-CNA sighting counts, keyed the way this harness keys them.
+
+    The live artefact counts by the CORPUS ASSIGNER STRING and this harness
+    counts by ROSTER SHORT NAME, and the two are not the same alphabet:
+    `Hitachi Energy` upstream is `Hitachi_Energy` on the roster, `JFROG` is
+    `JFrog`, `SICK AG` is `SICK_AG`. Comparing them raw reports eight CNAs as
+    "effective here, missing live" that are the same eight CNAs spelled twice.
+
+    So every key goes through `roster.normalise` and the pinned index, exactly as
+    `sightings_by_cna` does, and counts that collapse onto one roster entry are
+    summed. Off-roster assigners are dropped for the same reason they are dropped
+    there: the roster is the denominator, and something not on it cannot be
+    marginal to it.
+    """
+    out = {}
+    for name, n in (raw or {}).items():
+        key = roster_index.get(roster_mod.normalise(name))
+        if key:
+            out[key] = out.get(key, 0) + int(n or 0)
+    return out
+
+
+def _live_feed_rows(feeds_block):
+    """Rows per feed from a published summary's health block.
+
+    `feeds.detail.<name>.rows` is the parent count for a fan-out adapter too, so
+    `csaf` reads 62,800 rather than the 121,827 its provider rows sum to: a
+    provider row counts ids in ITS scope and the same id is in several.
+    """
+    detail = (feeds_block or {}).get("detail") or {}
+    return {k: int(v.get("rows") or 0) for k, v in detail.items()
+            if isinstance(v, dict)}
+
+
+def pin_live(url=None):
+    """Fetch the live run's published summary and pin the half this harness scores
+    against.
+
+    NOT THE WHOLE ARTEFACT. What is recorded is the per-CNA sightings, the rows
+    each feed returned, the provider rows behind `csaf`, and enough provenance to
+    tell whether the pin still describes the running site. The rest of the
+    summary is the site's business and would make the diff unreadable.
+
+    The site publishes these names on purpose: `coverage.covered`, `sightings`,
+    `near_floor` and `top_missed_effective` are allowlisted in `publish.check`
+    "so the naming gate is inspectable", and they are aggregate coverage rather
+    than attribution of a row to an owner. No row, no id and no owner is read
+    here.
+    """
+    url = url or LIVE_URL
+    body, code, _hdrs = feeds._get(url, timeout=60)
+    if not isinstance(body, dict):
+        raise SystemExit(f"{url} returned {code} and no JSON object; nothing to pin")
+    cov = body.get("coverage") or {}
+    if not cov.get("sightings"):
+        raise SystemExit(
+            f"{url} carries no coverage.sightings, so there is nothing for a "
+            "candidate to be marginal to. The published summary's shape "
+            "changed; fix the reader rather than pinning an empty set.")
+    roster_index = roster_mod.index(roster_mod.load())
+    sight = _roster_sightings(cov.get("sightings"), roster_index)
+    csaf = ((body.get("feeds") or {}).get("detail") or {}).get("csaf") or {}
+    return {
+        "source_url": url,
+        "fetched": dt.date.today().isoformat(),
+        # The run's own marks, so a pin can be told from the run it describes.
+        "generated_at": body.get("generated_at"),
+        "source_commit": body.get("source_commit"),
+        "source_dirty": body.get("source_dirty"),
+        "date": body.get("date"),
+        "years": sorted(cov.get("recent_years") or []),
+        "sources": sorted(cov.get("sources") or []),
+        "corroborating_feeds": sorted(cov.get("corroborating_feeds") or []),
+        "min_sightings": cov.get("min_sightings"),
+        "feed_rows": _live_feed_rows(body.get("feeds")),
+        "csaf_provider_rows": {k: int((v or {}).get("rows") or 0)
+                               for k, v in (csaf.get("parts") or {}).items()},
+        "sightings": sight,
+        "effective": sorted(effective(sight)),
+        # The site's own count, kept beside ours because they are two different
+        # questions and a reader will otherwise assume one is a typo. TWO
+        # DIFFERENCES, both deliberate. Theirs applies the corroborating
+        # exclusion and ours does not, so ours can never be the smaller; see
+        # `coverage.compute`, "applied to effective ONLY". And theirs applies the
+        # floor to the raw assigner counts and maps the survivors onto the
+        # roster, where ours maps first and then counts, which is what
+        # `sightings_by_cna` does for the baseline: two assigner strings that
+        # collapse onto one roster entry are one CNA here and two there. Ours is
+        # the one comparable to the baseline, which is the whole point of the
+        # pin. On 2026-09-06 both are 263, which is the measurement that says the
+        # exclusion costs nothing today.
+        "published_cnas_effective": cov.get("cnas_effective"),
+        "published_cnas_sighted": cov.get("cnas_sighted"),
+    }
+
+
+def load_live(path=LIVE):
+    """The pinned live profile, or None.
+
+    None is a state, not an error. A candidate can still be scored against the
+    local baseline alone; what it cannot do is claim the resulting figure is what
+    the site would see, and `scorecard` says so on the card rather than here.
+    """
+    if not os.path.exists(path):
+        return None
+    try:
+        with open(path, encoding="utf-8") as fh:
+            live = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    return live if isinstance(live, dict) and live.get("sightings") else None
+
+
+def live_age_days(live, today=None):
+    """Days since the pin was fetched, or None if it does not say."""
+    if not live:
+        return None
+    if today is None:
+        today = dt.date.today()
+    return _days_between(live.get("fetched"),
+                         today if isinstance(today, str) else today.isoformat())
+
+
+def depth_shortfall(base, live):
+    """Per feed, how many rows the live run read that this baseline did not.
+
+    THE NUMBER THIS WHOLE SECTION EXISTS FOR. A feed list that matches the
+    pipeline says nothing about the state behind one of those feeds, which is
+    exactly where the 20,141-id `csaf` gap was hiding: `test_the_recorded_
+    baseline_describes_the_profile_that_actually_runs` passed while the harness
+    was reading two thirds of one feed.
+
+    Positive means the baseline is COLDER than the live run, which is the
+    permissive direction and the one worth failing on. Negative means the
+    baseline read more than the live run did, which happens while a feed is
+    draining and is not a defect.
+    """
+    if not base or not live:
+        return {}
+    rows = base.get("per_feed_rows") or {
+        k: len(v.get("rows") or ()) for k, v in (base.get("per_feed") or {}).items()}
+    out = {}
+    for name, live_n in (live.get("feed_rows") or {}).items():
+        if name in rows:
+            out[name] = int(live_n) - int(rows[name])
+    return out
+
+
+def csaf_depth(path=None):
+    """How deep the LOCAL csaf read marks are, as counts rather than as prose.
+
+    `_record_csaf_health` already said "3 stopped on time budget; 3 still
+    catching up" in a health string, which is a sentence a reader can see and no
+    test can read. The same facts are recorded here as numbers so the baseline
+    can carry them and a card can subtract them.
+
+    `ids` is the UNIQUE reference count across providers, which is the figure
+    comparable to the live run's `csaf` rows; the per-provider sum is larger
+    because providers reference the same id.
+    """
+    path = path or feeds.CSAF_STATE
+    try:
+        with open(path, encoding="utf-8") as fh:
+            state = json.load(fh)
+    except (OSError, ValueError):
+        return None
+    provs = {k: v for k, v in state.items()
+             if not k.startswith("_") and isinstance(v, dict)}
+    ids = set()
+    for v in provs.values():
+        ids |= set(v.get("refs") or ())
+    behind = {k: int(v.get("behind") or 0) for k, v in provs.items()}
+    return {
+        "providers": len(provs),
+        "ids": len(ids),
+        "behind": sum(behind.values()),
+        "providers_behind": sorted(k for k, n in behind.items() if n > 0),
+        "listed": sum(int(v.get("listed") or 0) for v in provs.values()),
+        "oldest_read": min((str(v.get("oldest_read") or "") for v in provs.values()
+                            if v.get("oldest_read")), default=None),
+    }
 
 
 # --------------------------------------------------------------------------
@@ -790,6 +1201,33 @@ def _default_years():
     return ",".join(str(y) for y in coverage_years())
 
 
+def _render_live(card):
+    """The live half of the card, as the two or three lines a reader needs.
+
+    Printed under the baseline figure rather than beside it, because they are not
+    two estimates of one number: the first is marginal to what this machine
+    reached and the second to what the site reached, and when they disagree the
+    second is the one that decides.
+    """
+    live = card.get("live") or {}
+    if not live.get("pinned"):
+        return [f"  vs the live run        not pinned ({live.get('reason', '')})"]
+    short = live.get("rows_short") or {}
+    head = (f"  vs the live run        {live.get('effective_n')} effective, "
+            f"pinned {live.get('fetched')} @ {live.get('source_commit')}"
+            + (f"; this baseline is {live.get('ids_short'):,} rows colder at "
+               f"{', '.join(sorted(short))}" if short else
+               "; no feed is colder here"))
+    if live.get("cnas_new_effective") is None:
+        return [head, f"    {live.get('reason')}"]
+    return [head,
+            f"  cnas_new_effective     {live['cnas_new_effective']}"
+            f"   <- the number that justifies the merge"
+            + ("  (upper bound)" if live.get("upper_bound") else ""),
+            f"    {', '.join(live['cnas_new_effective_names']) or '(none)'}",
+            f"    {live.get('reason')}"]
+
+
 def _render(card):
     d = card["disclosure"]
     L = [f"\n{card['feed']}  ({', '.join(str(y) for y in card['years'])})",
@@ -798,8 +1236,9 @@ def _render(card):
             if card["ids_new"] is not None else ""),
          f"  cnas reached           {card['cnas_reached']}",
          f"  cnas_new_effective     {card['cnas_new_effective']}"
-         f"   <- the number that justifies the merge",
+         f"   <- vs this machine's baseline",
          f"    {', '.join(card['cnas_new_effective_names']) or '(none)'}",
+         *_render_live(card),
          f"  disclosure lead        {d['lead_n']} of {d['dated_n']} dated "
          f"references ({d['lead_pct']}%), median {d['lead_median_days']}d, "
          f"max {d['lead_max_days']}d",
@@ -829,10 +1268,21 @@ def corroborating_feeds(path=None):
     guarantee. `test_every_feed_in_the_running_profile_has_a_scorecard` is what
     actually keeps the verdicts present.
 
-    Only `corroborating` is excluded. `unmeasurable` is NOT: it means the feed
-    published nothing datable to score, which is an absence of evidence rather
-    than evidence a feed cannot detect, and treating the two the same would
-    quietly demote any new feed whose first scorecard was thin.
+    Only `corroborating` is excluded, and that word now means one thing. TWO
+    verdicts are deliberately NOT excluded, for the same reason in both cases:
+    the exclusion is evidence a feed CANNOT surface an unpublished id, and
+    neither of them is that evidence.
+
+    `unmeasurable` means the feed published nothing datable to score, which is an
+    absence of evidence rather than evidence of absence, and treating the two the
+    same would quietly demote any new feed whose first scorecard was thin.
+
+    `redundant` means the feed clears admissibility test 2 and adds no marginal
+    CNA. It used to be spelled `corroborating` and was therefore excluded, which
+    is how `mozilla`, `samsung` and `ubuntu` came to be in the live run's
+    published exclusion list on 2026-09-06 while FEEDS.md said in as many words
+    that `mozilla` "clears admissibility test 2, so it stays in the numerator".
+    See `classify`.
     """
     path = path or os.path.join(LAB, "_audit.json")
     try:
@@ -927,6 +1377,13 @@ def _build_parser():
                    help="score every merged feed against all the others, "
                         "offline, from the recorded baseline")
 
+    p = sub.add_parser("pin-live",
+                       help="pin the live run's published profile, so a "
+                            "candidate is marginal to the set the site has "
+                            "rather than to the set this machine reached")
+    p.add_argument("--url", default=LIVE_URL,
+                   help="the published summary to pin, %(default)s")
+
     n = sub.add_parser("near-floor",
                        help="roster CNAs sighted but short of the sighting "
                             "floor; the cheapest coverage on the board")
@@ -981,6 +1438,33 @@ def main(argv=None):
                   "the baseline recorded before.")
         return 0
 
+    if args.cmd == "pin-live":
+        live = pin_live(args.url)
+        write(live, LIVE)
+        print(f"pinned {args.url}")
+        print(f"  run           {live.get('generated_at')} @ "
+              f"{live.get('source_commit')}"
+              + ("  (DIRTY TREE)" if live.get("source_dirty") else ""))
+        print(f"  feeds         {len(live.get('sources') or [])}: "
+              f"{', '.join(live.get('sources') or [])}")
+        print(f"  effective     {len(live.get('effective') or [])} roster CNAs "
+              f"at floor {MIN_SIGHTINGS} "
+              f"(the site publishes {live.get('published_cnas_effective')}, "
+              "which applies the corroborating exclusion and this does not)")
+        base = load_baseline()
+        short = {k: v for k, v in depth_shortfall(base, live).items() if v > 0}
+        if short:
+            # THE POINT OF THE PIN, printed at the moment it is measurable.
+            print(f"  COLDER HERE   this baseline is {sum(short.values()):,} "
+                  "rows short of the live run:")
+            for k, v in sorted(short.items(), key=lambda kv: -kv[1]):
+                print(f"      {k:12} {v:+,} rows")
+            print("    Every marginal figure scored against it is an upper "
+                  "bound by that much.")
+        elif base:
+            print("  depth         no feed is colder here than the live run")
+        return 0
+
     if args.cmd == "near-floor":
         return _near_floor_report(args)
 
@@ -997,12 +1481,34 @@ def main(argv=None):
         print(f"baseline: {len(base['ids']):,} ids, {len(base['effective'])} "
               f"effective roster CNAs, {base['wall_seconds']}s, "
               f"{base['bytes'] / 1e6:.1f} MB")
-        # The corpus half of a sighting, printed because it was invisible: this
-        # baseline reached 247 effective CNAs against the live run's 263 on the
-        # same feeds and window, and the whole difference was an index ten days
-        # behind the one the gate uses.
+        # The corpus half of a sighting, printed because it was invisible: a feed
+        # row can only credit a CNA if the corpus holds the record it names, so a
+        # baseline is measured against two moving things and used to record one.
+        # RULED OUT AS THE GAP, and recorded so nobody re-measures it: refreshing
+        # a ten-day-old index on 2026-09-06 moved 3,696 referenced ids into the
+        # corpus and changed the effective count by nothing. The 247 against the
+        # live run's 263 was the other half, below.
         print(f"  corpus newest {base.get('corpus_newest')}"
               + ("  (re-scored, no fetch)" if args.rescore else ""))
+        depth = base.get("csaf_state") or {}
+        if depth.get("behind"):
+            print(f"  csaf depth    {depth['ids']:,} ids from "
+                  f"{depth['providers']} providers, {depth['behind']:,} "
+                  f"advisories still unread at "
+                  f"{len(depth['providers_behind'])} of them")
+        live = load_live()
+        short = {k: v for k, v in depth_shortfall(base, live).items() if v > 0}
+        if short:
+            print(f"  COLDER THAN THE LIVE RUN by {sum(short.values()):,} rows "
+                  f"at {', '.join(sorted(short))}. Every marginal figure scored "
+                  "against this baseline is an upper bound by that much.")
+        elif live:
+            print("  depth         no feed is colder here than the live run "
+                  f"pinned {live.get('fetched')}")
+        else:
+            print("  depth         NO PINNED LIVE RUN to compare against. Run "
+                  "`python -m rbp.feedlab pin-live`; a baseline nobody has "
+                  "compared to the site is a baseline that can be quietly cold.")
         print(f"  working state -> {BASELINE} (gitignored)")
         print(f"  summary       -> {os.path.join(LAB, '_baseline.json')} (committed)")
         if base["failed"]:
@@ -1048,6 +1554,13 @@ def main(argv=None):
         roster_index = roster_mod.index(roster_mod.load())
         eligible = eligible_published(corpus, coverage_years())
         per_feed = base["per_feed"]
+        # Read once, for fifteen cards. Also the one place a missing pin is worth
+        # saying out loud, because every card below will otherwise say it.
+        live = load_live()
+        if live is None:
+            print("  no pinned live profile: these verdicts are marginal to "
+                  "this machine's baseline only. `python -m rbp.feedlab "
+                  "pin-live`.", file=sys.stderr)
         cards = []
         for name, payload in sorted(per_feed.items()):
             other_ids = sorted({r["cve_id"] for n, p in per_feed.items()
@@ -1057,9 +1570,17 @@ def main(argv=None):
             others = {"feeds": [n for n in per_feed if n != name],
                       "scored_at": base.get("scored_at"), "ids": other_ids,
                       "sightings": other_sight,
-                      "effective": sorted(effective(other_sight))}
+                      "effective": sorted(effective(other_sight)),
+                      # The WHOLE baseline's rows, not the leave-one-out set's.
+                      # How cold this machine is against the live run is a
+                      # property of the machine, and a card that omits it while
+                      # omitting one feed would read as though the missing feed
+                      # were the gap.
+                      "per_feed_rows": {n: len(p["rows"])
+                                        for n, p in per_feed.items()}}
             card = scorecard(name, set(base["years"]), corpus, base=others,
-                             rows=payload["rows"], stats=payload["stats"])
+                             rows=payload["rows"], stats=payload["stats"],
+                             live=live)
             # READ the history, never append to it. See build_baseline: audit
             # replays stored rows, so appending here would manufacture a perfect
             # stability reading out of a single fetch.
@@ -1073,21 +1594,34 @@ def main(argv=None):
                "note": ("each feed scored against ALL THE OTHERS, so these "
                         "marginal figures do not sum: two feeds that both "
                         "uniquely cover the same CNA each score 0"),
+               # HOW COLD THIS MACHINE WAS WHEN THE VERDICTS WERE STRUCK, at the
+               # top of the file that carries them. `corroborating_feeds` reads
+               # this artefact on every pipeline run, so the one place a stale
+               # verdict has consequences is the one place its provenance has to
+               # be legible.
+               "live": {k: (cards[0].get("live") or {}).get(k)
+                        for k in ("pinned", "fetched", "generated_at",
+                                  "source_commit", "effective_n", "rows_short",
+                                  "ids_short")} if cards else None,
                "feeds": {c["feed"]: {"verdict": c["verdict"],
                                      "cnas_new_effective": c["cnas_new_effective"],
                                      "cnas_new_effective_names":
                                          c["cnas_new_effective_names"],
+                                     "combine": c.get("combine"),
                                      "lead_n": c["disclosure"]["lead_n"],
                                      "unpublished_n": c["disclosure"]["unpublished_n"],
                                      "wall_seconds": c["wall_seconds"]}
                          for c in cards}},
               os.path.join(LAB, "_audit.json"))
-        detecting = [c["feed"] for c in cards if c["verdict"] == "detecting"]
-        corrob = [c["feed"] for c in cards if c["verdict"] == "corroborating"]
-        rejected = [c["feed"] for c in cards if c["verdict"] == "reject"]
-        print(f"detecting     {len(detecting)}: {', '.join(detecting) or '-'}")
-        print(f"corroborating {len(corrob)}: {', '.join(corrob) or '-'}")
-        print(f"reject        {len(rejected)}: {', '.join(rejected) or '-'}")
+        by_verdict = {}
+        for c in cards:
+            by_verdict.setdefault(c["verdict"], []).append(c["feed"])
+        for v in ("detecting", "redundant", "corroborating", "unmeasurable",
+                  "reject"):
+            names = by_verdict.get(v) or []
+            print(f"{v:14}{len(names)}: {', '.join(names) or '-'}")
+        print("only `corroborating` leaves the coverage numerator: it is the "
+              "one verdict that says a feed cannot surface an unpublished id")
         return 0
 
     return 1

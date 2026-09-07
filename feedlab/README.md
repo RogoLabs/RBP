@@ -9,7 +9,8 @@ gitignored along with the rest of `data/`.
 
 | file | what it is |
 |---|---|
-| `_baseline.json` | the merged set the marginal figures are marginal to: which feeds, when, how many ids each, how long, how many roster CNAs it reaches |
+| `_baseline.json` | the merged set the marginal figures are marginal to: which feeds, when, how many ids each, how long, how many roster CNAs it reaches, and how deep its `csaf` read marks were |
+| `_live.json` | the live run's own published profile, pinned: per-CNA sightings, rows per feed, and the commit that produced them |
 | `_audit.json` | every merged feed scored against all the others, with its verdict |
 | `<feed>.json` | one feed's full scorecard |
 | `_csaf_probe.json` | `.well-known/csaf/` probe results, per CNA |
@@ -19,7 +20,10 @@ gitignored along with the rest of `data/`.
 FEEDS.md section 2. A candidate is merged only if it clears both.
 
 1. **Marginal CNA yield >= 1.** At least one roster CNA crosses the 3-sighting
-   floor that no already-merged feed crosses. `cnas_new_effective`.
+   floor that no already-merged feed crosses. `live.cnas_new_effective` when
+   there is a pinned live run, `cnas_new_effective` when there is not. See
+   "what a candidate is marginal to" below: they are different sets, and on
+   2026-09-06 they differed by 16 effective CNAs.
 2. **Disclosure lead > 0.** At least one referenced ID was, at the time of
    reference, not yet published. `disclosure.lead_n` or
    `disclosure.unpublished_n`.
@@ -30,10 +34,70 @@ cannot credit a CNA as observable. Crediting a CNA on a feed that is structurall
 incapable of surfacing an unpublished ID is how a launch gate clears while the
 site's actual claim gets weaker.
 
+**A feed that fails (1) and clears (2) is `redundant`, and that is a different
+verdict.** It is mergeable and it STAYS IN THE NUMERATOR, because it can surface
+an unpublished id; it just reaches no CNA the others do not. Both used to be
+spelled `corroborating`, and `corroborating_feeds` reads the verdict string, so
+`mozilla`, `samsung` and `ubuntu` were all in the live run's published exclusion
+list on 2026-09-06 with lead references apiece and not a mirror among them. This
+document had already recorded the right answer for `mozilla`, in FEEDS.md's
+2026-08-24 audit: "it clears admissibility test 2, so it stays in the numerator."
+Correcting it moves the published figure by zero CNAs, because there is no
+publication mirror in the profile and the exclusion set is now empty.
+
+The five verdicts: `detecting`, `redundant`, `corroborating`, `unmeasurable`,
+`reject`. **Only `corroborating` leaves the coverage numerator.** `unmeasurable`
+does not, because a feed nobody could measure is not a proven mirror.
+
+## What a candidate is marginal to
+
+Two sets, and they are not the same size.
+
+`_baseline.json` is what THIS MACHINE reached. `_live.json` is what the SITE
+reached, pinned from `https://rbptracker.org/data/summary.json`, which publishes
+per-CNA sightings and rows per feed four times a day. On 2026-09-06 the local
+baseline was 20,141 `csaf` rows and 16 effective roster CNAs short of the live
+run, on the same fifteen feeds, the same window and the same commit: `deploy.yml`
+caches `data/csaf_state.json` across runs and a provider emits everything it has
+ever seen, so the live state is as deep as every run before it and a local state
+is as deep as the runs that happened locally. Three providers here are 125,588
+advisories behind.
+
+Neither half is broken and the consequence is one-directional: **a candidate
+scored against the local baseline alone looks better than it is**, because the
+CNAs the site already covers are missing from the set it is supposed to be
+marginal to. Thirteen roster CNAs sat below the floor locally and were already
+effective live, and three more were not sighted here at all: 247 effective
+against 263, and the local set is a strict subset of the live one.
+
+So every card carries both figures. `cnas_new_effective` is marginal to this
+machine; `live.cnas_new_effective` is marginal to the site, and it decides the
+verdict when it exists. `live.rows_short` says how much colder this machine was
+when the card was written, and `live.upper_bound` says the live figure is still a
+ceiling: only counts are published, not ids, so the candidate's overlap with the
+LOCAL baseline can be removed exactly and its overlap with the live-only ids
+cannot. That residue shrinks as the local state drains and is bounded by
+`rows_short`.
+
+Re-pin before believing a card: `python -m rbp.feedlab pin-live`. The pin is a
+committed file with a visible diff, like `roster_data/cna_roster.json`, and
+`test_the_pinned_live_run_is_not_stale` fails at 14 days.
+
+**Sightings combine by the UNION OF IDS, never by adding the counts.** A sighting
+is a published CVE the site saw, and `coverage.compute` counts distinct ids, so
+two feeds referencing one CVE are one sighting. Summing per-CNA counts credited a
+feed for re-referencing what the merged set already had, which is exactly the
+mirror test 1 exists to refuse: ten of the fifteen committed cards carried
+marginal CNAs no id had earned (`alas` 2 -> 0, `debian` 4 -> 0, `ubuntu-osv`
+4 -> 0, `ghsa` 3 -> 0, `alpine` 1 -> 0, `osv` 5 -> 1, `redhat` 6 -> 3, `csaf`
+84 -> 80). `combine` on each card records which arithmetic produced it.
+
 ## Running it
 
 ```
+python -m rbp.feedlab pin-live                 # one fetch of the site's own summary
 python -m rbp.feedlab baseline                 # ~26 min, all merged feeds
+python -m rbp.feedlab baseline --rescore       # offline, re-derive against today's corpus
 python -m rbp.feedlab audit                    # offline, from that baseline
 python -m rbp.feedlab score <name>             # one candidate, live
 python -m rbp.feedlab near-floor               # offline, from the last snapshot

@@ -24,6 +24,7 @@
  "cnas_new_effective": 0,
  "cnas_new_effective_names": [],
  "cnas_reached": 63,
+ "combine": "union",
  "disclosure": {
   "dated_n": 3858,
   "lead_examples": [
@@ -59,10 +60,26 @@
  },
  "ids": 3993,
  "ids_new": 16,
- "scored_at": "2026-09-06T21:17:18+00:00",
+ "live": {
+  "already_merged": true,
+  "cnas_new_effective": null,
+  "cnas_new_effective_names": null,
+  "effective_n": 263,
+  "fetched": "2026-09-06",
+  "generated_at": "2026-09-06T20:51:44+00:00",
+  "ids_short": 20141,
+  "pinned": true,
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "rows_short": {
+   "csaf": 20141
+  },
+  "source_commit": "9a1bba54ceaf",
+  "upper_bound": null
+ },
+ "scored_at": "2026-09-07T01:01:00+00:00",
  "stability": null,
- "verdict": "corroborating",
- "verdict_reason": "no marginal CNA, but it does reference unpublished ids, so it can strengthen a row it did not find",
+ "verdict": "redundant",
+ "verdict_reason": "no marginal CNA, but it references ids that were unpublished at the time, so it clears admissibility test 2 and STAYS IN THE NUMERATOR: redundant on coverage, not a publication mirror",
  "wall_seconds": 88.0,
  "years": [
   2023,

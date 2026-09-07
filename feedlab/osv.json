@@ -21,15 +21,12 @@
  },
  "bytes": 309575253,
  "cnas_effective_alone": 104,
- "cnas_new_effective": 5,
+ "cnas_new_effective": 1,
  "cnas_new_effective_names": [
-  "BombadilSystems",
-  "Kong",
-  "Swift",
-  "Toreon",
-  "alibaba"
+  "Kong"
  ],
  "cnas_reached": 137,
+ "combine": "union",
  "disclosure": {
   "dated_n": 19936,
   "lead_examples": [
@@ -58,10 +55,26 @@
  "health": {},
  "ids": 20366,
  "ids_new": 1761,
- "scored_at": "2026-09-06T21:17:17+00:00",
+ "live": {
+  "already_merged": true,
+  "cnas_new_effective": null,
+  "cnas_new_effective_names": null,
+  "effective_n": 263,
+  "fetched": "2026-09-06",
+  "generated_at": "2026-09-06T20:51:44+00:00",
+  "ids_short": 20141,
+  "pinned": true,
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "rows_short": {
+   "csaf": 20141
+  },
+  "source_commit": "9a1bba54ceaf",
+  "upper_bound": null
+ },
+ "scored_at": "2026-09-07T01:00:58+00:00",
  "stability": null,
  "verdict": "detecting",
- "verdict_reason": "5 marginal CNA(s) and 6614 lead / 414 unpublished references",
+ "verdict_reason": "1 marginal CNA(s) and 6614 lead / 414 unpublished references",
  "wall_seconds": 11.0,
  "years": [
   2023,
