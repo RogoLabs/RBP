@@ -64,6 +64,22 @@ drains, not what the site can see.
 
 ## What is open
 
+Six items, and they are not the same KIND of thing, which is worth knowing before
+reading them in order:
+
+- **two are decisions, not work.** 5a (`feed_ubuntu`: keep it or delete it) and 6
+  (`euvd`: leave it out) are both measured, both carry a recommendation, and
+  neither needs code. Taking them is how this list gets shorter today.
+- **two are waiting on accumulated data, not on effort.** 4 drains over
+  successive runs by design. The `months` half of 2 wants a few weeks of
+  snapshots to backtest its thresholds, and picking them early is the exact
+  mistake that entry exists to prevent.
+- **and two are real work.** 1 is the largest, because it is the harness
+  disagreeing with the pipeline about what the merged set IS. 3 is a rehearsal
+  that has to touch a real run.
+
+No numbers in that list on purpose. It routes; the items carry the measurements.
+
 ### 1. The harness's `csaf` is colder than the pipeline's, and nothing said so
 
 **Found 2026-09-06 by fixing the window below, rebuilding the baseline at four
@@ -142,14 +158,17 @@ never been exercised against a real run.
 SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
 can read, so the count climbs over several runs rather than jumping.
 
-### 5. `ubuntu-osv`: two follow-ups, both blocked on one host
+### 5. `ubuntu-osv`: a decision (a) and a measurement (b)
 
 `feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
 recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
 measurement in `FEEDS.md` under "MERGED 2026-08-31".
 
-Both follow-ups are blocked on the same thing: `ubuntu.com/security/` answering
-503. Neither can be started while it is down, so **check the endpoint first**.
+Both follow-ups used to be blocked on `ubuntu.com/security/` answering 503, and
+**a is now answered and b is runnable**: the host was up on 2026-09-06. It goes
+down without warning and has cost this section a 25-minute wasted rebuild once
+already, so **check the endpoint first anyway**, and read the per-feed line rather
+than the exit status when you do.
 
 **a. THE AUDIT HAS RUN, 2026-09-06, at the four-year window, and it says
 `feed_ubuntu` earns nothing on coverage.** `cnas_new_effective` **0**, 16 of its
@@ -282,6 +301,38 @@ level down, at the harness rather than at `verify`. It is done HERE and not
 there: `feeds.py` and `verify` still compare row counts across runs with nowhere
 to record which profile or window produced them.
 
+### 6. `euvd`: the one argument for it is gone
+
+`euvd` is measured and **refused as a numerator source**: zero disclosure lead on
+9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
+oracle. It is a publication mirror. That has never been in doubt.
+
+The open question was whether to merge it tagged `corroborating` anyway, and the
+single reason for was that **it is the only source measured that references
+`TR-CERT` and `twcert` at all**, the two top-50 misses nothing else reached.
+
+**That reason did not survive the four-year window.** The first live run after
+the 2026-09-06 merge sights `TR-CERT` 6 times and `twcert` 15, both over the
+3-sighting floor, from feeds already merged, and `top_missed_effective` came back
+as `huawei` alone. Neither CNA needs euvd and neither ever needed a new parser;
+they needed more years of the feeds already in the profile.
+
+The harness reproduces `TR-CERT` at exactly 6 and sights `twcert` **zero** times,
+which is item 1 and not a contradiction of this: fourteen feeds returned
+identical row counts in both runs and `csaf` did not, so every id the live run
+had and the harness lacked came from `csaf`. Which locates `twcert` for anyone
+who needs it later: it is reached through a CSAF provider, by a feed already
+merged, and still not through euvd.
+
+So what is left is the cost side on its own: no incremental route was found,
+`api/search` is not date-ordered, and covering the window means roughly 150,000
+records and 1,500 requests for rows that only corroborate. **Recommend leaving it
+out and closing this item.** It is written down rather than deleted because the
+reasoning above is what a future reader will otherwise re-derive from euvd's CNA
+count, which still looks like the best row in FEEDS.md.
+
+---
+
 ---
 
 ## Settled, so they are not re-opened by accident
@@ -347,38 +398,6 @@ costs a session.
   72-hour clock), changes `feed_count`'s meaning, collides with the 250-char
   `refs` truncation, and breaks every `?src=csaf` link already shared. The
   review panel reached the same conclusion from six directions.
-
-### 6. `euvd`: the one argument for it is gone
-
-`euvd` is measured and **refused as a numerator source**: zero disclosure lead on
-9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
-oracle. It is a publication mirror. That has never been in doubt.
-
-The open question was whether to merge it tagged `corroborating` anyway, and the
-single reason for was that **it is the only source measured that references
-`TR-CERT` and `twcert` at all**, the two top-50 misses nothing else reached.
-
-**That reason did not survive the four-year window.** The first live run after
-the 2026-09-06 merge sights `TR-CERT` 6 times and `twcert` 15, both over the
-3-sighting floor, from feeds already merged, and `top_missed_effective` came back
-as `huawei` alone. Neither CNA needs euvd and neither ever needed a new parser;
-they needed more years of the feeds already in the profile.
-
-The harness reproduces `TR-CERT` at exactly 6 and sights `twcert` **zero** times,
-which is item 1 and not a contradiction of this: fourteen feeds returned
-identical row counts in both runs and `csaf` did not, so every id the live run
-had and the harness lacked came from `csaf`. Which locates `twcert` for anyone
-who needs it later: it is reached through a CSAF provider, by a feed already
-merged, and still not through euvd.
-
-So what is left is the cost side on its own: no incremental route was found,
-`api/search` is not date-ordered, and covering the window means roughly 150,000
-records and 1,500 requests for rows that only corroborate. **Recommend leaving it
-out and closing this item.** It is written down rather than deleted because the
-reasoning above is what a future reader will otherwise re-derive from euvd's CNA
-count, which still looks like the best row in FEEDS.md.
-
----
 
 ## What will bite you
 
