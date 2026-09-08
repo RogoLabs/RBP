@@ -3966,13 +3966,180 @@ def feed_zdi(years):
     return list(best.values())
 
 
+# CERT/CC's Vulnerability Note API. The month endpoint lists notes; each note's
+# `/vuls/` gives one record per vulnerability with a structured `uid`.
+_CERTCC_MONTH = "https://www.kb.cert.org/vuls/api/{year}/{month:02d}/"
+_CERTCC_VULS = "https://www.kb.cert.org/vuls/api/{idnumber}/vuls/"
+CERTCC_WORKERS = 6
+
+
+def _certcc_json(url, timeout=45):
+    """One API call, returning None for anything that is not a usable document.
+
+    THE API ANSWERS 200 WITH THE FAILURE INSIDE THE BODY, which is the MyJVN trap
+    this repository has already paid for once: `/vuls/api/2026/` returns HTTP 200,
+    `application/json`, and `{"error": "Content requested either does not exist or
+    you do not have permissions to view it!"}`. A caller that checks the status
+    code reads that as a year with no notes in it. Read the document, not the
+    status.
+    """
+    raw, status, _ = _get(url, timeout=timeout, headers={"Accept": "application/json"})
+    if status == 404 or raw is None:
+        return None
+    if isinstance(raw, dict) and raw.get("error"):
+        return None
+    return raw
+
+
+def feed_certcc(years):
+    """CERT/CC Vulnerability Notes: the coordinator's own database, by month.
+
+    A COORDINATOR FEED IS AN AGGREGATE FEED, which is why a source publishing
+    about forty notes a year is worth an adapter. `coverage.compute` credits a
+    sighting to the CNA that owns the referenced id, never to the feed carrying
+    it, so these 162 notes reach 26 roster CNAs and none of them is `certcc`.
+
+    IT IS `redundant`, NOT `detecting`, AND THAT IS A MERGEABLE VERDICT. Measured
+    2026-09-08 against the sixteen-feed baseline (`feedlab/certcc.json`):
+
+        in-window referenced ids                     299
+        marginal roster CNAs                           0   <- fails test 1
+        dated references leading publication   56 (19.8%)   <- clears test 2
+        absent from the corpus                        16
+        RESERVED at the live oracle             13 of 16
+        RESERVED AND IN NO OTHER FEED                 13
+
+    Zero marginal CNAs is the whole of what it fails on: CERT/CC coordinates for
+    vendors this site already reads several ways over. FEEDS.md section 2 and
+    `feedlab/README.md` are explicit that this verdict STAYS IN THE COVERAGE
+    NUMERATOR, because the exclusion is for a publication MIRROR and this is the
+    opposite of one. Only `corroborating` leaves the numerator.
+
+    IT IS THE BEST DETECTOR HERE BY RATE. 13 sole-source rows off 299 ids is a
+    4.3% hit rate, against `zdi`'s 24 off 4,299 (0.6%) and every distro feed's
+    fraction of that. A coordinator publishes when coordination concludes, which
+    like `zdi`'s expiring timeline is a reason to publish that does not wait for a
+    CVE Record to exist. It is a small feed whose rows are almost all interesting.
+
+    ONE REQUEST PER MONTH, AND THE PER-NOTE CALL IS KEPT ON PURPOSE. 48 month
+    calls for the four-year window plus one `/vuls/` call per note, 210 requests
+    and about 13 seconds. `feed_jvn` above dropped exactly this second call after
+    measuring that the ids were already in the list document, and the same
+    question was asked here and came back the other way:
+
+      * THE ID SET DOES NOT NEED THE CALL. Every note carries its own `cveids`
+        list, and over all 162 notes it agrees with the `/vuls/` uids **162 times
+        out of 162**, with no id on either side that the other lacks.
+      * THE DATE DOES. `date_added` is per VULNERABILITY, and a note gains CVEs
+        after it is first published. Measured over all 307: 299 were added the day
+        the note was published, 2 within a week and **6 up to 30 days later**.
+        Dating those from the note would claim an id was public up to a month
+        before it was, and 30 days against a 72-hour expectation is not a rounding
+        error.
+
+    And the cost of the shortcut was measured rather than argued, because "up to
+    30 days on 6 rows" is the kind of bound that sounds ignorable. Scoring the
+    same 299 rows both ways through `feedlab.disclosure_lead`: **the note-date
+    route reports 63 lead references and the per-id route reports 56.** The
+    shortcut would have over-claimed this feed's disclosure lead by 7 references,
+    2.47 points, in the direction that makes a feed look like a better detector
+    than it is -- which is the one direction FEEDS.md section 2 exists to refuse.
+
+    So the calls are made for the DATE, not for the ids, which is a sharper claim
+    than either "keep them" or "drop them" and is the reason to state it here: a
+    future reader who spots `cveids` and deletes 162 requests would be right about
+    the ids and would silently mis-date part of the feed, flattering it. `date_added`
+    is never null and never earlier than the note's own publication date, both
+    checked over the same 307, so it is used directly with the note date as a
+    fallback.
+
+    UNDATED IS NOT AN OPTION HERE, for the same reason it was not for `jvn`. Every
+    row carries the date the id entered its note, so nothing is stamped with today
+    and no row's age is inherited from the run rather than the advisory.
+    """
+    months = [(y, m) for y in sorted(years) for m in range(1, 13)]
+    notes, answered, failed = [], 0, []
+    for year, month in months:
+        url = _CERTCC_MONTH.format(year=year, month=month)
+        try:
+            doc = _certcc_json(url)
+        except Exception as e:
+            failed.append(f"{year}-{month:02d}: {str(e)[:40]}")
+            continue
+        # A MONTH WITH NO NOTES IS ORDINARY AND A MONTH THAT DID NOT ANSWER IS
+        # NOT, and `_certcc_json` collapses the API's in-body error to None, so
+        # the two are told apart by the TYPE of what came back rather than by its
+        # length. A list is an answer, empty or not; None is not.
+        if isinstance(doc, list):
+            answered += 1
+            notes += [n for n in doc if isinstance(n, dict) and n.get("idnumber")]
+
+    if not answered:
+        detail = "; ".join(failed[:3]) or "every month returned an error document"
+        record_feed("certcc", FAILED, f"no month answered ({detail})"[:120])
+        return []
+
+    def _note_vuls(note):
+        try:
+            return note, _certcc_json(_CERTCC_VULS.format(idnumber=note["idnumber"]))
+        except Exception:
+            return note, None
+
+    out, seen, note_failed = [], set(), 0
+    with concurrent.futures.ThreadPoolExecutor(max_workers=CERTCC_WORKERS) as ex:
+        for note, vuls in ex.map(_note_vuls, notes):
+            if vuls is None:
+                note_failed += 1
+                continue
+            vuid = note.get("vuid") or ""
+            first = _d(note.get("datefirstpublished") or note.get("publicdate"))
+            title = (note.get("name") or "").strip()
+            for row in (vuls if isinstance(vuls, list) else []):
+                if not isinstance(row, dict):
+                    continue
+                # `uid` CARRIES THE PREFIXED ID AND `cve` CARRIES THE BARE NUMBER.
+                # `{"cve": "2026-33197", "uid": "CVE-2026-33197"}`. Reading `cve`
+                # and matching the CVE shape finds ZERO on every note and reports
+                # a coordinator feed with nothing in it, which is how this feed
+                # was first scored at 0 ids over 162 notes that all had some.
+                cid = row.get("uid") or ""
+                if not _CVE_ID_RE.fullmatch(cid):
+                    continue
+                if _year(cid) not in years or cid in seen:
+                    continue
+                seen.add(cid)
+                out.append({"cve_id": cid, "source": "certcc",
+                            "source_ref": vuid,
+                            "public_date": _d(row.get("date_added")) or first,
+                            "product": "",
+                            "description": title[:400]})
+
+    # NOTES THAT ANSWERED AND CARRIED NO ID AT ALL IS A SHAPE CHANGE. Every one of
+    # the 162 real notes has a non-empty `cveids`, so a run that finds notes and
+    # parses no ids out of them has met a renamed field, not a quiet quarter.
+    if notes and not out:
+        record_feed("certcc", FAILED,
+                    f"{len(notes)} notes, no CVE ids parsed; `uid` field changed"[:120])
+        return []
+    if failed or note_failed or answered < len(months):
+        bits = []
+        if answered < len(months):
+            bits.append(f"{answered}/{len(months)} months answered")
+        if note_failed:
+            bits.append(f"{note_failed} notes unreadable")
+        if failed:
+            bits.append(failed[0])
+        record_feed("certcc", TRUNCATED, "; ".join(bits)[:120], rows=len(out))
+    return out
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
             "arch": feed_arch, "samsung": feed_samsung,
             "ubuntu-osv": feed_ubuntu_osv, "jvn": feed_jvn,
-            "zdi": feed_zdi}
+            "zdi": feed_zdi, "certcc": feed_certcc}
 
 
 # How many adapters download at once. A ceiling on concurrent fetches, not a

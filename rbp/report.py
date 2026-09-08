@@ -117,6 +117,13 @@ def _derive_meta(row):
             ref = next((r.split(":", 1)[1] for r in refs if r.startswith("zdi:")), "")
             return (f"https://www.zerodayinitiative.com/advisories/{ref}/"
                     if re.fullmatch(r"ZDI-\d\d-\d{3,}", ref) else "")
+        if s == "certcc":
+            # The note's own page. refs carry "certcc:VU#<n>", and the URL takes
+            # the BARE number: `/vuls/id/782720` is 200 and `/vuls/id/VU%23782720`
+            # is 404, so the `VU#` has to come off rather than be escaped.
+            ref = next((r.split(":", 1)[1] for r in refs if r.startswith("certcc:")), "")
+            m = re.fullmatch(r"VU#(\d{4,})", ref)
+            return f"https://www.kb.cert.org/vuls/id/{m.group(1)}" if m else ""
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
         if s == "ubuntu-osv":
