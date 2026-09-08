@@ -76,53 +76,39 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 Four items, and they are not the same KIND of thing, which is worth knowing
 before reading them in order:
 
-- **one is work, and small.** 1 is a false positive the live site published as
-  `degraded: true` on 2026-09-07, with its fix specified.
 - **two are decisions, not work.** 3a (`feed_ubuntu`: keep it or delete it) and 4
   (`euvd`: leave it out) are both measured, both carry a recommendation, and
   neither needs code. Taking them is how this list gets shorter today.
-- **one is waiting on accumulated data, not on effort.** 2 drains over
-  successive runs by design.
+- **two are waiting on accumulated data, not on effort.** 1 needs enough days
+  of `months` to measure two thresholds that were picked rather than derived;
+  2 drains over successive runs by design.
 
-Those three kinds cover all four.
+Those two kinds cover all four.
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
-### 1. `withdrawn_history`'s bucket half reads the ubuntu cap's trailing edge as a withdrawal
+### 1. `withdrawn_history`'s bucket thresholds are unmeasured
 
-**Measured 2026-09-07, on the first run after #37 merged, and it is a false
-positive.** The run published `degraded: true` with one reason: `ubuntu: 2026-07
-held 321 ids and holds 100 now (69% of that month withdrawn)`. Ubuntu withdrew
-nothing. `feed_ubuntu` reads the newest 4,000 records and stops. 221 new records
-landed between the 09-06 and 09-07 runs (September went 253 to 474), so the same
-4,000-record window gave up 221 from its oldest end, and every one of them was
-July. The 09-05 and 09-06 snapshots both hold July at 321 because two records
-landed between them.
+**The false positive this item used to be is fixed, 2026-09-08.** The first run
+after #37 published `degraded: true` over `ubuntu: 2026-07 held 321 ids and
+holds 100 now`, and Ubuntu had withdrawn nothing: 221 records landed at the new
+end of a 4,000-record newest-first window, so the same window gave up 221 from
+its old end, all July. The bucket loop now skips a month at or before the month
+of `oldest` when the feed's status is CAPPED. The exemption is the cap's EDGE
+and nothing else: a capped feed losing a month from the middle of its window
+still fires, the msrc-shaped event still fires, and `_explains_a_gap` still
+leaves CAPPED out. `tests/test_degraded.py` replays the 09-07 numbers from the
+data branch and holds both complements beside it. The reasoning is in the
+comment above `MONTH_MIN_ROWS` and in `git log`.
 
-The horizon half cannot see this and is right not to: `oldest` stayed
-2026-07-30 and `newest` moved forward. The bucket half has no notion of a cap
-trimming the old end. The comment on `withdrawn_history` states that fact for the
-horizon ("the caps on these feeds trim the old end too") and did not carry it
-into the buckets. It will fire again on any day a burst of Ubuntu records lands
-while the trailing month sits between `MONTH_MIN_ROWS` and its half-life, so for
-a few days around the turn of every month.
-
-**The fix is narrow.** In the bucket loop, skip a month at or before the month of
-`cur["oldest"]` when the feed's status is CAPPED: for a newest-first capped feed
-that month is the cap's edge, not evidence withdrawn. Two things must keep
-firing, and each needs a test beside the replay of today's numbers: a capped feed
-losing a month from the MIDDLE of its window, and the msrc-shaped event (uncapped,
-middle month) that the guard exists for. `_explains_a_gap` deliberately excludes
-CAPPED and stays that way. This is not "a cap excuses everything"; it is "a cap's
-own edge is not a withdrawal".
-
-**The thresholds themselves are still unmeasured**, and this is the first datum.
-`MONTH_MIN_ROWS` and `MONTH_DROP` were picked to fire only on wholesale
-withdrawal because `months` was a new field with no history. The snapshots now
-carry enough days of `months` to measure the real per-month variation and tighten
-them the way `FRESHNESS_FLOOR_DAYS` was derived from the feeds' own cadences.
-Until that is done, do not promote either half into `verify`. What today says is
-that the first thing the bucket half needed was not a threshold but an exemption.
+**What is left is the measurement.** `MONTH_MIN_ROWS` and `MONTH_DROP` were
+picked to fire only on wholesale withdrawal because `months` was a new field
+with no history. The snapshots now carry enough days of `months` to measure the
+real per-month variation and tighten them the way `FRESHNESS_FLOOR_DAYS` was
+derived from the feeds' own cadences. Until that is done, do not promote either
+half into `verify`. What the first datum said is that the first thing the bucket
+half needed was not a threshold but an exemption; the second datum should be
+the thresholds.
 
 **Half of what fired on 2026-09-08 is already explained, and the half that is
 not is exactly this item.** The 13:15Z run reported two ubuntu months withdrawn,
