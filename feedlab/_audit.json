@@ -245,16 +245,21 @@
   }
  },
  "live": {
-  "effective_n": 263,
+  "effective_n": 266,
   "fetched": "2026-09-08",
-  "generated_at": "2026-09-08T18:05:51+00:00",
-  "ids_short": 11288,
+  "generated_at": "2026-09-08T21:18:12+00:00",
+  "ids_short": 11613,
   "pinned": true,
   "rows_short": {
-   "csaf": 11288
+   "alas": 14,
+   "csaf": 11532,
+   "debian": 3,
+   "ghsa": 52,
+   "ghsa-repos": 1,
+   "osv": 11
   },
-  "source_commit": "ff1bdc8c4ce6"
+  "source_commit": "3c0effe30aa2"
  },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-09-08T20:38:06+00:00"
+ "scored_at": "2026-09-08T21:21:49+00:00"
 }

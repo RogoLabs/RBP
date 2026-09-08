@@ -1418,12 +1418,14 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > requests.**
 >
 > **`zdi` IS MERGED.** Scorecard in `feedlab/zdi.json`, verdict `detecting` on both
-> tests: 3 marginal roster CNAs (`PaperCut`, `WDC_PSIRT`, `bosch`) and 2,356 lead
-> references. Adapter, tests and the four integration points are in the same diff.
+> tests: 4 marginal roster CNAs (`PaperCut`, `WDC_PSIRT`, `blackberry`, `bosch`)
+> and 2,356 lead references. Adapter, tests and the four integration points are in
+> the same diff. The count was 3 while the baseline row was 11 ids short; closing
+> that added `blackberry`, and the paragraph below records both readings.
 >
 > **The lead figure is the one to read, and it is not close to anything else here.**
-> `feedlab score` puts it at **2,356 of 4,250 dated references leading publication,
-> 55.44%, median 33 days, max 822.** The committed cards for comparison: `jvn`
+> The card puts it at **2,356 of 4,260 dated references leading publication,
+> 55.31%, median 33 days, max 822.** The committed cards for comparison: `jvn`
 > 33.6% at a 6-day median, `csaf:ncsc-nl` 4.07% at 8 days, `mozilla` 34 references
 > in total. More than half of what this feed says was said before the CVE Record
 > existed, and by a month.
@@ -1511,8 +1513,9 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > it as marginal to a set that already contains it: it reported "6 ids not already
 > seen" and ONE marginal CNA against the audit's three, which is not a smaller
 > estimate of the same thing but a different and meaningless quantity. `audit`
-> computes leave-one-out and returns the 3 (`PaperCut`, `WDC_PSIRT`, `bosch`) that
-> match the independent measurement. **The merge-justifying figure has to come from
+> computes leave-one-out and returns the names that match the independent
+> measurement: the 3 (`PaperCut`, `WDC_PSIRT`, `bosch`) at 4,288, and 4 once the
+> 11 ids landed, adding `blackberry`. **The merge-justifying figure has to come from
 > `audit` once the baseline contains the feed; `score` is for candidates only.**
 >
 > **The baseline row was briefly 11 ids short of the adapter, and that is fixed
