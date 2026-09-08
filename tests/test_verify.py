@@ -232,6 +232,24 @@ def test_a_shortfall_behind_a_recorded_truncation_publishes(tmp_path):
     assert any("ubuntu" in n and "503" in n for n in notes), notes
 
 
+def test_the_ubuntu_budget_morning_publishes_as_degraded(tmp_path):
+    """2026-09-08 13:15Z, replayed with the real numbers. Ubuntu's API ran at a
+    third of its usual speed, the walk spent its 900s budget after 96 pages and
+    returned 1,915 ids against a best of 3,996. Recorded CAPPED, this failed the
+    build and froze the site on the previous artefact. Recorded TRUNCATED, which
+    it now is, it publishes as an accounted-for shortfall beside `degraded: true`."""
+    site = _site(tmp_path, [_row(i) for i in range(50)], degraded=True)
+    snaps = _snap(tmp_path, "2026-09-07", 2221,
+                  {"ubuntu": {"rows": 3996, "status": "capped",
+                              "detail": "hit the 200-page cap at 4,000 records"}})
+    _snap(tmp_path, "2026-09-08", 2414,
+          {"ubuntu": {"rows": 1915, "status": "truncated",
+                      "detail": "spent the 900s wall-clock budget at 1,920 records"}})
+    problems, notes = verify.review(site, snaps)
+    assert problems == [], problems
+    assert len(notes) == 1 and "ubuntu" in notes[0] and "truncated" in notes[0], notes
+
+
 def test_a_shortfall_behind_a_recorded_failure_publishes(tmp_path):
     site, snaps = _shortfall(tmp_path, "failed", "HTTP Error 500", degraded=True)
     assert verify.check(site, snaps) == []
