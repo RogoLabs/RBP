@@ -284,6 +284,17 @@ _ORIGIN_KIND = {
     # no assigner, so its presence cannot separate "zdi assigned and disclosed
     # this" from "ZDI is publishing about another CNA's id".
     "zdi": "advisory",
+    # A CERT/CC Vulnerability Note has its own VU#<n> identifier, its own page and
+    # its own publication date, and each id carries the date it entered the note.
+    # It is coordinated disclosure concluding, which is the shape 4.5.1.4 and
+    # 4.5.1.6 mean by Publicly Disclosing, and the same argument that makes `jvn`
+    # an advisory rather than a tracker.
+    #
+    # NOT in OWNER_FEEDS, for the third time on the `ghsa` reasoning: CERT/CC is a
+    # CNA and 205 of the sightings here are ids it assigned itself, but a note
+    # carries no per-id assigner, so its presence cannot separate "certcc assigned
+    # and disclosed this" from "CERT/CC coordinated someone else's id".
+    "certcc": "advisory",
     # A repository advisory is a published advisory with its own identifier and
     # release date, on the vendor's own security tab. Absence from this map is a
     # deliberate fail-safe that reads an unmapped adapter as a tracker, and

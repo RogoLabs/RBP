@@ -1363,5 +1363,126 @@ def test_a_baseline_rebuild_records_one_observation_per_feed(tmp_path, monkeypat
         "window change reads as the feed swinging")
 
 
+def test_extending_a_baseline_fetches_only_the_named_feed(tmp_path, monkeypatch):
+    """ADDING A FEED MUST NOT COST A FETCH OF EVERY OTHER ONE.
+
+    `build_baseline` replaces the recorded set, so learning about one new feed
+    meant fetching all of them: the `zdi` merge on 2026-09-08 spent 32 minutes and
+    6.8 GB doing it and the `certcc` merge an hour later would have repeated it.
+    This module already refuses that trade in its own words for re-scoring -- "must
+    not cost twelve more fetches at twelve third parties" -- and adding a feed is
+    the same trade.
+
+    Run rather than read: the whole value is in which adapters are CALLED.
+    """
+    from rbp import feeds
+    monkeypatch.setattr(feedlab, "STATE", str(tmp_path))
+    called = []
+
+    def adapter(name):
+        def f(years):
+            called.append(name)
+            return [row(f"CVE-{y}-1000") for y in sorted(years)]
+        return f
+    monkeypatch.setitem(feeds.ADAPTERS, "old", adapter("old"))
+    monkeypatch.setitem(feeds.ADAPTERS, "new", adapter("new"))
+    years = {2023, 2024, 2025, 2026}
+    base = feedlab.build_baseline(["old"], years, CORPUS)
+    called.clear()
+
+    out = feedlab.extend_baseline(["new"], years, CORPUS, base=base)
+    assert called == ["new"], (
+        f"extending fetched {called}; only the named feed may be re-read")
+    assert out["feeds"] == ["new", "old"]
+    assert out["per_feed"]["old"]["rows"] == base["per_feed"]["old"]["rows"], (
+        "the untouched feed's rows were not reused")
+    assert out["extended"] == ["new"]
+
+
+def test_extending_recomputes_the_derived_half_from_the_union(tmp_path, monkeypatch):
+    """A spliced baseline and a rebuilt one must differ only in WHEN each feed's
+    rows were read. `ids`, `sightings` and `effective` all come from the union
+    through the same function the offline rescore uses, so there is one definition
+    of what those fields mean."""
+    from rbp import feeds
+    monkeypatch.setattr(feedlab, "STATE", str(tmp_path))
+    monkeypatch.setitem(feeds.ADAPTERS, "old", lambda years: [row("CVE-2025-1000")])
+    monkeypatch.setitem(feeds.ADAPTERS, "new", lambda years: [row("CVE-2025-2000")])
+    years = {2023, 2024, 2025, 2026}
+    base = feedlab.build_baseline(["old"], years, CORPUS)
+    assert base["ids"] == ["CVE-2025-1000"]
+    out = feedlab.extend_baseline(["new"], years, CORPUS, base=base)
+    assert out["ids"] == ["CVE-2025-1000", "CVE-2025-2000"], (
+        "the id union was not recomputed after the splice")
+
+
+def test_extending_does_not_advance_scored_at(tmp_path, monkeypatch):
+    """`scored_at` means "when these rows were read", and it is what
+    `test_the_recorded_baseline_describes_the_profile_that_actually_runs` and every
+    card's `baseline.scored_at` report. Advancing it for feeds that were not
+    re-read is the same fabrication `rescore_baseline` and `audit` both refuse when
+    they decline to record a fetch they did not make."""
+    from rbp import feeds
+    monkeypatch.setattr(feedlab, "STATE", str(tmp_path))
+    monkeypatch.setitem(feeds.ADAPTERS, "old", lambda years: [row("CVE-2025-1000")])
+    monkeypatch.setitem(feeds.ADAPTERS, "new", lambda years: [row("CVE-2025-2000")])
+    years = {2023, 2024, 2025, 2026}
+    base = feedlab.build_baseline(["old"], years, CORPUS)
+    out = feedlab.extend_baseline(["new"], years, CORPUS, base=base)
+    assert out["scored_at"] == base["scored_at"]
+    assert out["extended_at"] > base["scored_at"] or out["extended_at"]
+    assert "rescored_at" not in out, (
+        "a splice is a fetch, not a rescore, and must not claim to be one")
+
+
+def test_extending_records_a_real_fetch_for_the_added_feed(tmp_path, monkeypatch):
+    """A splice DOES fetch, so unlike `audit` it must contribute one honest
+    stability observation. `stability` was decoration on every committed card
+    because only `score` recorded fetches; a second way of really fetching that
+    recorded nothing would put it back."""
+    from rbp import feeds
+    monkeypatch.setattr(feedlab, "STATE", str(tmp_path))
+    monkeypatch.setitem(feeds.ADAPTERS, "old", lambda years: [row("CVE-2025-1000")])
+    monkeypatch.setitem(feeds.ADAPTERS, "new", lambda years: [row("CVE-2025-2000")])
+    years = {2023, 2024, 2025, 2026}
+    base = feedlab.build_baseline(["old"], years, CORPUS)
+    feedlab.extend_baseline(["new"], years, CORPUS, base=base)
+    hist = json.loads((tmp_path / "new.fetches.json").read_text())
+    assert [h["ids"] for h in hist] == [1]
+    assert hist[0]["years"] == [2023, 2024, 2025, 2026]
+    assert not (tmp_path / "old.fetches.json").read_text().count('"ids": 1') > 1, (
+        "the untouched feed gained a second observation from a fetch that "
+        "never happened")
+
+
+def test_extending_recomputes_cost_rather_than_inheriting_it(tmp_path, monkeypatch):
+    """`build_baseline` times a sequential loop, so its `wall_seconds` and `bytes`
+    ARE the per-feed sums. Carrying the old values through a splice would report
+    the original build's 1,938 seconds for an operation that took 30, and that is
+    the kind of number that gets quoted later as the cost of adding a feed."""
+    from rbp import feeds
+    monkeypatch.setattr(feedlab, "STATE", str(tmp_path))
+    monkeypatch.setitem(feeds.ADAPTERS, "old", lambda years: [row("CVE-2025-1000")])
+    monkeypatch.setitem(feeds.ADAPTERS, "new", lambda years: [row("CVE-2025-2000")])
+    years = {2023, 2024, 2025, 2026}
+    base = feedlab.build_baseline(["old"], years, CORPUS)
+    out = feedlab.extend_baseline(["new"], years, CORPUS, base=base)
+    want = sum(f["stats"].get("wall_seconds") or 0
+               for f in out["per_feed"].values())
+    assert out["wall_seconds"] == round(want, 1)
+    assert out["bytes"] == sum(f["stats"].get("bytes") or 0
+                               for f in out["per_feed"].values())
+
+
+def test_extending_with_no_recorded_baseline_refuses(tmp_path, monkeypatch):
+    """There is nothing to splice into, and inventing an empty one would make the
+    added feed marginal to nothing at all, which is the cold-baseline error at its
+    limit."""
+    import pytest as _pytest
+    monkeypatch.setattr(feedlab, "STATE", str(tmp_path))
+    with _pytest.raises(SystemExit):
+        feedlab.extend_baseline(["new"], {2026}, CORPUS, base={})
+
+
 def test_reading_a_missing_fetch_history_is_empty_not_an_error(tmp_path):
     assert feedlab._read_fetches("nope", str(tmp_path / "nope.json")) == []

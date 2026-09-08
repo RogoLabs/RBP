@@ -4,6 +4,7 @@
   "feeds": [
    "alas",
    "alpine",
+   "certcc",
    "csaf",
    "debian",
    "ghsa",
@@ -58,7 +59,7 @@
   "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-08T20:19:55+00:00",
+ "scored_at": "2026-09-08T20:37:56+00:00",
  "stability": {
   "fetches": 2,
   "max": 95,

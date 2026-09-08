@@ -1,0 +1,86 @@
+{
+ "baseline": {
+  "effective_n": 261,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "ghsa-repos",
+   "jvn",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu",
+   "ubuntu-osv",
+   "zdi"
+  ],
+  "scored_at": "2026-09-08T18:58:56+00:00"
+ },
+ "bytes": 1037662,
+ "cnas_effective_alone": 7,
+ "cnas_new_effective": 0,
+ "cnas_new_effective_names": [],
+ "cnas_reached": 26,
+ "combine": "union",
+ "disclosure": {
+  "dated_n": 283,
+  "lead_examples": [
+   "CVE-2023-7005",
+   "CVE-2024-2201",
+   "CVE-2025-11919",
+   "CVE-2026-0685",
+   "CVE-2026-0828"
+  ],
+  "lead_max_days": 287,
+  "lead_median_days": 8,
+  "lead_n": 56,
+  "lead_pct": 19.79,
+  "mirror_n": 227,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2024-24481",
+   "CVE-2025-13207",
+   "CVE-2025-13328",
+   "CVE-2025-13834",
+   "CVE-2025-6243"
+  ],
+  "unpublished_n": 16
+ },
+ "feed": "certcc",
+ "health": {},
+ "ids": 299,
+ "ids_new": 161,
+ "live": {
+  "already_merged": false,
+  "cnas_new_effective": 0,
+  "cnas_new_effective_names": [],
+  "effective_n": 263,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_not_in_baseline": 161,
+  "ids_short": 11288,
+  "pinned": true,
+  "reason": "an upper bound: this baseline is 11,288 rows colder than the live run at csaf",
+  "rows_short": {
+   "csaf": 11288
+  },
+  "source_commit": "ff1bdc8c4ce6",
+  "upper_bound": true
+ },
+ "scored_at": "2026-09-08T20:37:57+00:00",
+ "stability": null,
+ "verdict": "redundant",
+ "verdict_reason": "no marginal CNA, but it references ids that were unpublished at the time, so it clears admissibility test 2 and STAYS IN THE NUMERATOR: redundant on coverage, not a publication mirror",
+ "wall_seconds": 15.2,
+ "years": [
+  2023,
+  2024,
+  2025,
+  2026
+ ]
+}

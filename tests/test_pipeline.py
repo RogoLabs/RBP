@@ -463,6 +463,9 @@ def test_every_adapter_either_builds_a_link_or_declares_it_cannot():
         # `zdi:somepackage` correctly builds no link and would report this
         # adapter as unhandled when it is not.
         "zdi": "zdi:ZDI-26-615",
+        # The bare number is the path segment, so a generic ref cannot
+        # produce a link and would report this adapter as unhandled.
+        "certcc": "certcc:VU#782720",
     }
     handled = set()
     for slug in feeds.ADAPTERS:
