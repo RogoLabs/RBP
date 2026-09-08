@@ -58,7 +58,9 @@ reference it has seen in `data/csaf_state.json`, cached across runs by
 everything it knows on every run whether it fetched anything or not, because
 `gather` keeps no memory of its own and a provider that returns nothing removes
 its rows from the site. `CSAF_PROVIDER_BUDGET_S` bounds how fast a backlog
-drains, not what the site can see.
+drains, not what the site can see. SUSE, Red Hat's CSAF endpoint and CERT-Bund
+each hold more than one budget reads, so their counts climb over several runs
+rather than jumping. That is the drain working, and it needs nothing.
 
 **Adapters fetch on four threads; everything that records runs on one.**
 `GATHER_WORKERS = 4` since 2026-09-07, and the wall clock is now the longest
@@ -73,251 +75,52 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 ## What is open
 
-Four items, and they are not the same KIND of thing, which is worth knowing
-before reading them in order:
-
-- **two are decisions, not work.** 3a (`feed_ubuntu`: keep it or delete it) and 4
-  (`euvd`: leave it out) are both measured, both carry a recommendation, and
-  neither needs code. Taking them is how this list gets shorter today.
-- **two are waiting on accumulated data, not on effort.** 1 needs enough days
-  of `months` to measure two thresholds that were picked rather than derived;
-  2 drains over successive runs by design.
-
-Those two kinds cover all four.
+One item. It is work, small, and specified below; it is not a decision and it
+is not waiting on data. The four that sat here on 2026-09-08 morning went three
+ways the same day: one fixed (#43), two decided into "Settled" below, and one
+measured into FEEDS.md ("MEASURED 2026-09-08", under the Canonical section).
 
 No numbers in that list on purpose. It routes; the items carry the measurements.
 
-### 1. `withdrawn_history`'s bucket thresholds are unmeasured
+### 1. `withdrawn_history`'s bucket half cannot tighten, and csaf is the reason
 
-**The false positive this item used to be is fixed, 2026-09-08.** The first run
-after #37 published `degraded: true` over `ubuntu: 2026-07 held 321 ids and
-holds 100 now`, and Ubuntu had withdrawn nothing: 221 records landed at the new
-end of a 4,000-record newest-first window, so the same window gave up 221 from
-its old end, all July. The bucket loop now skips a month at or before the month
-of `oldest` when the feed's status is CAPPED. The exemption is the cap's EDGE
-and nothing else: a capped feed losing a month from the middle of its window
-still fires, the msrc-shaped event still fires, and `_explains_a_gap` still
-leaves CAPPED out. `tests/test_degraded.py` replays the 09-07 numbers from the
-data branch and holds both complements beside it. The reasoning is in the
-comment above `MONTH_MIN_ROWS` and in `git log`.
+**The false positive this item used to be is fixed (#43).** The first run after
+#37 published `degraded: true` over July on `ubuntu`, and Ubuntu had withdrawn
+nothing: a burst at the new end of a fixed newest-first window pushed the same
+number of records off the old end. The bucket loop now skips a month at or
+before the month of `oldest` when the feed is CAPPED, and only that. A capped
+feed losing a middle month still fires, the msrc-shaped event still fires, and
+`_explains_a_gap` still leaves CAPPED out. `tests/test_degraded.py` replays the
+09-07 numbers and holds both complements beside it.
 
-**What is left is the measurement.** `MONTH_MIN_ROWS` and `MONTH_DROP` were
-picked to fire only on wholesale withdrawal because `months` was a new field
-with no history. The snapshots now carry enough days of `months` to measure the
-real per-month variation and tighten them the way `FRESHNESS_FLOOR_DAYS` was
-derived from the feeds' own cadences. Until that is done, do not promote either
-half into `verify`. What the first datum said is that the first thing the bucket
-half needed was not a threshold but an exemption; the second datum should be
-the thresholds.
+**The thresholds were then measured, 2026-09-08, and the answer is not a
+tighter number.** Six snapshots carry `months` (2026-09-03 to 09-08). Over
+every month-to-month pair above `MONTH_MIN_ROWS`, every drop over 2% that is not
+ubuntu's cap edge or a TRUNCATED read is `csaf`, and the eleven other feeds'
+worst unexplained drop is under 2%. `csaf` moved one month by 46% between 09-04
+and 09-05, when SUSE went unreachable and its rows left every month at once, and
+another by 38% between 09-05 and 09-06 with every provider OK, because SUSE came
+back: the cross-provider `seen` dedupe credits an id to the first provider in
+config order that holds it, with that provider's date, so a provider leaving or
+returning moves shared ids between months. `MONTH_DROP` at 0.5 held by four
+points on a day nothing was withdrawn. Tightening it would have published two
+more false withdrawals in six days.
 
-**Half of what fired on 2026-09-08 is already explained, and the half that is
-not is exactly this item.** The 13:15Z run reported two ubuntu months withdrawn,
-July (100 to 0) and August (3,419 to 1,441). Both were the walk spending its
-900s budget after 96 pages, a partial read of the same window. #41 records that
-exit as TRUNCATED, which `_explains_a_gap` already skips, so a budget day no
-longer reads as months withdrawn. What TRUNCATED cannot cover is a COMPLETE read
-whose cap edge moved, which is the 2026-09-07 case above and the only shape left.
+**So the work is a shape, not a threshold, and it is small.** Two things:
 
-### 2. Loose threads from the uncapping
+- an unreachable provider's `accounted` mark sits on the PART
+  (`csaf:www.suse.com`) and `_explains_a_gap` reads the parent, which never
+  carries it. The 46% day was accounted for and the bucket half could not see
+  that. The bucket half should read the parts.
+- a month bucket on a multi-provider feed moves when a provider returns, and no
+  threshold fixes that. Either `csaf`'s buckets are compared per provider, or
+  `csaf` is exempt from the bucket half with the horizon half kept. Recommend
+  the exemption until per-provider months exist: the horizon half is exact and
+  covers the newest edge, and the middle-month case on csaf is exactly the case
+  the measurement says cannot be read from the parent's buckets.
 
-SUSE, Red Hat's CSAF endpoint and CERT-Bund each hold far more than one budget
-can read, so the count climbs over several runs rather than jumping.
-
-### 3. `ubuntu-osv`: a decision (a) and a measurement (b)
-
-`feed_ubuntu_osv` was merged 2026-08-31 on the Ubuntu Security Team's own
-recommendation. Scorecard in `feedlab/ubuntu-osv.json`, reasoning and every
-measurement in `FEEDS.md` under "MERGED 2026-08-31".
-
-Both follow-ups used to be blocked on `ubuntu.com/security/` answering 503, and
-**a is now answered and b is runnable**: the host was up on 2026-09-06. It goes
-down without warning and has cost this section a 25-minute wasted rebuild once
-already, so **check the endpoint first anyway**, and read the per-feed line rather
-than the exit status when you do.
-
-**a. THE AUDIT HAS RUN, 2026-09-06, at the four-year window, and it says
-`feed_ubuntu` earns nothing on coverage.** `cnas_new_effective` **0**, 16 of its
-3,993 ids not already seen by the other fourteen feeds, verdict **`redundant`**
-rather than detecting. Its cost that run was 88.0s, against 1,070s on 2026-08-27,
-93.1s on 2026-08-31 and 257.5s earlier on 2026-09-06; price the bad case.
-
-**That verdict read `corroborating` when this was written, and the word mattered
-to the decision.** `corroborating` meant "excluded from the coverage numerator",
-which reads as an argument for deleting the feed. It was the wrong word:
-`feed_ubuntu` references ids that were unpublished at the time, so it clears
-admissibility test 2 and **stays in the numerator**. What it does not do is reach
-a CNA the other fourteen miss. FEEDS.md section 2, "CORRECTED 2026-09-06".
-
-**The three reasons for keeping it were then priced, and two of them changed.**
-
-*The dependency reason is gone.* `resolve_dates_ubuntu` does not go through
-`feed_ubuntu`: it asks `cves.json?q=<id>` by name, and `cli.py:444` calls it on
-the undated rows of ANY feed. Its own docstring says it exists BECAUSE the walk
-cannot reach those rows. Deleting the adapter would not touch it. What the site
-depends on either way is the HOST, and deleting a feed does not reduce that.
-
-*The rows reason survives and is small.* Of the 156 distinct ids `feed_ubuntu`
-references that are unpublished now, **7 are referenced by no other feed in the
-profile**. That is what deleting it costs today, beside 0 marginal CNAs. For
-scale, on the same baseline: `ghsa-repos` is sole source for 1,129, `csaf` 303,
-`samsung` 64, `alpine` 45, `ubuntu-osv` 30. One measurement, not a rate.
-
-*And the obvious compromise does not work.* Six of those 7 sit at rank ~3,730 of
-3,993 in the feed's own newest-first order, which is the far edge of what the
-200-page cap reaches. **Shrinking the cap to make it cheaper would lose six of
-the seven.** Its unique contribution lives exactly at the bottom of its reach,
-which is also why raising the cap was measured and rejected at 1,128 pages.
-
-So the trade is 7 candidate rows against 88s in the good case and ~18 minutes in
-the bad one, inside a 60-minute job ceiling where a cancelled job publishes
-nothing. **Recommend KEEPING it and closing this item.** The project's standing
-bias is to delete, but that bias is about accreting guards and surfaces, not
-about dropping the only source of rows the site exists to publish; and the cost
-is bounded by a cap that is already there rather than open-ended. The 2026-08-31
-independent failure is the second reason and it is unchanged. If it goes, the
-diff should say it is trading 7 rows for 18 bad-case minutes, because that is
-what it is.
-
-**The bad case was measured again on 2026-09-08, and it is the whole gather.**
-Ubuntu's API answered one page in 27.8s and two in 504s after 50s; the walk
-spent its 900s budget after 96 pages and returned 1,915 ids. With `gather` on
-four threads the wall clock is the longest single feed, so those 900s were the
-gather's 987s wall against 2,066s summed, on two consecutive runs. The recorded
-`seconds` per feed is how this will be priced from now on rather than from a
-log line. It does not change the recommendation: 900s is the budget's ceiling
-by design, and a run that hits it now publishes as degraded (#41) rather than
-freezing the site, which is what the 13:15Z run did before that fix.
-
-Read that 0 against the depth the card records. The merged set it is marginal to
-was 20,141 `csaf` ids short of the live run, and that error runs the other way,
-making a feed look BETTER than it is. `ubuntu` scoring zero against an
-understated baseline is a stronger result than the same zero against a complete
-one, not a weaker one. Every card now carries `live.rows_short`, so the next
-reader does not have to know this to read the number.
-
-All fifteen cards now describe one baseline, recorded at one moment, over the
-window the pipeline actually gathers. Before this pass they did not: two were
-newer than the other thirteen, and every one of them measured two years.
-
-`ubuntu-osv` reaches 15,500 ids to the tracker's 3,994 and beats it on every
-scorecard axis, but it is **not a superset**: 31.9% of the tracker's ids have no
-OSV record. All the RBP candidates in that 31.9% are already sighted elsewhere,
-so the tracker's remaining contribution is *sightings*, which feed
-`cnas_effective`, which is the gate. The audit is the only thing that can price
-that. Two things push the other way and must be costed in: the tracker's endpoint
-is what `resolve_dates_ubuntu` queries by name (130 rows still depend on it), and
-on 2026-08-31 the two feeds demonstrably failed independently. **Do not delete
-`feed_ubuntu` before the audit.**
-
-**b. Two things from Canonical's second reply, 2026-09-01**, both in FEEDS.md
-under "CANONICAL ANSWERED THE OPEN QUESTION". The 31.9% non-overlap figure quoted
-to them was inflated: it charged tarball snapshot lag to scope, and the same
-subtraction now gives 38.9% purely because the tracker fetch got newer.
-**Neither number is a scope measurement; do not quote either.** Separating scope
-from lag needs per-release status for a sample of the gap, which needs
-`cves.json?q=`, which was 503 on 25 of 30 queries.
-
-**The host was answering 200 on 2026-09-06**, checked before the rebuild:
-`cves.json?limit=1` in 41.0s and `notices.json?limit=1` in 3.6s. So this is
-runnable right now rather than blocked, and 41s for a one-record query is the
-thing to budget for. It re-blocks itself without warning, so **check again before
-starting rather than trusting this line.**
-
-Second: `osv-all.tar.xz` was **30.5 hours stale** when checked, while
-`canonical/ubuntu-security-notices` runs its OSV conversion every five to six
-hours. The lag window held 293 new in-window ids and 202 RBP candidates, and
-**zero** of them unseen by the other thirteen feeds. So it costs sightings, not
-rows. Reading the git repo's delta beside the tarball is the obvious follow-up
-and is unscoped.
-
-**The baseline was rebuilt a third time 2026-09-06, at the right window:
-15 feeds, 77,219 ids, 247 effective roster CNAs, `[ubuntu] 3993 rows`, 26
-minutes, no feed failed and no feed shrank.** Every feed grew or held against the
-two-year rebuild it replaced (51,070 ids, 208 CNAs) and none lost an effective
-CNA, which is the shape a window widening should have. Two feeds barely moved and
-both are explained rather than suspicious: `ubuntu` by 5 rows because its
-200-page cap binds long before the window does, reading back 36 days of a window
-that opens 2023-01-01, and `samsung` by 4 because its feed does not reach back
-either. `corpus_newest` and the endpoint check are in the record: the host was
-answering 200 when it ran.
-
-The 2026-08-31 rebuild it replaced read 14 feeds, 45,895 ids and 183 effective
-CNAs. The
-first attempt at it is the reason the endpoint warning above is the first line of
-this section: it ran while the host was answering 503 and then timing out, and
-produced `[ubuntu] 80 rows, 750.2s` against a usual 3,994. **That run exited 0.**
-Committing it would have made every future candidate look better than it is, in
-exactly the direction
-`test_the_recorded_baseline_describes_the_profile_that_actually_runs` warns
-about. It cost 25 minutes to catch and only the `[ubuntu] 80 rows` line said so.
-
-One local artefact survives it. `data/feedlab/ubuntu.fetches.json` (gitignored
-working state, not in any diff) holds **80, then 3,968, then 3,988**, so
-`stability` reports a ~98% swing for `ubuntu`. All three fetches are real and the
-file is kept for that reason, but the 80 is an outage rather than variation, so
-**do not read that swing as a shrink baseline**. `ubuntu-osv` beside it has five
-fetches between 15,500 and 16,338, a 5.1% swing, which is the shape a healthy
-history has.
-
-**Every `stability` figure on every card is null as of 2026-09-06, deliberately,
-and this is the fix rather than a regression.** `record_fetch` now stamps the
-window each fetch read and `stability` compares only fetches of the newest window
-that are at least `MIN_FETCH_INTERVAL_H` (24) apart, which is what FEEDS.md asked
-for and nothing enforced. Both filters were needed and both were violated by
-committed numbers:
-
-- ten of the fifteen cards carried **0.0%** from two fetches four hours apart, on
-  a feed nobody had watched for a day;
-- `jvn`'s two fetches were **thirty minutes** apart, both 1,117, so the next
-  audit would have committed a perfect reading of one observation;
-- `csaf`'s **29.3%** was sixteen CSAF providers against eighteen, and `ubuntu`'s
-  **98.0%** was the 503 outage below. Neither is the feed moving;
-- and the window itself moved on 2026-09-06, so the first four-year fetch beside
-  a two-year history would have read as a 20-50% swing on **every feed at once**.
-
-So the histories restart at this window. The first rebuild at least a day after
-2026-09-06 produces the first honest pair, and until then null is the correct
-answer. The raw files keep every fetch, including `ubuntu`'s 80-row outage: the
-filtering happens when the history is read, so nothing was deleted to get here.
-
-This was FEEDS.md section 3's "per-feed shrink baselines surviving a profile
-change" one level down, at the harness rather than at `verify`. It is done HERE
-and not there: `feeds.py` now seeds a missing baseline from the scorecard
-(2026-09-07), but neither it nor `verify` records which profile or window
-produced the count it compares against.
-
-### 4. `euvd`: the one argument for it is gone
-
-`euvd` is measured and **refused as a numerator source**: zero disclosure lead on
-9,066 dated references and 60 of 60 of its absent ids PUBLISHED at the live
-oracle. It is a publication mirror. That has never been in doubt.
-
-The open question was whether to merge it tagged `corroborating` anyway, and the
-single reason for was that **it is the only source measured that references
-`TR-CERT` and `twcert` at all**, the two top-50 misses nothing else reached.
-
-**That reason did not survive the four-year window.** The first live run after
-the 2026-09-06 merge sights `TR-CERT` 6 times and `twcert` 15, both over the
-3-sighting floor, from feeds already merged, and `top_missed_effective` came back
-as `huawei` alone. Neither CNA needs euvd and neither ever needed a new parser;
-they needed more years of the feeds already in the profile.
-
-The harness reproduces `TR-CERT` at exactly 6 and sights `twcert` **zero** times,
-which is the harness's colder `csaf` state and not a contradiction of this:
-fourteen feeds returned
-identical row counts in both runs and `csaf` did not, so every id the live run
-had and the harness lacked came from `csaf`. Which locates `twcert` for anyone
-who needs it later: it is reached through a CSAF provider, by a feed already
-merged, and still not through euvd.
-
-So what is left is the cost side on its own: no incremental route was found,
-`api/search` is not date-ordered, and covering the window means roughly 150,000
-records and 1,500 requests for rows that only corroborate. **Recommend leaving it
-out and closing this item.** It is written down rather than deleted because the
-reasoning above is what a future reader will otherwise re-derive from euvd's CNA
-count, which still looks like the best row in FEEDS.md.
-
----
+Neither half moves into `verify` before this is done. The numbers above are the
+measurement of record; re-run it before trusting them, they are six days old.
 
 ---
 
@@ -326,6 +129,29 @@ count, which still looks like the best row in FEEDS.md.
 Each of these was decided with reasoning that is in `git log`. Re-litigating one
 costs a session.
 
+- **`feed_ubuntu` stays.** Decided 2026-09-08 on the audit of 2026-09-06 at the
+  four-year window: zero marginal effective CNAs, and 7 candidate rows that no
+  other feed references, six of them at the far edge of the 200-page cap, so a
+  smaller cap loses them and a larger one was measured and rejected at 1,128
+  pages. Cost is 88s in the good case and a 900s budget in the bad one, which
+  since #41 publishes as degraded instead of freezing the site. The two Ubuntu
+  sources failed independently on 2026-08-31, which is the second reason and
+  unchanged. The project's bias to delete is about guards and surfaces, not the
+  only source of rows the site exists to publish. If it ever goes, the diff
+  says it trades 7 rows for bad-case minutes. FEEDS.md section 2, "CORRECTED
+  2026-09-06"; pricing in `git log` for this entry. The tracker-minus-OSV gap
+  that used to be item 3b was measured the same day, FEEDS.md "MEASURED
+  2026-09-08": it is mostly records not-affected on every Ubuntu release, not
+  EOL scope, and neither of the two figures quoted to Canonical was right.
+- **`euvd` stays out.** Decided 2026-09-08. It is a publication mirror: zero
+  disclosure lead on 9,066 dated references, 60 of 60 absent ids PUBLISHED at
+  the oracle. The one argument for merging it tagged `corroborating` was that
+  it alone referenced `TR-CERT` and `twcert`; the four-year window reaches both
+  over the 3-sighting floor through feeds already merged, `twcert` via a CSAF
+  provider. Covering it means roughly 150,000 records and 1,500 requests a run
+  with no incremental route, for rows that only corroborate. Written down
+  because its CNA count in FEEDS.md still reads as the best row there, and the
+  next reader would re-derive the argument from it.
 - **Prefer the DELETE list when in doubt.** Every review this project has run
   came back weighted towards removal; round 9's own balance was 21 removals
   against 7 additions. The documented failure mode is accreting guards and

@@ -803,6 +803,47 @@ the disclosure-lead backtest, and none of them are counted as progress.
 > suggests untriaged records are a second component alongside EOL. **Unresolved, and
 > blocked on the same endpoint as everything else here.**
 >
+> ### MEASURED 2026-09-08. The gap is neither EOL scope nor lag. It is "not-affected".
+>
+> Run while `cves.json?q=` was answering, then not: the first 15 queries came back in
+> under a second, and 16 of the last 21 were 504s, so this is a 15-record sample and
+> is labelled as one. Method and raw results are in the commit that added this block.
+>
+> **The gap itself, first, at the window the site actually reads.** Both feeds from the
+> 2026-09-06 baseline, one gather, four years: `ubuntu` 3,993 ids, `ubuntu-osv` 26,294,
+> **884 of the tracker's ids (22.1%) have no OSV record**, and 16 of the 884 are seen
+> by no other feed in the profile. So the 31.9% and 38.9% above were both wrong in the
+> same direction: two-year OSV against a four-year-ish tracker window, plus lag.
+>
+> **Lag is a small component and it drains.** 100 of the 884 (11.3%) were in the
+> tarball two days later. The three sampled lag ids were all published 2026-09-04,
+> two days before the baseline. That is the tarball's daily stamp doing what the
+> section below says it does.
+>
+> **The rest is records that affect no Ubuntu release.** 12 of the 15 records read carry
+> `not-affected` on every Ubuntu release listed (jammy, noble, resolute, focal, bionic,
+> xenial, trusty in the sample) and `released` only on `upstream`; one carries no
+> package at all. Chromium is typical: the tracker triages every CVE Chromium publishes
+> and records that no Ubuntu package ships the affected code. There is nothing for an
+> OSV record to say about such a CVE, so OSV does not say it, which is correct and is
+> not the EOL scope Canonical described. **Zero of the 15 were EOL-only and zero were
+> `needs-triage`-only**, and the one 2026-09-01 sample that suggested an untriaged
+> component, `CVE-2025-56798`, is in the 2026-09-08 tarball under `Ubuntu:24.04:LTS`
+> and `Ubuntu:26.04:LTS`. It was lag, of the ordinary kind, and there is no evidence
+> left for an untriaged component.
+>
+> **What this settles.** The tracker's unique contribution over OSV is (a) sightings
+> of CVEs no Ubuntu package is affected by, which are real evidence that the id is
+> public, and (b) a two-day head start on the newest records. Both are sightings, not
+> rows, and the audit above already priced sightings at zero marginal CNAs. The
+> decision to keep `feed_ubuntu` (NEXT.md, Settled, 2026-09-08) rests on the 7 rows
+> and the independent failure, not on this. **The figure to give Canonical is 22.1% at
+> four years, dominated by not-affected records, with lag at about a tenth of it.**
+>
+> **The tarball is still daily.** `Last-Modified` 2026-09-08 06:00:02Z, checked at
+> 14:57Z; the conversion repo committed `osv/cve` at 09:20Z and 14:31Z the same day and
+> five to six times a day across 09-07. The ask in the unsent reply still stands.
+>
 > ### AND THE TARBALL IS THE STALER OF CANONICAL'S TWO OSV SOURCES.
 >
 > Measured 2026-09-01 12:09Z. `osv-all.tar.xz` was stamped **2026-08-31 05:41Z**, so
