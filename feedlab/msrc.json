@@ -5,6 +5,7 @@
    "alas",
    "alpine",
    "arch",
+   "certcc",
    "csaf",
    "debian",
    "ghsa",
@@ -70,7 +71,7 @@
   "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-08T20:20:00+00:00",
+ "scored_at": "2026-09-08T20:38:02+00:00",
  "stability": {
   "fetches": 2,
   "max": 18502,

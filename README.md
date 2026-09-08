@@ -42,20 +42,22 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
 1. **Corpus.** The full CVE List (`cvelistV5`, ~365k records) is downloaded and
    indexed to parquet. It contains zero `RESERVED` records, which is the whole
    problem: the reserved population is invisible in the bulk data.
-2. **Feeds.** 16 public advisory sources are read for CVE IDs
-   (`alas`, `alpine`, `arch`, `csaf`, `debian`, `ghsa`, `ghsa-repos`, `jvn`,
-   `mozilla`, `msrc`, `osv`, `redhat`, `samsung`, `ubuntu`, `ubuntu-osv`, `zdi`).
-   `ghsa-repos` polls
+2. **Feeds.** 17 public advisory sources are read for CVE IDs
+   (`alas`, `alpine`, `arch`, `certcc`, `csaf`, `debian`, `ghsa`, `ghsa-repos`,
+   `jvn`, `mozilla`, `msrc`, `osv`, `redhat`, `samsung`, `ubuntu`, `ubuntu-osv`,
+   `zdi`). `ghsa-repos` polls
    repository security advisories one repo at a time, because an advisory with no
    package ecosystem never enters GitHub's advisory database and no page of the
    global endpoint can return it. `ubuntu-osv` reads Canonical's OSV tarball on
    the Ubuntu Security Team's own recommendation; it is year-sharded, so unlike
    the `ubuntu` tracker walk beside it there is no page cap and no reach caveat.
-   `zdi` is the Zero Day Initiative's published-advisory index, and it is the one
-   source here read for detection rather than for coverage: a disclosure broker
-   publishes when its own timeline expires whether or not a CVE Record exists, so
-   55% of its dated references lead publication, median 33 days. Every other feed
-   was admitted on how many CNAs it made observable.
+   `zdi` and `certcc` are the two sources here read for detection rather than for
+   coverage. A disclosure broker publishes when its own timeline expires, and a
+   coordinator publishes when coordination concludes; neither waits for a CVE
+   Record to exist, so 55% of ZDI's dated references and 20% of CERT/CC's lead
+   publication. Every other feed was admitted on how many CNAs it made
+   observable. `certcc` adds no CNA at all and is merged anyway, because 13 of its
+   299 referenced IDs are reserved and appear in no other feed.
 3. **Classify.** Every referenced ID is checked against the CVE Services
    reservation endpoint, which returns the true state for any ID. `RESERVED` plus
    a public reference is an RBP.

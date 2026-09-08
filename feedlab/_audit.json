@@ -28,8 +28,17 @@
    "verdict": "unmeasurable",
    "wall_seconds": 1.5
   },
+  "certcc": {
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "combine": "union",
+   "lead_n": 56,
+   "unpublished_n": 16,
+   "verdict": "redundant",
+   "wall_seconds": 15.2
+  },
   "csaf": {
-   "cnas_new_effective": 69,
+   "cnas_new_effective": 68,
    "cnas_new_effective_names": [
     "AMI",
     "Absolute",
@@ -90,7 +99,6 @@
     "atlassian",
     "avaya",
     "blackberry",
-    "bosch",
     "brocade",
     "jci",
     "juniper",
@@ -231,9 +239,9 @@
    ],
    "combine": "union",
    "lead_n": 2356,
-   "unpublished_n": 38,
+   "unpublished_n": 39,
    "verdict": "detecting",
-   "wall_seconds": 8.7
+   "wall_seconds": 9.7
   }
  },
  "live": {
@@ -248,5 +256,5 @@
   "source_commit": "ff1bdc8c4ce6"
  },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-09-08T20:20:05+00:00"
+ "scored_at": "2026-09-08T20:38:06+00:00"
 }

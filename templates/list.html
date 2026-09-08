@@ -254,7 +254,7 @@
                alpine:"Alpine", alas:"Amazon Linux",
                msrc:"Microsoft", mozilla:"Mozilla", arch:"Arch",
                csaf:"CSAF Advisory", samsung:"Samsung", jvn:"JVN",
-               zdi:"Zero Day Initiative",
+               zdi:"Zero Day Initiative", certcc:"CERT/CC",
                "ghsa-repos":"GitHub Repo Advisory"};
 
   // CSAF IS A TRANSPORT, NOT A PUBLISHER, and the control treated it as one.
@@ -761,7 +761,7 @@
   // a screen reader's link list read "OSV" 44 times and "open advisory" more than
   // that, each pointing somewhere different, with nothing to tell them apart.
   function chipLabel(feed, cve) {
-    // "ENTRY", NOT "ADVISORY". Five of the sixteen feeds are distribution
+    // "ENTRY", NOT "ADVISORY". Five of the seventeen feeds are distribution
     // trackers, and clock.py draws that distinction as the whole difference
     // between belonging in the count and starting a 72-hour clock: a tracker
     // entry records that an id exists and how a package is affected, and is

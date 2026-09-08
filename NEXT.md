@@ -62,21 +62,30 @@ drains, not what the site can see. SUSE, Red Hat's CSAF endpoint and CERT-Bund
 each hold more than one budget reads, so their counts climb over several runs
 rather than jumping. That is the drain working, and it needs nothing.
 
-**Sixteen feeds, and one of them is there for a different reason.** `zdi` was
-merged 2026-09-08 as the first source admitted on DETECTION rather than on
-coverage, because coverage stopped being the binding constraint: the gate stands
-at 49 of 50 and the one miss (`huawei`) publishes a CSAF catalogue no
-unauthenticated client can read. What the site is short of is rows, and `zdi`
-supplies 24 reserved ids that no other merged feed references, off four requests.
-55% of its dated references lead publication at a 33-day median, against `jvn`'s
-33.6% at 6 days and `csaf:ncsc-nl`'s 4.07%. The reason is the business model, not
-the format, and FEEDS.md's "MEASURED AND MERGED 2026-09-08" states the general
-rule it produced: ask what makes a source publish. EUVD publishes because a record
-was published, so it can never lead; ZDI publishes because a clock ran out.
+**Seventeen feeds, and two of them are there for a different reason.** `zdi` and
+`certcc` were both merged 2026-09-08, and they are the first sources admitted on
+DETECTION rather than on coverage. Coverage stopped being the binding constraint:
+the gate stands at 49 of 50, the one miss (`huawei`) publishes a CSAF catalogue no
+unauthenticated client can read, and the 120 reachable CNAs still short of the
+floor are all sub-160-volume, one parser each. What the site is short of is rows.
 
-It is also the only feed whose evidence is an HTML table on someone else's
-marketing site. That risk is named, guarded in two directions and tested, and it
-is the thing to look at first if `zdi` ever reports a shape failure.
+- **`zdi`** supplies 24 reserved ids no other merged feed references, off four
+  requests. 55% of its dated references lead publication, median 33 days.
+- **`certcc`** supplies 13, and adds ZERO roster CNAs. It is merged on
+  disclosure lead alone, which is the first time section 2's `redundant` verdict
+  has carried a merge. By RATE it is the best detector in the profile: 13
+  sole-source rows off 299 ids, 4.3%, against `zdi`'s 0.6%.
+
+The general rule both produced, in FEEDS.md's two "MEASURED AND MERGED 2026-09-08"
+blocks: **ask what makes a source publish.** EUVD publishes because a record was
+published, so it can never lead. ZDI publishes because a disclosure clock ran out;
+CERT/CC publishes because coordination concluded. Neither waits for a record.
+
+Two things about them to look at first if either goes wrong. `zdi` is the only
+feed whose evidence is an HTML table on someone else's marketing site, and that
+risk is named, guarded in two directions and tested. `certcc` is the smallest feed
+in the profile, so a shrink there is the easiest one to miss; its committed
+scorecard is what lets `compare_magnitudes` see it at all on its first two runs.
 
 **Adapters fetch on four threads; everything that records runs on one.**
 `GATHER_WORKERS = 4` since 2026-09-07, and the wall clock is now the longest
@@ -91,16 +100,16 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 ## What is open
 
-**1. Re-pin the live run once `zdi` has published, and delete its pending
-declaration.** Opened 2026-09-08 with the `zdi` merge, and it is bookkeeping with
-a deadline rather than a defect.
+**1. Re-pin the live run once `zdi` and `certcc` have published, and delete their
+pending declarations.** Opened 2026-09-08 with those two merges, and it is
+bookkeeping with a deadline rather than a defect.
 
 `feedlab/_live.json` is pinned from the site's own `summary.json`, so it can only
 name feeds the site has already run, and merging to main is what makes the site
-run a new one. A commit that adds a feed therefore lands with the profile one
-name ahead of the pin, and `test_the_pinned_live_run_is_the_profile_the_pipeline_runs`
+run a new one. A commit that adds a feed therefore lands with the profile a name
+ahead of the pin, and `test_the_pinned_live_run_is_the_profile_the_pipeline_runs`
 asserted set equality. `zdi` is the first feed merged since that test was written
-in #33, so it is the first to hit it.
+in #33, so it is the first to hit it, and `certcc` is the second.
 
 The fix in the diff is a declaration, not a loosened assertion:
 `feedlab.PENDING_FIRST_RUN` names the feeds awaiting a first live run, the pin
@@ -114,7 +123,8 @@ because that one flatters every candidate.
 python -m rbp.feedlab pin-live      # one fetch of the site's own summary
 ```
 
-then remove `"zdi"` from `feedlab.PENDING_FIRST_RUN`. Until that happens
+then remove `"zdi"` and `"certcc"` from `feedlab.PENDING_FIRST_RUN`. Until that
+happens
 `test_no_feed_is_declared_pending_once_the_live_run_has_it` fails, deliberately:
 a declaration that outlives its reason would hide the drift the pin test exists to
 catch. `test_the_pinned_live_run_is_not_stale` already bounds the wait to a
@@ -122,8 +132,16 @@ fortnight. `deploy.yml` deselects `harness_artefact`, so none of this can stop a
 publication.
 
 Re-scoring is optional and worth doing once: every committed card's marginal
-figure is an upper bound by `live.rows_short`, and `zdi`'s is scored against a pin
-that does not contain it.
+figure is an upper bound by `live.rows_short`, and both new cards are scored
+against a pin that does not contain them. Note that a re-score of either has to be
+`feedlab audit`, not `feedlab score`: once a feed is in the baseline, `score`
+measures it as marginal to a set containing itself and returns a meaningless
+number. FEEDS.md's `zdi` block records that happening.
+
+Adding a feed no longer costs a rebuild of every other one. `feedlab baseline
+--add <feed>` fetches only what is named and splices it into the stored rows,
+30 seconds against 32 minutes; it was built for the `certcc` merge and its own
+block explains why.
 
 ---
 

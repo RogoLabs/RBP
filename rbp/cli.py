@@ -65,8 +65,23 @@ from . import (cvelist, feeds, classify, report, coverage,
 # currently see, against a top-50 gate already at 49/50 where three marginal CNAs
 # change nothing. FEEDS.md section 2 admits a feed on marginal CNAs OR on
 # disclosure lead; every merge before this one led with the first.
+# `certcc` added 2026-09-08 on `feedlab/certcc.json`: 299 in-window ids, ZERO
+# marginal CNAs, 56 lead references (19.8%) and 13 currently-unpublished ids, in
+# 210 requests, 1.0 MB and ~15s. Verdict REDUNDANT.
+#
+# REDUNDANT IS A MERGEABLE VERDICT AND IT STAYS IN THE NUMERATOR. It is the one
+# that fails test 1 and clears test 2, which is the opposite shape from
+# `corroborating`, and only `corroborating` leaves the coverage numerator. Both
+# used to be spelled the same word and `cli.run` read the wrong one; FEEDS.md
+# section 2's "CORRECTED 2026-09-06" is that story. This is the first feed merged
+# on that verdict, so it is the first time the distinction has cost anything.
+#
+# It is here for the same reason `zdi` is, one step further along: 13 of its 299
+# ids are reserved and referenced by no other feed, a 4.3% hit rate against
+# `zdi`'s 0.6%. A coordinator publishes when coordination concludes, which does
+# not wait for a CVE Record to exist.
 _WEEKLY = ("alas,ubuntu,ubuntu-osv,debian,ghsa,ghsa-repos,redhat,alpine,osv,"
-           "mozilla,arch,csaf,msrc,samsung,jvn,zdi")
+           "mozilla,arch,csaf,msrc,samsung,jvn,zdi,certcc")
 PROFILES = {
     "weekly": _WEEKLY,
     # ONE STRING, REFERENCED TWICE, not two identical literals.
