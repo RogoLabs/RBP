@@ -1989,9 +1989,6 @@
   "CVE-2026-28631": {
    "first_public": "2026-07-01"
   },
-  "CVE-2026-0001": {
-   "first_public": "2026-07-01"
-  },
   "CVE-2026-24081": {
    "first_public": "2026-07-01"
   },
@@ -6825,21 +6822,6 @@
   "CVE-2026-55277": {
    "first_public": "2026-09-01"
   },
-  "CVE-2026-7477": {
-   "first_public": "2026-09-01"
-  },
-  "CVE-2026-12285": {
-   "first_public": "2026-09-01"
-  },
-  "CVE-2026-12387": {
-   "first_public": "2026-09-01"
-  },
-  "CVE-2026-5729": {
-   "first_public": "2026-09-01"
-  },
-  "CVE-2026-7476": {
-   "first_public": "2026-09-01"
-  },
   "CVE-2026-55331": {
    "first_public": "2026-09-01"
   },
@@ -9896,6 +9878,60 @@
    "published": "2026-09-07",
    "days_to_publish": 17,
    "closed_on": "2026-09-07"
+  },
+  {
+   "cve_id": "CVE-2026-0001",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-01",
+   "published": "2026-09-08",
+   "days_to_publish": 69,
+   "closed_on": "2026-09-08"
+  },
+  {
+   "cve_id": "CVE-2026-7477",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-01",
+   "published": "2026-09-08",
+   "days_to_publish": 7,
+   "closed_on": "2026-09-08"
+  },
+  {
+   "cve_id": "CVE-2026-12285",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-01",
+   "published": "2026-09-08",
+   "days_to_publish": 7,
+   "closed_on": "2026-09-08"
+  },
+  {
+   "cve_id": "CVE-2026-12387",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-01",
+   "published": "2026-09-08",
+   "days_to_publish": 7,
+   "closed_on": "2026-09-08"
+  },
+  {
+   "cve_id": "CVE-2026-5729",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-01",
+   "published": "2026-09-08",
+   "days_to_publish": 7,
+   "closed_on": "2026-09-08"
+  },
+  {
+   "cve_id": "CVE-2026-7476",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-01",
+   "published": "2026-09-08",
+   "days_to_publish": 7,
+   "closed_on": "2026-09-08"
   }
  ]
 }
