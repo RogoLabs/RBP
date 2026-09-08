@@ -75,52 +75,16 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 ## What is open
 
-One item. It is work, small, and specified below; it is not a decision and it
-is not waiting on data. The four that sat here on 2026-09-08 morning went three
-ways the same day: one fixed (#43), two decided into "Settled" below, and one
-measured into FEEDS.md ("MEASURED 2026-09-08", under the Canonical section).
+Nothing, as of 2026-09-08. The four items that were here that morning went four
+ways the same day: one fixed (#43) and then measured, and the measurement's own
+fix built in #44; two decided into "Settled" below; one measured into FEEDS.md
+("MEASURED 2026-09-08", under the Canonical section).
 
-No numbers in that list on purpose. It routes; the items carry the measurements.
-
-### 1. `withdrawn_history`'s bucket half cannot tighten, and csaf is the reason
-
-**The false positive this item used to be is fixed (#43).** The first run after
-#37 published `degraded: true` over July on `ubuntu`, and Ubuntu had withdrawn
-nothing: a burst at the new end of a fixed newest-first window pushed the same
-number of records off the old end. The bucket loop now skips a month at or
-before the month of `oldest` when the feed is CAPPED, and only that. A capped
-feed losing a middle month still fires, the msrc-shaped event still fires, and
-`_explains_a_gap` still leaves CAPPED out. `tests/test_degraded.py` replays the
-09-07 numbers and holds both complements beside it.
-
-**The thresholds were then measured, 2026-09-08, and the answer is not a
-tighter number.** Six snapshots carry `months` (2026-09-03 to 09-08). Over
-every month-to-month pair above `MONTH_MIN_ROWS`, every drop over 2% that is not
-ubuntu's cap edge or a TRUNCATED read is `csaf`, and the eleven other feeds'
-worst unexplained drop is under 2%. `csaf` moved one month by 46% between 09-04
-and 09-05, when SUSE went unreachable and its rows left every month at once, and
-another by 38% between 09-05 and 09-06 with every provider OK, because SUSE came
-back: the cross-provider `seen` dedupe credits an id to the first provider in
-config order that holds it, with that provider's date, so a provider leaving or
-returning moves shared ids between months. `MONTH_DROP` at 0.5 held by four
-points on a day nothing was withdrawn. Tightening it would have published two
-more false withdrawals in six days.
-
-**So the work is a shape, not a threshold, and it is small.** Two things:
-
-- an unreachable provider's `accounted` mark sits on the PART
-  (`csaf:www.suse.com`) and `_explains_a_gap` reads the parent, which never
-  carries it. The 46% day was accounted for and the bucket half could not see
-  that. The bucket half should read the parts.
-- a month bucket on a multi-provider feed moves when a provider returns, and no
-  threshold fixes that. Either `csaf`'s buckets are compared per provider, or
-  `csaf` is exempt from the bucket half with the horizon half kept. Recommend
-  the exemption until per-provider months exist: the horizon half is exact and
-  covers the newest edge, and the middle-month case on csaf is exactly the case
-  the measurement says cannot be read from the parent's buckets.
-
-Neither half moves into `verify` before this is done. The numbers above are the
-measurement of record; re-run it before trusting them, they are six days old.
+That is not a claim that the site is finished. It is a claim that nothing known
+is waiting. The things that WILL come are the ones this file cannot list yet: a
+feed shrinking for a reason nobody has seen, a guard firing on a shape nobody
+measured. When one arrives, it goes here with its measurement and its fix
+specified, the way item 1 did, and it leaves here when it ships.
 
 ---
 
@@ -129,6 +93,21 @@ measurement of record; re-run it before trusting them, they are six days old.
 Each of these was decided with reasoning that is in `git log`. Re-litigating one
 costs a session.
 
+- **`withdrawn_history` has no bucket half for a feed assembled from parts,
+  and its thresholds stay where they were picked.** Measured 2026-09-08 over
+  the six snapshots carrying `months`: eleven feeds never moved a month by more
+  than 2% between runs; `csaf` moved one 46% when SUSE went unreachable and
+  another 38% when it came back, because the cross-provider `seen` dedupe
+  credits an id to the first provider in config order with that provider's
+  date. A month count on such a feed measures which parts answered, not what
+  the source serves, so `csaf` and `osv` keep the horizon half (exact, no
+  threshold) and lose the buckets; `_explains_a_gap` now reads an unreachable
+  part's `accounted` mark, which `health_detail` rolls up as status but not as
+  reason. Per-part buckets would give the bucket half back and are not built.
+  Neither half goes into `verify` on thresholds that were picked; if the
+  buckets are ever wanted on `csaf`, build them per part first, then measure
+  again. Block comment above `MONTH_MIN_ROWS`; `tests/test_degraded.py`
+  replays both csaf days.
 - **`feed_ubuntu` stays.** Decided 2026-09-08 on the audit of 2026-09-06 at the
   four-year window: zero marginal effective CNAs, and 7 candidate rows that no
   other feed references, six of them at the far edge of the 200-page cap, so a
