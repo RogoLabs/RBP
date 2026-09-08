@@ -1,1 +1,20 @@
-[]
+[
+ {
+  "cve_id": "CVE-2026-19625",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-08-31",
+  "published": "2026-09-08",
+  "days_to_publish": 8,
+  "closed_on": "2026-09-08"
+ },
+ {
+  "cve_id": "CVE-2026-19651",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-08-31",
+  "published": "2026-09-08",
+  "days_to_publish": 8,
+  "closed_on": "2026-09-08"
+ }
+]
