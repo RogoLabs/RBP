@@ -540,6 +540,23 @@ def stale_feeds(detail, today=None, floor_days=FRESHNESS_FLOOR_DAYS):
 # tighten them, the way FRESHNESS_FLOOR_DAYS was derived from the feeds' own
 # cadences rather than picked.
 #
+# MEASURED 2026-09-08, over the six snapshots that carried `months` by then, and
+# the answer was not a tighter number. Eleven feeds never moved a month by more
+# than 2% between runs. `csaf` moved one month 46% when SUSE went unreachable and
+# its rows left every month at once, and another 38% the next day when SUSE came
+# back with every provider OK: the cross-provider `seen` dedupe credits an id to
+# the FIRST provider in config order that holds it, with that provider's date,
+# so a provider leaving or returning moves shared ids between months. 2024-01
+# went 640 -> 998 -> 616 across those three runs and nobody withdrew anything.
+# MONTH_DROP at 0.5 held by four points. The same mechanism applies to any feed
+# assembled from parts (`osv`'s ecosystems dedupe the same way), so a feed with
+# `parts` has NO bucket half: its per-month counts are a property of which
+# parts answered and in what order, not of what the source serves. Its horizon
+# half stays, because `newest` is the max over the whole feed and a provider
+# dropping out is already accounted for below. Per-part buckets would give the
+# bucket half back and are not built; until they are, the thresholds cannot be
+# tightened from these numbers, and the numbers are the reason.
+#
 # Until then BOTH signals report on the DEGRADED path and not the blocking one.
 # A guard whose thresholds have never been measured must not be able to freeze
 # the site on its first bad afternoon, and `verify` freezing the site over one
@@ -559,9 +576,19 @@ def _explains_a_gap(rec):
     CAPPED is deliberately absent, exactly as it is there. Ubuntu's page cap
     fires on every single run by design, so letting a cap excuse a withdrawal
     would excuse every withdrawal on that feed for ever.
+
+    The mark is read from the PARTS as well as the parent. An unreachable CSAF
+    provider is recorded CAPPED with `accounted` on `csaf:<host>`, and
+    `health_detail` rolls the status up to `csaf` but not the mark, so on
+    2026-09-05 SUSE's 20,096 rows left every month of `csaf` at once and the
+    parent said nothing about why. A feed one of whose parts could not be read
+    holds a partial view of its own history, which is the sentence above.
     """
     rec = rec or {}
-    return rec.get("status") in (FAILED, TRUNCATED) or bool(rec.get("accounted"))
+    if rec.get("status") in (FAILED, TRUNCATED) or rec.get("accounted"):
+        return True
+    return any(isinstance(p, dict) and p.get("accounted")
+               for p in (rec.get("parts") or {}).values())
 
 
 def withdrawn_history(previous, current):
@@ -603,6 +630,13 @@ def withdrawn_history(previous, current):
                 f"{now_newest}; the source withdrew advisories it had already "
                 f"served")
 
+        if cur.get("parts"):
+            # NO BUCKET HALF FOR A FEED ASSEMBLED FROM PARTS. Its month counts
+            # move with which parts answered and in what order, not with what
+            # the source serves: measured at 46% and 38% on csaf across two
+            # consecutive days on which nothing was withdrawn. See the block
+            # comment above MONTH_MIN_ROWS. The horizon half above still ran.
+            continue
         was_months = prev.get("months") or {}
         now_months = cur.get("months") or {}
         # THE CAP'S OWN EDGE. A newest-first feed that stops at a fixed record
