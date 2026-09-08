@@ -2574,12 +2574,74 @@ def test_a_failed_or_truncated_feed_is_not_reported_as_a_withdrawal():
 def test_a_capped_feed_is_still_checked():
     """CAPPED must never excuse a withdrawal. Ubuntu's page cap fires on every
     single run, so excusing it here would excuse every withdrawal on that feed
-    for ever, which is the argument `degraded_state` and `verify` both make."""
+    for ever, which is the argument `degraded_state` and `verify` both make.
+    The cap's EDGE month is exempt (the two tests below); the cap is not, and
+    this fixture's lost month sits above the edge."""
     prev = {"ubuntu": _feed(3996, "2026-08-11", {"2026-08": 3996})}
     cur = {"ubuntu": _feed(3900, "2026-07-01", {"2026-07": 3900},
-                           status=feeds.CAPPED)}
+                           status=feeds.CAPPED, oldest="2026-07-01")}
     assert feeds.withdrawn_history(prev, cur), (
         "a configured page cap is excusing a withdrawal")
+
+
+def test_a_capped_feeds_trailing_month_is_the_caps_edge_not_a_withdrawal():
+    """THE 2026-09-07 FALSE POSITIVE, replayed on the numbers the live site
+    published. Two consecutive snapshots from the data branch.
+
+    `feed_ubuntu` reads the newest 4,000 records and stops. 221 records landed
+    between the 09-06 and 09-07 runs (September 253 -> 474), so the same
+    4,000-record window gave up 221 from its oldest end, every one of them July
+    (321 -> 100). `oldest` stayed 2026-07-30 and `newest` moved forward, which is
+    the horizon half correctly seeing nothing; the bucket half read the cap's
+    trailing edge as 69% of a month withdrawn and the site published
+    `degraded: true` over it. Ubuntu withdrew nothing.
+
+    It recurs on any day a burst lands while the trailing month sits between
+    MONTH_MIN_ROWS and its half-life, so around the turn of every month.
+    """
+    prev = {"ubuntu": _feed(3993, "2026-09-04",
+                            {"2026-07": 321, "2026-08": 3419, "2026-09": 253},
+                            status=feeds.CAPPED, capped=True,
+                            oldest="2026-07-30")}
+    cur = {"ubuntu": _feed(3993, "2026-09-07",
+                           {"2026-07": 100, "2026-08": 3419, "2026-09": 474},
+                           status=feeds.CAPPED, capped=True,
+                           oldest="2026-07-30")}
+    assert feeds.withdrawn_history(prev, cur) == []
+
+
+def test_a_capped_feed_losing_a_month_from_the_middle_is_still_a_withdrawal():
+    """The exemption is for the cap's edge and nothing else. Same ubuntu shape,
+    same `oldest`, but the month that emptied is August, ABOVE the edge, which
+    no newest-first cap can produce: a cap gives up its oldest records first.
+    This is the one that must keep firing after the edge exemption, and it is
+    the reason `_explains_a_gap` still leaves CAPPED out."""
+    prev = {"ubuntu": _feed(3993, "2026-09-04",
+                            {"2026-07": 321, "2026-08": 3419, "2026-09": 253},
+                            status=feeds.CAPPED, capped=True,
+                            oldest="2026-07-30")}
+    cur = {"ubuntu": _feed(1274, "2026-09-07",
+                           {"2026-07": 321, "2026-08": 479, "2026-09": 474},
+                           status=feeds.CAPPED, capped=True,
+                           oldest="2026-07-30")}
+    found = feeds.withdrawn_history(prev, cur)
+    assert len(found) == 1 and found[0].startswith("ubuntu: 2026-08"), found
+
+
+def test_an_uncapped_feed_gets_no_edge_exemption():
+    """The msrc-shaped event the guard exists for, with `oldest` in the lost
+    month. An uncapped feed has no cap edge, so a month emptying at its oldest
+    end is a withdrawal like any other; only a CAPPED status earns the
+    exemption. `test_a_month_withdrawn_from_the_middle_is_caught_by_nothing_else`
+    above is the middle-month version of the same event."""
+    prev = {"msrc": _feed(15025, "2026-08-11",
+                          {"2026-03": 1637, "2026-07": 1200, "2026-08": 900},
+                          oldest="2026-03-02")}
+    cur = {"msrc": _feed(13388, "2026-08-11",
+                         {"2026-03": 0, "2026-07": 1200, "2026-08": 900},
+                         oldest="2026-03-02")}
+    found = feeds.withdrawn_history(prev, cur)
+    assert len(found) == 1 and found[0].startswith("msrc: 2026-03"), found
 
 
 def test_a_resolver_is_never_reported_as_a_withdrawal():

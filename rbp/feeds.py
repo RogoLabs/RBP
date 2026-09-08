@@ -516,6 +516,21 @@ def stale_feeds(detail, today=None, floor_days=FRESHNESS_FLOOR_DAYS):
 #                 window rather than only at its newest edge. This is the half
 #                 that covers the `2026-Mar` case above.
 #
+#                 The horizon's own sentence about the caps trimming the OLD end
+#                 has to hold here too, and for two runs it did not. A capped
+#                 newest-first feed serves a fixed number of records, so when a
+#                 burst lands at the new end the SAME window gives up the same
+#                 number from its old end, and every one of them sits in the
+#                 month `oldest` falls in. MEASURED 2026-09-07, the first run
+#                 after the buckets shipped: 221 Ubuntu records landed between
+#                 two runs, September went 253 -> 474, July went 321 -> 100,
+#                 `oldest` stayed 2026-07-30, and the site published
+#                 `degraded: true` over a month nobody had withdrawn. So a month
+#                 at or before the month of `oldest` on a CAPPED feed is that
+#                 cap's edge and is not compared. A month in the MIDDLE of a
+#                 capped feed's window still is: the edge is exempt, the cap is
+#                 not, and `_explains_a_gap` keeps CAPPED out for that reason.
+#
 # THE BUCKET THRESHOLDS ARE NOT MEASURED, and saying so is the point. `months` is
 # a new field, so there is no history to backtest against and these are set to
 # fire only on wholesale withdrawal: a month that was materially populated and
@@ -590,9 +605,17 @@ def withdrawn_history(previous, current):
 
         was_months = prev.get("months") or {}
         now_months = cur.get("months") or {}
+        # THE CAP'S OWN EDGE. A newest-first feed that stops at a fixed record
+        # count gives up its oldest month whenever a burst lands at its newest,
+        # and that month is the one `oldest` falls in. Only on a CAPPED feed,
+        # only for the edge month and anything older; the middle of the window
+        # is checked exactly as an uncapped feed's is. 2026-09-07, ubuntu, July.
+        cap_edge = (cur.get("oldest") or "")[:7] if cur.get("status") == CAPPED else ""
         for month, was in sorted(was_months.items()):
             if month[:4] not in live_years:
                 continue                   # the window rolled; the year is gone
+            if cap_edge and month <= cap_edge:
+                continue                   # the cap trimmed it; nobody withdrew it
             now = now_months.get(month, 0)
             if (isinstance(was, int) and was >= MONTH_MIN_ROWS
                     and isinstance(now, int) and now < was * (1 - MONTH_DROP)):
