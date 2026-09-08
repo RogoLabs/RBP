@@ -60,6 +60,15 @@ everything it knows on every run whether it fetched anything or not, because
 its rows from the site. `CSAF_PROVIDER_BUDGET_S` bounds how fast a backlog
 drains, not what the site can see.
 
+**Adapters fetch on four threads; everything that records runs on one.**
+`GATHER_WORKERS = 4` since 2026-09-07, and the wall clock is now the longest
+single feed, so the number to tune it from is the `seconds` each feed records in
+`summary.feeds.detail`, not the four. A feed's first run is compared against its
+scorecard's `ids` when no previous count exists. A feed that FAILS is weighed by
+`coverage.effective_by_feed`, the effective CNAs that rested on it alone in the
+last published run, and named under `feeds.failed_bearing` when that weight was
+positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
+
 ---
 
 ## What is open
@@ -114,6 +123,14 @@ carry enough days of `months` to measure the real per-month variation and tighte
 them the way `FRESHNESS_FLOOR_DAYS` was derived from the feeds' own cadences.
 Until that is done, do not promote either half into `verify`. What today says is
 that the first thing the bucket half needed was not a threshold but an exemption.
+
+**Half of what fired on 2026-09-08 is already explained, and the half that is
+not is exactly this item.** The 13:15Z run reported two ubuntu months withdrawn,
+July (100 to 0) and August (3,419 to 1,441). Both were the walk spending its
+900s budget after 96 pages, a partial read of the same window. #41 records that
+exit as TRUNCATED, which `_explains_a_gap` already skips, so a budget day no
+longer reads as months withdrawn. What TRUNCATED cannot cover is a COMPLETE read
+whose cap edge moved, which is the 2026-09-07 case above and the only shape left.
 
 ### 2. Loose threads from the uncapping
 
@@ -174,6 +191,16 @@ is bounded by a cap that is already there rather than open-ended. The 2026-08-31
 independent failure is the second reason and it is unchanged. If it goes, the
 diff should say it is trading 7 rows for 18 bad-case minutes, because that is
 what it is.
+
+**The bad case was measured again on 2026-09-08, and it is the whole gather.**
+Ubuntu's API answered one page in 27.8s and two in 504s after 50s; the walk
+spent its 900s budget after 96 pages and returned 1,915 ids. With `gather` on
+four threads the wall clock is the longest single feed, so those 900s were the
+gather's 987s wall against 2,066s summed, on two consecutive runs. The recorded
+`seconds` per feed is how this will be priced from now on rather than from a
+log line. It does not change the recommendation: 900s is the budget's ceiling
+by design, and a run that hits it now publishes as degraded (#41) rather than
+freezing the site, which is what the 13:15Z run did before that fix.
 
 Read that 0 against the depth the card records. The merged set it is marginal to
 was 20,141 `csaf` ids short of the live run, and that error runs the other way,
@@ -329,6 +356,17 @@ costs a session.
   thing to change is `ubuntu-osv`'s 8 GB ceiling and `ghsa`'s 40-page cap, not
   the window.** Full table and reasoning in the block comment on
   `coverage.WINDOW_YEARS`.
+- **A cap and a budget are different things, and the difference is cadence.**
+  A cap fires on every run by design and defines the normal read: `CAPPED`, a
+  standing limitation, never `degraded`. A budget bounds a bad day and fires only
+  on one: `TRUNCATED`, `degraded`, published through `verify`'s
+  `EXPLAINS_A_SHORTFALL` rather than blocked. `feed_ubuntu`'s wall-clock exit was
+  CAPPED until 2026-09-08 on a written rationale that measured false (zero budget
+  firings in 18 daily snapshots; the cap costs 289-341s on the runner against
+  900s), and the one morning it fired, `verify` correctly refused to let a cap
+  excuse the shortfall and the site froze. The resolver's and CSAF's budgets stay
+  CAPPED for reasons of their own: neither can remove a row. Reasoning on the
+  `budget_spent` branch of `feed_ubuntu` and in #41.
 - **The corroborated / independent-origin count is gone**, not repointed. It
   produced a second headline beside `summary.total`.
 - **The launch-day epoch is retired, unused.** Setting it now would take a
