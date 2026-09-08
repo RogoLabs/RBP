@@ -100,68 +100,9 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 ## What is open
 
-**1. Re-pin the live run once `certcc` has published, and delete its pending
-declaration.** Opened 2026-09-08 with the `zdi` and `certcc` merges. **`zdi`'s
-half is closed in this commit:** it published at `3c0effe`, the pin now reads it,
-and `PENDING_FIRST_RUN` is down to `{"certcc"}`.
-
-`feedlab/_live.json` is pinned from the site's own `summary.json`, so it can only
-name feeds the site has already run, and merging to main is what makes the site
-run a new one. A commit that adds a feed therefore lands with the profile a name
-ahead of the pin, and `test_the_pinned_live_run_is_the_profile_the_pipeline_runs`
-asserted set equality. `zdi` was the first feed merged since that test was written
-in #33, so it was the first to hit it, and `certcc` is the second.
-
-The fix in the diff is a declaration, not a loosened assertion:
-`feedlab.PENDING_FIRST_RUN` names the feeds awaiting a first live run, the pin
-test allows exactly that difference in exactly that direction, and the reverse
-direction (a feed in the pin that the repo no longer runs) stays an equality
-because that one flatters every candidate.
-
-**Why `certcc`'s wait runs longer than its commit date suggests, and it is not a
-site defect.** Its first merge, PR #48, was based on `zdi-detection-feed` rather
-than on `main`, and that branch had itself been squashed to main twenty-six
-minutes earlier as #47. So the PR read MERGED, the work sat on a branch that had
-already served its purpose, main never had it, and the six-hourly deploy kept
-publishing sixteen feeds. It reaches main by cherry-pick in this commit. The
-lesson is a git one: a squash leaves the source branch alive, so a follow-up PR
-opened while that branch was in flight keeps it as its base. Read the PR's
-`baseRefName` and not only its `state`.
-
-**What to do, after the deploy that first runs `certcc`:**
-
-```
-python -m rbp.feedlab pin-live      # one fetch of the site's own summary
-```
-
-then remove `"certcc"` from `feedlab.PENDING_FIRST_RUN`. Until that happens
-`test_no_feed_is_declared_pending_once_the_live_run_has_it` fails, deliberately:
-a declaration that outlives its reason would hide the drift the pin test exists to
-catch. `test_the_pinned_live_run_is_not_stale` already bounds the wait to a
-fortnight. `deploy.yml` deselects `harness_artefact`, so none of this can stop a
-publication.
-
-**Budget a re-audit with the re-pin, because the pin does not move alone.**
-`test_every_committed_scorecard_declares_the_depth_it_was_measured_at` fails the
-moment the pin moves, so a pin-only commit cannot exist: the pin and all
-seventeen cards move together, or one of them misstates the depth it was measured
-at. `baseline --rescore` then `audit`, both offline. That is by design and it
-cost a session to rediscover, so it is written here rather than left to the test.
-
-Note that a re-score of a merged feed has to be `feedlab audit`, not `feedlab
-score`: once a feed is in the baseline, `score` measures it as marginal to a set
-containing itself and returns a meaningless number. FEEDS.md's `zdi` block
-records that happening.
-
-Adding a feed no longer costs a rebuild of every other one. `feedlab baseline
---add <feed>` fetches only what is named and splices it into the stored rows,
-30 seconds against 32 minutes; it was built for the `certcc` merge and its own
-block explains why.
-
----
-
-**2. `data/feedlab/` is not branch-scoped, and the test that would catch that
-reads a different file.** Found 2026-09-08 doing item 1's re-pin.
+**1. `data/feedlab/` is not branch-scoped, and the test that would catch that
+reads a different file.** Found 2026-09-08 doing the re-pin after the `zdi`
+merge, which is the item this one outlived.
 
 `audit` and `baseline --rescore` read the working state at
 `data/feedlab/_baseline.json`, which is gitignored and therefore shared by every
@@ -192,16 +133,18 @@ test, because the test cannot see the file that decides the numbers.
 
 ---
 
-Two items, as of 2026-09-08, and the second is the shape this file predicted
-rather than one it listed. The four items that were here that morning went four
-ways the same day: one fixed (#43) and then measured, and the measurement's
+One item, as of 2026-09-08, and it is the shape this file predicted rather than
+one it listed. The `zdi` and `certcc` pin bookkeeping that stood here through the
+day is closed: both feeds have published, the pin reads all seventeen, and
+`PENDING_FIRST_RUN` is empty. The four items that were here that morning went
+four ways the same day: one fixed (#43) and then measured, and the measurement's
 own fix built in #45; two decided into "Settled" below; one measured into FEEDS.md
 ("MEASURED 2026-09-08", under the Canonical section).
 
 That is not a claim that the site is finished. The things that come are the ones
 this file cannot list yet: a feed shrinking for a reason nobody has seen, a guard
 firing on a shape nobody measured, a harness reading a file no test looks at.
-Item 2 is the third of those and it arrived the way this paragraph said it would.
+Item 1 is the third of those and it arrived the way this paragraph said it would.
 When one arrives, it goes here with its measurement and its fix specified, and it
 leaves here when it ships.
 

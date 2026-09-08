@@ -145,7 +145,7 @@ LIVE_MAX_AGE_DAYS = 14
 # Anything in here is scored against a pin that does not contain it, which is the
 # `live.upper_bound` case every card already records: the candidate looks better
 # than it is, by at most `live.rows_short`.
-PENDING_FIRST_RUN = frozenset({"certcc"})
+PENDING_FIRST_RUN = frozenset()
 
 # Advisory dates more than this far before the CVE's publication are treated as
 # a data error rather than as evidence of lead. Feeds carry wrong dates: a
