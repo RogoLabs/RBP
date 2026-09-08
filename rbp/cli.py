@@ -55,8 +55,18 @@ from . import (cvelist, feeds, classify, report, coverage,
 # and not the years the pipeline gathers. ESET, Toshiba and
 # Panasonic_Holdings_Corporation cross the floor only on 2024 ids this profile
 # never fetches. Six is the number that describes what running it does.
+# `zdi` added 2026-09-08 on `feedlab/zdi.json`: 4,299 in-window ids for 3 new
+# effective CNAs (PaperCut, WDC_PSIRT, bosch) in 4 requests, 17.2 MB and ~10s.
+# Verdict DETECTING.
+#
+# THE FIRST FEED MERGED FOR DETECTION RATHER THAN FOR COVERAGE, and the numbers
+# are why. Of its 39 in-window ids absent from the corpus, 38 are RESERVED at the
+# live oracle, and 24 of those appear in NO OTHER FEED: 24 rows the site cannot
+# currently see, against a top-50 gate already at 49/50 where three marginal CNAs
+# change nothing. FEEDS.md section 2 admits a feed on marginal CNAs OR on
+# disclosure lead; every merge before this one led with the first.
 _WEEKLY = ("alas,ubuntu,ubuntu-osv,debian,ghsa,ghsa-repos,redhat,alpine,osv,"
-           "mozilla,arch,csaf,msrc,samsung,jvn")
+           "mozilla,arch,csaf,msrc,samsung,jvn,zdi")
 PROFILES = {
     "weekly": _WEEKLY,
     # ONE STRING, REFERENCED TWICE, not two identical literals.

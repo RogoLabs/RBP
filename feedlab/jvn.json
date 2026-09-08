@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 241,
+  "effective_n": 258,
   "feeds": [
    "alas",
    "alpine",
@@ -15,20 +15,18 @@
    "redhat",
    "samsung",
    "ubuntu",
-   "ubuntu-osv"
+   "ubuntu-osv",
+   "zdi"
   ],
-  "scored_at": "2026-09-06T21:08:54+00:00"
+  "scored_at": "2026-09-08T18:58:56+00:00"
  },
  "bytes": 1862082,
  "cnas_effective_alone": 24,
- "cnas_new_effective": 6,
+ "cnas_new_effective": 3,
  "cnas_new_effective_names": [
-  "ASUS",
-  "Canon",
   "NEC",
   "OMRON",
-  "Panasonic_Holdings_Corporation",
-  "Toshiba"
+  "Panasonic_Holdings_Corporation"
  ],
  "cnas_reached": 56,
  "combine": "union",
@@ -59,28 +57,39 @@
  "feed": "jvn",
  "health": {},
  "ids": 1968,
- "ids_new": 1290,
+ "ids_new": 1193,
  "live": {
   "already_merged": true,
   "cnas_new_effective": null,
   "cnas_new_effective_names": null,
   "effective_n": 263,
-  "fetched": "2026-09-06",
-  "generated_at": "2026-09-06T20:51:44+00:00",
-  "ids_short": 20141,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_short": 11288,
   "pinned": true,
-  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 11,288 rows colder than the live run",
   "rows_short": {
-   "csaf": 20141
+   "csaf": 11288
   },
-  "source_commit": "9a1bba54ceaf",
+  "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-07T01:00:56+00:00",
- "stability": null,
+ "scored_at": "2026-09-08T20:19:59+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 1968,
+  "min": 1968,
+  "swing_pct": 0.0,
+  "years": [
+   2023,
+   2024,
+   2025,
+   2026
+  ]
+ },
  "verdict": "detecting",
- "verdict_reason": "6 marginal CNA(s) and 658 lead / 9 unpublished references",
- "wall_seconds": 11.9,
+ "verdict_reason": "3 marginal CNA(s) and 658 lead / 9 unpublished references",
+ "wall_seconds": 9.8,
  "years": [
   2023,
   2024,

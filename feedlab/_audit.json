@@ -1,14 +1,14 @@
 {
- "baseline_scored_at": "2026-09-06T21:08:54+00:00",
+ "baseline_scored_at": "2026-09-08T18:58:56+00:00",
  "feeds": {
   "alas": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "combine": "union",
    "lead_n": 992,
-   "unpublished_n": 121,
+   "unpublished_n": 123,
    "verdict": "redundant",
-   "wall_seconds": 1.0
+   "wall_seconds": 1.1
   },
   "alpine": {
    "cnas_new_effective": 0,
@@ -17,7 +17,7 @@
    "lead_n": 0,
    "unpublished_n": 158,
    "verdict": "redundant",
-   "wall_seconds": 5.6
+   "wall_seconds": 5.7
   },
   "arch": {
    "cnas_new_effective": 0,
@@ -26,20 +26,18 @@
    "lead_n": 0,
    "unpublished_n": 0,
    "verdict": "unmeasurable",
-   "wall_seconds": 1.6
+   "wall_seconds": 1.5
   },
   "csaf": {
-   "cnas_new_effective": 80,
+   "cnas_new_effective": 69,
    "cnas_new_effective_names": [
-    "ASUS",
+    "AMI",
     "Absolute",
     "Acronis",
-    "Arista",
     "Axis",
     "BD",
     "BT",
     "Baxter",
-    "Bitdefender",
     "CIRCL",
     "CSA",
     "Carrier",
@@ -49,12 +47,10 @@
     "CyberDanube",
     "DEVOLUTIONS",
     "Danfoss",
-    "Deltaww",
     "Dragos",
     "Eaton",
     "Esri",
     "Fortra",
-    "Foxit",
     "GEN",
     "GE_Vernova",
     "GitHub_P",
@@ -62,30 +58,29 @@
     "Hanwha_Vision",
     "Hitachi_Energy",
     "Honeywell",
+    "INCD",
     "Insyde",
-    "JetBrains",
-    "Lexmark",
+    "Mandiant",
     "Medtronic",
     "Moxa",
     "N-able",
     "NCSC-FI",
     "NCSC-NL",
-    "NI",
     "NetScaler",
     "Octopus",
     "Omnissa",
     "PTC",
     "Pega",
-    "ProgressSoftware",
-    "Rockwell",
+    "Phoenix",
     "SEC-VLab",
     "SICK_AG",
     "SN",
     "Salesforce",
-    "SolarWinds",
+    "Sophos",
     "Tanium",
+    "Trellix",
     "Ubiquiti",
-    "WatchGuard",
+    "Wiz",
     "Xerox",
     "YokogawaGroup",
     "Zohocorp",
@@ -93,48 +88,42 @@
     "Zscaler",
     "Zyxel",
     "atlassian",
+    "avaya",
+    "blackberry",
+    "bosch",
     "brocade",
-    "checkpoint",
-    "dell",
-    "fortinet",
-    "hpe",
-    "ivanti",
     "jci",
     "juniper",
     "krcert",
-    "lenovo",
     "netapp",
     "palo_alto",
-    "qnap",
-    "schneider",
-    "siemens",
-    "sonicwall",
     "symantec",
-    "synology"
+    "tibco",
+    "twcert"
    ],
    "combine": "union",
-   "lead_n": 7970,
-   "unpublished_n": 512,
+   "lead_n": 11235,
+   "unpublished_n": 820,
    "verdict": "detecting",
-   "wall_seconds": 1044.7
+   "wall_seconds": 990.6
   },
   "debian": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "combine": "union",
    "lead_n": 0,
-   "unpublished_n": 300,
+   "unpublished_n": 341,
    "verdict": "redundant",
-   "wall_seconds": 1.3
+   "wall_seconds": 2.3
   },
   "ghsa": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "combine": "union",
-   "lead_n": 4308,
+   "lead_n": 4312,
    "unpublished_n": 345,
    "verdict": "redundant",
-   "wall_seconds": 220.1
+   "wall_seconds": 264.8
   },
   "ghsa-repos": {
    "cnas_new_effective": 2,
@@ -143,44 +132,41 @@
     "netflix"
    ],
    "combine": "union",
-   "lead_n": 6587,
-   "unpublished_n": 1338,
+   "lead_n": 6592,
+   "unpublished_n": 1368,
    "verdict": "detecting",
-   "wall_seconds": 121.7
+   "wall_seconds": 145.4
   },
   "jvn": {
-   "cnas_new_effective": 6,
+   "cnas_new_effective": 3,
    "cnas_new_effective_names": [
-    "ASUS",
-    "Canon",
     "NEC",
     "OMRON",
-    "Panasonic_Holdings_Corporation",
-    "Toshiba"
+    "Panasonic_Holdings_Corporation"
    ],
    "combine": "union",
    "lead_n": 658,
    "unpublished_n": 9,
    "verdict": "detecting",
-   "wall_seconds": 11.9
+   "wall_seconds": 9.8
   },
   "mozilla": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "combine": "union",
    "lead_n": 169,
-   "unpublished_n": 0,
+   "unpublished_n": 1,
    "verdict": "redundant",
-   "wall_seconds": 6.1
+   "wall_seconds": 11.2
   },
   "msrc": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "combine": "union",
-   "lead_n": 7445,
-   "unpublished_n": 8,
+   "lead_n": 7453,
+   "unpublished_n": 972,
    "verdict": "redundant",
-   "wall_seconds": 10.3
+   "wall_seconds": 12.2
   },
   "osv": {
    "cnas_new_effective": 1,
@@ -188,10 +174,10 @@
     "Kong"
    ],
    "combine": "union",
-   "lead_n": 6614,
-   "unpublished_n": 414,
+   "lead_n": 6616,
+   "unpublished_n": 639,
    "verdict": "detecting",
-   "wall_seconds": 11.0
+   "wall_seconds": 17.5
   },
   "redhat": {
    "cnas_new_effective": 3,
@@ -202,49 +188,65 @@
    ],
    "combine": "union",
    "lead_n": 2718,
-   "unpublished_n": 93,
+   "unpublished_n": 120,
    "verdict": "detecting",
-   "wall_seconds": 19.6
+   "wall_seconds": 17.8
   },
   "samsung": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "combine": "union",
-   "lead_n": 262,
-   "unpublished_n": 77,
+   "lead_n": 263,
+   "unpublished_n": 158,
    "verdict": "redundant",
-   "wall_seconds": 1.4
+   "wall_seconds": 1.7
   },
   "ubuntu": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
    "combine": "union",
    "lead_n": 15,
-   "unpublished_n": 135,
+   "unpublished_n": 141,
    "verdict": "redundant",
-   "wall_seconds": 88.0
+   "wall_seconds": 413.9
   },
   "ubuntu-osv": {
-   "cnas_new_effective": 0,
-   "cnas_new_effective_names": [],
+   "cnas_new_effective": 1,
+   "cnas_new_effective_names": [
+    "INCD"
+   ],
    "combine": "union",
    "lead_n": 546,
-   "unpublished_n": 255,
-   "verdict": "redundant",
-   "wall_seconds": 32.6
+   "unpublished_n": 275,
+   "verdict": "detecting",
+   "wall_seconds": 33.4
+  },
+  "zdi": {
+   "cnas_new_effective": 4,
+   "cnas_new_effective_names": [
+    "PaperCut",
+    "WDC_PSIRT",
+    "blackberry",
+    "bosch"
+   ],
+   "combine": "union",
+   "lead_n": 2356,
+   "unpublished_n": 38,
+   "verdict": "detecting",
+   "wall_seconds": 8.7
   }
  },
  "live": {
   "effective_n": 263,
-  "fetched": "2026-09-06",
-  "generated_at": "2026-09-06T20:51:44+00:00",
-  "ids_short": 20141,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_short": 11288,
   "pinned": true,
   "rows_short": {
-   "csaf": 20141
+   "csaf": 11288
   },
-  "source_commit": "9a1bba54ceaf"
+  "source_commit": "ff1bdc8c4ce6"
  },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-09-07T01:01:01+00:00"
+ "scored_at": "2026-09-08T20:20:05+00:00"
 }

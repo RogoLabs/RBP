@@ -1020,11 +1020,24 @@ def test_the_pinned_live_run_is_the_profile_the_pipeline_runs():
     """
     live = _live()
     pinned, profile = set(live.get("sources") or []), set(_profile_feeds())
-    assert pinned == profile, (
+    # A FEED THE SITE HAS NEVER RUN CANNOT BE IN A PIN TAKEN FROM THE SITE, and
+    # merging to main is what makes the site run it. So the one difference this
+    # allows is declared by name in `feedlab.PENDING_FIRST_RUN`, and the test
+    # below fails the moment such a name turns up in the pin.
+    #
+    # The other direction stays an equality: a feed in the PIN and not in the
+    # profile is a feed the repo stopped running while still scoring against it,
+    # which is the cold-baseline error and flatters every candidate.
+    pending = set(feedlab.PENDING_FIRST_RUN)
+    assert pinned - profile == set(), (
+        f"the pin reads feeds this repo does not run: "
+        f"{sorted(pinned - profile)}. Re-pin: `python -m rbp.feedlab pin-live`.")
+    assert profile - pinned <= pending, (
         f"the pinned live run reads a different feed set than this repo runs.\n"
-        f"  in the profile, not the pin: {sorted(profile - pinned)}\n"
+        f"  in the profile, not the pin: {sorted(profile - pinned - pending)}\n"
         f"  in the pin, not the profile: {sorted(pinned - profile)}\n"
-        "Re-pin after the merge lands live: `python -m rbp.feedlab pin-live`.")
+        "Re-pin after the merge lands live: `python -m rbp.feedlab pin-live`, or "
+        "declare a not-yet-deployed feed in `feedlab.PENDING_FIRST_RUN`.")
     recorded = json.loads((_lab() / "_baseline.json").read_text())
     assert sorted(live.get("years") or []) == sorted(recorded.get("years") or []), (
         f"the pin measures {sorted(live.get('years') or [])} and the baseline "
@@ -1033,6 +1046,33 @@ def test_the_pinned_live_run_is_the_profile_the_pipeline_runs():
     assert live.get("min_sightings") == FLOOR, (
         f"the pinned run counts a CNA effective at {live.get('min_sightings')} "
         f"sightings and this harness at {FLOOR}. Two floors is two questions.")
+
+
+@pytest.mark.harness_artefact
+def test_no_feed_is_declared_pending_once_the_live_run_has_it():
+    """What keeps `PENDING_FIRST_RUN` from becoming furniture.
+
+    The declaration exists because a commit that adds a feed lands before the
+    site can have run it. The moment the deploy happens and the pin is refreshed,
+    the name is a lie that would hide exactly the drift the test above checks for,
+    so this fails until it is deleted. Cost of clearing it is one line.
+    """
+    pinned = set(_live().get("sources") or [])
+    stale = sorted(set(feedlab.PENDING_FIRST_RUN) & pinned)
+    assert not stale, (
+        f"{stale} are declared as awaiting a first live run and the pinned run "
+        "already reads them. Remove them from `feedlab.PENDING_FIRST_RUN`.")
+
+
+@pytest.mark.harness_artefact
+def test_a_pending_feed_is_actually_in_the_profile():
+    """The mirror image: a name left here after the feed itself was removed
+    silently widens the allowance above for a feed nobody runs."""
+    profile = set(_profile_feeds())
+    orphan = sorted(set(feedlab.PENDING_FIRST_RUN) - profile)
+    assert not orphan, (
+        f"{orphan} are declared as awaiting a first live run but are not in the "
+        "profile at all. Remove them from `feedlab.PENDING_FIRST_RUN`.")
 
 
 @pytest.mark.harness_artefact

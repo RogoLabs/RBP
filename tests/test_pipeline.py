@@ -459,6 +459,10 @@ def test_every_adapter_either_builds_a_link_or_declares_it_cannot():
         # page, so a generic ref cannot produce a link and would report this
         # adapter as unhandled when it is not.
         "jvn": "jvn:JVNDB-2026-000001",
+        # Same shape as `jvn`: the advisory id IS the path, so a generic
+        # `zdi:somepackage` correctly builds no link and would report this
+        # adapter as unhandled when it is not.
+        "zdi": "zdi:ZDI-26-615",
     }
     handled = set()
     for slug in feeds.ADAPTERS:

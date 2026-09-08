@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 247,
+  "effective_n": 260,
   "feeds": [
    "alas",
    "alpine",
@@ -15,18 +15,21 @@
    "osv",
    "redhat",
    "samsung",
-   "ubuntu"
+   "ubuntu",
+   "zdi"
   ],
-  "scored_at": "2026-09-06T21:08:54+00:00"
+  "scored_at": "2026-09-08T18:58:56+00:00"
  },
- "bytes": 42529880,
- "cnas_effective_alone": 98,
- "cnas_new_effective": 0,
- "cnas_new_effective_names": [],
+ "bytes": 42890132,
+ "cnas_effective_alone": 99,
+ "cnas_new_effective": 1,
+ "cnas_new_effective_names": [
+  "INCD"
+ ],
  "cnas_reached": 136,
  "combine": "union",
  "disclosure": {
-  "dated_n": 26025,
+  "dated_n": 26308,
   "lead_examples": [
    "CVE-2023-3866",
    "CVE-2023-3865",
@@ -37,8 +40,8 @@
   "lead_max_days": 703,
   "lead_median_days": 19,
   "lead_n": 546,
-  "lead_pct": 2.1,
-  "mirror_n": 25479,
+  "lead_pct": 2.08,
+  "mirror_n": 25762,
   "undated_n": 14,
   "unpublished_examples": [
    "CVE-2023-24283",
@@ -47,40 +50,51 @@
    "CVE-2023-24286",
    "CVE-2023-24287"
   ],
-  "unpublished_n": 255
+  "unpublished_n": 275
  },
  "feed": "ubuntu-osv",
  "health": {
   "capped": false,
-  "detail": "26294 ids from 43MB; skipped 665 withdrawn record(s)",
+  "detail": "26597 ids from 43MB; skipped 666 withdrawn record(s)",
   "ok": true,
-  "rows": 26294,
+  "rows": 26597,
   "status": "ok",
   "truncated": false
  },
- "ids": 26294,
- "ids_new": 789,
+ "ids": 26597,
+ "ids_new": 634,
  "live": {
   "already_merged": true,
   "cnas_new_effective": null,
   "cnas_new_effective_names": null,
   "effective_n": 263,
-  "fetched": "2026-09-06",
-  "generated_at": "2026-09-06T20:51:44+00:00",
-  "ids_short": 20141,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_short": 11288,
   "pinned": true,
-  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 11,288 rows colder than the live run",
   "rows_short": {
-   "csaf": 20141
+   "csaf": 11288
   },
-  "source_commit": "9a1bba54ceaf",
+  "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-07T01:01:01+00:00",
- "stability": null,
- "verdict": "redundant",
- "verdict_reason": "no marginal CNA, but it references ids that were unpublished at the time, so it clears admissibility test 2 and STAYS IN THE NUMERATOR: redundant on coverage, not a publication mirror",
- "wall_seconds": 32.6,
+ "scored_at": "2026-09-08T20:20:04+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 26597,
+  "min": 26294,
+  "swing_pct": 1.1,
+  "years": [
+   2023,
+   2024,
+   2025,
+   2026
+  ]
+ },
+ "verdict": "detecting",
+ "verdict_reason": "1 marginal CNA(s) and 546 lead / 275 unpublished references",
+ "wall_seconds": 33.4,
  "years": [
   2023,
   2024,

@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import concurrent.futures
 import datetime as dt
+import html
 import http.client
 import ipaddress
 import json
@@ -3739,12 +3740,239 @@ def feed_jvn(years):
     return out
 
 
+# ZDI's published-advisory index is an HTML table, and every field this adapter
+# needs is in a `data-label` cell rather than in prose. The row boundary is the
+# `ZDI ID` cell, which is the first column of each row.
+_ZDI_URL = "https://www.zerodayinitiative.com/advisories/published/{year}/"
+_ZDI_ROW = re.compile(r'data-label="ZDI ID"')
+_ZDI_CELL = re.compile(
+    r'data-label="(ZDI ID|Vendor / Product|CVE|Published)"[^>]*>(.*?)</td>', re.S)
+_ZDI_ID_RE = re.compile(r"ZDI-\d\d-\d{3,}")
+_ZDI_TAGS = re.compile(r"<[^>]*>")
+_ISO_DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+# A CVE cell holding several ids separates them with commas and whitespace.
+_ZDI_CELL_SPLIT = re.compile(r"[,;\s]+")
+
+
+def _zdi_rows(doc):
+    """Yield one dict per advisory row, fields keyed by their `data-label`.
+
+    THE ROW BOUNDARY IS EXACT AND THAT IS DELIBERATE. An earlier version of this
+    parser took `doc[start - 400:end]` so the chunk would comfortably contain the
+    whole row. The 400 bytes of lookback reach backwards into the PREVIOUS row's
+    `Published` and `Updated` cells, and `setdefault` keeps the first value it
+    sees, so a chunk that reached far enough back would have stamped every row
+    with its predecessor's date. Measured over the 2025 index before the boundary
+    was tightened: 1,202 rows, 0 dates differed, so the lookback happened to be
+    just short of the previous cell. A silent off-by-one-row date is exactly the
+    class of error `clock.py` exists to prevent, and it is not worth leaving to
+    the byte count of someone else's markup.
+    """
+    starts = [m.start() for m in _ZDI_ROW.finditer(doc)]
+    for i, a in enumerate(starts):
+        b = starts[i + 1] if i + 1 < len(starts) else len(doc)
+        row = {}
+        for label, body in _ZDI_CELL.findall(doc[a:b]):
+            row.setdefault(label, html.unescape(_ZDI_TAGS.sub("", body)).strip())
+        yield row
+
+
+def feed_zdi(years):
+    """Trend Micro Zero Day Initiative published advisories, one index per year.
+
+    THIS IS THE BEST DETECTOR THIS PROJECT HAS MEASURED, and the reason is the
+    feed's business model rather than anything about its format. ZDI buys
+    vulnerabilities, reports them to the vendor, and publishes its advisory when
+    its disclosure timeline expires -- whether or not the vendor has published a
+    CVE Record. A reserved id with a public advisory against it is precisely what
+    this site exists to count, so a broker operating on a disclosure deadline is
+    a source that produces them by construction, not by accident.
+
+    Measured 2026-09-08 over the four-year window, against the 2026-08-20 corpus
+    and the live reservation oracle:
+
+        in-window referenced ids                  4,299
+        absent from the corpus                       39
+        RESERVED at the live oracle           38 of 39   (one NOT_ALLOCATED)
+        already published as a row on the site       14
+        RESERVED AND IN NO OTHER FEED                24
+
+    The 97.4% reserved rate is the highest measured here by a wide margin, and
+    the comparison is the argument. FEEDS.md scored `euvd` at 0 of 60 and refused
+    it as a publication mirror; `csaf:ncsc-nl` came in at 11 of 60 and `jvn` at 8
+    of 14, and both were merged. This feed inverts the euvd result.
+
+    The 24 sole-source rows are the number that matters, because they are rows the
+    site cannot currently see at all. Against the per-feed sole-source counts
+    FEEDS.md section 2 recorded for the 2026-08-20 snapshot (`osv` 42, `debian`
+    36, `alpine` 23, `redhat` 10, `ghsa` 5), a new feed arriving at 24 lands just
+    above `alpine` on the site's own detection ranking, for four requests.
+
+    ADMISSIBILITY, both tests, from `feedlab/zdi.json`. Test 1: three roster CNAs
+    cross the 3-sighting floor that no merged feed crosses (`PaperCut`,
+    `WDC_PSIRT`, `bosch`). Test 2: 37 currently-unpublished references. Verdict
+    `detecting`. Note which half is load-bearing -- coverage is nearly saturated
+    (the gate stands at 49 of 50 with only the unreadable `huawei` outstanding),
+    so three marginal CNAs is a rounding error and this feed is merged for
+    detection. It is the first one that has been.
+
+    FOUR REQUESTS, ONE PER YEAR. `/advisories/published/` serves the CURRENT YEAR
+    ONLY, which is a trap worth naming: a first pass read that one page, found 541
+    ids, and would have quietly covered a quarter of the window while looking
+    complete. The year route is `/advisories/published/<year>/`, and it is not
+    guesswork -- it is what the page's own year selector navigates to, back to
+    2005. Measured cost is 4 requests, 17.2 MB and about 10 seconds for 5,472
+    advisories.
+
+    THE RSS FEED IS REFUSED AND IT IS NOT A CLOSE CALL. `/rss/published/` is the
+    obvious route and it carries NO CVE ID: not in a structured element, not in
+    the `<description>` prose, not anywhere. Its `<guid>` is the ZDI-CAN case
+    number and its title is the vulnerability name. It also holds only the latest
+    200 advisories. Checked before writing the HTML parser, because reaching for
+    a scraper when a feed exists is how this file's Android-bulletin row got
+    cancelled.
+
+    `/advisories/upcoming/` is refused for the same reason and is the more
+    tempting one: 756 ZDI-CAN entries for vulnerabilities not yet disclosed, and
+    zero CVE ids among them. There is nothing there to reference.
+
+    STRUCTURED CELLS, NOT A FULL-TEXT REGEX. Each row's id comes from its own
+    `data-label="CVE"` cell, paired with the `Published` and `ZDI ID` cells of the
+    same row. A regex over the four documents finds 4,441 ids against the
+    structured 4,425; the 16 extras are ids mentioned in related-advisory prose
+    and in page furniture. This is the third time this repository has measured
+    that gap (OSV's GIT ecosystem, JVN's yearly RDFs) and the third time narrower
+    won.
+
+    VERIFIED AGAINST THE ADVISORY PAGES BEFORE THE INDEX WAS TRUSTED, which is
+    the check `feed_jvn` ran before dropping its 585 detail calls. Twelve rows
+    sampled across the four years: the index's CVE id appeared on its own advisory
+    page 12 times out of 12, and so did the index's `Published` date. So the index
+    is the same claim as the detail page, one request per year instead of 5,472.
+
+    THE COUNTS RECONCILE, AND MAKING THEM DO IT FOUND THIS ADAPTER'S OWN DEFECT.
+    5,472 advisories, of which 328 carry an empty CVE cell: ZDI published and no id
+    was ever assigned. Those 328 are a genuine failure of the same system this site
+    measures and are NOT RBPs, because there is no reserved id to be public about.
+    5,472 - 328 = 5,144, and the first version of this adapter returned 5,136. The
+    eight-row gap was cells holding a LIST of ids, dropped whole; see the comment
+    on `_ZDI_CELL_SPLIT` in the loop below. The 328 were never the risk, because
+    they were counted. The risk was the number nobody had subtracted.
+
+    DATES ARE THE ADVISORY'S OWN, already ISO. `Published` is per row, so nothing
+    here has to infer a date from the response, from the ZDI id, or from a
+    heading, and no row is undated. `clock.origin_kind` maps this feed to
+    `advisory`: a ZDI advisory has its own identifier, its own page and its own
+    publication date, which is the shape 4.5.1.4 means by Publicly Disclosing.
+
+    IT IS NOT IN `clock.OWNER_FEEDS`, and the reasoning is the one that excluded
+    `ghsa`. ZDI is itself a CNA and assigns ids for part of what it brokers -- 199
+    of the sightings here are its own. But a ZDI advisory cannot distinguish "zdi
+    assigned this id and disclosed it" from "ZDI is publishing about another CNA's
+    id", which is the same ambiguity that had Apple's own advisories scored as a
+    third party's. Promoting it would need a per-row assigner this index does not
+    carry.
+    """
+    best, read_ok, failed, shapeless = {}, [], [], []
+    for year in sorted(years):
+        url = _ZDI_URL.format(year=year)
+        try:
+            doc = _get_text(url, timeout=90)
+        except Exception as e:
+            failed.append(f"{year}: {str(e)[:60]}")
+            print(f"  [zdi] {year} FAILED: {e}", file=sys.stderr)
+            continue
+
+        rows = list(_zdi_rows(doc))
+        got = 0
+        for row in rows:
+            # ONE CELL CAN HOLD SEVERAL IDS, and treating the cell as a single id
+            # silently dropped every one of them. 8 of the 5,472 advisories carry
+            # a comma-separated list -- ZDI-25-730's cell is "CVE-2019-18935,
+            # CVE-2017-11317, CVE-2014-2217" -- and a `fullmatch` against the
+            # whole cell classified those as malformed and skipped the row, losing
+            # 14 ids without a word in the log.
+            #
+            # Splitting the cell is NOT the full-text route this feed refuses. The
+            # distinction that matters is CELL versus PAGE TEXT: every id here was
+            # put in the CVE column by the publisher, which is the claim being
+            # read. The refused route is scraping ids out of surrounding prose,
+            # and it stays refused.
+            zid = row.get("ZDI ID") or ""
+            if not _ZDI_ID_RE.fullmatch(zid):
+                zid = ""
+            date = row.get("Published") or ""
+            if not _ISO_DATE_RE.fullmatch(date):
+                date = ""
+            cell = row.get("CVE") or ""
+            ids = [t for t in _ZDI_CELL_SPLIT.split(cell) if _CVE_ID_RE.fullmatch(t)]
+            if not ids:
+                continue                       # empty cell, or no id shape in it
+            got += 1
+            for cid in ids:
+                if _year(cid) not in years:
+                    continue
+                # THE EARLIEST ADVISORY WINS, NOT THE FIRST ONE READ. 209 of
+                # 4,409 ids in this index appear in more than one advisory and 94 of
+                # those carry more than one date, because ZDI files one advisory per
+                # sink and re-publishes when a patch is incomplete: CVE-2023-36804 is
+                # spread over thirteen advisories from 2023-09-12 to 2023-12-15.
+                #
+                # A plain `seen` set kept whichever row the loop met first, which is
+                # the newest advisory of the earliest year, because each index is
+                # ordered newest-first. That is the LATEST date of the earliest year,
+                # picked by two orderings nobody chose, and it understates how long
+                # the id has been public -- the one direction that matters here, since
+                # `public_date` feeds the 7-day buffer and the expectation clock.
+                #
+                # Taking the minimum makes the answer independent of both the year
+                # loop and the table's internal order, so a source that reorders its
+                # own index cannot move a date on this site.
+                prev = best.get(cid)
+                if prev is None or (date and (not prev["public_date"]
+                                             or date < prev["public_date"])):
+                    best[cid] = {"cve_id": cid, "source": "zdi",
+                                 "source_ref": zid, "public_date": date,
+                                 "product": (row.get("Vendor / Product") or "")[:200],
+                                 "description": (f"ZDI advisory {zid}" if zid
+                                                 else "ZDI published advisory")}
+
+        # A DOCUMENT THAT LOADED AND PARSED TO NOTHING IS A SHAPE CHANGE, NOT AN
+        # EMPTY YEAR. This is an HTML table on someone else's marketing site, so
+        # the markup WILL move, and the failure it produces is the exact one this
+        # site cannot tolerate: 200 OK, no rows, a smaller count, and a build that
+        # reports success. Two ways it can go, and both are named separately from
+        # a fetch failure so the log says which happened.
+        if not rows:
+            shapeless.append(f"{year}: no advisory rows parsed")
+            print(f"  [zdi] {year} no rows parsed; table shape changed",
+                  file=sys.stderr)
+        elif not got:
+            shapeless.append(f"{year}: {len(rows)} rows, none with a CVE cell")
+            print(f"  [zdi] {year} {len(rows)} rows, no CVE cell; column renamed",
+                  file=sys.stderr)
+        else:
+            read_ok.append(str(year))
+
+    if not read_ok:
+        detail = "; ".join(failed + shapeless) or "no year index loaded"
+        record_feed("zdi", FAILED, f"no usable year index ({detail})"[:120])
+        return []
+    if failed or shapeless:
+        record_feed("zdi", TRUNCATED,
+                    f"read {'+'.join(read_ok)}; "
+                    f"{'; '.join(failed + shapeless)}"[:120],
+                    rows=len(best))
+    return list(best.values())
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
             "arch": feed_arch, "samsung": feed_samsung,
-            "ubuntu-osv": feed_ubuntu_osv, "jvn": feed_jvn}
+            "ubuntu-osv": feed_ubuntu_osv, "jvn": feed_jvn,
+            "zdi": feed_zdi}
 
 
 # How many adapters download at once. A ceiling on concurrent fetches, not a

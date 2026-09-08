@@ -103,6 +103,20 @@ def _derive_meta(row):
             m = re.match(r"JVNDB-(\d{4})-\d+$", ref)
             return (f"https://jvndb.jvn.jp/en/contents/{m.group(1)}/{ref}.html"
                     if m else "")
+        if s == "zdi":
+            # The advisory's own page. refs carry "zdi:ZDI-<yy>-<n>", and that id
+            # IS the path, so the link needs no second field.
+            #
+            # A row whose only evidence link is a blank page is a defect this
+            # project has already shipped once: `report._u` had no `csaf` branch,
+            # so every CSAF row fell through to `cve.org/CVERecord?id=<id>`, which
+            # renders NOTHING for a RESERVED id. FEEDS.md section 4 records it as
+            # a Tier 0 prerequisite. Every row this feed produces is by definition
+            # a reserved id, so the fallthrough would have been blank on 100% of
+            # them.
+            ref = next((r.split(":", 1)[1] for r in refs if r.startswith("zdi:")), "")
+            return (f"https://www.zerodayinitiative.com/advisories/{ref}/"
+                    if re.fullmatch(r"ZDI-\d\d-\d{3,}", ref) else "")
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
         if s == "ubuntu-osv":
