@@ -16,6 +16,7 @@ half a gigabyte per run:
 from __future__ import annotations
 
 import os
+import urllib.request
 
 import pandas as pd
 import pytest
@@ -276,13 +277,39 @@ def test_live_delta_is_available_for_today_and_recent_days():
     assert len(deltas) >= 3, f"only {len(deltas)} delta day(s) visible; widen _releases()"
 
 
+def _delta_ids(url):
+    """The CVE ids inside one delta zip, read from the member names alone."""
+    import io
+    import zipfile
+    with urllib.request.urlopen(urllib.request.Request(url, headers=cvelist.UA),
+                                timeout=180) as r:
+        blob = r.read()
+    return {os.path.basename(i.filename)[:-5]
+            for i in zipfile.ZipFile(io.BytesIO(blob)).infolist()
+            if i.filename.endswith(".json")
+            and os.path.basename(i.filename).startswith("CVE-")}
+
+
 @live_only
 def test_live_delta_is_cumulative_from_midnight():
     """The warm path fetches one delta per day. That is only correct while the
-    delta is cumulative rather than hour-on-hour."""
+    delta is cumulative rather than hour-on-hour.
+
+    ASSERTED ON CONTENT, NOT ON BYTES, since 2026-09-08. This test used to
+    require the same-day delta sizes to be non-increasing walking back through
+    the day, on the reasoning that a cumulative file can only grow. It cannot
+    only grow: a record already in the delta can be edited again, shorter. On
+    2026-09-07 the 1700Z and 1800Z deltas held the identical 517 records and
+    three of them (CVE-2026-46579, -50236, -50237) each lost one byte, so the
+    newer file was 11 bytes smaller and this test failed CI on main twice for a
+    property that held. Cumulative means every record in an earlier release of
+    the day is in a later one; that is what is checked, on the newest release
+    against one from the middle of the day, which is two downloads of about
+    2 MB rather than twenty-five.
+    """
     rels = cvelist._releases(pages=1)
     today = None
-    sizes = []
+    urls = []
     for rel in rels:
         a = cvelist._asset(rel, lambda n: "delta_CVEs" in n and n.endswith(".zip"))
         if not a:
@@ -290,17 +317,21 @@ def test_live_delta_is_cumulative_from_midnight():
         day = a["name"][:10]
         today = today or day
         if day == today:
-            sizes.append(a["size"])
-    if len(sizes) < 3:
+            urls.append(a["browser_download_url"])
+    if len(urls) < 3:
         # Shortly after UTC midnight there is only one same-day release, so the
         # cumulative property has nothing to be evaluated against. Skipping is
         # correct: asserting here made the suite fail as a function of the time
         # of day, which trains people to ignore red builds.
-        pytest.skip(f"only {len(sizes)} same-day release(s) so far; "
+        pytest.skip(f"only {len(urls)} same-day release(s) so far; "
                     "cumulativeness is not observable yet")
-    # Newest first, so sizes must be non-increasing as we walk back through the day.
-    assert sizes == sorted(sizes, reverse=True), (
-        f"delta sizes {sizes} are not monotonic within the day; it may no longer "
+    # Newest first. The mid-day release has real content where the first release
+    # of the day may be an empty zip, so the superset check has something to bite on.
+    newest, earlier = _delta_ids(urls[0]), _delta_ids(urls[len(urls) // 2])
+    missing = sorted(earlier - newest)
+    assert not missing, (
+        f"{len(missing)} record(s) in the {len(urls) // 2}-releases-older delta are "
+        f"absent from the newest one, first {missing[0]}; the delta may no longer "
         "be cumulative, in which case the warm path is skipping changes")
 
 
