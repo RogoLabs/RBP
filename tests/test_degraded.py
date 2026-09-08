@@ -2628,6 +2628,83 @@ def test_a_capped_feed_losing_a_month_from_the_middle_is_still_a_withdrawal():
     assert len(found) == 1 and found[0].startswith("ubuntu: 2026-08"), found
 
 
+def _part(rows, status=None, **kw):
+    rec = {"status": status or feeds.OK, "detail": "", "rows": rows, "ok": True}
+    rec.update(kw)
+    return rec
+
+
+def test_a_feed_assembled_from_parts_has_no_bucket_half():
+    """THE 2026-09-05 -> 09-06 csaf NUMBERS, from the data branch. Every one of
+    the eighteen providers answered OK on 09-06 and 2024-01 fell 998 -> 616,
+    because SUSE had been unreachable the day before and came back: the
+    cross-provider dedupe credits a shared id to the first provider in config
+    order, with that provider's date, so SUSE returning pulled its ids back out
+    of the months they had been sitting in under other providers' dates. 38%,
+    nothing withdrawn, and MONTH_DROP at 0.5 held by twelve points. The day
+    before it held by four. A month count on such a feed is a property of which
+    parts answered, so the bucket half does not read it."""
+    parts_ok = {h: _part(1000) for h in ("security.access.redhat.com",
+                                         "www.suse.com", "wid.cert-bund.de")}
+    prev = {"csaf": _feed(53338, "2026-09-04",
+                          {"2024-01": 998, "2025-03": 932, "2026-09": 613},
+                          parts=parts_ok, oldest="2024-01-01")}
+    cur = {"csaf": _feed(62800, "2026-09-05",
+                         {"2024-01": 616, "2025-03": 840, "2026-09": 774},
+                         parts=parts_ok, oldest="2023-01-03")}
+    assert feeds.withdrawn_history(prev, cur) == []
+
+
+def test_a_feed_assembled_from_parts_keeps_its_horizon_half():
+    """The complement. `newest` is the max over the whole feed, so a provider
+    dropping out is the only innocent way it moves backward, and that case is
+    the next test. With every part OK, a backward newest on csaf is Microsoft's
+    2026-09-02 event happening to a CSAF publisher, and it must still fire."""
+    parts_ok = {"a.example": _part(10), "b.example": _part(10)}
+    prev = {"csaf": _feed(500, "2026-09-04", {"2026-08": 400, "2026-09": 100},
+                          parts=parts_ok)}
+    cur = {"csaf": _feed(400, "2026-08-30", {"2026-08": 400},
+                         parts=parts_ok)}
+    found = feeds.withdrawn_history(prev, cur)
+    assert len(found) == 1 and "moved BACKWARD" in found[0], found
+
+
+def test_an_unreachable_part_explains_the_whole_feeds_gap():
+    """THE 2026-09-04 -> 09-05 csaf SHAPE. SUSE answered something that was not
+    JSON, its part was recorded CAPPED with `accounted`, and its 20,096 rows left
+    every month of csaf at once (2025-03: 1,724 -> 932, 46%). `health_detail`
+    rolls the status up to the parent and not the mark, so `_explains_a_gap`
+    reading the parent alone saw a CAPPED feed with no reason, and only
+    MONTH_DROP kept it quiet. A part that could not be read is a partial view of
+    the feed's own history, which is the line `_explains_a_gap` already draws
+    for FAILED and TRUNCATED. Asserted on the horizon half, which the parts
+    exemption does not touch, so this proves the mark is read and not merely
+    that buckets were skipped."""
+    prev = {"csaf": _feed(54071, "2026-09-04", {"2025-03": 1724},
+                          parts={"www.suse.com": _part(20096)})}
+    cur = {"csaf": _feed(53338, "2026-09-01", {"2025-03": 932},
+                         status=feeds.CAPPED,
+                         parts={"www.suse.com": _part(
+                             0, status=feeds.CAPPED,
+                             accounted="provider unreachable this run")})}
+    assert feeds.withdrawn_history(prev, cur) == []
+    assert feeds._explains_a_gap(cur["csaf"]), (
+        "the part's accounted mark is not reaching the feed-level question")
+
+
+def test_a_single_source_feed_still_has_its_bucket_half():
+    """The exemption is for feeds with `parts` and nothing else. msrc has none,
+    so the middle-month event this whole guard exists for is unchanged; this
+    pins that the parts check keys on the field and not on the feed name."""
+    prev = {"msrc": _feed(15025, "2026-08-11",
+                          {"2026-03": 1637, "2026-07": 1200, "2026-08": 900})}
+    cur = {"msrc": _feed(13388, "2026-08-11",
+                         {"2026-03": 0, "2026-07": 1200, "2026-08": 900})}
+    assert "parts" not in cur["msrc"]
+    found = feeds.withdrawn_history(prev, cur)
+    assert len(found) == 1 and found[0].startswith("msrc: 2026-03"), found
+
+
 def test_an_uncapped_feed_gets_no_edge_exemption():
     """The msrc-shaped event the guard exists for, with `oldest` in the lost
     month. An uncapped feed has no cap edge, so a month emptying at its oldest
