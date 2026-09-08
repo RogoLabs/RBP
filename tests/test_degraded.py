@@ -1543,18 +1543,22 @@ def test_a_record_served_at_two_offsets_is_counted_once(monkeypatch):
     assert [r["cve_id"] for r in out] == ["CVE-2026-1", "CVE-2026-2"], out
 
 
-def test_the_wall_clock_budget_is_a_standing_limit_not_a_degradation(monkeypatch):
-    """A page cap's cost in TIME is not stable: measured cold latency ranged
-    1.25s to 30s per page on the same endpoint within an hour, and the
-    2026-08-27 baseline spent 1,070s on 200 pages. A cap denominated only in
-    pages is one whose cost varies five-fold with the endpoint's mood, and the
-    job timeout is denominated in time.
+def test_the_wall_clock_budget_firing_is_a_degradation_not_a_standing_limit(monkeypatch):
+    """THIS TEST ASSERTED THE OPPOSITE until 2026-09-08, and what it pinned
+    froze the site.
 
-    CAPPED, not TRUNCATED, and that is the whole reason the budget is safe to
-    add. The live cost of the 200-page cap is 553s against a 900s budget, so a
-    slow afternoon brings the two within reach. Classifying budget exhaustion as
-    TRUNCATED would mark the run degraded on any slow day, which is the furniture
-    problem `degraded_state` rejects, reached from a third direction.
+    Its reasoning: the 200-page cap cost 553s against a 900s budget, so a slow
+    afternoon brought the two within reach, and TRUNCATED would have made
+    `degraded` furniture. Measured: across the 18 daily snapshots on the data
+    branch the budget fired zero times, and the runner spends 289-341s on the
+    full cap. A spent budget is the host at a third of its usual speed, and the
+    read it leaves is a lower floor than usual, which is what `degraded` means.
+
+    2026-09-08 13:15Z: the budget fired after 96 pages, 1,915 ids against a
+    usual 3,993, recorded CAPPED. `verify` refuses to let a cap excuse a
+    shortfall, correctly, so it failed the build and the deploy was skipped for
+    one feed's slow morning. TRUNCATED is in EXPLAINS_A_SHORTFALL: the shortfall
+    publishes with `degraded: true` beside it.
     """
     pages = {i * 20: {"cves": [{"id": f"CVE-2026-{i}",
                                 "published": "2026-08-01T00:00:00Z"}]}
@@ -1562,15 +1566,22 @@ def test_the_wall_clock_budget_is_a_standing_limit_not_a_degradation(monkeypatch
     _ubuntu_pages(pages, monkeypatch)
     feeds.feed_ubuntu({2026}, time_budget_s=-1)      # already spent
     h = feeds.health_detail().get("ubuntu") or {}
-    assert h.get("status") == feeds.CAPPED, h
+    assert h.get("status") == feeds.TRUNCATED, h
     assert "wall-clock budget" in (h.get("detail") or ""), h
 
     _f, truncated, _a, capped = feeds.health_summary()
-    assert truncated == [], "a configured time budget degraded the run"
-    assert any("ubuntu" in c for c in capped), capped
-    on, _ = cli.degraded_state(failures=[], truncated=truncated, capped=capped,
-                               dropped=0, shrunk=[], stale=[], withdrawn=[], bearing=[])
-    assert on is False, "spending the time budget put the site in a degraded posture"
+    assert any("ubuntu" in t for t in truncated), (
+        "a spent budget left a shorter read and nothing called the run degraded")
+    assert not any("ubuntu" in c for c in capped), (
+        "a budget that fires on a bad day is not a standing limitation")
+    on, reasons = cli.degraded_state(failures=[], truncated=truncated, capped=capped,
+                                     dropped=0, shrunk=[], stale=[], withdrawn=[],
+                                     bearing=[])
+    assert on is True and any("stopped early" in r for r in reasons), reasons
+    # And the page cap, which fires on every run by design, is still CAPPED:
+    # the change is about the budget's cadence, not about configured limits.
+    feeds.feed_ubuntu({2026}, page_cap=3)
+    assert feeds.health_detail()["ubuntu"]["status"] == feeds.CAPPED
 
 
 def test_the_page_cap_is_still_reported_as_a_standing_limit(monkeypatch):

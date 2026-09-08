@@ -1167,24 +1167,41 @@ def feed_ubuntu(years, page_cap=200, retry_budget_s=UBUNTU_RETRY_BUDGET_S,
     else:
         note = ""
     if budget_spent:
-        # CAPPED, NOT TRUNCATED, and the difference decides whether the site
-        # wears a degraded posture. A wall-clock budget is a CONFIGURED limit in
-        # exactly the sense the page cap is, so it belongs in `limitations` beside
-        # it rather than in `degraded`.
+        # TRUNCATED, NOT CAPPED, since 2026-09-08, and this reversed the
+        # paragraph that stood here. It argued that a wall-clock budget is a
+        # configured limit in exactly the sense the page cap is, so exhausting it
+        # belongs in `limitations` rather than in `degraded`; and that with the
+        # cap costing 553s against a 900s budget, a slow afternoon put the two
+        # within reach, so TRUNCATED would have made `degraded` furniture.
         #
-        # It is not a fine distinction here, it is the whole reason the budget is
-        # safe to add. The measured live cost of the 200-page cap is 553s against
-        # a 900s budget, and cold page latency on this endpoint ranges 1.25s to
-        # 30s, so a slow afternoon puts the two within reach of each other.
-        # Classifying budget exhaustion as TRUNCATED would have marked the run
-        # degraded on any slow day, which is the furniture problem
-        # `degraded_state` spends a paragraph rejecting, arrived at from a third
-        # direction. `compare_magnitudes` still catches a real collapse in rows,
-        # which is the guard for "worse than usual".
+        # Both premises were measured and neither holds. Across the 18 daily
+        # snapshots retained on the data branch to 2026-09-08 the budget fired
+        # ZERO times; every ubuntu exit was the page cap or an HTTP error. The
+        # runner now spends 289-341s on the full 200 pages. So a spent budget is
+        # not a slow afternoon, it is the host running at a third of its normal
+        # speed, and the read it leaves behind is a lower floor than usual, which
+        # is what `degraded` means.
+        #
+        # THE DIFFERENCE BETWEEN A CAP AND A BUDGET IS CADENCE. A cap fires on
+        # every run by design and defines the normal read; that is a standing
+        # limitation. A budget exists to bound a bad day and fires only on one;
+        # that is a truncation, however configured the number is.
+        #
+        # What CAPPED actually did, 2026-09-08 13:15Z: the budget fired after 96
+        # pages, 1,915 ids against a usual 3,993, `compare_magnitudes` set
+        # `degraded`, and `verify` FAILED THE BUILD, because a cap must never
+        # excuse a shortfall (ubuntu's and ghsa's caps fire every run, so letting
+        # one excuse a shortfall would excuse every shortfall on those feeds for
+        # ever). The deploy was skipped and the site froze on the previous
+        # artefact for one feed's slow morning, which is the outcome `verify`'s
+        # EXPLAINS_A_SHORTFALL was written to prevent and could not see here.
+        # TRUNCATED is in that tuple: the shortfall publishes, `degraded: true`
+        # beside it, and `withdrawn_history` stops reading the partial window as
+        # months withdrawn, which it also did that morning.
         pages_read = offset // limit
         print(f"  [ubuntu] wall-clock budget ({time_budget_s}s) spent after "
               f"{pages_read} pages", file=sys.stderr)
-        record_feed("ubuntu", CAPPED,
+        record_feed("ubuntu", TRUNCATED,
                     _ubuntu_reach(pages_read, limit, total_results, out, years,
                                   why=f"spent the {time_budget_s}s wall-clock budget")
                     + note)
@@ -1364,9 +1381,12 @@ def resolve_dates_ubuntu(cve_ids, budget_s=UBUNTU_RESOLVE_BUDGET_S,
     # count still says so out loud in `detail`, which is where `feed_csaf`
     # already puts the same shape of partial result.
     #
-    # A spent budget is CAPPED, not TRUNCATED, for the reason the walk's own
-    # wall-clock budget is: a configured limit belongs in `limitations` rather
-    # than in the degraded banner.
+    # A spent budget is CAPPED, not TRUNCATED, and the reason is this entry's
+    # own and not borrowed from the walk (whose budget exit became TRUNCATED on
+    # 2026-09-08): a resolver's rows are work done over a population another
+    # feed is draining, marked `counts_coverage=False`, so a short pass here can
+    # only leave a row undated for a day and can never remove one. There is no
+    # shortfall for a status word to explain.
     #
     # But Ubuntu being DOWN is none of the above. If every lookup failed there
     # is no self-healing to appeal to, the pass learned nothing, and reporting
@@ -2569,9 +2589,13 @@ CSAF_MAX_DIRS = 12
 # A budget that only wrapped the advisory fetch would not have caught this at
 # all: open-xchange never reached the advisory fetch.
 #
-# This is a configured limit in exactly the sense the Ubuntu wall-clock budget
-# and the advisory cap are, so it is reported the same way: CAPPED, named, with
-# the number, and not a degradation.
+# CAPPED, named, with the number, and not a degradation. NOT for the reason
+# the Ubuntu walk's budget used to give (that exit became TRUNCATED on
+# 2026-09-08); for one specific to this reader. RETURNING IS NEVER INCREMENTAL:
+# a provider emits every id its state has ever seen whether or not this run
+# fetched anything, so a spent budget slows the drain of new advisories and
+# removes nothing from the site. There is no shortfall to explain, only a
+# backlog to disclose, and `3 still catching up` is that disclosure.
 CSAF_PROVIDER_BUDGET_S = 300
 
 # What each provider has seen, and where it got to.
