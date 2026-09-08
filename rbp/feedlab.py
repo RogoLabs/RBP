@@ -131,7 +131,7 @@ LIVE_MAX_AGE_DAYS = 14
 #
 # `zdi` is the first feed merged since the pin test was written (#33), so it is
 # the first to hit this, and the honest fix is a declaration rather than a
-# loosened assertion. A test that accepted any profile/pin difference would stop
+# loosened assertion. `certcc` followed within the hour and is the second. A test that accepted any profile/pin difference would stop
 # noticing the case it exists for: a feed REMOVED from the live run while the
 # repo still scores against it, which is the same-direction error as a cold
 # baseline and makes a candidate look better than it is.
@@ -145,7 +145,7 @@ LIVE_MAX_AGE_DAYS = 14
 # Anything in here is scored against a pin that does not contain it, which is the
 # `live.upper_bound` case every card already records: the candidate looks better
 # than it is, by at most `live.rows_short`.
-PENDING_FIRST_RUN = frozenset({"zdi"})
+PENDING_FIRST_RUN = frozenset({"certcc"})
 
 # Advisory dates more than this far before the CVE's publication are treated as
 # a data error rather than as evidence of lead. Feeds carry wrong dates: a
@@ -732,6 +732,81 @@ def rescore_baseline(corpus_df, base=None):
             "csaf_state": csaf_depth(),
             "rescored_at": dt.datetime.now(dt.timezone.utc)
                              .isoformat(timespec="seconds")}
+
+
+def extend_baseline(names, years, corpus_df, base=None):
+    """Fetch ONLY `names` and splice them into the recorded baseline.
+
+    A baseline that can only be built all-at-once costs sixteen fetches to learn
+    about one new feed, and this module already refuses that trade twice in
+    exactly these words: "re-scoring against a changed corpus or a changed floor
+    must not cost twelve more fetches at twelve third parties." Adding a feed is
+    the same trade and had no path, so the merge of `zdi` on 2026-09-08 rebuilt
+    all sixteen (32 minutes, 6.8 GB) and the merge of `certcc` an hour later would
+    have rebuilt all seventeen again.
+
+    It bit twice in one day in a second way worth recording: `zdi`'s adapter was
+    fixed AFTER that rebuild, so the committed baseline row is 11 ids short of
+    what the adapter returns, and the choice was between a wrong number and a
+    second full refetch. With this, it is neither.
+
+    THE OTHER FEEDS' ROWS ARE REUSED, NOT RE-READ, and the derived half is
+    recomputed from the union exactly as `rescore_baseline` does it, so a spliced
+    baseline and a rebuilt one differ only in WHEN each feed's rows were read.
+    That is recorded per feed rather than glossed: `per_feed[name]["stats"]`
+    already carries its own timing, and `extended_at` says the splice happened.
+
+    `scored_at` is deliberately NOT moved. It means "when these rows were read",
+    it is what `test_the_recorded_baseline_describes_the_profile_that_actually_runs`
+    and every card's `baseline.scored_at` report, and advancing it for feeds that
+    were not re-read would be the same fabrication `rescore_baseline` and `audit`
+    both refuse when they decline to record a fetch.
+    """
+    base = base if base is not None else load_baseline()
+    if base is None or not base.get("per_feed"):
+        raise SystemExit(
+            "no recorded baseline to extend. Run `python -m rbp.feedlab "
+            "baseline` first; there is nothing to splice into.")
+    per_feed = dict(base["per_feed"])
+    failed = dict(base.get("failed") or {})
+    for name in names:
+        try:
+            rows, stats = fetch(name, years)
+        except Exception as e:
+            failed[name] = str(e)[:160]
+            print(f"  [{name}] FAILED: {e}", file=sys.stderr)
+            continue
+        # A REAL FETCH, so it contributes a real stability observation, on the
+        # same reasoning as `build_baseline` and unlike `audit` or a rescore.
+        record_fetch(name, {r["cve_id"] for r in rows if r.get("cve_id")}, years)
+        failed.pop(name, None)
+        per_feed[name] = {
+            "rows": [{"cve_id": r["cve_id"], "public_date": r.get("public_date") or ""}
+                     for r in rows if r.get("cve_id")],
+            "stats": stats,
+        }
+        print(f"  [{name}] {len(rows)} rows, {stats['wall_seconds']}s, "
+              f"{stats['bytes'] / 1e6:.0f} MB", file=sys.stderr)
+    merged = {**base, "per_feed": per_feed, "feeds": sorted(per_feed),
+              "failed": failed,
+              "extended_at": dt.datetime.now(dt.timezone.utc)
+                               .isoformat(timespec="seconds"),
+              "extended": sorted(set(names))}
+    # The derived half, from the union of the spliced rows. Same function the
+    # offline rescore uses, so there is one definition of what these fields mean.
+    out = rescore_baseline(corpus_df, base=merged)
+    out.pop("rescored_at", None)      # this was a fetch, not a rescore
+    # RECOMPUTED FROM THE PER-FEED STATS, not inherited. `build_baseline` times a
+    # sequential loop, so its `wall_seconds` and `bytes` ARE the per-feed sums;
+    # carrying the old values through a splice would report the original build's
+    # 1,938 seconds for an operation that took 30, which is the kind of number
+    # that gets quoted later as the cost of adding a feed.
+    out["bytes"] = sum(f["stats"].get("bytes") or 0 for f in per_feed.values())
+    out["wall_seconds"] = round(
+        sum(f["stats"].get("wall_seconds") or 0 for f in per_feed.values()), 1)
+    out["health"] = {k: dict(v["stats"].get("health") or {})
+                     for k, v in per_feed.items()}
+    return out
 
 
 def baseline_summary(base):
@@ -1385,6 +1460,11 @@ def _build_parser():
     b.add_argument("--rescore", action="store_true",
                    help="recompute the recorded baseline against the current "
                         "corpus, from the rows it already stored; no fetch")
+    b.add_argument("--add", default="",
+                   help="comma-separated; fetch ONLY these feeds and splice them "
+                        "into the recorded baseline, reusing the other feeds' "
+                        "stored rows. Adding a feed should not cost a fetch of "
+                        "every other one")
     b.add_argument("--years", default=_default_years(),
                    help="comma-separated; default is the window the pipeline "
                         "gathers, %(default)s")
@@ -1500,8 +1580,17 @@ def main(argv=None):
         from .cli import PROFILES
         years = _years(args.years)
         srcs = [x for x in (args.sources or PROFILES["weekly"]).split(",") if x]
-        base = (rescore_baseline(corpus) if args.rescore
-                else build_baseline(srcs, years, corpus))
+        if args.add and (args.rescore or args.sources):
+            raise SystemExit("--add is exclusive with --rescore and --sources: "
+                             "one splices a fetch in, the others replace or "
+                             "recompute the whole set")
+        if args.add:
+            base = extend_baseline([x for x in args.add.split(",") if x],
+                                   years, corpus)
+        elif args.rescore:
+            base = rescore_baseline(corpus)
+        else:
+            base = build_baseline(srcs, years, corpus)
         write(base, BASELINE)
         write(baseline_summary(base), os.path.join(LAB, "_baseline.json"))
         print(f"baseline: {len(base['ids']):,} ids, {len(base['effective'])} "

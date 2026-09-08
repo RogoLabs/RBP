@@ -1418,12 +1418,14 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > requests.**
 >
 > **`zdi` IS MERGED.** Scorecard in `feedlab/zdi.json`, verdict `detecting` on both
-> tests: 3 marginal roster CNAs (`PaperCut`, `WDC_PSIRT`, `bosch`) and 2,356 lead
-> references. Adapter, tests and the four integration points are in the same diff.
+> tests: 4 marginal roster CNAs (`PaperCut`, `WDC_PSIRT`, `blackberry`, `bosch`)
+> and 2,356 lead references. Adapter, tests and the four integration points are in
+> the same diff. The count was 3 while the baseline row was 11 ids short; closing
+> that added `blackberry`, and the paragraph below records both readings.
 >
 > **The lead figure is the one to read, and it is not close to anything else here.**
-> `feedlab score` puts it at **2,356 of 4,250 dated references leading publication,
-> 55.44%, median 33 days, max 822.** The committed cards for comparison: `jvn`
+> The card puts it at **2,356 of 4,260 dated references leading publication,
+> 55.31%, median 33 days, max 822.** The committed cards for comparison: `jvn`
 > 33.6% at a 6-day median, `csaf:ncsc-nl` 4.07% at 8 days, `mozilla` 34 references
 > in total. More than half of what this feed says was said before the CVE Record
 > existed, and by a month.
@@ -1505,29 +1507,26 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > there is no reserved id to be public about. Whether an advisory with no id is
 > worth counting somewhere is a real question and is not answered here.
 >
-> **The committed card and baseline both record the pre-fix 4,288, and that is
-> deliberate.** `feedlab/_baseline.json` was rebuilt before the multi-id fix
-> landed. Re-running it would put a second round of fetches on all sixteen third
-> parties within the hour to move one row by 11 ids, 0.26%, in the direction that
-> makes every OTHER feed's marginal figure very slightly generous, and this
-> document's own rule is that `audit` and re-scoring are offline so that changing a
-> constant does not "put twelve more fetches on twelve third parties".
+> **`feedlab/zdi.json` was re-scored live at 4,299 and then DELIBERATELY REPLACED
+> by the audit card**, which is worth recording because the reason is not obvious
+> and it is now a rule. Once `zdi` is IN the baseline, `feedlab score zdi` measures
+> it as marginal to a set that already contains it: it reported "6 ids not already
+> seen" and ONE marginal CNA against the audit's three, which is not a smaller
+> estimate of the same thing but a different and meaningless quantity. `audit`
+> computes leave-one-out and returns the names that match the independent
+> measurement: the 3 (`PaperCut`, `WDC_PSIRT`, `bosch`) at 4,288, and 4 once the
+> 11 ids landed, adding `blackberry`. **The merge-justifying figure has to come from
+> `audit` once the baseline contains the feed; `score` is for candidates only.**
 >
-> `feedlab/zdi.json` was re-scored live at 4,299 and then DELIBERATELY REPLACED by
-> the audit card at 4,288, which is worth recording because the reason is not
-> obvious. Once `zdi` is in the baseline, `feedlab score zdi` measures it as
-> marginal to a set that already contains it: it reported "6 ids not already seen"
-> and ONE marginal CNA against the audit's three, which is not a smaller estimate
-> of the same thing but a different and meaningless quantity. `audit` computes
-> leave-one-out and returns the 3 (`PaperCut`, `WDC_PSIRT`, `bosch`) that match the
-> independent measurement. **The merge-justifying figure has to come from `audit`
-> once the baseline contains the feed, and `score` is for candidates only.**
->
-> So the card's `ids` is 11 low. It seeds the shrink baseline via
-> `scorecard_baselines`, and `compare_magnitudes` only ever fires on a FALL, so a
-> seed 11 below the truth cannot produce a false alarm; it makes the first run's
-> drop threshold marginally less sensitive, and the first real gather replaces it.
-> The alternative was a wrong marginal CNA count on a public page.
+> **The baseline row was briefly 11 ids short of the adapter, and that is fixed
+> rather than documented.** This block first recorded the shortfall as a deliberate
+> compromise: the baseline was rebuilt before the multi-id fix landed, and closing
+> it meant a second round of fetches on all sixteen third parties within the hour
+> to move one row by 0.26%. That was the honest trade at the time and it was the
+> wrong thing to accept, because the real problem was that the harness had no way
+> to re-read ONE feed. `feedlab baseline --add` was built for the `certcc` merge an
+> hour later (see its block below) and closed this for nine seconds. Both artefacts
+> now read 4,299.
 >
 > **IT IS AN HTML TABLE ON SOMEONE ELSE'S MARKETING SITE.** That is the standing
 > risk and it is the one this project has named as intolerable: a redesign gives a
@@ -1544,26 +1543,10 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > "ZDI is publishing about another CNA's id" -- the ambiguity that had Apple's own
 > advisories scored as a third party's.
 >
-> **`certcc` is admissible, is NOT merged in this diff, and is the obvious next
-> one.** CERT/CC's Vulnerability Note API is unauthenticated JSON with a structured
-> `uid` per vulnerability, and it is the best detector measured here BY RATE: 13
-> sole-source rows off 299 ids, a 4.3% hit rate against `zdi`'s 0.5%, plus 22.26%
-> of its dated references leading publication at an 8-day median. It fails
-> admissibility test 1 with zero marginal CNAs -- CERT/CC coordinates for vendors
-> the site already covers -- which makes it `redundant`: mergeable, and it STAYS IN
-> THE NUMERATOR, because it can surface an unpublished id.
->
-> It is left out only to keep this diff to one feed. Its card is in
-> `feedlab/_candidates.json` with the figures above computed by `feedlab`'s own
-> functions, so the next session starts from a scorecard rather than from this
-> paragraph. Two traps are already paid for and recorded on the card so they are
-> not paid twice: the `{year}/` endpoint 404s inside a 200-shaped JSON error body
-> and only `{year}/{month}/` answers, and each vulnerability's `cve` field is the
-> BARE number (`2026-33197`) while `uid` carries the prefixed id -- reading `cve`
-> and matching the CVE shape finds ZERO and reports a coordinator feed with no CVEs
-> in it, which is the MyJVN trap in a different costume. A note also carries a
-> `cveids` field, so the 162 per-note calls may not be needed at all; that has NOT
-> been checked.
+> **`certcc` is admissible and was MERGED the same day**, in the block below. It
+> was left out of this diff only to keep it to one feed; its candidate card stays
+> in `feedlab/_candidates.json` as the record of how it was scored before the
+> merge.
 >
 > **What is NOT established.** `zdi` has one recorded fetch, so its `stability` is
 > null and stays null until a second real gather 24 hours apart. And the pin this
@@ -1572,6 +1555,108 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > upper bounds by `live.rows_short`, `feedlab.PENDING_FIRST_RUN` declares it, and
 > two guards in `tests/test_feedlab.py` force the declaration out on the first
 > re-pin after the deploy. NEXT.md carries that as the open item.
+
+> ### MEASURED AND MERGED 2026-09-08. `certcc`, and the first merge on the `redundant` verdict.
+>
+> **This feed adds ZERO roster CNAs and is merged anyway.** That is the whole
+> point of it, and it is only defensible because section 2 wrote the rule down
+> before there was a feed that needed it: a candidate is merged on marginal CNAs
+> **or** on disclosure lead, and only `corroborating` -- clears test 1, FAILS test
+> 2, a publication mirror -- leaves the coverage numerator. `certcc` is the
+> opposite shape and its verdict is `redundant`, which is mergeable and stays in
+> the numerator.
+>
+> `feedlab/certcc.json`, scored against the seventeen-feed baseline:
+>
+> | | |
+> |---|---:|
+> | in-window referenced ids | 299 |
+> | marginal roster CNAs | **0** |
+> | dated references leading publication | **56 (19.8%)**, median 8d, max 287d |
+> | absent from the corpus | 16 |
+> | RESERVED at the live oracle | 13 of 16 |
+> | **RESERVED AND IN NO OTHER FEED** | **13** |
+>
+> **It is the best detector in the profile by RATE.** 13 sole-source rows off 299
+> ids is 4.3%; `zdi` is 24 off 4,299, which is 0.6%, and the distro feeds are a
+> fraction of that. It is a small feed whose rows are almost all interesting,
+> which is a different and better reason to read a source than volume.
+>
+> The zero is not a defect and it is worth being precise about why: CERT/CC
+> coordinates for vendors this site already reads several ways over, so its 26
+> reached CNAs are all above the floor already. 205 of its sightings are ids
+> CERT/CC assigned itself.
+>
+> **THIS IS ALSO THE FIRST TIME THE `redundant`/`corroborating` DISTINCTION HAS
+> COST ANYTHING**, and it is the reason section 2's "CORRECTED 2026-09-06" block
+> matters. Both verdicts were once the same word; `cli.run` read the verdict
+> string, and `mozilla`, `samsung` and `ubuntu` were all in a published exclusion
+> list with lead references apiece and not a mirror among them. `certcc` is the
+> feed where getting it wrong again would be hardest to see, because
+> `corroborating` would look plausible on a card that genuinely adds no CNA, and it
+> would drop the feed out of the numerator for a reason that is false of it. Its 13
+> sole-source reserved rows are the proof. `tests/test_certcc.py` asserts the
+> verdict and that a `redundant` feed is not in the exclusion set.
+>
+> **48 REQUESTS FOR THE IDS, AND 162 MORE KEPT ON PURPOSE FOR THE DATES.** This is
+> the `jvn` question asked again and answered the other way, which is why it is
+> written out rather than left to the diff.
+>
+> - **The id set does not need the per-note call.** Every note carries its own
+>   `cveids` list, and over all 162 notes it agrees with the `/vuls/` uids **162
+>   times out of 162**, with no id on either side the other lacks. `feed_jvn`
+>   dropped 583 calls on exactly this finding.
+> - **The dates do.** `date_added` is per VULNERABILITY and a note gains CVEs after
+>   it is first published: of 307, **299 were added the day the note opened, 2
+>   within a week and 6 up to 30 days later.**
+> - **And the cost of the shortcut was measured, not argued**, because "6 rows, up
+>   to 30 days" sounds ignorable. The same 299 rows through
+>   `feedlab.disclosure_lead` both ways: **the note-date route reports 63 lead
+>   references, the per-id route 56.** The shortcut over-claims this feed's
+>   disclosure lead by 7 references, 2.47 points, in the direction that makes a
+>   candidate look like a better detector than it is.
+>
+> That is the sharpest form of the rule this section keeps rediscovering: the
+> cheaper route is not wrong about the thing you checked, it is wrong about the
+> thing you did not. `date_added` is never null and never earlier than the note's
+> own date, both checked over the same 307.
+>
+> **Two field traps, recorded because each cost time.**
+>
+> 1. **The API answers 200 with the failure inside the document.**
+>    `/vuls/api/2026/` returns HTTP 200, `application/json`, and `{"error":
+>    "Content requested either does not exist or you do not have permissions to
+>    view it!"}`. Only `{year}/{month}/` answers. A caller checking the status code
+>    reads a whole year as having no notes in it. This is the MyJVN trap in a
+>    different costume, and this repository's own note is "read the log rather than
+>    the exit status".
+> 2. **`cve` is the BARE number and `uid` is the prefixed id.** `{"cve":
+>    "2026-33197", "uid": "CVE-2026-33197"}`. Reading `cve` and matching the CVE
+>    shape finds **zero** ids across 162 notes that all have some, and reports a
+>    coordinator feed with nothing in it. That is exactly how this feed was first
+>    scored at 0, in this session.
+>
+> An empty month is ordinary for a source publishing forty notes a year, and a
+> month that did not answer is not, so the two are told apart by the TYPE of what
+> came back rather than by its length: a list is an answer, empty or not.
+>
+> **`feedlab baseline --add`, because this merge would otherwise have cost a
+> refetch of every other feed.** `build_baseline` replaces the recorded baseline,
+> so learning about one new feed meant fetching all seventeen: the `zdi` merge an
+> hour earlier spent 32 minutes and 6.8 GB doing it, and this one would have done
+> it again. That is the trade this document refuses twice in its own words for
+> re-scoring -- "must not put twelve more fetches on twelve third parties" -- and
+> adding a feed is the same trade with no path. `--add` fetches only the named
+> feeds and splices them into the stored rows, recomputing the derived half through
+> the same function the offline rescore uses: **30 seconds instead of 32 minutes.**
+>
+> It also retired a compromise recorded above in this same file. The `zdi` block
+> says its committed baseline row is 11 ids short of what its adapter returns,
+> because the adapter was fixed after the rebuild and the alternative was a second
+> full refetch. `--add zdi` closed that for nine seconds, so `zdi` now reads 4,299
+> in both places and that paragraph documents a choice that no longer has to be
+> made. `scored_at` is deliberately not advanced for feeds that were not re-read,
+> on the same reasoning that stops `audit` recording a fetch it did not make.
 
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated
