@@ -121,6 +121,32 @@ LIVE_URL = "https://rbptracker.org/data/summary.json"
 # refreshed this in a release cycle" rather than "this moved yesterday".
 LIVE_MAX_AGE_DAYS = 14
 
+# FEEDS FROM WHICH THE LIVE SITE HAS NOT YET PUBLISHED A RUN.
+#
+# The pin is taken from `rbptracker.org/data/summary.json`, so it can only ever
+# name feeds the site has already run. A commit that ADDS a feed therefore lands
+# with the profile one name ahead of the pin, and merging to main is what makes
+# the site run it -- the pin cannot be brought into step before the merge it is
+# supposed to be checking.
+#
+# `zdi` is the first feed merged since the pin test was written (#33), so it is
+# the first to hit this, and the honest fix is a declaration rather than a
+# loosened assertion. A test that accepted any profile/pin difference would stop
+# noticing the case it exists for: a feed REMOVED from the live run while the
+# repo still scores against it, which is the same-direction error as a cold
+# baseline and makes a candidate look better than it is.
+#
+# It is self-clearing, and that is the property that keeps it from becoming
+# furniture. `test_no_feed_is_declared_pending_once_the_live_run_has_it` fails
+# the moment a name here appears in the pin, so the first re-pin after the deploy
+# forces the name out. `test_the_pinned_live_run_is_not_stale` already bounds that
+# to a fortnight.
+#
+# Anything in here is scored against a pin that does not contain it, which is the
+# `live.upper_bound` case every card already records: the candidate looks better
+# than it is, by at most `live.rows_short`.
+PENDING_FIRST_RUN = frozenset({"zdi"})
+
 # Advisory dates more than this far before the CVE's publication are treated as
 # a data error rather than as evidence of lead. Feeds carry wrong dates: a
 # changelog entry dated by the package release rather than the advisory, or a

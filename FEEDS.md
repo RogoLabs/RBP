@@ -1367,6 +1367,212 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > refreshing them is `feedlab audit`, which rewrites all fifteen and belongs in its
 > own commit, as NEXT.md item 3a already says.
 
+> ### MEASURED AND MERGED 2026-09-08. `zdi`, and the first feed admitted for detection rather than for coverage.
+>
+> **The question this expansion was built to answer has changed, and the numbers
+> are what changed it.** Every tier above is sequenced by marginal CNA yield,
+> because the launch gate was the binding constraint. It is not any more. The live
+> run of 2026-09-08 (`ff1bdc8c4ce6`) stands at **49 of 50 top CNAs at the sighting
+> floor**, and the one miss is `huawei`, which publishes a CSAF catalogue no
+> unauthenticated client can read and is closed in `feeds.py`. The gate needs 40
+> and has 49.
+>
+> So the reachable-but-unsighted set was re-derived against that run rather than
+> against section 1's 2026-08-22 table: **120 roster CNAs, of which the largest
+> after `huawei` (682) are `OpenHarmony` (159) and `CERT-In` (141), and every one
+> of the remaining 117 published fewer than 100 CVEs in the window.** Section 1's
+> "one CNA per parser" tail is now the whole of what is left on the coverage side,
+> and section 5 prices it at 2 to 3 CNAs per working day. Coverage is no longer
+> where the value is.
+>
+> **What the site is short of is ROWS**, and section 2's second admissibility test
+> was always the one that measured them. Five sources were probed on that test,
+> and the failures are kept whole below because the expensive mistake this document
+> keeps making is re-probing a host it has already established is unreadable.
+>
+> | candidate | in-window ids | marginal CNAs | absent | RESERVED at the oracle | sole-source rows | cost | verdict |
+> |---|---:|---:|---:|---|---:|---|---|
+> | `zdi` | 4,299 | **+3** | 39 | **38 of 39 (97%)** | **24** | 4 requests, 17.2 MB, ~10s | **detecting** |
+> | `certcc` | 299 | +0 | 16 | 13 of 16 (81%) | 13 | 210 requests, ~13s | redundant |
+> | `CERT-In` | -- | -- | -- | -- | -- | no route | unreadable |
+> | `OpenHarmony` | -- | -- | -- | -- | -- | no route | unreadable |
+> | Wordfence | -- | -- | -- | -- | -- | authentication | unreadable |
+>
+> **The three unreadables, exactly, so they are not probed again.** `CERT-In` is
+> the third-largest reachable miss on the roster (141 in window, 0 sighted) and
+> serves no feed: `cert-in.org.in` answers 200 with a 447-byte HTML frame and there
+> is no RSS or JSON route behind it, only PDF advisory pages. `OpenHarmony` (159,
+> 0 sighted) is the same shape one layer along -- `openharmony.cn/security/bulletin`
+> 404s, and the gitee and gitcode mirrors answer 200 with an HTML application
+> shell, which is the "a 200 is still not a feed" trap this document has now been
+> caught by four times. Wordfence Intelligence would be the largest WordPress
+> source available, and its v2 endpoints are gone (410) while v3 requires an API
+> key (401); an authenticated feed is a different decision from this one and is not
+> taken here.
+>
+> `sole-source rows` is the number that decided this: reserved ids that appear in
+> NO currently-merged feed, checked against the 2,359 rows the live run publishes.
+> Against the per-feed sole-source counts section 2 recorded for the 2026-08-20
+> snapshot (`osv` 42, `debian` 36, `alpine` 23, `redhat` 10, `ghsa` 5), **`zdi`
+> arrives just above `alpine` as the site's third-largest detector, for four
+> requests.**
+>
+> **`zdi` IS MERGED.** Scorecard in `feedlab/zdi.json`, verdict `detecting` on both
+> tests: 3 marginal roster CNAs (`PaperCut`, `WDC_PSIRT`, `bosch`) and 2,356 lead
+> references. Adapter, tests and the four integration points are in the same diff.
+>
+> **The lead figure is the one to read, and it is not close to anything else here.**
+> `feedlab score` puts it at **2,356 of 4,250 dated references leading publication,
+> 55.44%, median 33 days, max 822.** The committed cards for comparison: `jvn`
+> 33.6% at a 6-day median, `csaf:ncsc-nl` 4.07% at 8 days, `mozilla` 34 references
+> in total. More than half of what this feed says was said before the CVE Record
+> existed, and by a month.
+>
+> That is not a property of the format. It is the business model: ZDI buys
+> vulnerabilities, reports them to the vendor, and publishes when its own
+> disclosure timeline expires, whether or not a record exists. **A broker operating
+> on a deadline produces reserved-but-public ids by construction.** Which is the
+> mirror image of the euvd result two blocks up, and worth stating as the general
+> rule this document did not have before: *ask what makes the source publish.* EUVD
+> publishes because a record was published, so it can never lead. ZDI publishes
+> because a clock ran out.
+>
+> | | sampled | RESERVED now | PUBLISHED now |
+> |---|---:|---:|---:|
+> | `zdi` | 39 (all of them) | **38** | 0 (+1 NOT_ALLOCATED) |
+> | `csaf:ncsc-nl` | 60 | 11 | 48 |
+> | `jvn` | 14 | 8 | 6 |
+> | `euvd` | 60 | **0** | **60** |
+>
+> Note the sample is not a sample: all 39 absent ids were resolved, so there is no
+> sampling error in the 97.4%.
+>
+> **THE ROUTE, AND THE TRAP IN IT.** `/advisories/published/` serves the CURRENT
+> YEAR ONLY. A first pass read that one page, found 541 ids and 24 reserved, and
+> would have covered a quarter of the window while looking complete. The year route
+> is `/advisories/published/<year>/`, which is what the page's own year selector
+> navigates to, back to 2005. Four requests cover the window.
+>
+> **THE RSS FEED CARRIES NO CVE ID.** `/rss/published/` is the obvious route and it
+> is useless: no structured element, no id in the `<description>` prose, `<guid>` is
+> the ZDI-CAN case number, and it holds only the latest 200 advisories.
+> `/advisories/upcoming/` is worse and more tempting: 756 ZDI-CAN entries for
+> undisclosed vulnerabilities and **zero** CVE ids among them. Both checked before
+> the HTML parser was written, because reaching for a scraper while a feed exists is
+> how the Android bulletin row below got cancelled.
+>
+> **THE GIT TRAP, A THIRD TIME, AND A FOURTH THING NOBODY HAD CHECKED.** A full-text
+> regex over the four indexes finds 4,441 ids against the structured 4,425; the 16
+> extras are related-advisory prose and page furniture. The structured route is each
+> row's own `data-label="CVE"` cell.
+>
+> The fourth thing is the DATE. **209 of the 4,409 ids appear in more than one
+> advisory and 94 carry more than one date** -- ZDI files one advisory per sink and
+> re-publishes when a patch is incomplete, so `CVE-2023-36804` spans thirteen
+> advisories from 2023-09-12 to 2023-12-15. Each index is ordered newest-first, so
+> a plain `seen` set keeps the LATEST advisory of the EARLIEST year: a date chosen
+> by two orderings nobody picked, understating how long the id has been public,
+> which is the direction that matters because `public_date` feeds the 7-day buffer
+> and the expectation clock. The adapter takes the minimum, which also makes the
+> answer independent of the table's internal order.
+>
+> **VERIFIED AGAINST THE ADVISORY PAGES BEFORE THE INDEX WAS TRUSTED**, which is the
+> check `feed_jvn` ran before dropping its 585 detail calls: on 12 rows sampled
+> across the four years, the index's CVE id appeared on its own advisory page 12
+> times out of 12, and so did the index's `Published` date.
+>
+> **THE ADVISORY COUNT AND THE ROW COUNT HAVE TO RECONCILE, AND MAKING THEM DO IT
+> FOUND A DEFECT IN THIS ADAPTER.** 5,472 advisories, 328 with an empty CVE cell,
+> and the first adapter returned 5,136 rows. 5,472 - 328 = 5,144, so eight rows
+> were unaccounted for.
+>
+> They are cells holding SEVERAL ids. ZDI-25-730's CVE cell reads
+> "CVE-2019-18935, CVE-2017-11317, CVE-2014-2217", and matching the whole cell
+> against the id shape classified all eight as malformed and skipped the row, so
+> **11 in-window ids were being dropped with nothing in the log -- one of them
+> `CVE-2026-19911`, a reserved id no other feed references.** Splitting the cell is
+> not the full-text route this feed refuses: the ids were put in the CVE column by
+> the publisher, and prose stays refused. Three tests in `tests/test_zdi.py` hold
+> it, including one asserting a cell of pure junk still trips the shape guard.
+>
+> Worth stating as a method rather than as a bug: the eight rows were found by
+> arithmetic that did not add up, in a document whose whole argument is that every
+> gap has a stated cause. The 328 were never the risk -- they were counted. The
+> risk was the number nobody had subtracted.
+>
+> The 328 themselves are real. ZDI published, and no id was ever assigned: a
+> genuine failure of the same system this site measures, and NOT an RBP, because
+> there is no reserved id to be public about. Whether an advisory with no id is
+> worth counting somewhere is a real question and is not answered here.
+>
+> **The committed card and baseline both record the pre-fix 4,288, and that is
+> deliberate.** `feedlab/_baseline.json` was rebuilt before the multi-id fix
+> landed. Re-running it would put a second round of fetches on all sixteen third
+> parties within the hour to move one row by 11 ids, 0.26%, in the direction that
+> makes every OTHER feed's marginal figure very slightly generous, and this
+> document's own rule is that `audit` and re-scoring are offline so that changing a
+> constant does not "put twelve more fetches on twelve third parties".
+>
+> `feedlab/zdi.json` was re-scored live at 4,299 and then DELIBERATELY REPLACED by
+> the audit card at 4,288, which is worth recording because the reason is not
+> obvious. Once `zdi` is in the baseline, `feedlab score zdi` measures it as
+> marginal to a set that already contains it: it reported "6 ids not already seen"
+> and ONE marginal CNA against the audit's three, which is not a smaller estimate
+> of the same thing but a different and meaningless quantity. `audit` computes
+> leave-one-out and returns the 3 (`PaperCut`, `WDC_PSIRT`, `bosch`) that match the
+> independent measurement. **The merge-justifying figure has to come from `audit`
+> once the baseline contains the feed, and `score` is for candidates only.**
+>
+> So the card's `ids` is 11 low. It seeds the shrink baseline via
+> `scorecard_baselines`, and `compare_magnitudes` only ever fires on a FALL, so a
+> seed 11 below the truth cannot produce a false alarm; it makes the first run's
+> drop threshold marginally less sensitive, and the first real gather replaces it.
+> The alternative was a wrong marginal CNA count on a public page.
+>
+> **IT IS AN HTML TABLE ON SOMEONE ELSE'S MARKETING SITE.** That is the standing
+> risk and it is the one this project has named as intolerable: a redesign gives a
+> 200, zero rows, a smaller count and a green build. The adapter separates a fetch
+> failure from a SHAPE failure and reports both -- a year that parses to no rows,
+> and rows that parse with no CVE column -- so the log says which happened rather
+> than publishing a quiet zero. `tests/test_zdi.py` asserts both, in both
+> directions, and `feedlab/zdi.json` seeds the shrink baseline for the first two
+> runs.
+>
+> **NOT AN OWNER FEED**, on the reasoning that excluded `ghsa`. ZDI is itself a CNA
+> and 199 of the sightings here are its own ids, but the advisory carries no
+> assigner, so its presence cannot separate "zdi assigned and disclosed this" from
+> "ZDI is publishing about another CNA's id" -- the ambiguity that had Apple's own
+> advisories scored as a third party's.
+>
+> **`certcc` is admissible, is NOT merged in this diff, and is the obvious next
+> one.** CERT/CC's Vulnerability Note API is unauthenticated JSON with a structured
+> `uid` per vulnerability, and it is the best detector measured here BY RATE: 13
+> sole-source rows off 299 ids, a 4.3% hit rate against `zdi`'s 0.5%, plus 22.26%
+> of its dated references leading publication at an 8-day median. It fails
+> admissibility test 1 with zero marginal CNAs -- CERT/CC coordinates for vendors
+> the site already covers -- which makes it `redundant`: mergeable, and it STAYS IN
+> THE NUMERATOR, because it can surface an unpublished id.
+>
+> It is left out only to keep this diff to one feed. Its card is in
+> `feedlab/_candidates.json` with the figures above computed by `feedlab`'s own
+> functions, so the next session starts from a scorecard rather than from this
+> paragraph. Two traps are already paid for and recorded on the card so they are
+> not paid twice: the `{year}/` endpoint 404s inside a 200-shaped JSON error body
+> and only `{year}/{month}/` answers, and each vulnerability's `cve` field is the
+> BARE number (`2026-33197`) while `uid` carries the prefixed id -- reading `cve`
+> and matching the CVE shape finds ZERO and reports a coordinator feed with no CVEs
+> in it, which is the MyJVN trap in a different costume. A note also carries a
+> `cveids` field, so the 162 per-note calls may not be needed at all; that has NOT
+> been checked.
+>
+> **What is NOT established.** `zdi` has one recorded fetch, so its `stability` is
+> null and stays null until a second real gather 24 hours apart. And the pin this
+> card is marginal to does not contain `zdi`, because the pin comes from the live
+> site and the site cannot have run a feed that has not been merged; the figures are
+> upper bounds by `live.rows_short`, `feedlab.PENDING_FIRST_RUN` declares it, and
+> two guards in `tests/test_feedlab.py` force the declaration out on the first
+> re-pin after the deploy. NEXT.md carries that as the open item.
+
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated
 4 to 6 CNAs, and it needed an HTML scraper walking a monthly index whose dated URL already

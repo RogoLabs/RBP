@@ -140,10 +140,12 @@
      this context and already used by /method for the same sentence. Two copies of
      a constant in one paragraph is how the multiple got wrong before. #}
   {% set feed_n = ((summary.feeds or {}).get('requested') or []) | length %}
-  {# "PUBLIC FEEDS", not "public advisory feeds". Five of the fourteen are
-     distribution trackers, and clock.py treats that difference as the whole
-     reason a tracker row can belong in the count without starting a 72-hour
-     clock. The shorter phrase is true of all fourteen. #}
+  {# "PUBLIC FEEDS", not "public advisory feeds". Five of the sixteen are
+     distribution trackers (alpine, arch, debian, ubuntu, ubuntu-osv), and
+     clock.py treats that difference as the whole reason a tracker row can belong
+     in the count without starting a 72-hour clock. The shorter phrase is true of
+     all sixteen. The five is the load-bearing half and is derivable from
+     `clock.origin_kind`; the total is `feed_n` above and is not typed. #}
   <p>{% if feed_n %}<strong>{{ feed_n }}</strong> public feeds{% else %}Public
      feeds{% endif %} are read every six hours and everything they
      reference is checked against the CVE List. Nothing appears here until it has

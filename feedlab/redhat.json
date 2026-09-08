@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 244,
+  "effective_n": 258,
   "feeds": [
    "alas",
    "alpine",
@@ -15,11 +15,12 @@
    "osv",
    "samsung",
    "ubuntu",
-   "ubuntu-osv"
+   "ubuntu-osv",
+   "zdi"
   ],
-  "scored_at": "2026-09-06T21:08:54+00:00"
+  "scored_at": "2026-09-08T18:58:56+00:00"
  },
- "bytes": 22262324,
+ "bytes": 22298223,
  "cnas_effective_alone": 92,
  "cnas_new_effective": 3,
  "cnas_new_effective_names": [
@@ -30,7 +31,7 @@
  "cnas_reached": 122,
  "combine": "union",
  "disclosure": {
-  "dated_n": 25451,
+  "dated_n": 25480,
   "lead_examples": [
    "CVE-2023-20576",
    "CVE-2023-20577",
@@ -41,8 +42,8 @@
   "lead_max_days": 932,
   "lead_median_days": 3,
   "lead_n": 2718,
-  "lead_pct": 10.68,
-  "mirror_n": 22733,
+  "lead_pct": 10.67,
+  "mirror_n": 22762,
   "undated_n": 14,
   "unpublished_examples": [
    "CVE-2023-7122",
@@ -51,33 +52,44 @@
    "CVE-2024-12455",
    "CVE-2024-31884"
   ],
-  "unpublished_n": 93
+  "unpublished_n": 120
  },
  "feed": "redhat",
  "health": {},
- "ids": 25558,
- "ids_new": 321,
+ "ids": 25614,
+ "ids_new": 226,
  "live": {
   "already_merged": true,
   "cnas_new_effective": null,
   "cnas_new_effective_names": null,
   "effective_n": 263,
-  "fetched": "2026-09-06",
-  "generated_at": "2026-09-06T20:51:44+00:00",
-  "ids_short": 20141,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_short": 11288,
   "pinned": true,
-  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 11,288 rows colder than the live run",
   "rows_short": {
-   "csaf": 20141
+   "csaf": 11288
   },
-  "source_commit": "9a1bba54ceaf",
+  "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-07T01:00:59+00:00",
- "stability": null,
+ "scored_at": "2026-09-08T20:20:02+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 25614,
+  "min": 25558,
+  "swing_pct": 0.2,
+  "years": [
+   2023,
+   2024,
+   2025,
+   2026
+  ]
+ },
  "verdict": "detecting",
- "verdict_reason": "3 marginal CNA(s) and 2718 lead / 93 unpublished references",
- "wall_seconds": 19.6,
+ "verdict_reason": "3 marginal CNA(s) and 2718 lead / 120 unpublished references",
+ "wall_seconds": 17.8,
  "years": [
   2023,
   2024,

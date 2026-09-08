@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 247,
+  "effective_n": 261,
   "feeds": [
    "alas",
    "alpine",
@@ -15,18 +15,19 @@
    "redhat",
    "samsung",
    "ubuntu",
-   "ubuntu-osv"
+   "ubuntu-osv",
+   "zdi"
   ],
-  "scored_at": "2026-09-06T21:08:54+00:00"
+  "scored_at": "2026-09-08T18:58:56+00:00"
  },
- "bytes": 140839124,
+ "bytes": 156250347,
  "cnas_effective_alone": 59,
  "cnas_new_effective": 0,
  "cnas_new_effective_names": [],
  "cnas_reached": 86,
  "combine": "union",
  "disclosure": {
-  "dated_n": 17389,
+  "dated_n": 17530,
   "lead_examples": [
    "CVE-2023-41953",
    "CVE-2026-1220",
@@ -36,9 +37,9 @@
   ],
   "lead_max_days": 664,
   "lead_median_days": 10,
-  "lead_n": 7445,
-  "lead_pct": 42.81,
-  "mirror_n": 9944,
+  "lead_n": 7453,
+  "lead_pct": 42.52,
+  "mirror_n": 10077,
   "undated_n": 0,
   "unpublished_examples": [
    "CVE-2023-32002 - M",
@@ -47,33 +48,44 @@
    "CVE-2024-9370",
    "CVE-2026-11053"
   ],
-  "unpublished_n": 8
+  "unpublished_n": 972
  },
  "feed": "msrc",
  "health": {},
- "ids": 17397,
- "ids_new": 1562,
+ "ids": 18502,
+ "ids_new": 2020,
  "live": {
   "already_merged": true,
   "cnas_new_effective": null,
   "cnas_new_effective_names": null,
   "effective_n": 263,
-  "fetched": "2026-09-06",
-  "generated_at": "2026-09-06T20:51:44+00:00",
-  "ids_short": 20141,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_short": 11288,
   "pinned": true,
-  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 11,288 rows colder than the live run",
   "rows_short": {
-   "csaf": 20141
+   "csaf": 11288
   },
-  "source_commit": "9a1bba54ceaf",
+  "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-07T01:00:57+00:00",
- "stability": null,
+ "scored_at": "2026-09-08T20:20:00+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 18502,
+  "min": 17397,
+  "swing_pct": 6.0,
+  "years": [
+   2023,
+   2024,
+   2025,
+   2026
+  ]
+ },
  "verdict": "redundant",
  "verdict_reason": "no marginal CNA, but it references ids that were unpublished at the time, so it clears admissibility test 2 and STAYS IN THE NUMERATOR: redundant on coverage, not a publication mirror",
- "wall_seconds": 10.3,
+ "wall_seconds": 12.2,
  "years": [
   2023,
   2024,

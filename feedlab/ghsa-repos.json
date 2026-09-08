@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 245,
+  "effective_n": 259,
   "feeds": [
    "alas",
    "alpine",
@@ -15,11 +15,12 @@
    "redhat",
    "samsung",
    "ubuntu",
-   "ubuntu-osv"
+   "ubuntu-osv",
+   "zdi"
   ],
-  "scored_at": "2026-09-06T21:08:54+00:00"
+  "scored_at": "2026-09-08T18:58:56+00:00"
  },
- "bytes": 218405,
+ "bytes": 9742320,
  "cnas_effective_alone": 24,
  "cnas_new_effective": 2,
  "cnas_new_effective_names": [
@@ -29,7 +30,7 @@
  "cnas_reached": 57,
  "combine": "union",
  "disclosure": {
-  "dated_n": 11379,
+  "dated_n": 11387,
   "lead_examples": [
    "CVE-2025-68469",
    "CVE-2024-46508",
@@ -39,9 +40,9 @@
   ],
   "lead_max_days": 901,
   "lead_median_days": 6,
-  "lead_n": 6587,
+  "lead_n": 6592,
   "lead_pct": 57.89,
-  "mirror_n": 4792,
+  "mirror_n": 4795,
   "undated_n": 67,
   "unpublished_examples": [
    "CVE-2023-28641",
@@ -50,33 +51,44 @@
    "CVE-2023-6537",
    "CVE-2024-10039"
   ],
-  "unpublished_n": 1338
+  "unpublished_n": 1368
  },
  "feed": "ghsa-repos",
  "health": {},
- "ids": 12784,
- "ids_new": 6446,
+ "ids": 12822,
+ "ids_new": 6399,
  "live": {
   "already_merged": true,
   "cnas_new_effective": null,
   "cnas_new_effective_names": null,
   "effective_n": 263,
-  "fetched": "2026-09-06",
-  "generated_at": "2026-09-06T20:51:44+00:00",
-  "ids_short": 20141,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_short": 11288,
   "pinned": true,
-  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 11,288 rows colder than the live run",
   "rows_short": {
-   "csaf": 20141
+   "csaf": 11288
   },
-  "source_commit": "9a1bba54ceaf",
+  "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-07T01:00:56+00:00",
- "stability": null,
+ "scored_at": "2026-09-08T20:19:58+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 12822,
+  "min": 12784,
+  "swing_pct": 0.3,
+  "years": [
+   2023,
+   2024,
+   2025,
+   2026
+  ]
+ },
  "verdict": "detecting",
- "verdict_reason": "2 marginal CNA(s) and 6587 lead / 1338 unpublished references",
- "wall_seconds": 121.7,
+ "verdict_reason": "2 marginal CNA(s) and 6592 lead / 1368 unpublished references",
+ "wall_seconds": 145.4,
  "years": [
   2023,
   2024,

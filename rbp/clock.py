@@ -273,6 +273,17 @@ _ORIGIN_KIND = {
     # adapter reads the English yearly RDFs, which carry the coordinated
     # advisories only, and never `jvndb.rdf`, which republishes NVD.
     "jvn": "advisory",
+    # A ZDI advisory has its own ZDI-<yy>-<n> identifier, its own page and its own
+    # `Published` date, which is the shape 4.5.1.4 and 4.5.1.6 mean by Publicly
+    # Disclosing. It is the disclosure event itself rather than a note that
+    # someone is aware of an id: ZDI publishes when its own disclosure timeline
+    # expires, which is why the feed detects reserved ids at all.
+    #
+    # NOT in OWNER_FEEDS below, on the reasoning that excluded `ghsa`: ZDI is
+    # itself a CNA and owns some of the ids it publishes, but the advisory carries
+    # no assigner, so its presence cannot separate "zdi assigned and disclosed
+    # this" from "ZDI is publishing about another CNA's id".
+    "zdi": "advisory",
     # A repository advisory is a published advisory with its own identifier and
     # release date, on the vendor's own security tab. Absence from this map is a
     # deliberate fail-safe that reads an unmapped adapter as a tracker, and

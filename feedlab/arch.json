@@ -1,6 +1,6 @@
 {
  "baseline": {
-  "effective_n": 247,
+  "effective_n": 261,
   "feeds": [
    "alas",
    "alpine",
@@ -15,11 +15,12 @@
    "redhat",
    "samsung",
    "ubuntu",
-   "ubuntu-osv"
+   "ubuntu-osv",
+   "zdi"
   ],
-  "scored_at": "2026-09-06T21:08:54+00:00"
+  "scored_at": "2026-09-08T18:58:56+00:00"
  },
- "bytes": 897033,
+ "bytes": 898835,
  "cnas_effective_alone": 10,
  "cnas_new_effective": 0,
  "cnas_new_effective_names": [],
@@ -46,22 +47,33 @@
   "cnas_new_effective": null,
   "cnas_new_effective_names": null,
   "effective_n": 263,
-  "fetched": "2026-09-06",
-  "generated_at": "2026-09-06T20:51:44+00:00",
-  "ids_short": 20141,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_short": 11288,
   "pinned": true,
-  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 20,141 rows colder than the live run",
+  "reason": "already in the live profile, so it cannot be marginal to a set that contains it; the figure above is the leave-one-out one, against this machine's baseline, and is an upper bound while that baseline is 11,288 rows colder than the live run",
   "rows_short": {
-   "csaf": 20141
+   "csaf": 11288
   },
-  "source_commit": "9a1bba54ceaf",
+  "source_commit": "ff1bdc8c4ce6",
   "upper_bound": null
  },
- "scored_at": "2026-09-07T01:00:53+00:00",
- "stability": null,
+ "scored_at": "2026-09-08T20:19:55+00:00",
+ "stability": {
+  "fetches": 2,
+  "max": 95,
+  "min": 95,
+  "swing_pct": 0.0,
+  "years": [
+   2023,
+   2024,
+   2025,
+   2026
+  ]
+ },
  "verdict": "unmeasurable",
  "verdict_reason": "every one of its 95 references is undated and none is currently unpublished, so admissibility test 2 could not be run. Not a mirror; not measured. It must not be excluded from the coverage numerator on this evidence",
- "wall_seconds": 1.6,
+ "wall_seconds": 1.5,
  "years": [
   2023,
   2024,

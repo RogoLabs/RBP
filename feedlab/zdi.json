@@ -1,0 +1,94 @@
+{
+ "baseline": {
+  "effective_n": 257,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "csaf",
+   "debian",
+   "ghsa",
+   "ghsa-repos",
+   "jvn",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu",
+   "ubuntu-osv"
+  ],
+  "scored_at": "2026-09-08T18:58:56+00:00"
+ },
+ "bytes": 17151946,
+ "cnas_effective_alone": 53,
+ "cnas_new_effective": 4,
+ "cnas_new_effective_names": [
+  "PaperCut",
+  "WDC_PSIRT",
+  "blackberry",
+  "bosch"
+ ],
+ "cnas_reached": 78,
+ "combine": "union",
+ "disclosure": {
+  "dated_n": 4250,
+  "lead_examples": [
+   "CVE-2023-32249",
+   "CVE-2023-32246",
+   "CVE-2023-32255",
+   "CVE-2023-32253",
+   "CVE-2023-32256"
+  ],
+  "lead_max_days": 822,
+  "lead_median_days": 33,
+  "lead_n": 2356,
+  "lead_pct": 55.44,
+  "mirror_n": 1894,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2023-29377",
+   "CVE-2024-9523",
+   "CVE-2024-9525",
+   "CVE-2025-14400",
+   "CVE-2025-15660"
+  ],
+  "unpublished_n": 38
+ },
+ "feed": "zdi",
+ "health": {},
+ "ids": 4288,
+ "ids_new": 2445,
+ "live": {
+  "already_merged": false,
+  "cnas_new_effective": 3,
+  "cnas_new_effective_names": [
+   "PaperCut",
+   "WDC_PSIRT",
+   "bosch"
+  ],
+  "effective_n": 263,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T18:05:51+00:00",
+  "ids_not_in_baseline": 2445,
+  "ids_short": 11288,
+  "pinned": true,
+  "reason": "an upper bound: this baseline is 11,288 rows colder than the live run at csaf",
+  "rows_short": {
+   "csaf": 11288
+  },
+  "source_commit": "ff1bdc8c4ce6",
+  "upper_bound": true
+ },
+ "scored_at": "2026-09-08T20:20:05+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "3 marginal CNA(s) and 2356 lead / 38 unpublished references",
+ "wall_seconds": 8.7,
+ "years": [
+  2023,
+  2024,
+  2025,
+  2026
+ ]
+}

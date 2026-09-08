@@ -1,5 +1,123 @@
 {
  "candidates": {
+  "certcc": {
+   "cost": {
+    "notes": 162,
+    "requests_cold": 210,
+    "wall_seconds_cold": 13.1,
+    "warm": "no conditional route measured; the 48 month calls are cheap, the per-note /vuls/ calls are not incremental as probed. Each note also carries a `cveids` field, which may remove them entirely; NOT checked."
+   },
+   "coverage": {
+    "absent_from_corpus": 16,
+    "cnas_new_effective": 0,
+    "cnas_reached": 26,
+    "feed": "certcc",
+    "in_window_ids": 299,
+    "new_effective": [],
+    "reserved": 0,
+    "top_cnas": [
+     [
+      "certcc",
+      205
+     ],
+     [
+      "mitre",
+      21
+     ],
+     [
+      "TianoCore",
+      9
+     ],
+     [
+      "GitHub_M",
+      9
+     ],
+     [
+      "redhat",
+      8
+     ],
+     [
+      "apache",
+      4
+     ],
+     [
+      "Linux",
+      3
+     ],
+     [
+      "AMI",
+      2
+     ],
+     [
+      "ibm",
+      2
+     ],
+     [
+      "twcert",
+      2
+     ],
+     [
+      "siemens",
+      2
+     ],
+     [
+      "F5",
+      2
+     ]
+    ]
+   },
+   "disclosure": {
+    "dated_n": 283,
+    "lead_examples": [
+     "CVE-2023-7005",
+     "CVE-2024-2201",
+     "CVE-2025-11919",
+     "CVE-2026-0685",
+     "CVE-2026-0828"
+    ],
+    "lead_max_days": 287,
+    "lead_median_days": 8,
+    "lead_n": 63,
+    "lead_pct": 22.26,
+    "mirror_n": 220,
+    "undated_n": 0,
+    "unpublished_examples": [
+     "CVE-2024-24481",
+     "CVE-2025-13207",
+     "CVE-2025-13328",
+     "CVE-2025-13834",
+     "CVE-2025-6243"
+    ],
+    "unpublished_n": 16
+   },
+   "live_reservation_sample": {
+    "PUBLISHED": 3,
+    "RESERVED": 13,
+    "sampled": 16
+   },
+   "sole_source_examples": [
+    "CVE-2024-24481",
+    "CVE-2025-13207",
+    "CVE-2025-13328",
+    "CVE-2025-13834",
+    "CVE-2025-6243",
+    "CVE-2025-65586",
+    "CVE-2025-65587",
+    "CVE-2025-65606",
+    "CVE-2025-9037",
+    "CVE-2025-9040",
+    "CVE-2025-9125",
+    "CVE-2026-10797",
+    "CVE-2026-6485"
+   ],
+   "sole_source_rows": 13,
+   "traps": [
+    "The `{year}/` endpoint 404s with a 200-shaped JSON error body. Only `{year}/{month}/` answers.",
+    "A vulnerability's `cve` field is the BARE number (`2026-33197`); `uid` carries the prefixed id. Reading `cve` and matching the CVE shape finds ZERO and reports a coordinator feed with no CVEs in it."
+   ],
+   "verdict": "redundant",
+   "why": "0 marginal CNA(s), so it fails admissibility test 1, and 13 reserved ids no merged feed references, so it clears test 2. `redundant` is mergeable and STAYS IN THE NUMERATOR."
+  },
   "csaf:ncsc-nl": {
    "cost": {
     "advisories": 1030,
@@ -408,6 +526,7 @@
  },
  "probe_note": "Every route tried on 2026-09-05, kept whole including the failures, because the expensive mistake this document keeps making is re-probing a host it has already established is unreadable. `kind` is sniffed from the first bytes: a 200 with kind=html at a provider-metadata path is an error page, not a feed.",
  "probed_at": "2026-09-05T21:26:18+00:00",
+ "probed_at_certcc": "2026-09-08T18:51:58+00:00",
  "probes": [
   {
    "bytes": 19125,
@@ -1857,5 +1976,5 @@
    "url": "https://jvndb.jvn.jp/myjvn?method=getVulnOverviewList&feed=hnd&rangeDatePublic=n&rangeDateFirstPublished=n&datePublicStartY=2026&maxCountItem=50"
   }
  ],
- "what_this_is": "CANDIDATE scorecards. None of these feeds is merged and none has an adapter in rbp/feeds.py except the two CSAF ones, which need a CSAF_PROVIDERS line and no code. Written under an underscore so nothing globbing feedlab/*.json for a merged feed's verdict picks them up."
+ "what_this_is": "CANDIDATE scorecards, written under an underscore so nothing globbing feedlab/*.json for a MERGED feed's verdict picks them up. Merged since these were written, and kept here as the record of how they were scored before the merge: `jvn` (adapter, 2026-09-06), `csaf:ncsc-nl` and `csaf:trendmicro` (one CSAF_PROVIDERS line each, 2026-09-06). Still candidates and NOT merged: `certcc` (verdict redundant, scored 2026-09-08, the obvious next one) and `euvd` (refused as a publication mirror, 0 of 60 sampled ids reserved). A merged feed's own card lives at feedlab/<name>.json."
 }

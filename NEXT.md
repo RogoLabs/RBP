@@ -62,6 +62,22 @@ drains, not what the site can see. SUSE, Red Hat's CSAF endpoint and CERT-Bund
 each hold more than one budget reads, so their counts climb over several runs
 rather than jumping. That is the drain working, and it needs nothing.
 
+**Sixteen feeds, and one of them is there for a different reason.** `zdi` was
+merged 2026-09-08 as the first source admitted on DETECTION rather than on
+coverage, because coverage stopped being the binding constraint: the gate stands
+at 49 of 50 and the one miss (`huawei`) publishes a CSAF catalogue no
+unauthenticated client can read. What the site is short of is rows, and `zdi`
+supplies 24 reserved ids that no other merged feed references, off four requests.
+55% of its dated references lead publication at a 33-day median, against `jvn`'s
+33.6% at 6 days and `csaf:ncsc-nl`'s 4.07%. The reason is the business model, not
+the format, and FEEDS.md's "MEASURED AND MERGED 2026-09-08" states the general
+rule it produced: ask what makes a source publish. EUVD publishes because a record
+was published, so it can never lead; ZDI publishes because a clock ran out.
+
+It is also the only feed whose evidence is an HTML table on someone else's
+marketing site. That risk is named, guarded in two directions and tested, and it
+is the thing to look at first if `zdi` ever reports a shape failure.
+
 **Adapters fetch on four threads; everything that records runs on one.**
 `GATHER_WORKERS = 4` since 2026-09-07, and the wall clock is now the longest
 single feed, so the number to tune it from is the `seconds` each feed records in
@@ -75,16 +91,52 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 ## What is open
 
-Nothing, as of 2026-09-08. The four items that were here that morning went four
-ways the same day: one fixed (#43) and then measured, and the measurement's own
-fix built in #45; two decided into "Settled" below; one measured into FEEDS.md
+**1. Re-pin the live run once `zdi` has published, and delete its pending
+declaration.** Opened 2026-09-08 with the `zdi` merge, and it is bookkeeping with
+a deadline rather than a defect.
+
+`feedlab/_live.json` is pinned from the site's own `summary.json`, so it can only
+name feeds the site has already run, and merging to main is what makes the site
+run a new one. A commit that adds a feed therefore lands with the profile one
+name ahead of the pin, and `test_the_pinned_live_run_is_the_profile_the_pipeline_runs`
+asserted set equality. `zdi` is the first feed merged since that test was written
+in #33, so it is the first to hit it.
+
+The fix in the diff is a declaration, not a loosened assertion:
+`feedlab.PENDING_FIRST_RUN` names the feeds awaiting a first live run, the pin
+test allows exactly that difference in exactly that direction, and the reverse
+direction (a feed in the pin that the repo no longer runs) stays an equality
+because that one flatters every candidate.
+
+**What to do, after the deploy that first runs `zdi`:**
+
+```
+python -m rbp.feedlab pin-live      # one fetch of the site's own summary
+```
+
+then remove `"zdi"` from `feedlab.PENDING_FIRST_RUN`. Until that happens
+`test_no_feed_is_declared_pending_once_the_live_run_has_it` fails, deliberately:
+a declaration that outlives its reason would hide the drift the pin test exists to
+catch. `test_the_pinned_live_run_is_not_stale` already bounds the wait to a
+fortnight. `deploy.yml` deselects `harness_artefact`, so none of this can stop a
+publication.
+
+Re-scoring is optional and worth doing once: every committed card's marginal
+figure is an upper bound by `live.rows_short`, and `zdi`'s is scored against a pin
+that does not contain it.
+
+---
+
+Nothing else, as of 2026-09-08. The four items that were here that morning went
+four ways the same day: one fixed (#43) and then measured, and the measurement's
+own fix built in #45; two decided into "Settled" below; one measured into FEEDS.md
 ("MEASURED 2026-09-08", under the Canonical section).
 
-That is not a claim that the site is finished. It is a claim that nothing known
-is waiting. The things that WILL come are the ones this file cannot list yet: a
-feed shrinking for a reason nobody has seen, a guard firing on a shape nobody
-measured. When one arrives, it goes here with its measurement and its fix
-specified, the way item 1 did, and it leaves here when it ships.
+That is not a claim that the site is finished. It is a claim that nothing else
+known is waiting. The things that WILL come are the ones this file cannot list
+yet: a feed shrinking for a reason nobody has seen, a guard firing on a shape
+nobody measured. When one arrives, it goes here with its measurement and its fix
+specified, and it leaves here when it ships.
 
 ---
 
