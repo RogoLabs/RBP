@@ -77,7 +77,7 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 Nothing, as of 2026-09-08. The four items that were here that morning went four
 ways the same day: one fixed (#43) and then measured, and the measurement's own
-fix built in #44; two decided into "Settled" below; one measured into FEEDS.md
+fix built in #45; two decided into "Settled" below; one measured into FEEDS.md
 ("MEASURED 2026-09-08", under the Canonical section).
 
 That is not a claim that the site is finished. It is a claim that nothing known
