@@ -198,6 +198,21 @@ ways the same day: one fixed (#43) and then measured, and the measurement's
 own fix built in #45; two decided into "Settled" below; one measured into FEEDS.md
 ("MEASURED 2026-09-08", under the Canonical section).
 
+**3. `oss-security` is a probed candidate and cannot be scored until item 2 is
+fixed.** Opened 2026-09-09. Six month-index requests over 2026-04 to 2026-09
+returned 1,105 distinct CVE ids from subject lines alone, 16 of them RESERVED at
+the oracle and **7 of those absent from all 2,359 rows the live run publishes**,
+at 27.0% disclosure lead. That is `zdi`-class detection for the cheapest fetch in
+the project, and Full Disclosure probed alongside it adds nothing `oss-security`
+does not already carry. Full tables in FEEDS.md, "PROBED 2026-09-09".
+
+**It is a probe and not a scorecard, and the gap is item 2.** Admissibility test 1
+is unmeasured because marginal CNA yield needs `feedlab score`, and `scorecard`
+reads the same cross-branch `load_baseline` that item 2 is about. Scoring it first
+would measure a candidate against a feed set nobody runs, in the permissive
+direction. **So item 2 is not housekeeping any more; it is the thing standing in
+front of the next feed.**
+
 That is not a claim that the site is finished. The things that come are the ones
 this file cannot list yet: a feed shrinking for a reason nobody has seen, a guard
 firing on a shape nobody measured, a harness reading a file no test looks at.
@@ -250,6 +265,21 @@ costs a session.
   with no incremental route, for rows that only corroborate. Written down
   because its CNA count in FEEDS.md still reads as the best row there, and the
   next reader would re-derive the argument from it.
+- **Patchstack and WPScan stay out, and the WordPress ecosystem is closed.**
+  Decided 2026-09-09 on 59 sampled ids across both, 59 PUBLISHED at the oracle
+  and 0 RESERVED. Patchstack's maximum disclosure lead is +1 day at a UTC date
+  boundary against `zdi`'s 33-day median, so it fails admissibility test 2; it
+  would clear test 1 for four unsighted CNAs, which makes it `corroborating`,
+  excluded from the numerator, worth zero rows. WPScan trails record publication
+  by a median of 186 days and carries no WPScan-assigned id in its newest 28, so
+  it would not credit the CNA it was listed to buy. **The reason is the
+  ecosystem, not the two adapters:** Wordfence, Patchstack and WPScan are all
+  CNAs competing on publication speed and they publish the record at or before
+  the advisory, so there is no reserved window there to see. Written down
+  because Patchstack is the largest missing CNA on the roster and section 5 says
+  to sequence the tail by volume, which puts a structurally rowless source
+  first. Routes, caps, the 403 throttle and the full tables in FEEDS.md,
+  "PROBED AND REFUSED 2026-09-09".
 - **Prefer the DELETE list when in doubt.** Every review this project has run
   came back weighted towards removal; round 9's own balance was 21 removals
   against 7 additions. The documented failure mode is accreting guards and
