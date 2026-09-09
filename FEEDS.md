@@ -1879,10 +1879,12 @@ browser to get past one.
 >
 > **What this probe does NOT establish, stated so the next reader does not treat it as a
 > scorecard.** Admissibility test 1 is unmeasured: marginal CNA yield needs the roster and
-> the baseline, which is `python -m rbp.feedlab score`, and that harness has the open defect
-> in NEXT.md item 1 (a working baseline shared across branches, read at `load_baseline` by
-> `scorecard` as well as by `audit`). **Fix that before scoring this, or the number it
-> returns is measured against a feed set nobody runs.**
+> the baseline, which is `python -m rbp.feedlab score`. That read was the open defect this
+> probe ran into, a working baseline shared across every branch on the machine, and it is
+> now guarded: `score`, `audit` and a rescore refuse a baseline whose feed set is not the
+> running profile. **So the number is scoreable, and it has not been scored.** Seven
+> sole-source ids say nothing about marginal CNA yield, and a candidate clearing test 2
+> while failing test 1 is `redundant`, which is mergeable and stays in the numerator.
 >
 > One design note the probe already settles. An `oss-security` post is a publication event
 > with a date, but the poster is not reliably the owning CNA, and a forwarded advisory reads

@@ -160,65 +160,59 @@ block explains why.
 
 ---
 
-**2. `data/feedlab/` is not branch-scoped, and the test that would catch that
-reads a different file.** Found 2026-09-08 doing item 1's re-pin.
+**2. `oss-security` is a probed candidate with no adapter and no scorecard.**
+Opened 2026-09-09. Six month-index requests over 2026-04 to 2026-09 returned
+1,105 distinct CVE ids from subject lines alone, 16 of them RESERVED at the
+oracle and **7 of those absent from all 2,359 rows the live run publishes**, at
+27.0% disclosure lead, median 1 day and max 127. That is `zdi`-class detection
+for the cheapest fetch in the project: 48 requests and about 2.5MB for a
+four-year window, one request a month after that. Full Disclosure probed
+alongside it is a body crawl that adds nothing `oss-security` does not already
+carry. Full tables in FEEDS.md, "PROBED 2026-09-09".
 
-`audit` and `baseline --rescore` read the working state at
-`data/feedlab/_baseline.json`, which is gitignored and therefore shared by every
-branch and worktree on the machine.
-`test_the_recorded_baseline_describes_the_profile_that_actually_runs` reads the
-COMMITTED summary at `feedlab/_baseline.json` instead. So the two can describe
-different feed sets, and nothing compares them.
+**What it needs, in order.** An adapter reading
+`www.openwall.com/lists/oss-security/YYYY/MM/`, then `feedlab score`, then the
+scorecard in the merge diff. Admissibility test 1 is entirely unmeasured: the
+seven sole-source ids say nothing about marginal CNA yield, and a candidate that
+clears test 2 and fails test 1 is `redundant`, which is mergeable and stays in
+the numerator, so the verdict is not in doubt in the way the numbers are.
 
-**Measured, not supposed.** A re-pin run on a branch off `main` while the working
-state still held a seventeenth feed produced sixteen cards whose leave-one-out
-figures were scored against a set containing a feed that branch did not run. The
-residue reached the committed summary as `extended`, `extended_at` and a `health`
-key naming a feed absent from that branch's `feeds.ADAPTERS`. The full suite
-passed.
-
-The direction that time was the CONSERVATIVE one, and that is not a defence. A
-baseline that is too large understates marginality, so it can refuse a good feed
-and cannot admit a mirror. But #33's finding was that a marginal figure means
-nothing except against the set the pipeline actually runs, and a set nobody runs
-is that same defect whichever way it leans. The permissive direction is one
-`git switch` away: the same mechanism serves a STALE, smaller working state to a
-branch that has added a feed, which is #33's original error exactly.
-
-**The fix, specified and not built:** `rescore_baseline` and `audit` should refuse
-a working state whose `feeds` differ from `feeds.ADAPTERS`, carrying the message
-the committed test already has. It belongs at the point of load rather than in a
-test, because the test cannot see the file that decides the numbers.
+One design question is already settled by the probe and should not be re-opened
+at adapter time: the slug stays OUT of `clock._ORIGIN_KIND`. A post is a dated
+publication event, but the poster is not reliably the owning CNA and a forwarded
+advisory reads identically to a first-party one, so the map's documented
+fail-safe should read it as a tracker and it must never start a 72-hour MUST
+clock.
 
 ---
 
-Two items, as of 2026-09-08, and the second is the shape this file predicted
-rather than one it listed. The four items that were here that morning went four
-ways the same day: one fixed (#43) and then measured, and the measurement's
-own fix built in #45; two decided into "Settled" below; one measured into FEEDS.md
-("MEASURED 2026-09-08", under the Canonical section).
+Two items, as of 2026-09-09, and the second is not the one that stood here
+yesterday. `data/feedlab/` not being branch-scoped is CLOSED, and its fix is in
+this commit rather than in a later one because the item that took its number
+cannot be scored until it lands: `scorecard` reads the same shared working state
+that `audit` and `baseline --rescore` do. Item 1, the `certcc` re-pin, is closed
+on `modernize-source-filter` and that branch is unmerged, so it stands here until
+it lands.
 
-**3. `oss-security` is a probed candidate and cannot be scored until item 2 is
-fixed.** Opened 2026-09-09. Six month-index requests over 2026-04 to 2026-09
-returned 1,105 distinct CVE ids from subject lines alone, 16 of them RESERVED at
-the oracle and **7 of those absent from all 2,359 rows the live run publishes**,
-at 27.0% disclosure lead. That is `zdi`-class detection for the cheapest fetch in
-the project, and Full Disclosure probed alongside it adds nothing `oss-security`
-does not already carry. Full tables in FEEDS.md, "PROBED 2026-09-09".
-
-**It is a probe and not a scorecard, and the gap is item 2.** Admissibility test 1
-is unmeasured because marginal CNA yield needs `feedlab score`, and `scorecard`
-reads the same cross-branch `load_baseline` that item 2 is about. Scoring it first
-would measure a candidate against a feed set nobody runs, in the permissive
-direction. **So item 2 is not housekeeping any more; it is the thing standing in
-front of the next feed.**
+**How it was closed, since the specification in this file was half right.** It
+said `rescore_baseline` and `audit` should refuse a working state whose `feeds`
+differ from `feeds.ADAPTERS`. Two corrections came out of building it. The set
+that matters is the profile filtered through `ADAPTERS`, which is what `cli.run`
+resolves and what the committed test already compared against, not `ADAPTERS`
+alone; and a guard on every load would have made `baseline --add` unreachable,
+which is the only cheap repair for the very mismatch being refused. So the reads
+that produce a NUMBER require the profile and the read that REPAIRS the file does
+not, and `main` checks the spliced result before writing it, which is where the
+residue reached the committed summary the one time this went wrong. The test and
+the guard now derive the profile from one function. Five mutations of the guard
+and two of the write rule were each confirmed to fail a test.
 
 That is not a claim that the site is finished. The things that come are the ones
 this file cannot list yet: a feed shrinking for a reason nobody has seen, a guard
 firing on a shape nobody measured, a harness reading a file no test looks at.
-Item 2 is the third of those and it arrived the way this paragraph said it would.
-When one arrives, it goes here with its measurement and its fix specified, and it
-leaves here when it ships.
+The item that closed today was the third of those and it arrived the way this
+paragraph said it would. When one arrives, it goes here with its measurement and
+its fix specified, and it leaves here when it ships.
 
 ---
 
