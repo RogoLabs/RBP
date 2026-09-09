@@ -1877,14 +1877,14 @@ browser to get past one.
 > that IPs "which make hundreds of requests in a short period of time will be banned",
 > which is the exact shape of the only crawl that would make this feed work.
 >
-> **What this probe does NOT establish, stated so the next reader does not treat it as a
-> scorecard.** Admissibility test 1 is unmeasured: marginal CNA yield needs the roster and
-> the baseline, which is `python -m rbp.feedlab score`. That read was the open defect this
-> probe ran into, a working baseline shared across every branch on the machine, and it is
-> now guarded: `score`, `audit` and a rescore refuse a baseline whose feed set is not the
-> running profile. **So the number is scoreable, and it has not been scored.** Seven
-> sole-source ids say nothing about marginal CNA yield, and a candidate clearing test 2
-> while failing test 1 is `redundant`, which is mergeable and stays in the numerator.
+> **What this probe does not establish is admissibility test 1, and the block below scores
+> it.** Marginal CNA yield needs the roster and the baseline, which is `python -m rbp.feedlab
+> score`. That read was the open defect this probe ran into, a working baseline shared across
+> every branch on the machine, and it is now guarded: `score`, `audit` and a rescore refuse a
+> baseline whose feed set is not the running profile. Seven sole-source ids in six months of
+> subjects say nothing about marginal CNA yield on their own, and a candidate clearing test 2
+> while failing test 1 is `redundant`, which is mergeable and stays in the numerator. Scored
+> the same day, and that is what it turned out to be.
 >
 > One design note the probe already settles. An `oss-security` post is a publication event
 > with a date, but the poster is not reliably the owning CNA, and a forwarded advisory reads
@@ -1892,6 +1892,66 @@ browser to get past one.
 > map's documented fail-safe reads it as a tracker and it can never start a 72-hour MUST
 > clock. That is the same treatment `debian` and `alpine` get, and for a better reason than
 > theirs.
+
+> ### SCORED 2026-09-09, on the four-year window. `redundant`, which is `certcc`'s verdict,
+> ### and 9 sole-source rows against `certcc`'s 13.
+>
+> The probe above read six months of subject lines by hand. This is the harness, over the
+> window the pipeline gathers, against the recorded baseline and the pinned live run.
+> Card in `feedlab/oss-security.json`.
+>
+> | | |
+> |---|---:|
+> | in-window ids | 2,471 |
+> | not already in the baseline | 363 |
+> | roster CNAs reached | 61 |
+> | **marginal CNAs (test 1)** | **0** |
+> | dated references leading publication | **807 of 2,430 (33.21%)**, median 1d, max 408d |
+> | unpublished at the corpus (test 2) | 40 |
+> | **RESERVED at the live oracle** | **19** |
+> | **reserved and in no merged feed** | **9** |
+> | cost | 45 requests, 1.2 MB, 46.1s |
+> | verdict | **`redundant`** |
+>
+> **`redundant` is mergeable and stays in the numerator.** It is the verdict that fails
+> test 1 and clears test 2, which is the opposite shape from `corroborating` and the one
+> `certcc` was merged on eight days ago. So the question this card asks is not whether the
+> feed is admissible. It is whether nine rows are worth 45 requests.
+>
+> **The zero is firm rather than provisional, and that is worth one line because the card
+> hedges it.** Every marginal figure here is printed as an upper bound, because this machine's
+> baseline is 11,613 rows colder than the live run at `alas`, `csaf`, `debian`, `ghsa`,
+> `ghsa-repos` and `osv`, and a colder baseline flatters a candidate. An upper bound of 0 is
+> 0. There is no reading of the depth shortfall that gives this feed a marginal CNA.
+>
+> **The lead figure went UP against the hand probe, and the reason is the window.** The probe
+> measured 27.0% over six months at a 1-day median and a 127-day maximum; the full window is
+> 33.21% at the same median and a 408-day maximum. Six months of a mailing list is mostly
+> distro traffic posting the day the record publishes, and the long leads are rare events that
+> a wider window catches more of. Against the committed cards: `zdi` 55.31% at 33 days,
+> **`oss-security` 33.21% at 1 day**, `jvn` 33.6% at 6 days, `certcc` 22.26% at 8 days.
+>
+> **Two numbers on this card mean different things and one of them is the stale index.**
+> `unpublished_n` is 40 and the live oracle says 19. `disclosure_lead` counts an id as
+> unpublished when it is RESERVED in the corpus **or absent from it**, and the local index
+> predates the run, so the 21 difference is mostly ids published since the index was built.
+> The docstring already says an absent id "can also mean a stale index"; this is that,
+> measured. **The number to quote is 19**, and the number that decides anything is 9.
+>
+> **The nine, over four years.** Seven are the probe's, unchanged. Two are older than the
+> probe's window and are the same shape: `CVE-2024-35347`, Xen Security Notice 2, posted
+> 2025-03-05, and `CVE-2025-14269`, a Kubernetes Headlamp advisory posted 2025-12-17. Both
+> have been publicly referenced and unpublished for months, which is the row this site exists
+> to publish, and neither appears in any of the seventeen merged feeds.
+>
+> **NOT MERGED IN THIS COMMIT, and the adapter is deliberately in `feeds.ADAPTERS` and not in
+> `cli.PROFILES["weekly"]`.** `feedlab.fetch` refuses to score a feed that is not an adapter,
+> on the rule that being scoreable and being runnable must be the same condition, so a
+> candidate has to be wired in before it can have a card. The profile is what the cron runs
+> and what reaches the site. Merging is one line in `_WEEKLY`, and
+> `test_it_is_an_adapter_and_deliberately_not_in_the_profile` fails the moment it is added,
+> which is the intended cost: the diff that merges this feed is the diff that inverts that
+> test.
 
 Tier 2 lands somewhere around **35 to 42% of roster, 51 to 61% of reachable**, and the
 range is that wide because six of eight rows are estimates.

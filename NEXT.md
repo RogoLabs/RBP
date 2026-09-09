@@ -160,29 +160,42 @@ block explains why.
 
 ---
 
-**2. `oss-security` is a probed candidate with no adapter and no scorecard.**
-Opened 2026-09-09. Six month-index requests over 2026-04 to 2026-09 returned
-1,105 distinct CVE ids from subject lines alone, 16 of them RESERVED at the
-oracle and **7 of those absent from all 2,359 rows the live run publishes**, at
-27.0% disclosure lead, median 1 day and max 127. That is `zdi`-class detection
-for the cheapest fetch in the project: 48 requests and about 2.5MB for a
-four-year window, one request a month after that. Full Disclosure probed
-alongside it is a body crawl that adds nothing `oss-security` does not already
-carry. Full tables in FEEDS.md, "PROBED 2026-09-09".
+**2. `oss-security` is scored, wired in, and not merged. The merge is a
+judgement, not a measurement.** Opened 2026-09-09, and the measuring half is
+closed the same day: adapter in `feeds.ADAPTERS`, card in
+`feedlab/oss-security.json`, tests in `tests/test_oss_security.py`.
 
-**What it needs, in order.** An adapter reading
-`www.openwall.com/lists/oss-security/YYYY/MM/`, then `feedlab score`, then the
-scorecard in the merge diff. Admissibility test 1 is entirely unmeasured: the
-seven sole-source ids say nothing about marginal CNA yield, and a candidate that
-clears test 2 and fails test 1 is `redundant`, which is mergeable and stays in
-the numerator, so the verdict is not in doubt in the way the numbers are.
+| the four-year window | |
+|---|---:|
+| in-window ids | 2,471 |
+| marginal CNAs (test 1) | **0**, and firm: an upper bound of 0 is 0 |
+| lead (test 2) | **807 of 2,430 dated (33.21%)**, median 1d, max 408d |
+| RESERVED at the live oracle | 19 |
+| **reserved and in no merged feed** | **9** |
+| cost | 45 requests, 1.2 MB, 46.1s |
+| verdict | **`redundant`**, mergeable, stays in the numerator |
 
-One design question is already settled by the probe and should not be re-opened
-at adapter time: the slug stays OUT of `clock._ORIGIN_KIND`. A post is a dated
-publication event, but the poster is not reliably the owning CNA and a forwarded
-advisory reads identically to a first-party one, so the map's documented
-fail-safe should read it as a tracker and it must never start a 72-hour MUST
-clock.
+**What is left is one line in `_WEEKLY` and the reason to write it.** `redundant`
+is `certcc`'s verdict from eight days ago, so admissibility is not the question.
+The question is whether nine rows are worth 45 requests a run, and the comparable
+trades are `certcc` at 13 sole-source rows for 210 requests and `zdi` at 24 for
+four. On rows-per-request this is the best of the three; on rows it is the
+smallest. **That is a call about what the site is for, and it is yours.**
+
+The diff that merges it adds `oss-security` to `_WEEKLY` and inverts
+`test_it_is_an_adapter_and_deliberately_not_in_the_profile`, which fails the
+moment the feed enters the profile. That is the intended cost rather than an
+obstacle: it makes merging a deliberate edit to a test that says why.
+
+Two things already decided by the card and not to be re-opened at merge time.
+The slug is mapped to `tracker` in `clock._ORIGIN_KIND`, explicitly rather than
+by omission, because the index cannot say whether the poster is the owning CNA
+and a forwarded advisory reads exactly like a first-party one; calling it an
+advisory would start a 72-hour MUST clock on rows where the CNA may not have
+spoken. And the adapter reads SUBJECT LINES only. A body read is one request per
+message against one per month, about 300x the cost, so it is a different feed
+with a different trade and the floor is stated in the adapter rather than
+implied.
 
 ---
 

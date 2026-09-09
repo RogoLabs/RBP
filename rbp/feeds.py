@@ -4133,13 +4133,113 @@ def feed_certcc(years):
     return out
 
 
+# oss-security's archive is a month index per URL, and the subject lines carry
+# the CVE ids. One request a month, back to 2008/02.
+_OSS_SEC_MONTH = "https://www.openwall.com/lists/oss-security/{year}/{month:02d}/"
+# `href="DD/N"` is a message; `href="DD/"` is a day. The trailing `\d+` is what
+# separates them, and dropping it would count every day link as a message.
+_OSS_SEC_MSG = re.compile(r'href="(\d\d)/(\d+)"[^>]*>(.*?)</a>', re.S)
+_OSS_SEC_TAG = re.compile(r"<[^>]+>")
+
+
+def feed_oss_security(years, months_cap=60, today=None):
+    """The oss-security mailing list, read as one index page per month.
+
+    WHAT MAKES IT PUBLISH is a poster deciding to post, which is the `zdi` shape
+    and not the `euvd` one: nothing in it waits for a CVE Record. In practice it
+    is where distro embargoes lift and where vendors post their own numbered
+    advisories, so a reserved id turns up in a subject line before the record
+    exists.
+
+    Probed 2026-09-09 over 2026-04-01 to 2026-09-09, subject lines only:
+
+        requests                                          6
+        messages indexed                              1,838
+        distinct CVE ids IN SUBJECTS                  1,105
+        RESERVED at the live oracle                      16
+        RESERVED and in no merged feed                    7
+        dated references leading publication  293 (27.0%), median 1d, max 127d
+
+    The seven were OpenStack OSSA-2026-038, NethServer (two ids), Xen XSA-512 and
+    XSA-513 (three), and Apache FreeMarker: numbered vendor advisories, not
+    chatter. Full tables in FEEDS.md, "PROBED 2026-09-09".
+
+    SUBJECTS ONLY, AND THAT IS A FLOOR STATED IN THE CODE. A CVE id that appears
+    only in a message body is not counted here. Bodies are one request per
+    message, about 300 a month against one for the index, so reading them is a
+    different feed with a different cost and is not what this is. Every count
+    this adapter produces is therefore low rather than wrong, which is the same
+    direction as every other number on this site.
+
+    The cost is the reason to read it at all: a four-year window is about 45
+    requests and 2.5MB, against `certcc` at 210 requests and `csaf:ncsc-nl` at
+    1,031 and 111MB.
+
+    A FUTURE MONTH ANSWERS 200, NOT 404. `2026/12/` serves an empty calendar
+    today, so a reader who trusts the status code would count three empty months
+    as three good reads. The loop stops at the current month instead, and an
+    empty answer from a month that has already happened is a real zero.
+    """
+    today = today or dt.date.today()
+    out, failed, read = {}, [], 0
+    wanted = [(y, m) for y in sorted(years) for m in range(1, 13)
+              if (y, m) <= (today.year, today.month)]
+    for year, month in wanted[-months_cap:]:
+        url = _OSS_SEC_MONTH.format(year=year, month=month)
+        try:
+            page = _get_text(url, timeout=45)
+        except Exception as e:
+            failed.append(f"{year}-{month:02d}: {str(e)[:40]}")
+            continue
+        read += 1
+        for day, num, subject in _OSS_SEC_MSG.findall(page):
+            subject = html.unescape(_OSS_SEC_TAG.sub("", subject))
+            subject = re.sub(r"\s+", " ", subject).strip()
+            ids = {c for c in re.findall(r"CVE-\d{4}-\d{4,}", subject)
+                   if _year(c) in years}
+            if not ids:
+                continue
+            ref = f"{year}/{month:02d}/{day}/{num}"
+            when = f"{year}-{month:02d}-{day}"
+            for cid in ids:
+                # EARLIEST WINS, and the loop runs oldest month first so the
+                # first sighting is the earliest one. `public_date` is a floor on
+                # how long an id has been public, and a later re-post would move
+                # that floor forward, which is the one direction it must never
+                # move.
+                if cid not in out:
+                    out[cid] = {"cve_id": cid, "source": "oss-security",
+                                "source_ref": ref, "public_date": when,
+                                "product": "", "description": subject[:400]}
+    if not read:
+        record_feed("oss-security", FAILED,
+                    f"no month answered ({'; '.join(failed[:3])})"[:120])
+        return []
+    if failed:
+        record_feed("oss-security", TRUNCATED,
+                    f"{len(failed)} of {len(wanted)} months failed: "
+                    f"{'; '.join(failed[:3])}"[:120], rows=len(out))
+    return list(out.values())
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
             "osv": feed_osv, "csaf": feed_csaf, "msrc": feed_msrc, "mozilla": feed_mozilla,
             "arch": feed_arch, "samsung": feed_samsung,
             "ubuntu-osv": feed_ubuntu_osv, "jvn": feed_jvn,
-            "zdi": feed_zdi, "certcc": feed_certcc}
+            "zdi": feed_zdi, "certcc": feed_certcc,
+            # IN THE TABLE AND NOT IN THE PROFILE, deliberately and for exactly
+            # as long as it takes to score it. `feedlab.fetch` refuses a feed
+            # that is not an adapter ("being scoreable and being runnable must be
+            # the same condition"), so a candidate cannot be measured until it is
+            # here; `cli.PROFILES["weekly"]` is what the cron runs, and this is
+            # not in it, so no row from it can reach the site. The two lists are
+            # allowed to differ in this direction and only this one:
+            # `test_the_profile_names_only_feeds_that_have_adapters` pins the
+            # other. Merging it means adding it to `_WEEKLY` with its scorecard
+            # in the same diff.
+            "oss-security": feed_oss_security}
 
 
 # How many adapters download at once. A ceiling on concurrent fetches, not a
