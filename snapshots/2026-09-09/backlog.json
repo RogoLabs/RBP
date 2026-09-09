@@ -36072,16 +36072,17 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28585",
+  "cve_id": "CVE-2026-24081",
   "state": "RESERVED",
   "public_date": "2026-07-01",
-  "sources": "samsung",
-  "feed_count": 1,
+  "sources": "csaf,samsung",
+  "feed_count": 2,
   "dates": {
+   "csaf": "2026-09-08",
    "samsung": "2026-07-01"
   },
-  "refs": "samsung:SMR-Jul-2026",
-  "description": "Samsung SMR Jul 2026",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;samsung:SMR-Jul-2026",
+  "description": "CVE-2026-24081",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
   "days_public": 70,
@@ -36100,6 +36101,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
    "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
   },
   "veto_evaluated": false,
@@ -36140,7 +36142,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-24081",
+  "cve_id": "CVE-2026-28585",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -61698,13 +61700,14 @@
   "cve_id": "CVE-2026-45518",
   "state": "RESERVED",
   "public_date": "2026-08-01",
-  "sources": "osv,samsung",
-  "feed_count": 2,
+  "sources": "csaf,osv,samsung",
+  "feed_count": 3,
   "dates": {
    "osv": "2026-09-01",
+   "csaf": "2026-09-08",
    "samsung": "2026-08-01"
   },
-  "refs": "osv:Android:platform/frameworks/base;samsung:SMR-Aug-2026",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;osv:Android:platform/frameworks/base;samsung:SMR-Aug-2026",
   "description": "In tokenize of SQLiteTokenizer.java, there is a possible way to access voicemail information due to SQL injection.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -61724,6 +61727,7 @@
   "package": "platform/frameworks/base",
   "ecosystem": "Android",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
    "osv": "https://osv.dev/list?q=CVE-2026-45518",
    "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
   },
@@ -61833,6 +61837,142 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-28665",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 39,
+  "clock_known": true,
+  "hours_public": 936,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 39,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28591",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 39,
+  "clock_known": true,
+  "hours_public": 936,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 39,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-49880",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 39,
+  "clock_known": true,
+  "hours_public": 936,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 39,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28645",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 39,
+  "clock_known": true,
+  "hours_public": 936,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 39,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-28667",
   "state": "RESERVED",
   "public_date": "2026-08-01",
@@ -61901,40 +62041,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49885",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 39,
-  "clock_known": true,
-  "hours_public": 936,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 39,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-0022",
   "state": "RESERVED",
   "public_date": "2026-08-01",
@@ -61969,75 +62075,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49880",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 39,
-  "clock_known": true,
-  "hours_public": 936,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 39,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28591",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 39,
-  "clock_known": true,
-  "hours_public": 936,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 39,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28665",
+  "cve_id": "CVE-2026-49885",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -62072,40 +62110,6 @@
  },
  {
   "cve_id": "CVE-2026-45513",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 39,
-  "clock_known": true,
-  "hours_public": 936,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 39,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28645",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -75618,40 +75622,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-12763",
-  "state": "RESERVED",
-  "public_date": "2026-08-30",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-08-30"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3096\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3096.json",
-  "description": "CVE-2026-12763",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 10,
-  "clock_known": true,
-  "hours_public": 240,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-30",
-  "advisory_days_public": 10,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3096.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-12765",
   "state": "RESERVED",
   "public_date": "2026-08-30",
@@ -77569,13 +77539,14 @@
   "cve_id": "CVE-2026-45529",
   "state": "RESERVED",
   "public_date": "2026-09-01",
-  "sources": "osv,samsung",
-  "feed_count": 2,
+  "sources": "csaf,osv,samsung",
+  "feed_count": 3,
   "dates": {
    "osv": "2026-09-01",
+   "csaf": "2026-09-08",
    "samsung": "2026-09-01"
   },
-  "refs": "osv:Android:platform/packages/providers/TelephonyProvider;samsung:SMR-Sep-2026",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;osv:Android:platform/packages/providers/TelephonyProvider;samsung:SMR-Sep-2026",
   "description": "In queryInternal of MmsSmsProvider.java, there is a possible way to access MMS/SMS data across user profiles due to a confused deputy.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -77595,6 +77566,7 @@
   "package": "platform/packages/providers/TelephonyProvider",
   "ecosystem": "Android",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
    "osv": "https://osv.dev/list?q=CVE-2026-45529",
    "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
   },
@@ -77605,13 +77577,14 @@
   "cve_id": "CVE-2026-45517",
   "state": "RESERVED",
   "public_date": "2026-09-01",
-  "sources": "osv,samsung",
-  "feed_count": 2,
+  "sources": "csaf,osv,samsung",
+  "feed_count": 3,
   "dates": {
    "osv": "2026-09-01",
+   "csaf": "2026-09-08",
    "samsung": "2026-09-01"
   },
-  "refs": "osv:Android:platform/packages/providers/MediaProvider;samsung:SMR-Sep-2026",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;osv:Android:platform/packages/providers/MediaProvider;samsung:SMR-Sep-2026",
   "description": "In screenArgsForPermissionCheckIfAny of MediaQueryForPreSelection.java, there is a possible way to access the images of other users due to a confused deputy.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -77631,6 +77604,7 @@
   "package": "platform/packages/providers/MediaProvider",
   "ecosystem": "Android",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
    "osv": "https://osv.dev/list?q=CVE-2026-45517",
    "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
   },
@@ -77641,13 +77615,14 @@
   "cve_id": "CVE-2026-49913",
   "state": "RESERVED",
   "public_date": "2026-09-01",
-  "sources": "osv,samsung",
-  "feed_count": 2,
+  "sources": "csaf,osv,samsung",
+  "feed_count": 3,
   "dates": {
    "osv": "2026-09-01",
+   "csaf": "2026-09-08",
    "samsung": "2026-09-01"
   },
-  "refs": "osv:Android:platform/hardware/interfaces;samsung:SMR-Sep-2026",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;osv:Android:platform/hardware/interfaces;samsung:SMR-Sep-2026",
   "description": "In descramble of DescramblerImpl.cpp, there is a possible arbitrary memory access due to a precondition check failure.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -77667,6 +77642,7 @@
   "package": "platform/hardware/interfaces",
   "ecosystem": "Android",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
    "osv": "https://osv.dev/list?q=CVE-2026-49913",
    "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
   },
@@ -77677,13 +77653,14 @@
   "cve_id": "CVE-2026-49926",
   "state": "RESERVED",
   "public_date": "2026-09-01",
-  "sources": "osv,samsung",
-  "feed_count": 2,
+  "sources": "csaf,osv,samsung",
+  "feed_count": 3,
   "dates": {
    "osv": "2026-09-01",
+   "csaf": "2026-09-08",
    "samsung": "2026-09-01"
   },
-  "refs": "osv:Android:platform/external/libjxl;samsung:SMR-Sep-2026",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;osv:Android:platform/external/libjxl;samsung:SMR-Sep-2026",
   "description": "In libjxl, there is a possible denial of service due to a logic error in the code.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -77703,6 +77680,7 @@
   "package": "platform/external/libjxl",
   "ecosystem": "Android",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
    "osv": "https://osv.dev/list?q=CVE-2026-49926",
    "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
   },
@@ -81450,6 +81428,78 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-25275",
+  "state": "RESERVED",
+  "public_date": "2026-09-01",
+  "sources": "csaf,samsung",
+  "feed_count": 2,
+  "dates": {
+   "csaf": "2026-09-08",
+   "samsung": "2026-09-01"
+  },
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;samsung:SMR-Sep-2026",
+  "description": "CVE-2026-25275",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 8,
+  "clock_known": true,
+  "hours_public": 192,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-01",
+  "advisory_days_public": 8,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-25294",
+  "state": "RESERVED",
+  "public_date": "2026-09-01",
+  "sources": "csaf,samsung",
+  "feed_count": 2,
+  "dates": {
+   "csaf": "2026-09-08",
+   "samsung": "2026-09-01"
+  },
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3251\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json;samsung:SMR-Sep-2026",
+  "description": "CVE-2026-25294",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 8,
+  "clock_known": true,
+  "hours_public": 192,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-01",
+  "advisory_days_public": 8,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3251.json",
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-48173",
   "state": "RESERVED",
   "public_date": "2026-09-01",
@@ -81480,40 +81530,6 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3206.json",
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28605",
-  "state": "RESERVED",
-  "public_date": "2026-09-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-09-01"
-  },
-  "refs": "samsung:SMR-Sep-2026",
-  "description": "Samsung SMR Sep 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 8,
-  "clock_known": true,
-  "hours_public": 192,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-01",
-  "advisory_days_public": 8,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
    "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
   },
   "veto_evaluated": false,
@@ -81554,41 +81570,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-25294",
-  "state": "RESERVED",
-  "public_date": "2026-09-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-09-01"
-  },
-  "refs": "samsung:SMR-Sep-2026",
-  "description": "Samsung SMR Sep 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 8,
-  "clock_known": true,
-  "hours_public": 192,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-01",
-  "advisory_days_public": 8,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-25275",
+  "cve_id": "CVE-2026-28605",
   "state": "RESERVED",
   "public_date": "2026-09-01",
   "sources": "samsung",
