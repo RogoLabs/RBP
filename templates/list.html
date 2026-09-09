@@ -86,41 +86,6 @@
   </figure>
 </section>
 
-{# THE SOURCE INVENTORY, COMPLETE, and it has to be complete.
-
-   This was a <select> built from the slugs in today's rows, which had two
-   consequences. A feed that returned nothing had no option at all, so the two
-   quiet feeds of thirteen were invisible unless a URL happened to name one; and
-   nothing on the page ever said how many feeds there are, so a reader could not
-   tell whether the list they were looking at was all of them.
-
-   The configured list is server-rendered from `summary.feeds.requested`, which
-   is the same field /status reads, so a feed that contributes nothing this run
-   is still listed, at zero, and is still selectable. Choosing it gives an honest
-   empty view rather than the every-row view the select used to fall back to.
-
-   The counts are computed in the browser from the rows, because they change with
-   the search and the age bound and a server-rendered number would be wrong the
-   moment either is touched.
-
-   IT IS ALSO THE FLOOR CAVEAT, MADE CONCRETE. "Only configured feeds are read"
-   is a sentence; this is the list of them with what each one contributed. #}
-<section class="seenin">
-  <div class="seenin-head">
-    <h2>Seen in</h2>
-    <p class="seenin-note" id="seennote"></p>
-  </div>
-  {# NOT A <select>, and that is the point.
-     A select silently discards a value it has no option for: `value` reads back
-     "" and the filter stops applying, so `?src=mozilla` rendered every row. A
-     hidden input cannot discard anything, so the entire class of defect is gone
-     rather than guarded. The visible controls are real buttons with aria-pressed,
-     which is also the first time this filter has been operable by keyboard
-     without opening a dropdown. #}
-  <input type="hidden" id="src" value="">
-  <div class="srcgrid" id="srcgrid"></div>
-</section>
-
 {# THE CONTROL BAR, sticky, directly above the rows where it is useful. It keeps
    the `cmdbar` class: tests/test_site.py reads it as the marker that the list
    page rather than the holding page is on the front door. #}
@@ -130,6 +95,74 @@
       <input type="search" id="q" autocomplete="off"
              placeholder="Filter by CVE ID, package or advisory text"
              aria-label="Filter rows by CVE ID, package or advisory text">
+    </div>
+    {# THE SOURCE FILTER, IN THE BAR WITH THE OTHER FILTERS.
+
+       It was twenty-three chips above the fold. Measured on 2026-09-08: the
+       inventory ran 198px on a desktop and 582px on a 375x812 phone, which is
+       72% of that screen, and it put the search box at y=1204 with the first CVE
+       ID below that. The reader met the plumbing before the data.
+
+       AND IT GROWS WITH THE SOURCE LIST, which is the part that made this
+       structural rather than cosmetic. Seventeen feeds today, and the CSAF row
+       underneath is not bounded by anything this project decides:
+       data/csaf_state.json already tracks fourteen publisher domains against the
+       seven that have rows. The height of the control was a function of how many
+       sources the site reads, which is the one number the whole project exists
+       to increase.
+
+       A POPOVER, NOT THE <select> THIS REPLACED. The defect that killed the
+       select was that it silently discards a value it has no option for, so
+       `?src=mozilla` read back "" and rendered all 1,672 rows. That defect lives
+       in the ELEMENT, not in the pattern. The value still lives in `#src`, a
+       hidden input, which cannot discard anything; the list below is a rendering
+       of that value rather than the home of it. So every guarantee the chips
+       carried is still carried here -- an unknown slug keeps a control, a quiet
+       feed keeps a control, the current selection is always drawn -- and the
+       trigger states the selection, so a filtered page can never hide which
+       filter is on.
+
+       THE INVENTORY IS NOT LOST, IT MOVED. The ledger below the rows is the same
+       data, drawn as a ledger, and it is what answers "is this all of them".
+       This is the control; that is the evidence. Splitting them is what lets
+       each one scale on its own terms: the control is now a fixed 34px at any
+       number of sources, and the ledger is a grid that gets denser rather than
+       taller. #}
+    <div class="srcpick">
+      {# NOT A <select>, and that is still the point. See the comment above: a
+         hidden input cannot discard a value a URL asked for. #}
+      <input type="hidden" id="src" value="">
+      {# THE LABEL SITS OUTSIDE THE CONTROL, the way "Public" does one control
+         over. It was inside the button, so the two filters in this bar were
+         built differently -- one read `[Source All]` as a single bordered blob
+         and the other `Public [Any Age]` -- and side by side at a 20px gap that
+         is most of why the bar looked crowded rather than the widths were. Both
+         are `label [control]` now, on the same rhythm.
+
+         aria-hidden, because the button's own aria-label already opens with
+         "Source" and is kept in step with the selection by renderSrcMenu. Left
+         announced it would be read twice, once as loose text in the toolbar and
+         again as the first word of the control's name. The visible word is still
+         inside the accessible name, which is what WCAG 2.5.3 asks. #}
+      <span class="srckey" aria-hidden="true">Source</span>
+      <button type="button" class="srcbtn" id="srctrig"
+              aria-expanded="false" aria-controls="srcmenu">
+        <span class="srcbtn-lab" id="srctriglab">All</span>
+      </button>
+      <div class="srcmenu" id="srcmenu" hidden>
+        <div class="srcmenu-find">
+          {# NARROWS THE LIST, NOT THE ROWS. A separate input from `#q` on
+             purpose: typing "red" here should offer Red Hat, not filter the
+             backlog down to advisories with "red" in the text. #}
+          <input type="search" id="srcq" autocomplete="off"
+                 placeholder="Type to narrow sources"
+                 aria-label="Narrow the source list">
+        </div>
+        {# Drawn by the same pass that draws the ledger, off the same counts, so
+           the two can never report different numbers for the same feed. #}
+        <div class="srcmenu-list" id="srcmenulist"></div>
+        <p class="srcmenu-none" id="srcmenunone" hidden>No source matches that.</p>
+      </div>
     </div>
     {# BOTH DIRECTIONS. "90+ days" answers "what has been sitting the longest";
        "under 90 days" answers "what has appeared lately", and until 2026-08-27
@@ -228,6 +261,48 @@
   </noscript>
   <div class="rbplist" id="list"></div>
   <div class="more-wrap"><button type="button" class="morebtn" id="more" hidden></button></div>
+
+{# THE SOURCE INVENTORY, COMPLETE, AND BELOW THE ROWS.
+
+   It has to be complete. This was a <select> built from the slugs in today's
+   rows, which had two consequences: a feed that returned nothing had no option
+   at all, so the quiet feeds were invisible unless a URL happened to name one;
+   and nothing on the page ever said how many feeds there are, so a reader could
+   not tell whether the list they were looking at was all of them. Both are still
+   fixed here. The configured list is server-rendered from
+   `summary.feeds.requested`, the same field /status reads, and `#seennote`
+   states how many of them have rows.
+
+   IT IS ALSO THE FLOOR CAVEAT, MADE CONCRETE. "Only configured feeds are read"
+   is a sentence; this is the list of them with what each one contributed.
+
+   A LEDGER RATHER THAN A ROW OF CHIPS, and the reason is that the chips could
+   not be read. Alignment is the whole difference: 1,295 and 116 sat at whatever
+   x position the wrapping put them, so the one genuinely interesting thing in
+   this section -- how lopsided the sources are -- was in the data and not on the
+   page. In a column with a bar beside it, that reads at a glance, and it reads
+   the same way as the age distribution in the lead, which is the other place
+   this site draws a magnitude.
+
+   THE ORDER IS STILL ALPHABETICAL, and the bars are why that survived contact
+   with a ranked layout. Sorting by contribution reads well as a chart and badly
+   as a control: this is the thing a reader uses to find their own distribution,
+   and finding "Ubuntu" among twenty entries ordered by volume is a scan where
+   alphabetical is a jump. The magnitude is not lost by ordering on the name,
+   because it is now drawn on every line rather than implied by position.
+
+   BELOW THE ROWS, which is the other half of the change. It was between the
+   count and the data, and on a phone it was 582px of it. Nothing here is a
+   route the reader needs before the list: the filter is in the bar with the
+   other filters now, and what is left is evidence, which belongs after the
+   thing it is evidence for. #}
+<section class="seenin">
+  <div class="seenin-head">
+    <h2>Seen in</h2>
+    <p class="seenin-note" id="seennote"></p>
+  </div>
+  <div class="srcgrid" id="srcgrid"></div>
+</section>
 
 {% include "_panel.html" %}
 <div class="scrim" id="scrim" hidden></div>
@@ -583,19 +658,26 @@
     return out;
   }
 
-  function renderSources() {
-    var c = srcCounts(), grid = $("srcgrid"), cur = els.src.value;
+  // ONE PASS, TWO RENDERINGS. The control in the sticky bar and the ledger below
+  // the rows are the same facets with the same counts drawn two ways, so they
+  // are computed once here and handed to both. Computing them twice would be two
+  // places for the number beside "Debian" to stop agreeing with itself, and the
+  // whole reason the inventory is trustworthy is that it is one reading of one
+  // set of rows.
+  function facets() {
+    var c = srcCounts(), cur = els.src.value;
     // ALPHABETICAL BY DISPLAY NAME, not by contribution.
     //
     // Sorting by count reads well as a chart and badly as a control: this is
     // the thing a reader uses to find their own distribution, and finding
-    // "Ubuntu" among thirteen chips ordered by volume is a scan where
-    // alphabetical is a jump. The magnitude is not lost, it is on every chip.
+    // "Ubuntu" among twenty entries ordered by volume is a scan where
+    // alphabetical is a jump.
     //
-    // It is also the order the select this replaces settled on, for the same
-    // reason plus one more: the first version sorted the CSAF publishers to the
-    // top, so a reader looking for Debian met five publishers first and the feed
-    // list started halfway down.
+    // It survived the move to a ledger, which is a layout that invites ranking,
+    // because the magnitude is now DRAWN on every line. Ordering by name costs
+    // nothing once the bar carries the size; in the chip row it cost the reader
+    // the only comparison the section was for.
+    //
     // ON THE VISIBLE LABEL, not the full name: this is a control a reader scans,
     // and an order they cannot see is not an order.
     var byName = function (a, b) { return feedShort(a.v).localeCompare(feedShort(b.v)); };
@@ -610,55 +692,88 @@
     });
 
     // A CONTROL THAT LEADS NOWHERE IS NOT A CONTROL, so an entry with no rows in
-    // this view is not drawn. Two feeds of thirteen return nothing on a normal
-    // run, and a search narrows most of the rest to zero on almost any term, so
-    // an inventory that drew every one of them would be mostly dead chips a
-    // reader has to skip past to find the live ones.
+    // this view is not drawn. Two feeds of seventeen return nothing on a normal
+    // run, and a search narrows most of the rest to zero on almost any term.
     //
-    // WITH ONE EXCEPTION, and it is the one that matters: the chip for the
+    // WITH ONE EXCEPTION, and it is the one that matters: the entry for the
     // CURRENT selection is always drawn, at zero, marked. `?src=mozilla` names a
     // feed that returns nothing, and the whole point of the change away from the
     // <select> is that such a link filters honestly instead of falling through to
-    // every row. Hiding its chip would apply the filter with nothing on the page
-    // saying which filter, which is a different way to break the same promise.
+    // every row. Hiding its control would apply the filter with nothing on the
+    // page saying which filter, which is a different way to break the same
+    // promise.
     //
-    // WHAT IS NOT LOST: how many feeds were read. That was the reason for drawing
-    // the quiet ones, and it belongs in a sentence rather than in a row of chips
-    // nobody can click. The note below carries it on every render.
+    // WHAT IS NOT LOST: how many feeds were read. That belongs in a sentence
+    // rather than in entries nobody can click, and `#seennote` carries it.
     function keep(x) { return x.n > 0 || x.v === cur; }
-    var feeds = all.filter(keep);
-    var pubs = pubsAll.filter(keep);
+    return {
+      cur: cur,
+      total: c.total,
+      feeds: all.filter(keep),
+      pubs: pubsAll.filter(keep),
+      live: all.filter(function (f) { return f.n > 0; }).length,
+      read: CONFIGURED.length || all.length
+    };
+  }
 
-    function chip(v, n, label) {
-      var on = cur === v, full = feedName(v);
-      // WHEN THE LABEL IS NOT THE NAME, THE NAME IS STILL ON THE CONTROL. A
-      // reader who does not know the abbreviation has to be able to get the
-      // publisher from the chip itself, and a screen reader is read the name
-      // rather than three initials.
-      var named = full === label ? "" :
-        ' title="' + esc(full) + '" aria-label="' + esc(full + ", " + num(n) + " IDs") + '"';
-      // The name in its own element rather than as a bare text node beside the
-      // count: it is the part the label cap applies to, and a test that has to
-      // strip " 1,173" off the end before it can measure the name is a test that
-      // silently stops measuring when the count format changes.
-      return '<button type="button" class="srcchip' + (n ? "" : " zero") +
-        '" data-src="' + esc(v) + '"' + named + ' aria-pressed="' +
-        (on ? "true" : "false") + '">' +
-        '<span class="srcname">' +
-        esc(cap(label, v.indexOf("csaf:") === 0 ? 56 : 44)) + "</span>" +
-        ' <u>' + num(n) + "</u></button>";
+  // WHEN THE LABEL IS NOT THE NAME, THE NAME IS STILL ON THE CONTROL. A reader
+  // who does not know the abbreviation has to be able to get the publisher from
+  // the control itself, and a screen reader is read the name rather than three
+  // initials. Shared by both renderings for the same reason `facets` is.
+  function srcTitle(v, n, label) {
+    var full = feedName(v);
+    return full === label ? "" :
+      ' title="' + esc(full) + '" aria-label="' + esc(full + ", " + num(n) + " IDs") + '"';
+  }
+  function srcLabel(v) { return cap(feedShort(v), v.indexOf("csaf:") === 0 ? 56 : 44); }
+
+  function renderSources() {
+    var f = facets();
+    renderLedger(f);
+    renderSrcMenu(f);
+  }
+
+  function renderLedger(f) {
+    var grid = $("srcgrid");
+    // THE BAR IS SCALED TO THE LARGEST FACET IN THIS VIEW, NOT TO THE TOTAL.
+    //
+    // Against the total, GitHub Repo Advisory at 1,295 of 2,349 fills 55% and
+    // everything else is a stub: eleven of the seventeen feeds draw under 6% and
+    // are indistinguishable from each other, which is exactly the comparison
+    // this section exists to make. Against the largest, the small feeds separate
+    // and the shape of the lopsidedness is still readable off the top bar.
+    var top = 0;
+    f.feeds.concat(f.pubs).forEach(function (x) { if (x.n > top) { top = x.n; } });
+
+    // The name in its own element rather than as a bare text node beside the
+    // count: it is the part the label cap applies to, and a test that has to
+    // strip " 1,173" off the end before it can measure the name is a test that
+    // silently stops measuring when the count format changes.
+    function item(v, n, label, cls) {
+      // NO FILL AT ALL AT ZERO, rather than a fill of zero width. The track is
+      // drawn dashed and empty by `.srcitem.zero`, which says "nothing" where a
+      // hairline of colour would say "very little"; the minimum mark that keeps
+      // CERT/CC at 12 visible against a 1,295 top bar is `min-width` on the fill
+      // itself, the same floor and the same reason as `.distbar > i > b`.
+      var w = top && n ? Math.round(n / top * 100) : 0;
+      return '<button type="button" class="srcitem' + (cls ? " " + cls : "") +
+        (n ? "" : " zero") + '" data-src="' + esc(v) + '"' + srcTitle(v, n, label) +
+        ' aria-pressed="' + (f.cur === v ? "true" : "false") + '">' +
+        '<span class="srcname">' + esc(label) + "</span>" +
+        '<span class="srcbar" aria-hidden="true">' +
+        (w ? '<i style="width:' + w + '%"></i>' : "") + "</span>" +
+        "<u>" + num(n) + "</u></button>";
     }
 
     var html = '<div class="srcrow">' +
-      // Same shape as every other chip, name element included: a control that is
+      // Same shape as every other entry, name element included: a control that is
       // structurally different from its siblings is one every reader of this
-      // markup has to special-case, and the tests already had to.
-      '<button type="button" class="srcchip all" data-src="" aria-pressed="' +
-      (cur ? "false" : "true") + '"><span class="srcname">All sources</span> <u>' +
-      num(c.total) + "</u></button>" +
-      feeds.map(function (f) { return chip(f.v, f.n, feedShort(f.v)); }).join("") +
+      // markup has to special-case, and the tests already had to. It is also the
+      // denominator the bars are read against, which is worth a line of its own.
+      item("", f.total, "All sources", "all") +
+      f.feeds.map(function (x) { return item(x.v, x.n, srcLabel(x.v)); }).join("") +
       "</div>";
-    if (pubs.length) {
+    if (f.pubs.length) {
       // NESTED, because the publishers are inside `csaf` rather than beside it.
       // The first version of this control sorted them into the same flat list,
       // where "Red Hat Product Security" sat next to "Red Hat" with nothing
@@ -666,28 +781,76 @@
       // role="group" WITH A LABEL, not just an indent and a caption.
       //
       // The <optgroup> this replaces was announced as a group; a styled div is
-      // not, so a screen reader would be read a flat run of nineteen peers with
-      // "Red Hat Product Security" sitting beside "Red Hat" and nothing saying
-      // one is a publisher inside the other. The visible label is the accessible
-      // one, so they cannot drift.
+      // not, so a screen reader would be read a flat run of peers with "Red Hat
+      // Product Security" sitting beside "Red Hat" and nothing saying one is a
+      // publisher inside the other. The visible label is the accessible one, so
+      // they cannot drift.
       html += '<div class="srcrow sub" role="group" aria-label="Within CSAF Advisory">' +
         '<span class="srclab">Within CSAF Advisory</span>' +
-        pubs.map(function (p) { return chip(p.v, p.n, feedShort(p.v)); }).join("") + "</div>";
+        '<div class="srcsub">' +
+        f.pubs.map(function (x) { return item(x.v, x.n, srcLabel(x.v)); }).join("") +
+        "</div></div>";
     }
     grid.innerHTML = html;
 
     // THE SENTENCE THAT ANSWERS "IS THIS ALL OF THEM", which is the question the
     // old control could not answer at all: it listed only the feeds behind
     // today's rows, so a reader had no way to tell a complete inventory from a
-    // partial one. Counted off `all`, not off what is drawn, so hiding the empty
-    // chips cannot quietly change what this claims.
-    var live = all.filter(function (f) { return f.n > 0; }).length;
-    var read = CONFIGURED.length || all.length;
-    $("seennote").textContent = num(live) + " of " + num(read) +
-      (read === 1 ? " configured feed has" : " configured feeds have") +
+    // partial one. Counted off the full facet list rather than off what is
+    // drawn, so hiding the empty entries cannot quietly change what this claims.
+    $("seennote").textContent = num(f.live) + " of " + num(f.read) +
+      (f.read === 1 ? " configured feed has" : " configured feeds have") +
       " rows in this view" +
-      (pubs.length ? ", and " + num(pubs.length) +
-        (pubs.length === 1 ? " CSAF publisher underneath" : " CSAF publishers underneath") : "") + ".";
+      (f.pubs.length ? ", and " + num(f.pubs.length) +
+        (f.pubs.length === 1 ? " CSAF publisher underneath" : " CSAF publishers underneath") : "") + ".";
+  }
+
+  // THE CONTROL IN THE BAR. Constant height at any number of sources, which is
+  // the property the chip row did not have and could not be given.
+  function renderSrcMenu(f) {
+    var trig = $("srctrig"), list = $("srcmenulist");
+    // THE TRIGGER STATES THE SELECTION. A filter the reader cannot see is the
+    // same defect as a filter that silently stopped applying, from the other
+    // direction, and this control is 1,200px away from the ledger that used to
+    // show it.
+    $("srctriglab").textContent = f.cur ? cap(feedShort(f.cur), 24) : "All";
+    trig.classList.toggle("on", !!f.cur);
+    trig.setAttribute("aria-label", f.cur
+      ? "Source, filtered to " + feedName(f.cur) + ". Change or clear the source filter"
+      : "Source, all sources. Filter by source");
+
+    // NARROWS THE LIST, NOT THE ROWS, and it matches the full name as well as
+    // the visible label: a reader who types "bundesamt" is looking for BSI, and
+    // an abbreviation nobody searched for should not be the only way in.
+    var narrow = ($("srcq").value || "").trim().toLowerCase();
+    function hit(x) {
+      return !narrow || (feedShort(x.v) + " " + feedName(x.v) + " " + x.v)
+        .toLowerCase().indexOf(narrow) > -1;
+    }
+    function opt(v, n, label, cls) {
+      return '<button type="button" class="srcopt' + (cls ? " " + cls : "") +
+        (n ? "" : " zero") + '" data-src="' + esc(v) + '"' + srcTitle(v, n, label) +
+        ' aria-pressed="' + (f.cur === v ? "true" : "false") + '">' +
+        '<span class="srcname">' + esc(label) + "</span>" +
+        "<u>" + num(n) + "</u></button>";
+    }
+
+    var feeds = f.feeds.filter(hit), pubs = f.pubs.filter(hit);
+    var html = "";
+    // "All sources" is the clear, and it is only offered when the reader is not
+    // mid-search: it is not a source and matching it against "red" is noise.
+    if (!narrow) { html += opt("", f.total, "All sources", "all"); }
+    html += feeds.map(function (x) { return opt(x.v, x.n, srcLabel(x.v)); }).join("");
+    if (pubs.length) {
+      html += '<div class="srcopt-grp" role="group" aria-label="Within CSAF Advisory">' +
+        '<span class="srclab">Within CSAF Advisory</span>' +
+        pubs.map(function (x) { return opt(x.v, x.n, srcLabel(x.v)); }).join("") +
+        "</div>";
+    }
+    list.innerHTML = html;
+    // A SEARCH THAT MATCHES NOTHING SAYS SO. An empty popover reads as a broken
+    // control rather than as an answer.
+    $("srcmenunone").hidden = !!(feeds.length || pubs.length || !narrow);
   }
 
   // A LINK MEANS WHAT IT SAYS, and for a feed that had gone quiet it meant the
@@ -1141,17 +1304,73 @@
   });
   els.sort.addEventListener("change", function () { render(); writeUrl(true); });
 
-  // The source inventory is redrawn on every render, so the handler is delegated
-  // rather than bound per chip: rebinding thirteen buttons on every keystroke is
-  // how a listener leak starts.
-  $("srcgrid").addEventListener("click", function (e) {
-    var b = e.target.closest ? e.target.closest("[data-src]") : null;
+  // Both renderings are redrawn on every render, so the handlers are delegated
+  // rather than bound per entry: rebinding two dozen buttons on every keystroke
+  // is how a listener leak starts.
+  function pickSrc(b, close) {
     if (!b) { return; }
-    // Clicking the chip that is already on clears the filter, so the control can
-    // be undone where it was set rather than only from "All sources".
+    // Choosing the entry that is already on clears the filter, so the control
+    // can be undone where it was set rather than only from "All sources".
     var v = b.getAttribute("data-src");
     setSrc(els.src.value === v ? "" : v);
+    if (close) { setMenu(false, true); }
     render(); writeUrl(true);
+  }
+  // THE DELEGATION STAYS IN THE HANDLER, and it is not duplication for its own
+  // sake. tests/test_a11y.py reads the body of every click handler bound to a
+  // non-focusable element and looks for a `.closest("[attr]")`, which is how it
+  // proves the thing actually clicked is a real control rather than a div; a
+  // handler that forwards its event to a helper is a handler the check cannot
+  // see through, and the first version of this pair hid both delegations behind
+  // one call and turned the check off for both.
+  $("srcgrid").addEventListener("click", function (e) {
+    pickSrc(e.target.closest ? e.target.closest("[data-src]") : null, false);
+  });
+  $("srcmenulist").addEventListener("click", function (e) {
+    pickSrc(e.target.closest ? e.target.closest("[data-src]") : null, true);
+  });
+
+  // THE POPOVER. A disclosure, not a dialog: it does not trap focus and it does
+  // not take the page away from the reader, because it is a filter in a toolbar
+  // rather than a task. What it does owe is the three things a disclosure that
+  // covers content owes -- it says whether it is open, Escape closes it, and
+  // closing by keyboard puts focus back where it came from.
+  function setMenu(open, refocus) {
+    var m = $("srcmenu"), t = $("srctrig");
+    if (m.hidden === !open) { if (!open && refocus) { t.focus(); } return; }
+    m.hidden = !open;
+    t.setAttribute("aria-expanded", open ? "true" : "false");
+    if (open) {
+      // Rendered on open as well as on every render, because the counts move
+      // with the search and the age bound while the menu is shut.
+      renderSrcMenu(facets());
+      $("srcq").focus();
+    } else {
+      // The narrowing is a way of finding an entry, not a filter the reader set,
+      // so it does not survive the popover it was typed into. Leaving it set
+      // means the next open shows a partial list with no visible cause.
+      $("srcq").value = "";
+      if (refocus) { t.focus(); }
+    }
+  }
+  $("srctrig").addEventListener("click", function () {
+    setMenu($("srcmenu").hidden, false);
+  });
+  $("srcq").addEventListener("input", function () { renderSrcMenu(facets()); });
+  // A popover that stays open when the reader has plainly moved on is a popover
+  // covering the rows they moved on to.
+  document.addEventListener("click", function (e) {
+    if ($("srcmenu").hidden) { return; }
+    if (e.target.closest && e.target.closest(".srcpick")) { return; }
+    setMenu(false, false);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" || $("srcmenu").hidden) { return; }
+    // Ahead of the panel's own Escape handler only in the sense that they cannot
+    // both be open: the panel is modal and the menu closes on the click that
+    // opens it.
+    e.stopPropagation();
+    setMenu(false, true);
   });
 
   // A BAR SETS THE AGE BOUND. The bars are the shape of the age filter, so

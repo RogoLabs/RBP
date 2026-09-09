@@ -1582,6 +1582,20 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > fraction of that. It is a small feed whose rows are almost all interesting,
 > which is a different and better reason to read a source than volume.
 >
+> **CONFIRMED BY THE FIRST LIVE RUN, 2026-09-08 at 21:53Z, and this is the check
+> the harness exists to pass.** The run published 12 certcc-only rows against the
+> predicted 13, and the sets agree exactly: no row appeared that the scorecard did
+> not name. The thirteenth, `CVE-2026-6485`, is held by `min_age_days = 7` and
+> nothing else. CERT/CC first referenced it the same day, so it is 0 days public,
+> and it reads RESERVED at `cveawg.mitre.org` as this is written, which makes it a
+> real row due on the site about 2026-09-15 rather than a figure that failed to
+> land. A prediction of 13 that delivers 12 on the day, with the absence explained
+> by a published constant, is the strongest reading this document has of a
+> scorecard against the site. Read it from `/data/rbp.json`, filtering rows whose
+> `sources` is `certcc` alone, and from `feeds.detail.certcc.rows_only` in
+> `summary.json`; the run also recorded 299 ids, matching the scorecard exactly,
+> which is the shrink guard's seed landing on the number it was given.
+>
 > The zero is not a defect and it is worth being precise about why: CERT/CC
 > coordinates for vendors this site already reads several ways over, so its 26
 > reached CNAs are all above the floor already. 205 of its sightings are ids

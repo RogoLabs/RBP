@@ -100,67 +100,7 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 ## What is open
 
-**1. Re-pin the live run once `certcc` has published, and delete its pending
-declaration.** Opened 2026-09-08 with the `zdi` and `certcc` merges. **`zdi`'s
-half is closed in this commit:** it published at `3c0effe`, the pin now reads it,
-and `PENDING_FIRST_RUN` is down to `{"certcc"}`.
-
-`feedlab/_live.json` is pinned from the site's own `summary.json`, so it can only
-name feeds the site has already run, and merging to main is what makes the site
-run a new one. A commit that adds a feed therefore lands with the profile a name
-ahead of the pin, and `test_the_pinned_live_run_is_the_profile_the_pipeline_runs`
-asserted set equality. `zdi` was the first feed merged since that test was written
-in #33, so it was the first to hit it, and `certcc` is the second.
-
-The fix in the diff is a declaration, not a loosened assertion:
-`feedlab.PENDING_FIRST_RUN` names the feeds awaiting a first live run, the pin
-test allows exactly that difference in exactly that direction, and the reverse
-direction (a feed in the pin that the repo no longer runs) stays an equality
-because that one flatters every candidate.
-
-**Why `certcc`'s wait runs longer than its commit date suggests, and it is not a
-site defect.** Its first merge, PR #48, was based on `zdi-detection-feed` rather
-than on `main`, and that branch had itself been squashed to main twenty-six
-minutes earlier as #47. So the PR read MERGED, the work sat on a branch that had
-already served its purpose, main never had it, and the six-hourly deploy kept
-publishing sixteen feeds. It reaches main by cherry-pick in this commit. The
-lesson is a git one: a squash leaves the source branch alive, so a follow-up PR
-opened while that branch was in flight keeps it as its base. Read the PR's
-`baseRefName` and not only its `state`.
-
-**What to do, after the deploy that first runs `certcc`:**
-
-```
-python -m rbp.feedlab pin-live      # one fetch of the site's own summary
-```
-
-then remove `"certcc"` from `feedlab.PENDING_FIRST_RUN`. Until that happens
-`test_no_feed_is_declared_pending_once_the_live_run_has_it` fails, deliberately:
-a declaration that outlives its reason would hide the drift the pin test exists to
-catch. `test_the_pinned_live_run_is_not_stale` already bounds the wait to a
-fortnight. `deploy.yml` deselects `harness_artefact`, so none of this can stop a
-publication.
-
-**Budget a re-audit with the re-pin, because the pin does not move alone.**
-`test_every_committed_scorecard_declares_the_depth_it_was_measured_at` fails the
-moment the pin moves, so a pin-only commit cannot exist: the pin and all
-seventeen cards move together, or one of them misstates the depth it was measured
-at. `baseline --rescore` then `audit`, both offline. That is by design and it
-cost a session to rediscover, so it is written here rather than left to the test.
-
-Note that a re-score of a merged feed has to be `feedlab audit`, not `feedlab
-score`: once a feed is in the baseline, `score` measures it as marginal to a set
-containing itself and returns a meaningless number. FEEDS.md's `zdi` block
-records that happening.
-
-Adding a feed no longer costs a rebuild of every other one. `feedlab baseline
---add <feed>` fetches only what is named and splices it into the stored rows,
-30 seconds against 32 minutes; it was built for the `certcc` merge and its own
-block explains why.
-
----
-
-**2. `oss-security` is scored, wired in, and not merged. The merge is a
+**1. `oss-security` is scored, wired in, and not merged. The merge is a
 judgement, not a measurement.** Opened 2026-09-09, and the measuring half is
 closed the same day: adapter in `feeds.ADAPTERS`, card in
 `feedlab/oss-security.json`, tests in `tests/test_oss_security.py`.
@@ -199,26 +139,24 @@ implied.
 
 ---
 
-Two items, as of 2026-09-09, and the second is not the one that stood here
-yesterday. `data/feedlab/` not being branch-scoped is CLOSED, and its fix is in
-this commit rather than in a later one because the item that took its number
-cannot be scored until it lands: `scorecard` reads the same shared working state
-that `audit` and `baseline --rescore` do. Item 1, the `certcc` re-pin, is closed
-on `modernize-source-filter` and that branch is unmerged, so it stands here until
-it lands.
+One item, as of 2026-09-09, and both of the ones that stood here on 2026-09-08
+are closed. The `certcc` re-pin went in #50. `data/feedlab/` not being
+branch-scoped goes in this commit rather than a later one, because the item that
+replaced it could not be scored until it landed: `scorecard` reads the same
+shared working state that `audit` and `baseline --rescore` do.
 
-**How it was closed, since the specification in this file was half right.** It
-said `rescore_baseline` and `audit` should refuse a working state whose `feeds`
-differ from `feeds.ADAPTERS`. Two corrections came out of building it. The set
-that matters is the profile filtered through `ADAPTERS`, which is what `cli.run`
-resolves and what the committed test already compared against, not `ADAPTERS`
-alone; and a guard on every load would have made `baseline --add` unreachable,
-which is the only cheap repair for the very mismatch being refused. So the reads
-that produce a NUMBER require the profile and the read that REPAIRS the file does
-not, and `main` checks the spliced result before writing it, which is where the
-residue reached the committed summary the one time this went wrong. The test and
-the guard now derive the profile from one function. Five mutations of the guard
-and two of the write rule were each confirmed to fail a test.
+**How the second was closed, since the specification in this file was half
+right.** It said `rescore_baseline` and `audit` should refuse a working state
+whose `feeds` differ from `feeds.ADAPTERS`. Two corrections came out of building
+it. The set that matters is the profile filtered through `ADAPTERS`, which is
+what `cli.run` resolves and what the committed test already compared against, not
+`ADAPTERS` alone; and a guard on every load would have made `baseline --add`
+unreachable, which is the only cheap repair for the very mismatch being refused.
+So the reads that produce a NUMBER require the profile and the read that REPAIRS
+the file does not, and `main` checks the spliced result before writing it, which
+is where the residue reached the committed summary the one time this went wrong.
+The test and the guard now derive the profile from one function. Five mutations
+of the guard and two of the write rule were each confirmed to fail a test.
 
 That is not a claim that the site is finished. The things that come are the ones
 this file cannot list yet: a feed shrinking for a reason nobody has seen, a guard

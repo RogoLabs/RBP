@@ -603,63 +603,177 @@ body.locked{overflow:hidden}
    from the slugs in today's rows: the two quiet feeds of thirteen had no entry
    at all, and nothing on the page said how many feeds there are, so a reader
    could not tell whether what they were looking at was all of them. */
-.seenin{margin:26px 0 0;padding:16px 0 0;border-top:1px solid var(--color-border)}
+/* BELOW THE ROWS NOW, so the space it takes is space after the data rather
+   than before it. It was 582px of a 812px phone screen between the count and
+   the first CVE ID. */
+.seenin{margin:34px 0 0;padding:18px 0 0;border-top:1px solid var(--color-border)}
 .seenin-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 14px;
   margin-bottom:11px}
 .seenin h2{font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;
   color:var(--rbp-text-muted);margin:0;font-weight:600}
 .seenin-note{margin:0;font-size:.76rem;color:var(--rbp-text-muted)}
-.srcrow{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
-.srcrow.sub{margin-top:9px;padding-left:14px;border-left:2px solid var(--color-border)}
-.srclab{font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
-  color:var(--rbp-text-muted);margin-right:4px}
+/* A GRID THAT GETS DENSER RATHER THAN TALLER.
+
+   The chip row was the opposite: every source added to the site added width
+   until it wrapped, and then added a line. Seventeen feeds plus seven CSAF
+   publishers ran 198px on a desktop and 582px on a 375x812 phone, and it sat
+   between the count and the rows.
+
+   `auto-fill` rather than a column count, so the browser decides how many
+   columns fit and this file does not have to be kept in step with the feed
+   list. Three columns at 1280, two on a tablet, one on a phone, where the
+   section is now below the rows and its height costs nothing.
+
+   330px is a measured floor rather than a round number. At 228 the grid fitted
+   four columns at 1280 and the name track came out at 118px, which truncated
+   "Red Hat Product Security", "Nationaal Cyber Security Centrum" and "Schneider
+   Electric CPCERT" all at once -- the three entries whose whole reason for being
+   nested is that they are distinguishable from the feed one row up. A column
+   count that cuts the names is not denser, it is just smaller.
+
+   `min(330px,100%)` INSIDE THE MINMAX, AND THAT IS NOT DECORATION. A bare
+   `minmax(330px,1fr)` track cannot go under its minimum, so at 320px the grid
+   laid a 330px column in a 320px viewport and scrolled the document sideways --
+   caught by the 320px case of
+   test_a_source_label_at_its_cap_does_not_scroll_the_page_sideways, which is the
+   test that exists because a source label is the one thing on this page whose
+   width comes from outside the page. Wrapping the minimum in `min(_,100%)` lets
+   the single column collapse to whatever there is. */
+.srcgrid{margin-top:2px}
+.srcrow{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));
+  gap:0 34px}
+.srcrow.sub{display:block;margin-top:18px;padding-left:14px;
+  border-left:2px solid var(--color-border)}
+.srcsub{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));
+  gap:0 34px}
+.srclab{display:block;font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--rbp-text-muted);margin:0 0 5px}
+
 /* THE NAME SHRINKS, THE COUNT DOES NOT.
 
    `overflow:hidden` on the button clips a long child but cannot ellipsise one:
    text-overflow applies to a box's own inline content, and the name is a span.
-   So at 320px the 50-character publisher name laid out 315px wide inside a chip
-   capped at 264px and the button simply cut whatever came last, which is the
-   COUNT. "Bundesamt fur Sicherheit in der Informationstechnik" rendered with its
-   number missing, and a facet with no count is the one part of this control a
-   reader cannot reconstruct from anywhere else on the page.
+   So at 320px the 50-character publisher name laid out 315px wide inside a
+   control capped narrower than that, and the button simply cut whatever came
+   last, which is the COUNT. "Bundesamt fur Sicherheit in der Informationstechnik"
+   rendered with its number missing, and a facet with no count is the one part of
+   this control a reader cannot reconstruct from anywhere else on the page.
 
-   A flex row with `min-width:0` on the name is what actually lets it shrink, and
-   moving the ellipsis onto the name means the part that gets cut is the part
-   that is still legible when cut. It does not fix a reflow: the button was
-   already clipping, so nothing here was reaching the page scroll width. */
-.srcchip{display:inline-flex;align-items:baseline;gap:6px;
-  font:inherit;font-size:.8rem;background:var(--color-bg-content);
-  color:var(--rbp-text-secondary);border:1px solid var(--color-border);
-  border-radius:999px;padding:5px 12px;cursor:pointer;min-height:0;
-  max-width:100%}
-.srcchip .srcname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.srcchip u{flex:0 0 auto;text-decoration:none;color:var(--rbp-text-muted);
+   In a grid the fix is the same as it was in the flex row: `minmax(0,1fr)` on
+   the name track is what actually lets it shrink, so the part that gets cut is
+   the part that is still legible when cut. The bar and the count have fixed
+   tracks and are never the thing that gives. */
+.srcitem{display:grid;grid-template-columns:minmax(0,1fr) 96px 3.6rem;
+  align-items:center;gap:0 12px;width:100%;text-align:left;
+  font:inherit;font-size:.8rem;background:none;color:var(--rbp-text-secondary);
+  border:0;border-bottom:1px solid var(--color-border);border-radius:0;
+  padding:7px 2px;cursor:pointer;min-height:0}
+.srcitem .srcname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* THE SAME HUE AS THE AGE DISTRIBUTION, and `--rbp-age` is the site's one data
+   colour rather than an age-specific one. One series, one hue, in both places
+   that draw a magnitude: length carries the size and the number is on the line,
+   so there is nothing a second colour would disambiguate.
+
+   Decorative, and marked so. The count beside it is the accessible reading of
+   the same fact, and a screen reader being read a bar as well is being read the
+   number twice. */
+.srcbar{height:6px;border-radius:3px;background:var(--color-bg-secondary);
+  display:block;overflow:hidden}
+/* A FACET WITH ROWS ALWAYS DRAWS A MARK. CERT/CC at 12 against a 1,312 top bar
+   is 1%, and 1% of a 96px track is one pixel, which renders as nothing: the
+   line would read as a feed that contributed zero next to a dashed entry that
+   actually did. Same floor and same reason as `.distbar > i > b`. */
+.srcbar i{display:block;height:100%;border-radius:3px;background:var(--rbp-age);
+  min-width:3px}
+.srcitem u{text-decoration:none;color:var(--rbp-text-muted);text-align:right;
   font-variant-numeric:tabular-nums}
-.srcchip:hover{border-color:var(--rbp-link);color:var(--color-text-primary)}
-/* THE SELECTED STATE IS A BORDER AND A MARK, NOT A FILL.
+.srcitem:hover{color:var(--color-text-primary);
+  border-bottom-color:var(--rbp-link)}
+/* THE SELECTED STATE IS A MARK AND A WEIGHT, NOT A FILL.
 
    It was a blue fill with the label reversed out of it, which reads well and
    cannot be verified: tests/test_a11y.py composites a rule's OWN background, so
-   the chip itself measured fine while the count nested inside it declared a
+   the control itself measured fine while the count nested inside it declared a
    colour with no background of its own and was measured against the page
    surfaces instead of the fill it actually lands on. White on white, passing.
-   Setting it to `inherit` only moved the problem: an inherited colour is
-   Unmeasurable to the harness, and the one skip it permits is named.
 
    Keeping every colour on a surface the harness already knows about means the
    ratios stay solved rather than argued about. The check mark carries the state
-   as well as the border does, so the selection is not colour alone either. */
-.srcchip[aria-pressed="true"]{border-color:var(--rbp-link);border-width:2px;
-  padding:4px 11px;background:var(--color-bg-secondary);
-  color:var(--rbp-link);font-weight:600}
-.srcchip[aria-pressed="true"]::before{content:"\2713\00a0"}
-.srcchip[aria-pressed="true"] u{color:var(--rbp-link)}
+   as well as the colour does, so the selection is not colour alone either. */
+.srcitem[aria-pressed="true"]{color:var(--rbp-link);font-weight:600;
+  border-bottom-color:var(--rbp-link)}
+.srcitem[aria-pressed="true"] .srcname::before{content:"\2713\00a0"}
+.srcitem[aria-pressed="true"] u{color:var(--rbp-link)}
 /* A FEED THAT RETURNED NOTHING IS STILL A FEED THAT WAS READ, so it is listed at
    zero rather than dropped. Recessive, because it is not a route to any rows,
    but still a control: choosing it gives an honest empty view, which is what the
    old select could not do -- it had no option for a quiet feed, so `?src=mozilla`
-   fell through to every row. */
-.srcchip.zero{border-style:dashed;color:var(--rbp-text-muted)}
+   fell through to every row. An empty dashed track rather than a filled one,
+   because the shape has to say "nothing" without saying "very little". */
+.srcitem.zero{color:var(--rbp-text-muted)}
+.srcitem.zero .srcbar{background:none;border:1px dashed var(--color-border)}
+/* The denominator the bars are read against, so it is the line above them
+   rather than one of them. */
+.srcitem.all{border-bottom-color:var(--rbp-text-muted)}
+.srcitem.all .srcname{font-weight:600;color:var(--color-text-primary)}
+.srcitem.all .srcbar{visibility:hidden}
+.srcitem.all u{color:var(--color-text-primary)}
+
+/* ---- the source filter, in the bar with the other filters ---- */
+/* CONSTANT HEIGHT AT ANY NUMBER OF SOURCES, which is the property the chip row
+   could not be given. The list inside grows; the page does not. */
+.srcpick{position:relative;display:flex;align-items:center;gap:6px}
+/* THE SAME TYPE AS "PUBLIC" ONE CONTROL OVER, and declared next to it rather
+   than near the popover, because the thing being kept in step is the pair. */
+.srckey{font-size:.78rem;color:var(--rbp-text-muted);flex:0 0 auto}
+.srcbtn{display:inline-flex;align-items:center;gap:7px;font:inherit;
+  font-size:.82rem;height:38px;padding:0 11px;border:1px solid var(--color-border);
+  border-radius:6px;background:var(--color-bg-secondary);
+  color:var(--color-text-primary);cursor:pointer;min-height:0;
+  max-width:min(20rem,60vw)}
+.srcbtn-lab{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* THE CARET IS THE ONLY THING SAYING THIS OPENS SOMETHING. The age control
+   beside it is a native select and draws its own; this is a button and would
+   otherwise read as an action. */
+.srcbtn::after{content:"";flex:0 0 auto;width:6px;height:6px;
+  margin:-3px 0 0 1px;border-right:2px solid var(--rbp-text-muted);
+  border-bottom:2px solid var(--rbp-text-muted);transform:rotate(45deg)}
+.srcbtn:hover{border-color:var(--rbp-link)}
+/* A FILTER THE READER CANNOT SEE IS THE SAME DEFECT AS ONE THAT SILENTLY STOPPED
+   APPLYING, from the other direction. The trigger carries the selection in its
+   own text, and the mark means the state is not colour alone. */
+.srcbtn.on{border-color:var(--rbp-link);color:var(--rbp-link);font-weight:600}
+.srcbtn.on .srcbtn-lab::before{content:"\2713\00a0"}
+.srcmenu{position:absolute;top:calc(100% + 6px);right:0;z-index:30;width:min(21rem,86vw);
+  background:var(--color-bg-content);border:1px solid var(--color-border);
+  border-radius:8px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.16)}
+.srcmenu-find input{width:100%;padding:7px 10px;font:inherit;font-size:.82rem;
+  border:1px solid var(--color-border);border-radius:6px;
+  background:var(--color-bg-secondary);color:var(--color-text-primary)}
+/* THE ONE PLACE ON THIS PAGE THAT SCROLLS INSIDE ITSELF, and it is the reason
+   the control is a fixed height: the list is bounded here rather than in the
+   page. Twelve entries fit before it scrolls, which is more than the site reads
+   today and less than it will. */
+.srcmenu-list{max-height:min(50vh,22rem);overflow-y:auto;margin-top:6px}
+.srcopt{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 12px;
+  align-items:baseline;width:100%;text-align:left;font:inherit;font-size:.82rem;
+  background:none;color:var(--rbp-text-secondary);border:0;border-radius:5px;
+  padding:6px 8px;cursor:pointer;min-height:0}
+.srcopt .srcname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.srcopt u{text-decoration:none;color:var(--rbp-text-muted);
+  font-variant-numeric:tabular-nums}
+.srcopt:hover{background:var(--color-bg-secondary);color:var(--color-text-primary)}
+.srcopt[aria-pressed="true"]{color:var(--rbp-link);font-weight:600}
+.srcopt[aria-pressed="true"] .srcname::before{content:"\2713\00a0"}
+.srcopt[aria-pressed="true"] u{color:var(--rbp-link)}
+.srcopt.zero{color:var(--rbp-text-muted)}
+.srcopt.all{border-bottom:1px solid var(--color-border);border-radius:5px 5px 0 0;
+  margin-bottom:4px}
+/* NESTED HERE TOO, for the reason it is nested in the ledger: `role="group"`
+   with a name is what tells a screen reader that "Red Hat Product Security" is
+   inside CSAF Advisory rather than beside Red Hat. */
+.srcopt-grp{margin-top:6px;padding-left:10px;border-left:2px solid var(--color-border)}
+.srcmenu-none{margin:8px;font-size:.8rem;color:var(--rbp-text-muted)}
 
 /* ---- the control bar, sticky, directly above the rows ---- */
 .cmdbar{position:sticky;top:0;z-index:20;background:var(--color-bg-content);
@@ -674,12 +788,66 @@ body.locked{overflow:hidden}
    The gap to the age control widens with it, because the field's right end was
    14px from the word "Public" and at this width that reads as the two controls
    touching. */
-.cmd-in{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:10px 0}
+/* THE CONTROLS SIT INSIDE THE BAR RATHER THAN ON ITS EDGES.
+
+   `.cmdbar` paints an opaque background -- it has to, it is sticky and the rows
+   scroll under it -- and that background was exactly the content width, so the
+   search field sat on its left edge and the age select on its right with nothing
+   between either control and the end of the box it lives in.
+
+   THIS IS A TRILEMMA AND THE THIRD ONE GIVES. The bar can be the content width,
+   the controls can be inset from it, and the controls can line up with the hard
+   left edge every other thing on this page starts on -- the eyebrow, the count,
+   the floor sentence, the view note, every group heading, every CVE ID. Any two.
+   Bleeding the bar outward was the version that kept the alignment, and it reads
+   as the bar overhanging the page rather than as the controls having room, which
+   is the wrong two. So the field starts 16px in and is the one thing on the page
+   off that line, which is legible as a toolbar with its own padding in a way an
+   overhanging bar is not. */
+.cmd-in{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:10px 16px}
+/* THE SEARCH TAKES THE ROW BACK, and the crowding is fixed by the gap instead.
+
+   It was capped at 640 with `margin-inline-end:auto` holding the filters at the
+   right end, on the theory that a search on one side and filters on the other
+   would read as deliberate. It does not, and the reason is that `.container` is
+   a hard 1200px: the freed space cannot go anywhere useful, so it pooled as a
+   fixed 238px hole in the middle of the bar at every desktop width, which is the
+   largest empty space on the page and reads as a missing control rather than as
+   composition. Two other placements were built and measured before this landed
+   -- packing left leaves 214px falling off the right end of a row whose content
+   below runs full width, and parking the live count in the gap still left 128px
+   and an orphaned label in it.
+
+   What actually read as crowded was never the width. It was three controls at
+   three heights with two different label patterns and 20px between all of them.
+   Those are fixed above and beside; the field can have the row.
+
+   THE GAP CARRIES THE GROUPING. 24px inside the filter pair, 42 between the
+   search and it, so the bar reads as one control and then two rather than three
+   in a line. Expressed as a margin on the first filter rather than as a second
+   `gap`, because a flex gap cannot differ between one pair of items and the
+   next. */
 .cmd-grow{flex:1 1 240px;min-width:180px}
-.cmd-grow input{width:100%;padding:8px 16px;border:1px solid var(--color-border);
+.srcpick{margin-inline-start:18px}
+/* ONE ROW, ONE HEIGHT. The three controls in this bar were 43.6px, 37px and
+   33.5px, each arriving at its own height from its own padding against its own
+   font size and its own default line-height -- 16px inherited in the field, .82
+   in the two filters, `normal` in the select where the other two compute a
+   ratio. Ten pixels of difference across three boxes sitting on one line is most
+   of what reads as clutter, ahead of any of the widths.
+
+   Set on the box rather than reached at through padding, because padding cannot
+   reconcile three different line-height regimes and this is a toolbar: the
+   height is a property of the row, not of what each control happens to contain.
+   38px clears the 24px WCAG 2.5.8 AA target on a phone and is the height the age
+   select, at 33.5, was already quietly setting for the group.
+
+   The field keeps its 16px type. Anything smaller makes iOS zoom the page on
+   focus, which is a worse defect than a tall input. */
+.cmd-grow input{width:100%;height:38px;padding:0 16px;border:1px solid var(--color-border);
   border-radius:6px;background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit}
 .cmd-lab{font-size:.78rem;color:var(--rbp-text-muted);display:flex;align-items:center;gap:6px}
-.cmd-lab select{padding:7px 9px;border:1px solid var(--color-border);border-radius:6px;
+.cmd-lab select{height:38px;padding:0 9px;border:1px solid var(--color-border);border-radius:6px;
   background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit;font-size:.82rem;
   max-width:min(22rem, 60vw);text-overflow:ellipsis}
 .linkbtn{background:none;border:none;color:var(--rbp-link);cursor:pointer;
@@ -903,6 +1071,39 @@ body.locked{overflow:hidden}
   .cmd-count span{font-size:.92rem}
   .distbar{grid-template-columns:minmax(0,7.5rem) 1fr 3rem;gap:9px}
   .cmd-grow{flex:1 1 100%}
+  /* THE SEARCH TAKES ITS OWN LINE AND THE TWO FILTERS SHARE THE NEXT ONE.
+
+     Measured at 375, where the content box is 335px: "Source All" is 104 and the
+     age control 220, which came to 336 at the tightened gap and wrapped to a
+     third row for one pixel. Capping the select is what actually buys the line
+     -- "Under 180 Days" is the longest option and sets at 133px, so 150 is a cap
+     the copy clears rather than a cap it ellipsises against, and `text-overflow`
+     is already declared above for anything longer that arrives later.
+
+     Below about 350px it wraps again, which is correct: three short rows beat one
+     row of controls squeezed to nothing. */
+  /* FLUSH AGAIN HERE, and it is a fit rather than a preference. The content box
+     is 335px at 375, the two filters need 330 of it to share one line, and 16px
+     of inset each way leaves 303 -- so the inset buys breathing room by spending
+     a whole third row of controls on the viewport where the row count matters
+     most. Nothing is crowded against a surface edge at this width anyway: the
+     bar is the full column and the controls fill it. */
+  .cmd-in{gap:10px 12px;padding-inline:0}
+  /* The grouping margin is a horizontal relationship, and there is no longer one
+     to express: the search has the line above and the two filters start this one
+     together. Left in, it indents the pair by 18px against every other control
+     on the page and costs the row the pixels it needs to stay one line. */
+  .srcpick{margin-inline-start:0}
+  .cmd-lab select{max-width:min(150px,44vw)}
+  /* THE POPOVER IS ANCHORED TO THE EDGE THE CONTROL IS ON.
+
+     `right:0` is right on a desktop, where the control sits at the right end of
+     the bar and a menu hanging left of it stays on the page. On a phone the
+     control is at the LEFT end of its row, so the same rule laid a 341px menu
+     from x=-216 to x=124: two thirds of the source list off the side of the
+     screen, unreachable, and not even a horizontal scroll to reveal it because
+     the overflow is to the left of the origin. */
+  .srcmenu{left:0;right:auto;width:min(21rem,calc(100vw - 34px))}
   .panel{padding:20px 18px 48px}
 }
 
