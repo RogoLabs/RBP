@@ -1007,8 +1007,8 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 |---|---|---|---|
 | ~~**Android Security Bulletin**~~ | **cancelled, see below** | | **0** |
 | ~~**Samsung Mobile SMR**~~ | **BUILT 2026-08-23** | SamsungMobile | **+1, measured** |
-| **Patchstack** | `patchstack.com/database/` 200; needs a machine-readable route, not the HTML | Patchstack (14,264 CVEs, the largest missing CNA on the roster) | +1 |
-| **WPScan** | `api/v3` route 404; API is token-gated | WPScan (1,961) | +1, blocked on credentials |
+| ~~**Patchstack**~~ | **REFUSED 2026-09-09, see below.** The JSON route exists and carries no CVE ids; the detail pages do, and 0 of 32 are reserved | Patchstack (14,264 CVEs, the largest missing CNA on the roster), as `corroborating` only | **0** |
+| ~~**WPScan**~~ | **REFUSED 2026-09-09, see below.** v3 and v4 live under `/wp-json/` and both 403; the public HTML trails publication by a median of 186 days | nothing: not one WPScan-assigned id in the newest 28 | **0** |
 | **CSAF provider sweep** | probe `.well-known/csaf/` per vendor. Sampled: SonicWall **200**, Palo Alto **404**, Dell **403** | one CNA each, no parser each | +5 to +15 |
 | **National CERT feeds** | CERT-FR **200**, TWCERT **200**, JVN **200**, CERT-VDE **200**, CISA ICS **200** | TR-CERT, twcert, CERTVDE, INCD, CERT-In, CIRCL, DIVD, JPCERT | +5 to +8 |
 | ~~**GitLab advisory DB**~~ | **REJECTED 2026-08-27, see below** | | **0** |
@@ -1748,6 +1748,224 @@ browser to get past one.
 > CNAs standing between the gate and headroom, nine publish no CSAF at the well-known path
 > and the tenth publishes it behind authentication. Margin has to come from Tier 2's
 > national CERT feeds or from Tier 3, both of which are parsers rather than config lines.
+
+> ### PROBED AND REFUSED 2026-09-09. Patchstack and WPScan, the two largest missing
+> ### CNAs on the roster, and the WordPress ecosystem has no reserved window to observe.
+>
+> Both rows in the table above are wrong about the route and right about the outcome for
+> a reason neither row gives. **59 CVE IDs sampled across the two sources, 59 PUBLISHED at
+> the oracle, 0 RESERVED.** Kept whole so neither host is probed again.
+>
+> **Patchstack has a machine-readable route, and it carries no CVE ids.** The row above
+> says the HTML is all there is. It is not: `patchstack.com/database/` is a Nuxt shell that
+> renders 20 rows server-side and pages through
+> `https://vdp.patchstack.com/api/database/home?page=N`, JSON, 20 rows and ~15KB a page,
+> allowed by that host's own robots (`patchstack.com/robots.txt` disallows `/api/`, but the
+> API is not on that host). A `search=` parameter filters it. The record has a `cve` field.
+>
+> **The `cve` field is null on all 500 records the endpoint will serve, and on year-old
+> records reached through `search=`.** CVE ids exist only on the server-rendered detail
+> page, one request and ~84KB each, where exactly one appears under a `CVE ID` label linked
+> to `cve.mitre.org`. So the cheap route is CVE-free and the CVE route is a page per
+> vulnerability, against a host that **403s after about 36 detail fetches at 0.5s spacing**
+> and clears within minutes, which is a throttle rather than a ban.
+>
+> Two caps to know before anyone re-reads it: `pagination.total` is **500** and
+> `total_pages` **25** on every query including a filtered one, and page 26 is a clean 404
+> rather than the soft 200 this document has been caught by four times. At the current rate
+> of about 55 disclosures a day, 500 records is nine days.
+>
+> | measured 2026-09-09 | Patchstack | WPScan |
+> |---|---|---|
+> | sampled | 42 detail pages, 2026-08-31 to 2026-09-09 | 28 newest of a 650-row crawl |
+> | carried a CVE id | 32 of 36 read (6 threw 403) | 27 of 28 |
+> | RESERVED at the oracle | **0 of 32** | **0 of 27** |
+> | leads record publication | 5, all by exactly 1 day | **0** |
+> | same day | 14 | 0 |
+> | trails | 13, max 140 days | **27, median 186 days, max 2,462** |
+> | owners of the sampled ids | Wordfence 10, WPScan 9, Patchstack 6, GitHub_M 5, VulnCheck 1, openjs 1 | Patchstack 15, Wordfence 10, VulnCheck 1, mitre 1 |
+>
+> **A one-day lead at a UTC date boundary is not a lead.** Patchstack's maximum is +1 and
+> its median is 0, against `zdi` at 55% and a 33-day median. It fails admissibility test 2.
+> It would clear test 1, and comfortably: a single 500-record window crosses the 3-sighting
+> floor for `Patchstack`, `Wordfence`, `WPScan` and `VulnCheck`, all unsighted. So the
+> verdict is **`corroborating`**: mergeable, excluded from the coverage numerator, worth
+> zero rows and zero effective CNAs. **That is section 2's opening paragraph arriving in
+> the flesh** on the largest missing CNA on the roster. Merging it would move
+> `cnas_sighted`, which looks like progress, and nothing a reader of this site can see.
+>
+> **WPScan's v3 API is not a 404, and there is a v4.** The row above was probing the wrong
+> base. wpscan.com is now a WordPress.com site and the routes are under `/wp-json/`:
+> `api/v3|v4/plugins/latest`, `themes/latest`, `plugins/<slug>`, `vulnerabilities/<uuid>`.
+> Every one answers `403 {"status":"forbidden"}` unauthenticated, and the free researcher
+> tier is **25 API calls a day**, which is not a feed. Same decision as Wordfence: an
+> authenticated feed is a different decision from this one and is not taken here.
+>
+> Its public HTML is readable and does not need one. `/plugins?get=<letter>&page=N` serves
+> 25 rows a page, each a `/vulnerability/<uuid>/` link with a published date, a title and
+> no CVE id; the detail page is ~145KB and carries the id. The full A-Z crawl is 27
+> requests and returned **650 vulnerabilities, 2014-08-01 to 2026-08-25**.
+>
+> **WPScan is a publication mirror, and by a wider margin than `euvd`.** Not one of the 27
+> leads. The median trails record publication by half a year. And the owner column is the
+> finding that closes the row: **not one WPScan-assigned id in the newest 28**, so the feed
+> would not credit the CNA it was on this table to buy. `euvd` at least had zero lead;
+> this has negative lead.
+>
+> **The general result, which is why this block is longer than a rejection needs to be.**
+> Apply this document's own rule, *ask what makes the source publish*. Wordfence, Patchstack
+> and WPScan are all CNAs, they compete on how fast they publish, and they publish the CVE
+> Record at or before the moment the advisory goes public: Patchstack's detail page carries
+> the id on the day of disclosure (5 of 5 sampled same-day entries) and that id is already
+> PUBLISHED. **There is no reserved window in the WordPress plugin ecosystem to observe.**
+> The largest missing CNA on the roster is missing for coverage and is structurally
+> incapable of producing a row, and section 5's rule to sequence the tail by volume
+> descending puts it first. Volume is not yield, which section 2 says of `msrc` and now
+> says of the top of Tier 3.
+
+> ### PROBED 2026-09-09. `oss-security`, and the cheapest detector this document has found.
+> ### Six requests bought seven reserved ids no merged feed sees.
+>
+> A new class, and it is not in the table above because the table is aggregators and vendor
+> pages. A disclosure MAILING LIST is neither. It publishes because a poster decided to
+> post, which by section 2's rule ("ask what makes the source publish") is the `zdi` shape
+> rather than the `euvd` one: nothing about it waits for a CVE Record.
+>
+> **The route is a month index and nothing else.**
+> `https://www.openwall.com/lists/oss-security/YYYY/MM/` lists every message for the month
+> with its subject, 15 to 75KB, **one request a month**, archived unbroken back to 2008/02.
+> `www.openwall.com/robots.txt` blocks named crawlers and not `*`. A four-year window is
+> **48 requests and about 2.5MB**, incremental at one request a month afterwards. For scale:
+> `zdi` is 4 requests and 17MB, `certcc` is 210 requests, `csaf:ncsc-nl` is 1,031 and 111MB.
+>
+> **Measured over 2026-04-01 to 2026-09-09, from subject lines only:**
+>
+> | | |
+> |---|---:|
+> | requests | **6** |
+> | messages indexed | 1,838 |
+> | distinct CVE ids in SUBJECTS | 1,105 |
+> | PUBLISHED at the oracle | 1,087 |
+> | REJECTED | 2 |
+> | **RESERVED** | **16** |
+> | of those, absent from all 2,359 rows the live run publishes | **7** |
+> | dated references leading record publication | **293 of 1,087 (27.0%)**, median 1d, max 127d |
+> | same day | 646 |
+> | trailing | 148 |
+>
+> The lead figure against the committed cards: `zdi` 55.31% at a 33-day median, `jvn` 33.6%
+> at 6 days, **`oss-security` 27.0% at 1 day**, `certcc` 22.26% at 8 days, `csaf:ncsc-nl`
+> 4.07% at 8 days. The median is short because most of the traffic is distro advisories
+> posting at the same moment the record publishes, and the median is not what this feed is
+> for. The tail is: 127 days at the far end, and sixteen ids that have not published at all.
+>
+> **The seven, named, because a sole-source claim should be checkable.** Every one is a
+> numbered vendor advisory posted to the list, not chatter:
+>
+> | id | posted | the advisory |
+> |---|---|---|
+> | CVE-2026-71196 | 2026-09-03 | OpenStack Glance, OSSA-2026-038 |
+> | CVE-2026-78331, CVE-2026-78332 | 2026-08-24 | NethServer, multiple vulnerabilities |
+> | CVE-2026-79604 | 2026-09-08 | Xen, XSA-512 v3, oxenstored |
+> | CVE-2026-79605, CVE-2026-79606 | 2026-09-08 | Xen, XSA-513 v3, Tapdisk |
+> | CVE-2026-84939 | 2026-09-08 | Apache FreeMarker |
+>
+> Two of the seven are already past `min_age_days = 7` and the other five mature into it,
+> so this is a snapshot of a rate rather than a stock. Against the per-feed sole-source
+> counts this document records elsewhere (`zdi` 24, `debian` 36, `alpine` 23, `certcc` 13,
+> `redhat` 10, `ghsa` 5), **seven in six months of subject lines, before a single message
+> body has been read, is in the range that got `zdi` and `certcc` merged.**
+>
+> **And it is a floor twice over.** Only subjects were read; a CVE id that appears only in
+> a body was not counted, and reading bodies is one request a message, about 300 a month.
+> The adapter this suggests reads month indexes for the window and stops there.
+>
+> **Full Disclosure is the same idea and does not survive the comparison.**
+> `https://seclists.org/fulldisclosure/YYYY/Mon/` indexes the month, but its subjects name
+> the product rather than the id: 12 ids in the August index against `oss-security`'s 212.
+> So it is a body crawl by construction. 45 of the 161 non-reply messages in August and
+> September were read: **255 distinct ids, 251 PUBLISHED, 4 RESERVED, and 2 of the 4 absent
+> from the site, both of them the same NethServer pair `oss-security` already carries.**
+> Marginal contribution over `oss-security` in this sample: **zero**, for 45 body fetches
+> against six index fetches. `seclists.org/robots.txt` blocks no general crawler and states
+> that IPs "which make hundreds of requests in a short period of time will be banned",
+> which is the exact shape of the only crawl that would make this feed work.
+>
+> **What this probe does not establish is admissibility test 1, and the block below scores
+> it.** Marginal CNA yield needs the roster and the baseline, which is `python -m rbp.feedlab
+> score`. That read was the open defect this probe ran into, a working baseline shared across
+> every branch on the machine, and it is now guarded: `score`, `audit` and a rescore refuse a
+> baseline whose feed set is not the running profile. Seven sole-source ids in six months of
+> subjects say nothing about marginal CNA yield on their own, and a candidate clearing test 2
+> while failing test 1 is `redundant`, which is mergeable and stays in the numerator. Scored
+> the same day, and that is what it turned out to be.
+>
+> One design note the probe already settles. An `oss-security` post is a publication event
+> with a date, but the poster is not reliably the owning CNA, and a forwarded advisory reads
+> identically to a first-party one. So the slug stays OUT of `clock._ORIGIN_KIND`, where the
+> map's documented fail-safe reads it as a tracker and it can never start a 72-hour MUST
+> clock. That is the same treatment `debian` and `alpine` get, and for a better reason than
+> theirs.
+
+> ### SCORED 2026-09-09, on the four-year window. `redundant`, which is `certcc`'s verdict,
+> ### and 9 sole-source rows against `certcc`'s 13.
+>
+> The probe above read six months of subject lines by hand. This is the harness, over the
+> window the pipeline gathers, against the recorded baseline and the pinned live run.
+> Card in `feedlab/oss-security.json`.
+>
+> | | |
+> |---|---:|
+> | in-window ids | 2,471 |
+> | not already in the baseline | 363 |
+> | roster CNAs reached | 61 |
+> | **marginal CNAs (test 1)** | **0** |
+> | dated references leading publication | **807 of 2,430 (33.21%)**, median 1d, max 408d |
+> | unpublished at the corpus (test 2) | 40 |
+> | **RESERVED at the live oracle** | **19** |
+> | **reserved and in no merged feed** | **9** |
+> | cost | 45 requests, 1.2 MB, 46.1s |
+> | verdict | **`redundant`** |
+>
+> **`redundant` is mergeable and stays in the numerator.** It is the verdict that fails
+> test 1 and clears test 2, which is the opposite shape from `corroborating` and the one
+> `certcc` was merged on eight days ago. So the question this card asks is not whether the
+> feed is admissible. It is whether nine rows are worth 45 requests.
+>
+> **The zero is firm rather than provisional, and that is worth one line because the card
+> hedges it.** Every marginal figure here is printed as an upper bound, because this machine's
+> baseline is 11,613 rows colder than the live run at `alas`, `csaf`, `debian`, `ghsa`,
+> `ghsa-repos` and `osv`, and a colder baseline flatters a candidate. An upper bound of 0 is
+> 0. There is no reading of the depth shortfall that gives this feed a marginal CNA.
+>
+> **The lead figure went UP against the hand probe, and the reason is the window.** The probe
+> measured 27.0% over six months at a 1-day median and a 127-day maximum; the full window is
+> 33.21% at the same median and a 408-day maximum. Six months of a mailing list is mostly
+> distro traffic posting the day the record publishes, and the long leads are rare events that
+> a wider window catches more of. Against the committed cards: `zdi` 55.31% at 33 days,
+> **`oss-security` 33.21% at 1 day**, `jvn` 33.6% at 6 days, `certcc` 22.26% at 8 days.
+>
+> **Two numbers on this card mean different things and one of them is the stale index.**
+> `unpublished_n` is 40 and the live oracle says 19. `disclosure_lead` counts an id as
+> unpublished when it is RESERVED in the corpus **or absent from it**, and the local index
+> predates the run, so the 21 difference is mostly ids published since the index was built.
+> The docstring already says an absent id "can also mean a stale index"; this is that,
+> measured. **The number to quote is 19**, and the number that decides anything is 9.
+>
+> **The nine, over four years.** Seven are the probe's, unchanged. Two are older than the
+> probe's window and are the same shape: `CVE-2024-35347`, Xen Security Notice 2, posted
+> 2025-03-05, and `CVE-2025-14269`, a Kubernetes Headlamp advisory posted 2025-12-17. Both
+> have been publicly referenced and unpublished for months, which is the row this site exists
+> to publish, and neither appears in any of the seventeen merged feeds.
+>
+> **NOT MERGED IN THIS COMMIT, and the adapter is deliberately in `feeds.ADAPTERS` and not in
+> `cli.PROFILES["weekly"]`.** `feedlab.fetch` refuses to score a feed that is not an adapter,
+> on the rule that being scoreable and being runnable must be the same condition, so a
+> candidate has to be wired in before it can have a card. The profile is what the cron runs
+> and what reaches the site. Merging is one line in `_WEEKLY`, and
+> `test_it_is_an_adapter_and_deliberately_not_in_the_profile` fails the moment it is added,
+> which is the intended cost: the diff that merges this feed is the diff that inverts that
+> test.
 
 Tier 2 lands somewhere around **35 to 42% of roster, 51 to 61% of reachable**, and the
 range is that wide because six of eight rows are estimates.

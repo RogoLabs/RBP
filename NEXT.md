@@ -100,53 +100,70 @@ positive; it does not block publication. FEEDS.md section 3, "BUILT 2026-09-07".
 
 ## What is open
 
-**1. `data/feedlab/` is not branch-scoped, and the test that would catch that
-reads a different file.** Found 2026-09-08 doing the re-pin after the `zdi`
-merge, which is the item this one outlived.
+**1. `oss-security` is scored, wired in, and not merged. The merge is a
+judgement, not a measurement.** Opened 2026-09-09, and the measuring half is
+closed the same day: adapter in `feeds.ADAPTERS`, card in
+`feedlab/oss-security.json`, tests in `tests/test_oss_security.py`.
 
-`audit` and `baseline --rescore` read the working state at
-`data/feedlab/_baseline.json`, which is gitignored and therefore shared by every
-branch and worktree on the machine.
-`test_the_recorded_baseline_describes_the_profile_that_actually_runs` reads the
-COMMITTED summary at `feedlab/_baseline.json` instead. So the two can describe
-different feed sets, and nothing compares them.
+| the four-year window | |
+|---|---:|
+| in-window ids | 2,471 |
+| marginal CNAs (test 1) | **0**, and firm: an upper bound of 0 is 0 |
+| lead (test 2) | **807 of 2,430 dated (33.21%)**, median 1d, max 408d |
+| RESERVED at the live oracle | 19 |
+| **reserved and in no merged feed** | **9** |
+| cost | 45 requests, 1.2 MB, 46.1s |
+| verdict | **`redundant`**, mergeable, stays in the numerator |
 
-**Measured, not supposed.** A re-pin run on a branch off `main` while the working
-state still held a seventeenth feed produced sixteen cards whose leave-one-out
-figures were scored against a set containing a feed that branch did not run. The
-residue reached the committed summary as `extended`, `extended_at` and a `health`
-key naming a feed absent from that branch's `feeds.ADAPTERS`. The full suite
-passed.
+**What is left is one line in `_WEEKLY` and the reason to write it.** `redundant`
+is `certcc`'s verdict from eight days ago, so admissibility is not the question.
+The question is whether nine rows are worth 45 requests a run, and the comparable
+trades are `certcc` at 13 sole-source rows for 210 requests and `zdi` at 24 for
+four. On rows-per-request this is the best of the three; on rows it is the
+smallest. **That is a call about what the site is for, and it is yours.**
 
-The direction that time was the CONSERVATIVE one, and that is not a defence. A
-baseline that is too large understates marginality, so it can refuse a good feed
-and cannot admit a mirror. But #33's finding was that a marginal figure means
-nothing except against the set the pipeline actually runs, and a set nobody runs
-is that same defect whichever way it leans. The permissive direction is one
-`git switch` away: the same mechanism serves a STALE, smaller working state to a
-branch that has added a feed, which is #33's original error exactly.
+The diff that merges it adds `oss-security` to `_WEEKLY` and inverts
+`test_it_is_an_adapter_and_deliberately_not_in_the_profile`, which fails the
+moment the feed enters the profile. That is the intended cost rather than an
+obstacle: it makes merging a deliberate edit to a test that says why.
 
-**The fix, specified and not built:** `rescore_baseline` and `audit` should refuse
-a working state whose `feeds` differ from `feeds.ADAPTERS`, carrying the message
-the committed test already has. It belongs at the point of load rather than in a
-test, because the test cannot see the file that decides the numbers.
+Two things already decided by the card and not to be re-opened at merge time.
+The slug is mapped to `tracker` in `clock._ORIGIN_KIND`, explicitly rather than
+by omission, because the index cannot say whether the poster is the owning CNA
+and a forwarded advisory reads exactly like a first-party one; calling it an
+advisory would start a 72-hour MUST clock on rows where the CNA may not have
+spoken. And the adapter reads SUBJECT LINES only. A body read is one request per
+message against one per month, about 300x the cost, so it is a different feed
+with a different trade and the floor is stated in the adapter rather than
+implied.
 
 ---
 
-One item, as of 2026-09-08, and it is the shape this file predicted rather than
-one it listed. The `zdi` and `certcc` pin bookkeeping that stood here through the
-day is closed: both feeds have published, the pin reads all seventeen, and
-`PENDING_FIRST_RUN` is empty. The four items that were here that morning went
-four ways the same day: one fixed (#43) and then measured, and the measurement's
-own fix built in #45; two decided into "Settled" below; one measured into FEEDS.md
-("MEASURED 2026-09-08", under the Canonical section).
+One item, as of 2026-09-09, and both of the ones that stood here on 2026-09-08
+are closed. The `certcc` re-pin went in #50. `data/feedlab/` not being
+branch-scoped goes in this commit rather than a later one, because the item that
+replaced it could not be scored until it landed: `scorecard` reads the same
+shared working state that `audit` and `baseline --rescore` do.
+
+**How the second was closed, since the specification in this file was half
+right.** It said `rescore_baseline` and `audit` should refuse a working state
+whose `feeds` differ from `feeds.ADAPTERS`. Two corrections came out of building
+it. The set that matters is the profile filtered through `ADAPTERS`, which is
+what `cli.run` resolves and what the committed test already compared against, not
+`ADAPTERS` alone; and a guard on every load would have made `baseline --add`
+unreachable, which is the only cheap repair for the very mismatch being refused.
+So the reads that produce a NUMBER require the profile and the read that REPAIRS
+the file does not, and `main` checks the spliced result before writing it, which
+is where the residue reached the committed summary the one time this went wrong.
+The test and the guard now derive the profile from one function. Five mutations
+of the guard and two of the write rule were each confirmed to fail a test.
 
 That is not a claim that the site is finished. The things that come are the ones
 this file cannot list yet: a feed shrinking for a reason nobody has seen, a guard
 firing on a shape nobody measured, a harness reading a file no test looks at.
-Item 1 is the third of those and it arrived the way this paragraph said it would.
-When one arrives, it goes here with its measurement and its fix specified, and it
-leaves here when it ships.
+The item that closed today was the third of those and it arrived the way this
+paragraph said it would. When one arrives, it goes here with its measurement and
+its fix specified, and it leaves here when it ships.
 
 ---
 
@@ -193,6 +210,21 @@ costs a session.
   with no incremental route, for rows that only corroborate. Written down
   because its CNA count in FEEDS.md still reads as the best row there, and the
   next reader would re-derive the argument from it.
+- **Patchstack and WPScan stay out, and the WordPress ecosystem is closed.**
+  Decided 2026-09-09 on 59 sampled ids across both, 59 PUBLISHED at the oracle
+  and 0 RESERVED. Patchstack's maximum disclosure lead is +1 day at a UTC date
+  boundary against `zdi`'s 33-day median, so it fails admissibility test 2; it
+  would clear test 1 for four unsighted CNAs, which makes it `corroborating`,
+  excluded from the numerator, worth zero rows. WPScan trails record publication
+  by a median of 186 days and carries no WPScan-assigned id in its newest 28, so
+  it would not credit the CNA it was listed to buy. **The reason is the
+  ecosystem, not the two adapters:** Wordfence, Patchstack and WPScan are all
+  CNAs competing on publication speed and they publish the record at or before
+  the advisory, so there is no reserved window there to see. Written down
+  because Patchstack is the largest missing CNA on the roster and section 5 says
+  to sequence the tail by volume, which puts a structurally rowless source
+  first. Routes, caps, the 403 throttle and the full tables in FEEDS.md,
+  "PROBED AND REFUSED 2026-09-09".
 - **Prefer the DELETE list when in doubt.** Every review this project has run
   came back weighted towards removal; round 9's own balance was 21 removals
   against 7 additions. The documented failure mode is accreting guards and

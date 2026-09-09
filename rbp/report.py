@@ -124,6 +124,16 @@ def _derive_meta(row):
             ref = next((r.split(":", 1)[1] for r in refs if r.startswith("certcc:")), "")
             m = re.fullmatch(r"VU#(\d{4,})", ref)
             return f"https://www.kb.cert.org/vuls/id/{m.group(1)}" if m else ""
+        if s == "oss-security":
+            # The message itself, which is the evidence: refs carry
+            # "oss-security:<year>/<mm>/<dd>/<n>" and that path IS the archive
+            # URL. A month index would be the wrong link. It lists a few hundred
+            # subjects and a reader would have to find the id in it, which is the
+            # dead-chip failure F3 was about wearing a 200.
+            ref = next((r.split(":", 1)[1] for r in refs
+                        if r.startswith("oss-security:")), "")
+            return (f"https://www.openwall.com/lists/oss-security/{ref}"
+                    if re.fullmatch(r"\d{4}/\d{2}/\d{2}/\d+", ref) else "")
         if s == "osv":
             return f"https://osv.dev/list?q={cid}"
         if s == "ubuntu-osv":

@@ -295,6 +295,24 @@ _ORIGIN_KIND = {
     # carries no per-id assigner, so its presence cannot separate "certcc assigned
     # and disclosed this" from "CERT/CC coordinated someone else's id".
     "certcc": "advisory",
+    # A MAILING LIST POST IS A TRACKER ENTRY, and the classification is the whole
+    # judgement about this feed.
+    #
+    # It has everything an advisory has: a stable URL, a date, and prose naming
+    # the id. What it does not have is a reliable answer to WHO is speaking. A
+    # numbered vendor advisory (XSA-512, OSSA-2026-038) and a third party
+    # forwarding one read identically from the index, and the whole point of the
+    # 4.5.1.4 / 4.5.1.6 split is which of those happened. Calling it an advisory
+    # would start a 72-hour MUST clock on rows where the CNA may not have spoken
+    # at all, and reporting a SHOULD as a MUST is named at the top of this module
+    # as the single most damaging error this project could make.
+    #
+    # So it is mapped, explicitly, to the conservative value. Mapped rather than
+    # omitted because `origin_kind` fail-safes an unmapped feed to the same
+    # answer, and `tests/test_pipeline.py` demands the classification be stated:
+    # absence is safe but silent, and a genuine advisory feed left out of the map
+    # understates the count with nothing reporting it.
+    "oss-security": "tracker",
     # A repository advisory is a published advisory with its own identifier and
     # release date, on the vendor's own security tab. Absence from this map is a
     # deliberate fail-safe that reads an unmapped adapter as a tracker, and

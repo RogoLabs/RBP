@@ -705,7 +705,7 @@ def rescore_baseline(corpus_df, base=None):
     the time the ROWS were read, because that is what it means and what
     `test_the_recorded_baseline_describes_the_profile_that_actually_runs` reads.
     """
-    base = base if base is not None else load_baseline()
+    base = base if base is not None else load_baseline(require_profile=True)
     if base is None or not base.get("per_feed"):
         raise SystemExit(
             "no recorded baseline with per-feed rows to re-score. Run "
@@ -823,11 +823,113 @@ def baseline_summary(base):
     }
 
 
-def load_baseline(path=BASELINE):
+def profile_feeds():
+    """The feed set the pipeline actually runs, as ONE definition.
+
+    `cli.run` resolves its sources as the profile filtered through
+    `feeds.ADAPTERS`, and this is that same expression and nothing else. It is a
+    function rather than a constant because `feeds.ADAPTERS` is monkeypatched by
+    tests and a constant would freeze the import-time value.
+
+    THE POINT IS THAT THERE IS ONLY ONE. The defect this exists to close is that
+    the harness and the test which polices the harness each had their own idea of
+    what the merged set is: `test_the_recorded_baseline_describes_the_profile_
+    that_actually_runs` read the COMMITTED summary while `audit` and
+    `baseline --rescore` read the working state, and nothing compared the two.
+    Both now derive the profile from here, so they can disagree about a FILE, and
+    they can no longer disagree about what the file should say.
+    """
+    from .cli import PROFILES
+    return {s for s in (x.strip() for x in PROFILES["weekly"].split(","))
+            if s and s in feeds.ADAPTERS}
+
+
+def profile_mismatch(base):
+    """The message for a baseline that is not the running profile, or None.
+
+    Wording is deliberately the committed test's, because a reader who hits this
+    at the command line and a reader who hits it in CI are looking at the same
+    defect and should not have to recognise two descriptions of it.
+    """
+    if not base:
+        return None
+    recorded = set(base.get("feeds") or [])
+    running = profile_feeds()
+    if recorded == running:
+        return None
+    return (
+        f"the recorded baseline describes a feed set the pipeline does not run.\n"
+        f"  in the profile, not the baseline: {sorted(running - recorded)}\n"
+        f"  in the baseline, not the profile: {sorted(recorded - running)}\n"
+        f"  the file: {BASELINE}\n"
+        "That file is GITIGNORED, so it is shared by every branch and worktree on "
+        "this machine and it does not switch when you do. A marginal figure means "
+        "nothing except against the set the pipeline actually runs, and this is "
+        "not that set.\n"
+        "Repair it with `python -m rbp.feedlab baseline --add "
+        f"{','.join(sorted(running - recorded)) or '<feed>'}`, which fetches only "
+        "the missing feeds, or rebuild the whole set with `python -m rbp.feedlab "
+        "baseline`.")
+
+
+def write_refusal(base, explicit_sources):
+    """Why this baseline must not be written, or None.
+
+    Separated from `main` so the rule can be read and tested without a corpus and
+    seventeen fetches. It is one sentence with one exception:
+
+      A baseline whose feed set is not the running profile is not written, unless
+      the caller named the sources itself.
+
+    `--sources` is the exception because it exists to build a deliberate subset,
+    so refusing it would delete an escape hatch rather than close a defect. It is
+    not a hole: the reads that produce a NUMBER (`score`, `audit`, a rescore)
+    refuse that subset anyway, which is the half that decides anything.
+    """
+    bad = profile_mismatch(base)
+    if not bad or explicit_sources:
+        return None
+    return bad + (
+        "\n\nNOTHING WAS WRITTEN. The committed summary still describes the "
+        "last baseline that matched the profile, which is the state the one "
+        "recorded incident here did not leave behind: a splice's residue reached "
+        "`feedlab/_baseline.json` as `extended`, `extended_at` and a `health` key "
+        "naming a feed that branch did not run, and the full suite passed.")
+
+
+def load_baseline(path=None, require_profile=False):
+    """Read the working baseline. With `require_profile`, refuse a stale one.
+
+    THE GUARD IS AT THE POINT OF LOAD, not in a test, because the test cannot see
+    the file that decides the numbers: `feedlab/_baseline.json` is a committed
+    SUMMARY and `data/feedlab/_baseline.json` is the working state the arithmetic
+    is actually done from. Only the caller reading the second one can check it.
+
+    It is opt-in for one reason, and the reason is a real workflow rather than
+    caution. `baseline --add` exists to repair exactly the mismatch this refuses,
+    by splicing a missing feed into the recorded rows instead of refetching all
+    seventeen, so a guard that fired on every load would make the cheap repair
+    path unreachable and leave a 32-minute rebuild as the only way out. So the
+    reads that PRODUCE A NUMBER require the profile (`score`, `audit`, a rescore)
+    and the read that REPAIRS the file does not. `main` checks the spliced result
+    before writing it, which is where the residue reached the committed summary
+    the one time this went wrong.
+    """
+    # RESOLVED AT CALL TIME, not bound as a default. `path=BASELINE` in the
+    # signature freezes the import-time value, so a caller that repoints
+    # `feedlab.BASELINE` gets the old file and no error, which is the same shape
+    # as the defect this function now guards: a reader who thinks they changed
+    # which file is read, and did not.
+    path = path or BASELINE
     if not os.path.exists(path):
         return None
     with open(path, encoding="utf-8") as fh:
-        return json.load(fh)
+        base = json.load(fh)
+    if require_profile:
+        bad = profile_mismatch(base)
+        if bad:
+            raise SystemExit(bad)
+    return base
 
 
 def write(obj, path):
@@ -1591,6 +1693,21 @@ def main(argv=None):
             base = rescore_baseline(corpus)
         else:
             base = build_baseline(srcs, years, corpus)
+        # WHAT IS ABOUT TO BE WRITTEN, checked before it is written, because the
+        # second file is committed and the one time this went wrong it was the
+        # residue of a splice that reached it: `extended`, `extended_at` and a
+        # `health` key naming a feed the branch did not run, with the full suite
+        # passing.
+        #
+        # `--sources` is exempt and warns instead. It exists to build a
+        # deliberate subset, so refusing it would delete the escape hatch rather
+        # than close the defect; the reads that produce a number refuse that
+        # subset anyway, which is the half that matters.
+        refusal = write_refusal(base, bool(args.sources))
+        if refusal:
+            raise SystemExit(refusal)
+        if args.sources and profile_mismatch(base):
+            print(f"  WARNING: {profile_mismatch(base)}", file=sys.stderr)
         write(base, BASELINE)
         write(baseline_summary(base), os.path.join(LAB, "_baseline.json"))
         print(f"baseline: {len(base['ids']):,} ids, {len(base['effective'])} "
@@ -1632,7 +1749,7 @@ def main(argv=None):
         return 0
 
     if args.cmd == "score":
-        base = load_baseline()
+        base = load_baseline(require_profile=True)
         if base is None:
             raise SystemExit(
                 "no baseline recorded, so 'marginal' has nothing to be marginal "
@@ -1659,7 +1776,7 @@ def main(argv=None):
         # Offline, from the baseline's per-feed rows. Re-scoring against a
         # changed corpus or a changed floor must not cost twelve more fetches at
         # twelve third parties.
-        base = load_baseline()
+        base = load_baseline(require_profile=True)
         if base is None or not base.get("per_feed"):
             raise SystemExit(
                 "no baseline with per-feed rows. Run `python -m rbp.feedlab "

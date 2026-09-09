@@ -914,8 +914,21 @@ def _lab():
 
 
 def _profile_feeds():
-    from rbp.cli import PROFILES
-    return [x for x in PROFILES["weekly"].split(",") if x]
+    """ONE definition, shared with the guard that refuses a stale baseline.
+
+    This used to build its own list from `cli.PROFILES`. That was the smaller
+    half of the defect NEXT.md recorded on 2026-09-08: the test read the
+    committed summary, `audit` and `baseline --rescore` read the working state,
+    and the two had separate ideas of what the merged set is. They now read the
+    same one, so a disagreement can only ever be about a file.
+
+    There is deliberately NO test asserting the two agree. Sharing the definition
+    makes that assertion tautological, and a tautology in the suite reads as
+    coverage of the thing it cannot fail on. What is worth testing is that the
+    shared definition means the right thing, which is
+    `test_the_profile_follows_the_adapters_rather_than_the_profile_string`.
+    """
+    return sorted(feedlab.profile_feeds())
 
 
 @pytest.mark.harness_artefact
@@ -1486,3 +1499,141 @@ def test_extending_with_no_recorded_baseline_refuses(tmp_path, monkeypatch):
 
 def test_reading_a_missing_fetch_history_is_empty_not_an_error(tmp_path):
     assert feedlab._read_fetches("nope", str(tmp_path / "nope.json")) == []
+
+
+# --------------------------------------------------------------------------
+# the working baseline is not branch-scoped, and the guard that says so
+# --------------------------------------------------------------------------
+#
+# NEXT.md, 2026-09-08: "`audit` and `baseline --rescore` read the working state at
+# `data/feedlab/_baseline.json`, which is gitignored and therefore shared by every
+# branch and worktree on the machine." The test that would have caught it read the
+# COMMITTED summary instead, so the two could describe different feed sets and
+# nothing compared them.
+#
+# The measured incident went the CONSERVATIVE way: a re-pin on a branch off `main`
+# scored sixteen cards against a set containing a seventeenth feed that branch did
+# not run. The permissive direction is one `git switch` away and is the same defect,
+# so every test below asserts BOTH directions.
+
+def _base_file(tmp_path, feeds_list):
+    p = tmp_path / "_baseline.json"
+    p.write_text(json.dumps({
+        "feeds": sorted(feeds_list), "scored_at": "2026-09-01T00:00:00+00:00",
+        "ids": [], "sightings": {}, "effective": [],
+        "per_feed": {f: {"rows": [], "stats": {}} for f in feeds_list},
+        "years": [2025], "failed": {}}))
+    return str(p)
+
+
+def test_a_baseline_matching_the_running_profile_passes_the_guard(tmp_path):
+    path = _base_file(tmp_path, feedlab.profile_feeds())
+    assert feedlab.profile_mismatch(json.loads(open(path).read())) is None
+    assert feedlab.load_baseline(path, require_profile=True) is not None
+
+
+def test_a_baseline_holding_a_feed_the_profile_does_not_run_is_refused(tmp_path):
+    """The direction the incident actually took: a residue feed from another
+    branch. Too LARGE understates marginality, so it can refuse a good feed and
+    cannot admit a mirror, and that is still a number measured against a set
+    nobody runs."""
+    path = _base_file(tmp_path, feedlab.profile_feeds() | {"ghost"})
+    with pytest.raises(SystemExit) as e:
+        feedlab.load_baseline(path, require_profile=True)
+    assert "in the baseline, not the profile: ['ghost']" in str(e.value)
+
+
+def test_a_baseline_missing_a_feed_the_profile_runs_is_refused(tmp_path):
+    """The permissive direction, which is #33's original error: a stale, smaller
+    working state served to a branch that has added a feed makes a candidate look
+    like it reaches CNAs nobody else reaches."""
+    running = feedlab.profile_feeds()
+    dropped = sorted(running)[0]
+    path = _base_file(tmp_path, running - {dropped})
+    with pytest.raises(SystemExit) as e:
+        feedlab.load_baseline(path, require_profile=True)
+    assert f"in the profile, not the baseline: ['{dropped}']" in str(e.value)
+
+
+def test_the_refusal_names_the_shared_file_and_the_cheap_repair(tmp_path):
+    """A message that says only "mismatch" sends the reader to a 32-minute
+    rebuild. The reason this is confusing enough to need saying is that the file
+    does not switch when the branch does, so the two things worth printing are
+    WHICH file and the `--add` path that repairs it for one fetch."""
+    running = feedlab.profile_feeds()
+    dropped = sorted(running)[0]
+    msg = str(feedlab.profile_mismatch(
+        {"feeds": sorted(running - {dropped})}))
+    assert "GITIGNORED" in msg
+    assert feedlab.BASELINE in msg
+    assert f"baseline --add {dropped}" in msg
+
+
+def test_the_repair_path_can_still_load_the_file_it_repairs(tmp_path):
+    """`baseline --add` exists to splice a missing feed into the recorded rows
+    instead of refetching all seventeen. A guard on every load would make the
+    only cheap repair for this defect unreachable, so the unguarded read stays
+    and the reads that produce a NUMBER are the ones that refuse."""
+    running = feedlab.profile_feeds()
+    path = _base_file(tmp_path, running - {sorted(running)[0]})
+    assert feedlab.load_baseline(path) is not None
+    assert feedlab.load_baseline(path, require_profile=False) is not None
+
+
+def test_rescore_refuses_a_stale_file_and_accepts_an_explicit_base(monkeypatch, tmp_path):
+    """Both halves matter. `rescore_baseline` loading the shared file is the
+    command NEXT.md names; `rescore_baseline` called with a base in hand is what
+    `extend_baseline` does mid-splice, and guarding that would refuse the repair
+    at the moment it is half done."""
+    stale = _base_file(tmp_path, {"only-this"})
+    monkeypatch.setattr(feedlab, "BASELINE", stale)
+    with pytest.raises(SystemExit) as e:
+        feedlab.rescore_baseline(CORPUS)
+    assert "the pipeline does not run" in str(e.value)
+
+    handed = {"feeds": ["only-this"], "years": [2025],
+              "per_feed": {"only-this": {"rows": [{"cve_id": "CVE-2025-1000",
+                                                   "public_date": "2025-06-01"}],
+                                         "stats": {}}}}
+    out = feedlab.rescore_baseline(CORPUS, base=handed)
+    assert out["ids"] == ["CVE-2025-1000"]
+
+
+def test_the_profile_follows_the_adapters_rather_than_the_profile_string(monkeypatch):
+    """`cli.run` resolves sources as the profile filtered through
+    `feeds.ADAPTERS` and drops the rest with a warning, so a profile naming a feed
+    with no adapter runs sixteen feeds and not seventeen. The guard has to mean
+    the same thing, or it refuses a baseline that is correct."""
+    from rbp import cli, feeds as feeds_mod
+    monkeypatch.setattr(cli, "PROFILES", {**cli.PROFILES,
+                                          "weekly": cli.PROFILES["weekly"] + ",no-such-feed"})
+    assert "no-such-feed" not in feedlab.profile_feeds()
+    monkeypatch.setitem(feeds_mod.ADAPTERS, "no-such-feed", lambda years: [])
+    assert "no-such-feed" in feedlab.profile_feeds()
+
+
+def test_a_spliced_baseline_that_still_mismatches_is_not_written():
+    """The recorded incident, at the moment it reached a committed file.
+
+    `baseline --add` repairs a mismatch, and a repair that only half worked used
+    to be written anyway: the residue reached `feedlab/_baseline.json` as
+    `extended`, `extended_at` and a `health` key naming a feed the branch did not
+    run. The write is the last point where that is still catchable."""
+    running = feedlab.profile_feeds()
+    half_repaired = {"feeds": sorted(running - {sorted(running)[0]})}
+    refusal = feedlab.write_refusal(half_repaired, explicit_sources=False)
+    assert refusal is not None
+    assert "NOTHING WAS WRITTEN" in refusal
+    assert feedlab.write_refusal({"feeds": sorted(running)},
+                                 explicit_sources=False) is None
+
+
+def test_an_explicitly_named_subset_may_still_be_written():
+    """`--sources` builds a deliberate subset and refusing it would delete an
+    escape hatch rather than close a defect. It is not a hole: `score`, `audit`
+    and a rescore all refuse that subset when they read it back, which is the
+    half that produces a number."""
+    running = feedlab.profile_feeds()
+    subset = {"feeds": sorted(running)[:2]}
+    assert feedlab.write_refusal(subset, explicit_sources=True) is None
+    assert feedlab.write_refusal(subset, explicit_sources=False) is not None
