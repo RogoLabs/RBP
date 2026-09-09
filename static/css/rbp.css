@@ -776,8 +776,35 @@ body.locked{overflow:hidden}
 .srcmenu-none{margin:8px;font-size:.8rem;color:var(--rbp-text-muted)}
 
 /* ---- the control bar, sticky, directly above the rows ---- */
+/* THE SURFACE GETS THE BUFFER, NOT THE CONTROLS.
+
+   `.cmdbar` paints an opaque background -- it has to, it is sticky and the rows
+   scroll under it -- and that background was exactly the content width, so the
+   search box sat on its left edge and the age select on its right with nothing
+   between the control and the end of the box it lives in. It read as jammed.
+
+   The obvious fix is padding on `.cmd-in`, and it is wrong here. This page has
+   one hard left edge: the eyebrow, the count, the floor sentence, the view note,
+   every group heading and every CVE ID all start at the same x. Insetting the
+   controls moves the search box 16px off that line and nothing else with it, and
+   at this width you can see it.
+
+   So the surface bleeds outward into the container's own padding instead. The
+   controls keep the column, the white gets the room, and the bottom rule now
+   runs the full width of the bar rather than stopping short of it.
+
+   THE BLEED HAS TO EQUAL `.container`'s PADDING or the bar overhangs the page.
+   It is a copy of the three values in style.css (`.container` at :root, at
+   max-width 768 and at max-width 480, 1.5rem / 1rem / 0.75rem) and there is no
+   way to read a parent's padding in CSS, so it is one variable in one place with
+   the breakpoints it has to match written next to it. Change one, change both;
+   tests/test_layout.py sweeps for horizontal overflow and is what catches it. */
+:root{--cmdbar-bleed:var(--spacing-lg)}
+@media (max-width:768px){:root{--cmdbar-bleed:var(--spacing-md)}}
+@media (max-width:480px){:root{--cmdbar-bleed:.75rem}}
 .cmdbar{position:sticky;top:0;z-index:20;background:var(--color-bg-content);
-  border-bottom:1px solid var(--color-border);margin-top:22px}
+  border-bottom:1px solid var(--color-border);margin-top:22px;
+  margin-inline:calc(-1 * var(--cmdbar-bleed));padding-inline:var(--cmdbar-bleed)}
 /* THE WIDEST CONTROL ON THE PAGE HAD THE TIGHTEST INSIDE.
 
    12px of inner padding is right for a chip. On a field 990px wide it puts the
