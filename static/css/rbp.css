@@ -722,18 +722,20 @@ body.locked{overflow:hidden}
 /* ---- the source filter, in the bar with the other filters ---- */
 /* CONSTANT HEIGHT AT ANY NUMBER OF SOURCES, which is the property the chip row
    could not be given. The list inside grows; the page does not. */
-.srcpick{position:relative;display:flex;align-items:center}
-.srcbtn{display:inline-flex;align-items:baseline;gap:7px;font:inherit;
-  font-size:.82rem;padding:7px 11px;border:1px solid var(--color-border);
+.srcpick{position:relative;display:flex;align-items:center;gap:6px}
+/* THE SAME TYPE AS "PUBLIC" ONE CONTROL OVER, and declared next to it rather
+   than near the popover, because the thing being kept in step is the pair. */
+.srckey{font-size:.78rem;color:var(--rbp-text-muted);flex:0 0 auto}
+.srcbtn{display:inline-flex;align-items:center;gap:7px;font:inherit;
+  font-size:.82rem;height:38px;padding:0 11px;border:1px solid var(--color-border);
   border-radius:6px;background:var(--color-bg-secondary);
   color:var(--color-text-primary);cursor:pointer;min-height:0;
   max-width:min(20rem,60vw)}
-.srcbtn-key{font-size:.78rem;color:var(--rbp-text-muted);flex:0 0 auto}
 .srcbtn-lab{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* THE CARET IS THE ONLY THING SAYING THIS OPENS SOMETHING. The age control
    beside it is a native select and draws its own; this is a button and would
    otherwise read as an action. */
-.srcbtn::after{content:"";align-self:center;flex:0 0 auto;width:6px;height:6px;
+.srcbtn::after{content:"";flex:0 0 auto;width:6px;height:6px;
   margin:-3px 0 0 1px;border-right:2px solid var(--rbp-text-muted);
   border-bottom:2px solid var(--rbp-text-muted);transform:rotate(45deg)}
 .srcbtn:hover{border-color:var(--rbp-link)}
@@ -786,12 +788,41 @@ body.locked{overflow:hidden}
    The gap to the age control widens with it, because the field's right end was
    14px from the word "Public" and at this width that reads as the two controls
    touching. */
-.cmd-in{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:10px 0}
-.cmd-grow{flex:1 1 240px;min-width:180px}
-.cmd-grow input{width:100%;padding:8px 16px;border:1px solid var(--color-border);
+.cmd-in{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:10px 0}
+/* THE SEARCH STOPS GROWING, AND THE FILTERS STAY ON THE RIGHT.
+
+   With nothing capping it the field took every pixel the two filters did not:
+   861px of a 1200px bar at 1340 wide, which is 72% of the row given to a control
+   whose content is rarely more than a CVE ID. That is what put "Source" and
+   "Public" hard against each other at the right end and made a bar with three
+   controls in it read as crowded.
+
+   Capped at 640, and the leftover goes into the middle rather than onto any
+   control: `margin-inline-end:auto` keeps the filters where they were, at the
+   right end, so the bar reads as a search on one side and the filters on the
+   other instead of three things jostling. The cap is a maximum, not a width --
+   below about 1000px the field is still the thing that gives, which is right,
+   because it is the only control here that can use the room. */
+.cmd-grow{flex:1 1 240px;min-width:180px;max-width:640px;margin-inline-end:auto}
+/* ONE ROW, ONE HEIGHT. The three controls in this bar were 43.6px, 37px and
+   33.5px, each arriving at its own height from its own padding against its own
+   font size and its own default line-height -- 16px inherited in the field, .82
+   in the two filters, `normal` in the select where the other two compute a
+   ratio. Ten pixels of difference across three boxes sitting on one line is most
+   of what reads as clutter, ahead of any of the widths.
+
+   Set on the box rather than reached at through padding, because padding cannot
+   reconcile three different line-height regimes and this is a toolbar: the
+   height is a property of the row, not of what each control happens to contain.
+   38px clears the 24px WCAG 2.5.8 AA target on a phone and is the height the age
+   select, at 33.5, was already quietly setting for the group.
+
+   The field keeps its 16px type. Anything smaller makes iOS zoom the page on
+   focus, which is a worse defect than a tall input. */
+.cmd-grow input{width:100%;height:38px;padding:0 16px;border:1px solid var(--color-border);
   border-radius:6px;background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit}
 .cmd-lab{font-size:.78rem;color:var(--rbp-text-muted);display:flex;align-items:center;gap:6px}
-.cmd-lab select{padding:7px 9px;border:1px solid var(--color-border);border-radius:6px;
+.cmd-lab select{height:38px;padding:0 9px;border:1px solid var(--color-border);border-radius:6px;
   background:var(--color-bg-secondary);color:var(--color-text-primary);font:inherit;font-size:.82rem;
   max-width:min(22rem, 60vw);text-overflow:ellipsis}
 .linkbtn{background:none;border:none;color:var(--rbp-link);cursor:pointer;

@@ -132,9 +132,21 @@
       {# NOT A <select>, and that is still the point. See the comment above: a
          hidden input cannot discard a value a URL asked for. #}
       <input type="hidden" id="src" value="">
+      {# THE LABEL SITS OUTSIDE THE CONTROL, the way "Public" does one control
+         over. It was inside the button, so the two filters in this bar were
+         built differently -- one read `[Source All]` as a single bordered blob
+         and the other `Public [Any Age]` -- and side by side at a 20px gap that
+         is most of why the bar looked crowded rather than the widths were. Both
+         are `label [control]` now, on the same rhythm.
+
+         aria-hidden, because the button's own aria-label already opens with
+         "Source" and is kept in step with the selection by renderSrcMenu. Left
+         announced it would be read twice, once as loose text in the toolbar and
+         again as the first word of the control's name. The visible word is still
+         inside the accessible name, which is what WCAG 2.5.3 asks. #}
+      <span class="srckey" aria-hidden="true">Source</span>
       <button type="button" class="srcbtn" id="srctrig"
               aria-expanded="false" aria-controls="srcmenu">
-        <span class="srcbtn-key">Source</span>
         <span class="srcbtn-lab" id="srctriglab">All</span>
       </button>
       <div class="srcmenu" id="srcmenu" hidden>
