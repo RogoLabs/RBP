@@ -500,7 +500,7 @@ def test_the_feed_list_stays_alphabetical_and_the_publishers_group(page, server)
     """
     page.goto(f"{server}/?age=any")
     top = page.eval_on_selector_all(
-        "#srcgrid .srcrow:not(.sub) .srcchip .srcname",
+        "#srcgrid .srcrow:not(.sub) .srcitem .srcname",
         "els => els.map(e => e.textContent.trim())")
     feeds_only = [t for t in top if t and t != "All sources"]
     assert feeds_only == sorted(feeds_only), (
@@ -513,7 +513,7 @@ def test_the_feed_list_stays_alphabetical_and_the_publishers_group(page, server)
         "to a screen reader, which is the defect the optgroup existed to fix")
 
     grouped = page.eval_on_selector_all(
-        "#srcgrid .srcrow.sub .srcchip .srcname",
+        "#srcgrid .srcrow.sub .srcitem .srcname",
         "els => els.map(e => e.textContent.trim())")
     assert len(grouped) >= 2, grouped
     assert grouped == sorted(grouped), (
@@ -540,7 +540,7 @@ def test_a_long_publisher_name_is_shortened_and_the_name_is_not_lost(page, serve
     the next long one arrives unshortened."""
     page.goto(f"{server}/?age=any")
     pubs = page.eval_on_selector_all(
-        "#srcgrid .srcrow.sub .srcchip",
+        "#srcgrid .srcrow.sub .srcitem",
         "els => els.map(e => ({label: e.querySelector('.srcname').textContent.trim(),"
         " src: e.getAttribute('data-src'),"
         " title: e.getAttribute('title'), aria: e.getAttribute('aria-label')}))")
