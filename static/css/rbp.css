@@ -789,21 +789,30 @@ body.locked{overflow:hidden}
    14px from the word "Public" and at this width that reads as the two controls
    touching. */
 .cmd-in{display:flex;align-items:center;gap:24px;flex-wrap:wrap;padding:10px 0}
-/* THE SEARCH STOPS GROWING, AND THE FILTERS STAY ON THE RIGHT.
+/* THE SEARCH TAKES THE ROW BACK, and the crowding is fixed by the gap instead.
 
-   With nothing capping it the field took every pixel the two filters did not:
-   861px of a 1200px bar at 1340 wide, which is 72% of the row given to a control
-   whose content is rarely more than a CVE ID. That is what put "Source" and
-   "Public" hard against each other at the right end and made a bar with three
-   controls in it read as crowded.
+   It was capped at 640 with `margin-inline-end:auto` holding the filters at the
+   right end, on the theory that a search on one side and filters on the other
+   would read as deliberate. It does not, and the reason is that `.container` is
+   a hard 1200px: the freed space cannot go anywhere useful, so it pooled as a
+   fixed 238px hole in the middle of the bar at every desktop width, which is the
+   largest empty space on the page and reads as a missing control rather than as
+   composition. Two other placements were built and measured before this landed
+   -- packing left leaves 214px falling off the right end of a row whose content
+   below runs full width, and parking the live count in the gap still left 128px
+   and an orphaned label in it.
 
-   Capped at 640, and the leftover goes into the middle rather than onto any
-   control: `margin-inline-end:auto` keeps the filters where they were, at the
-   right end, so the bar reads as a search on one side and the filters on the
-   other instead of three things jostling. The cap is a maximum, not a width --
-   below about 1000px the field is still the thing that gives, which is right,
-   because it is the only control here that can use the room. */
-.cmd-grow{flex:1 1 240px;min-width:180px;max-width:640px;margin-inline-end:auto}
+   What actually read as crowded was never the width. It was three controls at
+   three heights with two different label patterns and 20px between all of them.
+   Those are fixed above and beside; the field can have the row.
+
+   THE GAP CARRIES THE GROUPING. 24px inside the filter pair, 42 between the
+   search and it, so the bar reads as one control and then two rather than three
+   in a line. Expressed as a margin on the first filter rather than as a second
+   `gap`, because a flex gap cannot differ between one pair of items and the
+   next. */
+.cmd-grow{flex:1 1 240px;min-width:180px}
+.srcpick{margin-inline-start:18px}
 /* ONE ROW, ONE HEIGHT. The three controls in this bar were 43.6px, 37px and
    33.5px, each arriving at its own height from its own padding against its own
    font size and its own default line-height -- 16px inherited in the field, .82
@@ -1058,6 +1067,11 @@ body.locked{overflow:hidden}
      Below about 350px it wraps again, which is correct: three short rows beat one
      row of controls squeezed to nothing. */
   .cmd-in{gap:10px 12px}
+  /* The grouping margin is a horizontal relationship, and there is no longer one
+     to express: the search has the line above and the two filters start this one
+     together. Left in, it indents the pair by 18px against every other control
+     on the page and costs the row the pixels it needs to stay one line. */
+  .srcpick{margin-inline-start:0}
   .cmd-lab select{max-width:min(150px,44vw)}
   /* THE POPOVER IS ANCHORED TO THE EDGE THE CONTROL IS ON.
 
