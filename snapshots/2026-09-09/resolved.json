@@ -1,11 +1,11 @@
 [
  {
-  "cve_id": "CVE-2026-47156",
+  "cve_id": "CVE-2026-54694",
   "state": "PUBLISHED",
   "transferred": false,
-  "first_public": "2026-07-15",
+  "first_public": "2026-06-16",
   "published": "2026-09-09",
-  "days_to_publish": 56,
+  "days_to_publish": 85,
   "closed_on": "2026-09-09"
  }
 ]
