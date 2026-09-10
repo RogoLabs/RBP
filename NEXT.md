@@ -26,12 +26,12 @@ are showing up." Five routes: `/` (the rows, a command bar, a slide-over
 carrying the argument), `/method.html`, `/policy.html`, `/status.html`,
 `/about-this-count.html`.
 
-`/slides.html` is deliberately not one of them. It is an unlinked conference
-deck, noindexed in both postures, reachable only by typing the URL. It is
-counted here so it stops being the thing nobody remembered was on the publish
-path: a page absent from this list is a page that stops being reviewed, and the
-first review it got found an absolute claim on it that the site's own published
-data contradicts.
+Five routes and no sixth. `/slides.html`, the unlinked CVE Consumer Working
+Group deck, was removed before the public launch: an unlinked page is a page
+that stops being reviewed, and the first review it got found an absolute claim
+on it that the site's own published data contradicted. The rule it leaves
+behind is that this list is the whole publish path, so anything added to that
+path is added here in the same change.
 
 **It names no CNA.** `site.NAMING_ENABLED = False` is the single flag, enforced
 at the writer. `python -m rbp.publish check` refuses to stage any tree in which

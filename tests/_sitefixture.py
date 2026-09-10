@@ -187,8 +187,7 @@ def _row(n, public_date="2026-08-05", days=19):
         # came out TRUE on 522 of 522 published rows... a claim asserted on every
         # single row does no discriminating work". A fixture in that state makes
         # every assertion about the GAP between the total and the
-        # past-expectation count vacuous, and /slides.html renders exactly that
-        # gap.
+        # past-expectation count vacuous.
         #
         # Every fifth row is tracker-only: referenced in a distribution tracker,
         # never in an advisory, so no 72-hour clock starts however old it is.
@@ -289,10 +288,9 @@ def summary(rows, date=SNAPSHOT_DATE):
         "should_rows": sum(1 for r in rows if r["rule_strength"] != "MUST"),
         "unmeasurable_rows": len(rows), "candidate_rows": 0,
         # FOUR BUCKETS, NOT ONE. The live run reports 7-30d, 30-90d, 90-180d and
-        # 180d+, and /slides.html renders a bar per bucket. With a single bucket
-        # the age slide was one row tall, so the deck built from this fixture was
-        # structurally shorter than the deck that ships and no layout assertion
-        # made against it could reach the density it is about.
+        # 180d+. With a single bucket a page built from this fixture is
+        # structurally shorter than the one that ships, and no assertion made
+        # against it can reach the density it is about.
         "age_buckets": {"7-30d": len(rows) - 24, "30-90d": 12,
                         "90-180d": 8, "180d+": 4},
         "corroborated": sum(1 for r in rows if not r["single_origin"]),
@@ -331,7 +329,7 @@ def summary(rows, date=SNAPSHOT_DATE):
         #   csaf   a fan-out with per-provider parts, one of them unreachable
         # REQUESTED IS A SUPERSET OF WHAT THE ROWS CITE, because in a real run it
         # has to be: a feed cannot evidence a row without having been asked for.
-        # This listed five while ROWS cite ten, so the deck rendered "5 configured
+        # This listed five while ROWS cite ten, so a page rendered "5 configured
         # feeds" above a table of ten of them, and `configured > evidencing` was
         # false where live it is true, which left the clause reconciling the two
         # numbers unreachable. `arch` and `mozilla` are the two that evidence
@@ -410,8 +408,8 @@ def summary(rows, date=SNAPSHOT_DATE):
                      "min_sightings": 3, "pct_cnas": 28.2, "pct_effective": 21.7,
                      "observed_pct": 12.5, "profile": "weekly",
                      "roster_pinned": True, "covered": [],
-                     # The denominator behind observed_pct. It was absent, so
-                     # /slides.html rendered "12.5% of the  CVEs published in the
+                     # The denominator behind observed_pct. It was absent, so a
+                     # page rendered "12.5% of the  CVEs published in the
                      # window": a percentage with its base silently missing,
                      # which is the exact defect
                      # test_the_headline_count_states_its_own_base exists to
@@ -422,7 +420,7 @@ def summary(rows, date=SNAPSHOT_DATE):
                      "top_missed_effective": []},
         # THE RESERVATION TALLY, and the run's own verdict on itself. Both are
         # written by every real run and neither was in this fixture, so the
-        # /slides.html cells that render them had nothing behind them: an
+        # cells that render them had nothing behind them: an
         # `oracle` that is not there renders as an empty table cell, which reads
         # as a measured zero rather than as a missing measurement.
         #
@@ -433,9 +431,9 @@ def summary(rows, date=SNAPSHOT_DATE):
         # and that test exists because "a blank status page reads as a broken
         # status page". One fixture cannot be both the clean run and the bad one.
         #
-        # tests/test_slides.py builds its OWN degraded snapshot rather than
-        # bending this one, which is the version that leaves both assertions
-        # able to fail.
+        # A test that needs a degraded run builds its OWN degraded snapshot
+        # rather than bending this one, which is the version that leaves both
+        # assertions able to fail.
         "oracle": {"lookups_attempted": 60, "lookups_live": 60,
                    "cached_terminal": 0, "published": 2, "rejected": 2,
                    "reserved": 54, "never_allocated": 1, "unresolved": 0,
