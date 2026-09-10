@@ -19,6 +19,11 @@
    were all real URLs on this site within the last fortnight, and /overview.html
    was the dashboard until launch. Anyone holding one of those gets this page.
 
+   /slides.html is the same case and the one most likely to be held by a person
+   rather than a crawler: it was the working-group deck, it was never linked, so
+   the only way anyone has that URL is that it was given to them directly. A bare
+   404 is a worse answer to them than to anybody else arriving here.
+
    NOINDEX regardless of posture. A soft-404 that search engines index is worse
    than the GitHub page it replaces, because it competes with the real pages for
    the site's own terms. `{% block robots %}` exists in base.html for this. #}
@@ -64,6 +69,10 @@
       themselves, and the argument behind them under
       <em>What is this?</em>{% if launched %} <span class="mono">/overview.html</span>
       was the dashboard before launch and is the front page now.{% endif %}
+      <span class="mono">/slides.html</span> was an unlinked conference deck and
+      was removed on 10 September 2026. Every figure on it was computed by the
+      run that built it, so the pages above carry the same numbers from the
+      same source.
       The machine-readable data is at
       <a href="{{ p }}data/rbp.json" class="mono">data/rbp.json</a> and
       <a href="{{ p }}data/rbp.csv" class="mono">data/rbp.csv</a>.
