@@ -125,6 +125,78 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-56827",
+  "state": "RESERVED",
+  "public_date": "2026-09-11",
+  "sources": "ghsa",
+  "feed_count": 1,
+  "dates": {
+   "ghsa": "2026-09-11"
+  },
+  "refs": "ghsa:GHSA-243p-f3cv-c5wh",
+  "description": "Shopper: Authorization bypass in Filament bulk actions allows browse-only staff to mass-delete attributes/tags and mass-toggle visibility of brands/categories/suppliers",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-11",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa": "https://github.com/advisories/GHSA-243p-f3cv-c5wh"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-59971",
+  "state": "RESERVED",
+  "public_date": "2026-09-11",
+  "sources": "ghsa",
+  "feed_count": 1,
+  "dates": {
+   "ghsa": "2026-09-11"
+  },
+  "refs": "ghsa:GHSA-rqfv-2mw9-78g2",
+  "description": "MySQL MCP Server: Missing Origin/Host Validation in SSE Transport Enables Unauthenticated SQL Execution (DNS Rebinding / Direct Exposure)",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-11",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa": "https://github.com/advisories/GHSA-rqfv-2mw9-78g2"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-59965",
   "state": "RESERVED",
   "public_date": "2026-09-10",
@@ -6174,6 +6246,42 @@
   "ecosystem": "",
   "source_urls": {
    "zdi": "https://www.zerodayinitiative.com/advisories/ZDI-26-616/"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-84286",
+  "state": "RESERVED",
+  "public_date": "2026-09-11",
+  "sources": "certcc",
+  "feed_count": 1,
+  "dates": {
+   "certcc": "2026-09-11"
+  },
+  "refs": "certcc:VU#369611",
+  "description": "ExLlamaV3 contains Denial of Service vulnerability via insufficient bounds checking on kernel dispatch index",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-11",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "certcc": "https://www.kb.cert.org/vuls/id/369611"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
