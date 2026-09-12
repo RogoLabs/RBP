@@ -3,16 +3,15 @@
   "cve_id": "CVE-2026-19816",
   "state": "RESERVED",
   "public_date": "2026-09-09",
-  "sources": "alas,csaf,debian,ghsa-repos,redhat,ubuntu",
-  "feed_count": 6,
+  "sources": "alas,csaf,debian,ghsa-repos,redhat",
+  "feed_count": 5,
   "dates": {
    "alas": "2026-09-11",
-   "ubuntu": "2026-09-11",
    "ghsa-repos": "2026-09-09",
    "redhat": "2026-09-09",
    "csaf": "2026-09-09"
   },
-  "refs": "alas:CVE-2026-19816;csaf:Red Hat Product Security\tCVE-2026-19816\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-19816.json;debian:packagekit;ghsa-repos:PackageKit/PackageKit\tGHSA-g5gf-h68q-gxc8;redhat:CVE-2026-19816;ubuntu:CVE-2026",
+  "refs": "alas:CVE-2026-19816;csaf:Red Hat Product Security\tCVE-2026-19816\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-19816.json;debian:packagekit;ghsa-repos:PackageKit/PackageKit\tGHSA-g5gf-h68q-gxc8;redhat:CVE-2026-19816",
   "description": "A flaw was found in PackageKit.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -36,8 +35,7 @@
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-19816.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-19816",
    "ghsa-repos": "https://github.com/PackageKit/PackageKit/security/advisories/GHSA-g5gf-h68q-gxc8",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-19816",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-19816"
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-19816"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -48,14 +46,13 @@
   "cve_id": "CVE-2026-85013",
   "state": "RESERVED",
   "public_date": "2026-09-08",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-09-08",
-   "ubuntu": "2026-09-09",
    "ubuntu-osv": "2026-09-09"
   },
-  "refs": "alas:CVE-2026-85013;debian:modules;ubuntu-osv:UBUNTU-CVE-2026-85013;ubuntu:CVE-2026-85013",
+  "refs": "alas:CVE-2026-85013;debian:modules;ubuntu-osv:UBUNTU-CVE-2026-85013",
   "description": "_module_comgen_words_and_files() fed untrusted text (module names read off disk, LOADEDMODULES, MODULEPATH) straight into `compgen -W`, which performs a full unquoted-word expansion on its wordlist -- including command substitution -- as a normal, documented part of its behavior.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -77,7 +74,6 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-85013.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-85013",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-85013",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-85013"
   },
   "veto_evaluated": false,
@@ -89,14 +85,13 @@
   "cve_id": "CVE-2026-79604",
   "state": "RESERVED",
   "public_date": "2026-09-08",
-  "sources": "csaf,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "csaf,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
-   "ubuntu": "2026-09-08",
    "ubuntu-osv": "2026-09-08",
    "csaf": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3248\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json;debian:xen;ubuntu-osv:UBUNTU-CVE-2026-79604;ubuntu:CVE-2026-79604",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3248\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json;debian:xen;ubuntu-osv:UBUNTU-CVE-2026-79604",
   "description": "oxenstored: Unbounded accumulation of watches: Oxenstored maintains two datastructures about watches; one global trie, and one hashtable tracked per domain.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -118,8 +113,44 @@
   "source_urls": {
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-79604",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-79604",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-79604"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-78030",
+  "state": "RESERVED",
+  "public_date": "2026-09-11",
+  "sources": "csaf,debian",
+  "feed_count": 2,
+  "dates": {
+   "csaf": "2026-09-11"
+  },
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11754-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11754-1.json;debian:libdbi-perl",
+  "description": "CVE-2026-78030",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-11",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "libdbi-perl",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11754-1.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-78030"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
