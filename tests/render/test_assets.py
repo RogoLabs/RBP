@@ -46,6 +46,11 @@ def test_every_page_versions_every_stylesheet_it_loads(site_dir):
         # which tripped the substring guard and then failed the assertion for
         # linking no stylesheet at all. A page that loads no external stylesheet
         # cannot serve a stale cached one, which is the defect this test is about.
+        #
+        # `site_dir` is the launched build, where every page extends base.html
+        # and links style.css, so nothing here takes the branch below.
+        # templates/holding.html is the one page of that class left, and it is
+        # written pre-launch only.
         if 'rel="stylesheet"' not in html:
             continue
         got = asset_versions(html)

@@ -186,8 +186,8 @@ def _row(n, public_date="2026-08-05", days=19):
         # `clock.py:225-239` records as the defect it fixed: "past_expectation
         # came out TRUE on 522 of 522 published rows... a claim asserted on every
         # single row does no discriminating work". A fixture in that state makes
-        # every assertion about the GAP between the total and the
-        # past-expectation count vacuous.
+        # every assertion about the GAP between the total and the past-expectation
+        # count vacuous.
         #
         # Every fifth row is tracker-only: referenced in a distribution tracker,
         # never in an advisory, so no 72-hour clock starts however old it is.
@@ -277,8 +277,8 @@ def summary(rows, date=SNAPSHOT_DATE):
         "date": date, "expectation_hours": 72,
         # COUNTED FROM THE ROWS, not `len(rows)`. Hardcoding it meant the summary
         # could never disagree with "all of them", so nothing downstream could
-        # ever observe the two figures differing, which is the one thing the
-        # count slide puts side by side.
+        # ever observe the two figures differing, and `rbp/cli.py` prints them
+        # side by side as `past_expectation`/`total` on every run.
         "total": len(rows),
         "past_expectation": sum(1 for r in rows if r.get("past_expectation")),
         "clock_unknown": 0, "undated_excluded": 0, "epoch": EPOCH,
@@ -288,9 +288,12 @@ def summary(rows, date=SNAPSHOT_DATE):
         "should_rows": sum(1 for r in rows if r["rule_strength"] != "MUST"),
         "unmeasurable_rows": len(rows), "candidate_rows": 0,
         # FOUR BUCKETS, NOT ONE. The live run reports 7-30d, 30-90d, 90-180d and
-        # 180d+. With a single bucket a page built from this fixture is
-        # structurally shorter than the one that ships, and no assertion made
-        # against it can reach the density it is about.
+        # 180d+. `templates/_panel.html` renders the 180d+ count, and the bucket
+        # boundaries are what the age control offers, which is what
+        # test_an_age_bound_the_control_does_not_offer_still_filters in
+        # tests/render/test_filters.py turns on: a reader reproducing a published
+        # bucket count uses one of them. A single bucket leaves no boundary to
+        # reproduce.
         "age_buckets": {"7-30d": len(rows) - 24, "30-90d": 12,
                         "90-180d": 8, "180d+": 4},
         "corroborated": sum(1 for r in rows if not r["single_origin"]),
@@ -329,11 +332,13 @@ def summary(rows, date=SNAPSHOT_DATE):
         #   csaf   a fan-out with per-provider parts, one of them unreachable
         # REQUESTED IS A SUPERSET OF WHAT THE ROWS CITE, because in a real run it
         # has to be: a feed cannot evidence a row without having been asked for.
-        # This listed five while ROWS cite ten, so a page rendered "5 configured
-        # feeds" above a table of ten of them, and `configured > evidencing` was
+        # This listed five while ROWS cite ten, so `configured > evidencing` was
         # false where live it is true, which left the clause reconciling the two
         # numbers unreachable. `arch` and `mozilla` are the two that evidence
-        # nothing, which is the live shape.
+        # nothing, which is the live shape, and two render tests turn on it:
+        # test_a_link_to_a_feed_with_no_rows_shows_no_rows and
+        # test_a_feed_with_no_rows_is_hidden_until_a_link_names_it in
+        # tests/render/test_filters.py.
         "feeds": {"requested": ["alas", "alpine", "arch", "csaf", "debian", "ghsa",
                                 "mozilla", "msrc", "osv", "redhat", "samsung",
                                 "ubuntu"],
@@ -408,21 +413,25 @@ def summary(rows, date=SNAPSHOT_DATE):
                      "min_sightings": 3, "pct_cnas": 28.2, "pct_effective": 21.7,
                      "observed_pct": 12.5, "profile": "weekly",
                      "roster_pinned": True, "covered": [],
-                     # The denominator behind observed_pct. It was absent, so a
-                     # page rendered "12.5% of the  CVEs published in the
-                     # window": a percentage with its base silently missing,
-                     # which is the exact defect
-                     # test_the_headline_count_states_its_own_base exists to
-                     # catch on the pages it does cover.
+                     # The denominator behind observed_pct. It was absent, and a
+                     # percentage whose base is silently missing is the exact
+                     # defect test_the_headline_count_states_its_own_base exists
+                     # to catch on the pages it does cover. Both keys mirror the
+                     # live summary and no page reads them:
+                     # `templates/method.html` still renders observed_pct
+                     # without its base.
                      "total_pub": 133325, "observed_ids": 16665,
                      "top_n": 50, "top_covered_effective": 45,
                      "top_covered": 47, "pct_top_effective": 90.0,
                      "top_missed_effective": []},
         # THE RESERVATION TALLY, and the run's own verdict on itself. Both are
-        # written by every real run and neither was in this fixture, so the
-        # cells that render them had nothing behind them: an
-        # `oracle` that is not there renders as an empty table cell, which reads
-        # as a measured zero rather than as a missing measurement.
+        # written by every real run and neither was in this fixture. No surviving
+        # template renders them: they reach consumers through
+        # `site/data/summary.json`, which `_unattributed_summary` copies whole,
+        # and `rbp/publish.py` keeps `$.oracle` in its name-scan allowlist
+        # precisely because they do. A fixture missing them publishes a summary
+        # shaped unlike every real one, and the name scan never sees the path it
+        # allowlists.
         #
         # `degraded` is FALSE here and stays false. The instinct to make this
         # fixture degraded is right in general and wrong for this file: the

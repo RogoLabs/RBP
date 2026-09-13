@@ -26,12 +26,10 @@ are showing up." Five routes: `/` (the rows, a command bar, a slide-over
 carrying the argument), `/method.html`, `/policy.html`, `/status.html`,
 `/about-this-count.html`.
 
-Five routes and no sixth. `/slides.html`, the unlinked CVE Consumer Working
-Group deck, was removed before the public launch: an unlinked page is a page
-that stops being reviewed, and the first review it got found an absolute claim
-on it that the site's own published data contradicted. The rule it leaves
-behind is that this list is the whole publish path, so anything added to that
-path is added here in the same change.
+That list is the whole publish path: a route added to the site is added here in
+the same change. Nothing enforces it mechanically, so it binds the change and
+not the tree, and `pages_for` in `rbp/site.py` is where an enforcement point
+would go.
 
 **It names no CNA.** `site.NAMING_ENABLED = False` is the single flag, enforced
 at the writer. `python -m rbp.publish check` refuses to stage any tree in which

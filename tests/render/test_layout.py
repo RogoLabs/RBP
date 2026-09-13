@@ -392,4 +392,3 @@ def test_the_mobile_menu_can_be_closed(page, server):
     pg.wait_for_timeout(150)
     assert not state()["open"], (
         "the menu stayed 'active' after the viewport crossed the breakpoint")
-

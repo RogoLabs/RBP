@@ -70,9 +70,6 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
    `/policy.html`, `/status.html` and `/about-this-count.html`. Before launch `/`
    is the holding page instead and the list moves to `/overview.html`.
 
-   Five pages and no sixth file. `/slides.html`, an unlinked conference deck,
-   was removed before the public launch.
-
 Whether the last run was complete, which feeds answered, how often the site has
 actually published and what moved since the previous run are all on
 **`/status.html`**, and nowhere else. The pages that carry the count carry no
