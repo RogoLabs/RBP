@@ -948,7 +948,6 @@ def load(snap_root, data_dir):
         "held_back": held_back,
         "held_back_oldest": max((r.get("days_public") or 0 for r in held_back),
                                 default=0),
-        "schema_version": _schema.SCHEMA_VERSION,
         "columns": _schema.COLUMNS,
         "fields": _schema.FIELDS,
         # Split at the render boundary, not in the templates. Both states used
