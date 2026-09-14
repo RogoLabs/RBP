@@ -3,16 +3,17 @@
   "cve_id": "CVE-2026-19816",
   "state": "RESERVED",
   "public_date": "2026-09-09",
-  "sources": "alas,csaf,debian,ghsa-repos,redhat,ubuntu",
-  "feed_count": 6,
+  "sources": "alas,csaf,debian,ghsa-repos,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 7,
   "dates": {
    "alas": "2026-09-11",
    "ubuntu": "2026-09-11",
+   "ubuntu-osv": "2026-09-11",
    "ghsa-repos": "2026-09-09",
    "redhat": "2026-09-09",
    "csaf": "2026-09-11"
   },
-  "refs": "alas:CVE-2026-19816;csaf:SUSE Product Security Team\tCVE-2026-19816\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-19816.json;debian:packagekit;ghsa-repos:PackageKit/PackageKit\tGHSA-g5gf-h68q-gxc8;redhat:CVE-2026-19816;ubuntu:CVE-2026-19",
+  "refs": "alas:CVE-2026-19816;csaf:SUSE Product Security Team\tCVE-2026-19816\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-19816.json;debian:packagekit;ghsa-repos:PackageKit/PackageKit\tGHSA-g5gf-h68q-gxc8;redhat:CVE-2026-19816;ubuntu-osv:UBUNTU-",
   "description": "A flaw was found in PackageKit.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -37,7 +38,8 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-19816",
    "ghsa-repos": "https://github.com/PackageKit/PackageKit/security/advisories/GHSA-g5gf-h68q-gxc8",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-19816",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-19816"
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-19816",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-19816"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -86,6 +88,45 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-78030",
+  "state": "RESERVED",
+  "public_date": "2026-09-11",
+  "sources": "csaf,debian,ubuntu",
+  "feed_count": 3,
+  "dates": {
+   "ubuntu": "2026-09-14",
+   "csaf": "2026-09-11"
+  },
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11754-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11754-1.json;debian:libdbi-perl;ubuntu:CVE-2026-78030",
+  "description": "libdbi-perl",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 3,
+  "clock_known": true,
+  "hours_public": 72,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-11",
+  "advisory_days_public": 3,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "libdbi-perl",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11754-1.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-78030",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-78030"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-79604",
   "state": "RESERVED",
   "public_date": "2026-09-08",
@@ -120,43 +161,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-79604",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-79604",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-79604"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-78030",
-  "state": "RESERVED",
-  "public_date": "2026-09-11",
-  "sources": "csaf,debian",
-  "feed_count": 2,
-  "dates": {
-   "csaf": "2026-09-11"
-  },
-  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11754-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11754-1.json;debian:libdbi-perl",
-  "description": "CVE-2026-78030",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 3,
-  "clock_known": true,
-  "hours_public": 72,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-11",
-  "advisory_days_public": 3,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "libdbi-perl",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11754-1.json",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-78030"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -1307,12 +1311,13 @@
   "cve_id": "CVE-2026-55752",
   "state": "RESERVED",
   "public_date": "2026-09-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-09-09"
+   "ghsa-repos": "2026-09-09",
+   "csaf": "2026-09-09"
   },
-  "refs": "ghsa-repos:PackageKit/PackageKit\tGHSA-x282-cq95-f96w",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3290\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3290.json;ghsa-repos:PackageKit/PackageKit\tGHSA-x282-cq95-f96w",
   "description": "PackageKit/PackageKit repository advisory GHSA-x282-cq95-f96w",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1332,6 +1337,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3290.json",
    "ghsa-repos": "https://github.com/PackageKit/PackageKit/security/advisories/GHSA-x282-cq95-f96w"
   },
   "veto_evaluated": false,
@@ -1369,6 +1375,114 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/amir20/dozzle/security/advisories/GHSA-xcw9-qmmf-vqxj"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-77633",
+  "state": "RESERVED",
+  "public_date": "2026-09-14",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-09-14"
+  },
+  "refs": "ghsa-repos:cloudreve/cloudreve\tGHSA-xj3h-wwxq-gfcj",
+  "description": "cloudreve/cloudreve repository advisory GHSA-xj3h-wwxq-gfcj",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-14",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/cloudreve/cloudreve/security/advisories/GHSA-xj3h-wwxq-gfcj"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-79913",
+  "state": "RESERVED",
+  "public_date": "2026-09-14",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-09-14"
+  },
+  "refs": "ghsa-repos:cloudreve/cloudreve\tGHSA-jvh5-97xg-v99f",
+  "description": "cloudreve/cloudreve repository advisory GHSA-jvh5-97xg-v99f",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-14",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/cloudreve/cloudreve/security/advisories/GHSA-jvh5-97xg-v99f"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-77637",
+  "state": "RESERVED",
+  "public_date": "2026-09-14",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-09-14"
+  },
+  "refs": "ghsa-repos:cloudreve/cloudreve\tGHSA-w89x-c962-c44g",
+  "description": "cloudreve/cloudreve repository advisory GHSA-w89x-c962-c44g",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-14",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/cloudreve/cloudreve/security/advisories/GHSA-w89x-c962-c44g"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -2135,12 +2249,13 @@
   "cve_id": "CVE-2024-28178",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-09-12"
+   "ghsa-repos": "2026-09-12",
+   "csaf": "2026-09-13"
   },
-  "refs": "ghsa-repos:squid-cache/squid\tGHSA-7f7w-8cq6-3g42",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3329\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json;ghsa-repos:squid-cache/squid\tGHSA-7f7w-8cq6-3g42",
   "description": "squid-cache/squid repository advisory GHSA-7f7w-8cq6-3g42",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2160,6 +2275,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-7f7w-8cq6-3g42"
   },
   "veto_evaluated": false,
@@ -2171,12 +2287,13 @@
   "cve_id": "CVE-2024-28177",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-09-12"
+   "ghsa-repos": "2026-09-12",
+   "csaf": "2026-09-13"
   },
-  "refs": "ghsa-repos:squid-cache/squid\tGHSA-hpj4-r696-39p2",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3329\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json;ghsa-repos:squid-cache/squid\tGHSA-hpj4-r696-39p2",
   "description": "squid-cache/squid repository advisory GHSA-hpj4-r696-39p2",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2196,6 +2313,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-hpj4-r696-39p2"
   },
   "veto_evaluated": false,
@@ -2207,12 +2325,13 @@
   "cve_id": "CVE-2026-61642",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-09-12"
+   "ghsa-repos": "2026-09-12",
+   "csaf": "2026-09-13"
   },
-  "refs": "ghsa-repos:squid-cache/squid\tGHSA-537g-4gfh-w7m6",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3329\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json;ghsa-repos:squid-cache/squid\tGHSA-537g-4gfh-w7m6",
   "description": "squid-cache/squid repository advisory GHSA-537g-4gfh-w7m6",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2232,6 +2351,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-537g-4gfh-w7m6"
   },
   "veto_evaluated": false,
@@ -2243,12 +2363,13 @@
   "cve_id": "CVE-2026-62846",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "csaf,ghsa-repos",
+  "feed_count": 2,
   "dates": {
-   "ghsa-repos": "2026-09-12"
+   "ghsa-repos": "2026-09-12",
+   "csaf": "2026-09-13"
   },
-  "refs": "ghsa-repos:squid-cache/squid\tGHSA-9vhr-vcrv-x837",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3329\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json;ghsa-repos:squid-cache/squid\tGHSA-9vhr-vcrv-x837",
   "description": "squid-cache/squid repository advisory GHSA-9vhr-vcrv-x837",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2268,6 +2389,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-9vhr-vcrv-x837"
   },
   "veto_evaluated": false,
@@ -5141,6 +5263,42 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3308.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-19248",
+  "state": "RESERVED",
+  "public_date": "2026-09-13",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-09-13"
+  },
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3332\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3332.json",
+  "description": "CVE-2026-19248",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-13",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3332.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
