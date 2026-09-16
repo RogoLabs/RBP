@@ -1,1 +1,11 @@
-[]
+[
+ {
+  "cve_id": "CVE-2026-8462",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-06-04",
+  "published": "2026-09-16",
+  "days_to_publish": 104,
+  "closed_on": "2026-09-16"
+ }
+]
