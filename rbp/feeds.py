@@ -730,12 +730,46 @@ def _stream_zip(url):
 # have noticed: 41.7 MB passes it with two decimal orders to spare.
 #
 # So the ceiling that matters here is on decompressed bytes, and it is the reason
-# this helper exists instead of a second call to `_stream_zip`. The in-window
-# read is 4.77 GB of that 9.77 (2025 at 1.70 and 2026 at 3.07), so 8 GB leaves
-# 68% headroom over the measured cost while still stopping an archive that has
-# decided to be infinite. It is a REFUSAL, not a truncation, for the same reason
-# the zip ceiling is: half an archive read as a whole one is the silent shrink.
-MAX_UNPACKED_BYTES = 8_000_000_000
+# this helper exists instead of a second call to `_stream_zip`. It is a REFUSAL,
+# not a truncation, for the same reason the zip ceiling is: half an archive read
+# as a whole one is the silent shrink.
+#
+# RAISED 2026-09-16, 8 GB -> 16 GB, and the archive growing is NOT why. THE
+# WINDOW GREW. The 8 GB was measured on 2026-08-31 against a TWO-year window
+# (2025-2026 at 4.77 GB) and left 68% headroom. `WINDOW_YEARS` went to four on
+# 2026-09-05 (a6332c0), which added the 2023 and 2024 shards to what `want`
+# selects and took the in-window read past a ceiling nobody re-measured. It ran
+# marginal for nine days and crossed on 2026-09-14, after which every run
+# refused the archive and the feed was TRUNCATED on all of them.
+#
+# THE COUPLING WAS THE BUG, not the number: a constant here, sized against a
+# window defined in `coverage.WINDOW_YEARS`, with nothing connecting the two.
+# `test_the_ceiling_is_sized_for_the_current_window` is that connection now, and
+# the health detail carries the headroom on EVERY run, so the next squeeze shows
+# up in the snapshot history while it is still headroom rather than after it has
+# become a refusal.
+#
+# Measured 2026-09-16 over the real tarball, decompressed bytes per year shard.
+# Whole archive 10.59 GB across 66,776 members, 43.6 MB on the wire:
+#
+#     window     shards        in-window read
+#     2 years    2025-2026           5.60 GB
+#     3 years    2024-2026           7.31 GB
+#     4 years    2023-2026           8.33 GB   <- current
+#     5 years    2022-2026           9.54 GB
+#
+# 16 GB is 92% headroom over the current four-year read and clears a five-year
+# window as well, while still stopping an archive that has decided to be
+# infinite: a real bomb is orders of magnitude past this, not 2x.
+#
+# WHAT THE REFUSAL COST, measured rather than assumed, because the count fell
+# over the same days and the two looked connected. The shards stream 2026, 2023,
+# 2025, 2024, so the cut landed in 2024 and never touched 2026. It hid 1,037 ids,
+# of which 1,019 are PUBLISHED, 17 REJECTED and exactly one RESERVED
+# (CVE-2024-52948), and that one is already sighted through `debian`. The
+# published count lost NOTHING. The fall from 2,315 to 2,123 over the same window
+# was records being published: 92 of the 94 rows that left are PUBLISHED today.
+MAX_UNPACKED_BYTES = 16_000_000_000
 
 
 def _stream_tar_xz(url, want, stats):
@@ -775,12 +809,16 @@ def _stream_tar_xz(url, want, stats):
         tmp.close()
         _count_bytes(total)
         stats["bytes"] = total
-        unpacked = 0
+        # Reported on every run, not only when it trips. The ceiling above went
+        # nine days marginal before it refused, and nothing in the health line
+        # would have shown the squeeze building.
+        stats["unpacked"] = unpacked = 0
         with tarfile.open(tmp.name, "r|xz") as tf:
             for m in tf:
                 if not m.isfile() or not want(m.name):
                     continue
                 unpacked += m.size
+                stats["unpacked"] = unpacked
                 if unpacked > MAX_UNPACKED_BYTES:
                     raise RuntimeError(
                         f"decompressed {unpacked:,} bytes, past the "
@@ -1593,7 +1631,15 @@ def feed_ubuntu_osv(years):
                     rows=len(out))
         return out
 
-    detail = f"{len(out)} ids from {stats['bytes'] / 1e6:.0f}MB"
+    # THE HEADROOM IS PART OF THE HEALTH LINE. `MAX_UNPACKED_BYTES` is sized
+    # against a window this module does not own, so the run that reports "ok"
+    # is the only place the squeeze is visible before it becomes a refusal.
+    # summary.json keeps this, so the trend is readable across snapshots.
+    used = stats.get("unpacked") or 0
+    detail = (f"{len(out)} ids from {stats['bytes'] / 1e6:.0f}MB"
+              f"; unpacked {used / 1e9:.2f}GB of the "
+              f"{MAX_UNPACKED_BYTES / 1e9:.0f}GB ceiling "
+              f"({100 * used / MAX_UNPACKED_BYTES:.0f}%)")
     if withdrawn:
         detail += f"; skipped {withdrawn} withdrawn record(s)"
     # A read that downloaded the tarball and matched nothing is NOT ok. `want`
