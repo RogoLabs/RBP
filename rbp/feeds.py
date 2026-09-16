@@ -4268,6 +4268,140 @@ def feed_oss_security(years, months_cap=60, today=None):
     return list(out.values())
 
 
+ACRONIS_API = "https://security-advisory.acronis.com/api/v1/advisories"
+# The API caps `limit` somewhere under 250: 100 is accepted, 250 answers 400.
+ACRONIS_PAGE = 100
+# A page walk needs a stop that is not "until the server stops". 40 pages is
+# 4,000 advisories against a catalogue of 248, so this is a runaway guard and
+# never a cap the site has to disclose. If it ever fires, that is a shape change
+# and the health line says TRUNCATED rather than ok.
+ACRONIS_MAX_PAGES = 40
+
+
+# FOUND BY A READER, not by a probe, and that is the part worth recording.
+# CVE-2026-87886 was reported to us on 2026-09-16 as an RBP the site could not
+# see: reserved, no record, and carried by Acronis's own advisory SEC-10986
+# since 2026-09-15. It was in no feed. FEEDS.md had already measured `Acronis`
+# into the residual gap and nothing had been done about it.
+#
+# WHY THERE WAS NO ROUTE. Acronis serves no CSAF: `.well-known/csaf/` 404s on
+# security-advisory.acronis.com and redirects on both apex and www (probed
+# 2026-09-16). The only way an Acronis advisory reached this site was CERT-Bund
+# republishing it into CSAF.
+#
+# AND THE DEFECT IS COVERAGE, NOT LATENCY, which is worth stating because the
+# latency guess was the obvious one and it is wrong. CERT-Bund is PROMPT on what
+# it carries: the two reserved Acronis ids the site already lists reached it 2
+# days and 0 days after the vendor's own advisory (CVE-2023-48675, advisory
+# 2023-11-17, sighted 2023-11-19; CVE-2026-33090, advisory and sighting both
+# 2026-04-29). What it is not is COMPLETE. 88 of this feed's 147 in-window ids
+# were in no merged feed at all, so the republisher route covers roughly 40% of
+# this vendor's advisories, and which 40% is not predictable from anything the
+# site can see. SEC-10986 landed in the other 60%. A source read only through a
+# third party that carries some of it is a coin flip per id, and no latency
+# measurement would have shown that.
+#
+# WHAT IT YIELDS, measured 2026-09-16 over the whole catalogue: 248 advisories,
+# of which 215 carry a CVE id and 147 fall in the four-year window. Three ids
+# are RESERVED and all three are in window: CVE-2023-48675 (advisory 2023-11-17),
+# CVE-2026-33090 (2026-04-29) and CVE-2026-87886 (2026-09-15). The first two are
+# already sighted through `csaf`; the third is this feed's alone, and it is the
+# admissibility test 2 lead reference.
+#
+# THE TRAP, and it is the `upstream` trap in a new costume: `description` is
+# EMPTY on 231 of the 248 advisories. The human-readable line is `summary`. An
+# adapter that reads the field named `description`, which is the obvious one,
+# returns a feed of blank descriptions that looks like it works. Read the data
+# before the field name.
+#
+# 33 advisories carry no CVE id at all and are skipped rather than counted.
+# `cve` is a single string on all 248 and never a list, so there is no fan-out
+# here today. The loop below normalises one into the other anyway, because the
+# alternative is `startswith` on a list, which raises on some shapes and
+# silently matches nothing on others.
+#
+# NOT IN `clock.OWNER_FEEDS`, deliberately, on the reasoning that keeps `ghsa`
+# and `zdi` out. Acronis publishing an advisory for an id Acronis assigned would
+# be an owner channel and would make these rows MUST rather than SHOULD, which
+# is a strictly stronger claim on a live page. `owning_cna` is REDACTED for
+# exactly the reserved population, so the assignment is an INFERENCE here and
+# not an observation, and the site publishes 0 MUST rows today. Adding the first
+# one on an inference is the wrong way to acquire one. That is a separate change
+# with its own measurement, not a line in this adapter.
+def feed_acronis(years):
+    """Acronis's own advisory database, read through its JSON API.
+
+    One request per 100 advisories, three pages as of 2026-09-16. See the block
+    comment above for why this feed exists, what it yields and the field trap.
+
+    `published` is present on all 248 and is the advisory's own date, so unlike
+    the trackers this is a real disclosure date and `clock` classifies the feed
+    as an advisory.
+    """
+    out, seen, page = [], set(), 1
+    total = None
+    try:
+        while page <= ACRONIS_MAX_PAGES:
+            data, status, _ = _get(
+                f"{ACRONIS_API}?page={page}&limit={ACRONIS_PAGE}", timeout=60)
+            if data is None:
+                raise RuntimeError(f"page {page} answered {status}")
+            items = data.get("items") or []
+            total = data.get("total") if total is None else total
+            for it in items:
+                cid = it.get("cve") or ""
+                # A single string on all 248, but a list would be silently
+                # dropped by `startswith`, so normalise rather than assume.
+                cids = cid if isinstance(cid, list) else [cid]
+                for c in cids:
+                    if not isinstance(c, str) or not c.startswith("CVE-"):
+                        continue
+                    if _year(c) not in years or c in seen:
+                        continue
+                    seen.add(c)
+                    prods = it.get("products") or []
+                    pkg = (prods[0].get("name") or "")[:120] if prods else ""
+                    out.append({
+                        "cve_id": c, "source": "acronis",
+                        "source_ref": it.get("id") or c,
+                        "public_date": _d(it.get("published")),
+                        "product": pkg,
+                        # `summary`, NOT `description`. See the block comment.
+                        "description": (it.get("summary") or "")[:400]})
+            if not items or (total is not None and page * ACRONIS_PAGE >= total):
+                break
+            page += 1
+        else:
+            # Loop exhausted without breaking: the catalogue is sixteen times
+            # bigger than measured, or pagination stopped terminating.
+            record_feed("acronis", TRUNCATED,
+                        f"stopped at {ACRONIS_MAX_PAGES} pages with "
+                        f"{len(out)} ids; total reported {total}", rows=len(out))
+            return out
+    # Broad on purpose: keep what was read, and say it was partial. A page walk
+    # that dies on page 2 of 3 returns a plausible number of plausible rows,
+    # which is the silent-shrink shape.
+    except Exception as e:
+        print(f"  [acronis] page walk stopped: {e}", file=sys.stderr)
+        record_feed("acronis", FAILED if not out else TRUNCATED,
+                    f"stopped after {len(out)} ids on page {page}: {str(e)[:90]}",
+                    rows=len(out))
+        return out
+
+    # A walk that reached the API and matched nothing is NOT ok. `cve` and
+    # `items` are a shape the publisher controls, and this is the one place a
+    # renamed field turns into a silently empty feed.
+    if not out:
+        record_feed("acronis", FAILED,
+                    f"{total} advisories read and no CVE id matched; the "
+                    f"API shape may have changed", rows=0)
+        return out
+    record_feed("acronis", OK,
+                f"{len(out)} ids from {total} advisories over {page} page(s)",
+                rows=len(out))
+    return out
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
@@ -4285,7 +4419,11 @@ ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             # `test_the_profile_names_only_feeds_that_have_adapters` pins the
             # other. Merging it means adding it to `_WEEKLY` with its scorecard
             # in the same diff.
-            "oss-security": feed_oss_security}
+            "oss-security": feed_oss_security,
+            # Same standing as `oss-security` above: in the table so
+            # `feedlab.fetch` can measure it, out of `cli._WEEKLY` until its
+            # scorecard says it clears. See the block comment on `feed_acronis`.
+            "acronis": feed_acronis}
 
 
 # How many adapters download at once. A ceiling on concurrent fetches, not a

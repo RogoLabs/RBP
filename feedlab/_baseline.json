@@ -1,5 +1,5 @@
 {
- "bytes": 6806205539,
+ "bytes": 6806345490,
  "corpus_newest": "2026-09-06",
  "coverage_years": [
   2023,
@@ -283,11 +283,12 @@
   "zephyr"
  ],
  "extended": [
-  "certcc"
+  "acronis"
  ],
- "extended_at": "2026-09-08T20:37:29+00:00",
+ "extended_at": "2026-09-16T16:35:29+00:00",
  "failed": {},
  "feeds": [
+  "acronis",
   "alas",
   "alpine",
   "arch",
@@ -307,6 +308,14 @@
   "zdi"
  ],
  "health": {
+  "acronis": {
+   "capped": false,
+   "detail": "147 ids from 248 advisories over 3 page(s)",
+   "ok": true,
+   "rows": 147,
+   "status": "ok",
+   "truncated": false
+  },
   "alas": {},
   "alpine": {},
   "arch": {},
@@ -346,8 +355,9 @@
   },
   "zdi": {}
  },
- "ids_n": 85492,
+ "ids_n": 85580,
  "per_feed_rows": {
+  "acronis": 147,
   "alas": 20034,
   "alpine": 4117,
   "arch": 95,
@@ -366,7 +376,6 @@
   "ubuntu-osv": 26597,
   "zdi": 4299
  },
- "rescored_at": "2026-09-08T21:21:18+00:00",
  "scored_at": "2026-09-08T18:58:56+00:00",
  "sightings": {
   "@huntr_ai": 394,
@@ -379,7 +388,7 @@
   "ASRG": 26,
   "ASUS": 7,
   "Absolute": 25,
-  "Acronis": 58,
+  "Acronis": 144,
   "Anolis": 14,
   "Arista": 39,
   "Arm": 43,
@@ -676,7 +685,7 @@
   "zdi": 1946,
   "zephyr": 180
  },
- "wall_seconds": 1953.8,
+ "wall_seconds": 1956.7,
  "years": [
   2023,
   2024,

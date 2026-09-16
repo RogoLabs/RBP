@@ -80,8 +80,22 @@ from . import (cvelist, feeds, classify, report, coverage,
 # ids are reserved and referenced by no other feed, a 4.3% hit rate against
 # `zdi`'s 0.6%. A coordinator publishes when coordination concludes, which does
 # not wait for a CVE Record to exist.
+#
+# `acronis` added 2026-09-16 on `feedlab/acronis.json`: 147 in-window ids, ZERO
+# marginal CNAs, 21 lead references (14.6%) and 3 currently-unpublished ids, in
+# 3 requests, 0.1 MB and ~2.4s. Verdict REDUNDANT, the second merge on it.
+#
+# A VENDOR PAGE, WHERE THE TWO BEFORE IT WERE A BROKER AND A COORDINATOR, so
+# "ask what makes a source publish" gets a third answer: a vendor publishes when
+# it ships the fix, which also does not wait for a record. It is the first feed
+# in this list added because a READER reported an id the site could not see.
+#
+# The thing that mattered was COVERAGE, not lag. This vendor serves no CSAF, so
+# it reached the site only through a national CERT republishing it, and that
+# republisher is prompt on what it carries (0 and 2 days on the two ids we had)
+# and carries only part of it: 88 of 147 in-window ids were in no merged feed.
 _WEEKLY = ("alas,ubuntu,ubuntu-osv,debian,ghsa,ghsa-repos,redhat,alpine,osv,"
-           "mozilla,arch,csaf,msrc,samsung,jvn,zdi,certcc")
+           "mozilla,arch,csaf,msrc,samsung,jvn,zdi,certcc,acronis")
 PROFILES = {
     "weekly": _WEEKLY,
     # ONE STRING, REFERENCED TWICE, not two identical literals.

@@ -1212,7 +1212,9 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > **The residual gap, after the three detecting sources, in volume order:**
 > `TR-CERT` (534), `huawei` (444, CLOSED, see the block comment in `feeds.py`),
 > `twcert` (431), `OpenHarmony` (133), `INCD` (122), `SEC-VLab` (118), `CERT-In`
-> (103), `OpenText` (101), `Acronis` (90), `Silabs` (78). The two Turkish and
+> (103), `OpenText` (101), `Acronis` (90, MERGED 2026-09-16, and a reader
+> reported the id that prompted it before this table's ordering reached it),
+> `Silabs` (78). The two Turkish and
 > Taiwanese CERTs remain unreachable by any route probed: `usom.gov.tr` still
 > serves the same 7,091-byte HTML document at `/rss.xml`, and every
 > `twcert.org.tw` path now fails TLS verification outright rather than returning
@@ -1671,6 +1673,95 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > in both places and that paragraph documents a choice that no longer has to be
 > made. `scored_at` is deliberately not advanced for feeds that were not re-read,
 > on the same reasoning that stops `audit` recording a fetch it did not make.
+
+> ### MERGED 2026-09-16. `acronis`, and the first feed here that a reader found before the harness did.
+>
+> `acronis` is in the profile. `feedlab/acronis.json` written by `feedlab score`
+> against the seventeen-feed baseline, which is the set it has to be marginal to.
+> The baseline then went to eighteen by `baseline --add acronis`, so the other
+> seventeen keep their 2026-09-08 measurements and `scored_at` is not advanced for
+> feeds that were not re-read; `extended: ["acronis"]` records exactly that.
+> `feedlab.PENDING_FIRST_RUN` carries the name until the first live run puts it in
+> the pin.
+>
+> A full rebuild was started first and abandoned, which is worth one line because
+> the splice path exists for precisely this. `ubuntu.com` answered **HTTP 504** at
+> offset 0 and the walk recorded **0 rows after 652s**, and `write_refusal` would
+> have written that: it checks the feed SET against the profile and not whether a
+> feed in it collapsed. A baseline carrying `ubuntu: 0` makes the next candidate
+> look like it reaches CNAs nobody else reaches, which is the exact failure
+> `test_the_recorded_baseline_describes_the_profile_that_actually_runs` was written
+> about, arriving through the one door that test does not watch.
+>
+> **THE HARNESS DID NOT FIND THIS ONE.** Section 4's own residual-gap table has
+> listed `Acronis` at 90 ids since 2026-09-06 and nothing was done about it, because
+> the table is ordered by volume and 90 is tenth. On 2026-09-16 a reader at CCCS
+> reported CVE-2026-87886 as an RBP the site could not see: reserved, no record,
+> and carried by the vendor's own advisory since the day before, with broad press
+> the same day. (It was NOT in CISA's KEV, catalogue 2026.09.16; the reader cited a
+> commercial KEV whose feed is behind a signup, so that half is unverified here.)
+> The ordering that put it tenth was not wrong about volume and was wrong about
+> what to do next, and it is worth writing down that one message in a chat channel
+> outperformed the scorecard queue.
+>
+> **WHY THERE WAS NO ROUTE, and the first answer was wrong.** The vendor serves no
+> CSAF: `.well-known/csaf/` 404s on the advisory host and redirects on both apex
+> and www, probed 2026-09-16. The only path from its advisories to this site was
+> CERT-Bund republishing them into CSAF, and the obvious thing to suspect about a
+> republisher is LAG.
+>
+> **It is not lag. It is coverage.** Measured rather than assumed: CERT-Bund
+> carried the two reserved ids the site already listed **2 days and 0 days** after
+> the vendor's own advisory (CVE-2023-48675, advisory 2023-11-17, sighted
+> 2023-11-19; CVE-2026-33090, advisory and sighting both 2026-04-29). The
+> republisher is prompt on what it carries. What it is not is complete: **88 of
+> this feed's 147 in-window ids were in no merged feed at all**, so the route
+> reached roughly 40% of the vendor, and nothing the site could see said which 40%.
+> SEC-10986 was in the other 60%.
+>
+> **The general lesson, corrected.** A CNA reachable only through a third party
+> that carries part of it is a coin flip per id, and it reads as COVERED today
+> because `cnas_effective` asks whether we have sighted the CNA at all, not what
+> share of its advisories we can see. A latency measurement would have found
+> nothing wrong here. The metric that would have ranked this first is per-CNA
+> sole-route coverage, and it does not exist.
+>
+> **The scorecard, and it is `REDUNDANT`:**
+>
+> | | |
+> |---|---:|
+> | ids, in window | 147 (88 not already seen) |
+> | `cnas_reached` | 1 |
+> | `cnas_new_effective` | **0**, local and live |
+> | disclosure lead | **21 of 144 dated refs (14.6%)**, median 6d, max 261d |
+> | unpublished now | 3 |
+> | wall / bytes | 2.4s / 0.1 MB |
+>
+> Fails admissibility test 1 and clears test 2, which is `redundant` and not
+> `corroborating`: it reaches no CNA the others do not, and it can surface an
+> unpublished id, so it **stays in the coverage numerator**. This is the second feed
+> merged on that verdict after `certcc`, and the distinction is the one that was
+> once a single word and briefly excluded five feeds from the site's own numerator.
+>
+> **The cost line is the argument for the tail.** 2.4 seconds and 0.1 MB for 147 ids
+> and 21 lead references, against `ubuntu` at 1,070s. Tier 3 assumes 2 to 3 CNAs per
+> working day at a vendor page at a time; this one was a JSON API nobody had looked
+> for, found by probing four guessed paths after the documented site turned out to be
+> a JS app. The tier-3 rate may be pessimistic for any vendor whose advisory database
+> has a front end, because a front end implies an API behind it.
+>
+> **The field trap, for the next adapter.** `description` is present and EMPTY on 231
+> of the 248 advisories; the human-readable line is `summary`. An adapter reading the
+> obvious field name returns 147 rows with nothing in them and reports `ok`. That is
+> the `upstream` trap from the `ubuntu-osv` merge wearing a different field name, and
+> it is now two for two: read the data before the field name.
+>
+> **NOT in `clock.OWNER_FEEDS`**, deliberately. The vendor publishing an advisory for
+> an id it assigned would be an owner channel and would make these rows MUST rather
+> than SHOULD. `owning_cna` is REDACTED for exactly the reserved population, so the
+> assignment is an INFERENCE, and the site publishes zero MUST rows today. Acquiring
+> the first one on an inference is the wrong way to acquire one. That is a separate
+> change with its own measurement.
 
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated

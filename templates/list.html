@@ -330,6 +330,7 @@
                msrc:"Microsoft", mozilla:"Mozilla", arch:"Arch",
                csaf:"CSAF Advisory", samsung:"Samsung", jvn:"JVN",
                zdi:"Zero Day Initiative", certcc:"CERT/CC",
+               acronis:"Acronis",
                "ghsa-repos":"GitHub Repo Advisory"};
 
   // CSAF IS A TRANSPORT, NOT A PUBLISHER, and the control treated it as one.
@@ -692,7 +693,7 @@
     });
 
     // A CONTROL THAT LEADS NOWHERE IS NOT A CONTROL, so an entry with no rows in
-    // this view is not drawn. Two feeds of seventeen return nothing on a normal
+    // this view is not drawn. Two feeds of eighteen return nothing on a normal
     // run, and a search narrows most of the rest to zero on almost any term.
     //
     // WITH ONE EXCEPTION, and it is the one that matters: the entry for the
@@ -738,7 +739,7 @@
     // THE BAR IS SCALED TO THE LARGEST FACET IN THIS VIEW, NOT TO THE TOTAL.
     //
     // Against the total, GitHub Repo Advisory at 1,295 of 2,349 fills 55% and
-    // everything else is a stub: eleven of the seventeen feeds draw under 6% and
+    // everything else is a stub: eleven of the eighteen feeds draw under 6% and
     // are indistinguishable from each other, which is exactly the comparison
     // this section exists to make. Against the largest, the small feeds separate
     // and the shape of the lopsidedness is still readable off the top bar.
@@ -924,7 +925,7 @@
   // a screen reader's link list read "OSV" 44 times and "open advisory" more than
   // that, each pointing somewhere different, with nothing to tell them apart.
   function chipLabel(feed, cve) {
-    // "ENTRY", NOT "ADVISORY". Five of the seventeen feeds are distribution
+    // "ENTRY", NOT "ADVISORY". Five of the eighteen feeds are distribution
     // trackers, and clock.py draws that distinction as the whole difference
     // between belonging in the count and starting a 72-hour clock: a tracker
     // entry records that an id exists and how a package is affected, and is

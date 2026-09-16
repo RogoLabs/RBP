@@ -267,6 +267,17 @@ _ORIGIN_KIND = {
     # identifier and release date, which is exactly the shape 4.5.1.4 and
     # 4.5.1.6 mean by Publicly Disclosing.
     "samsung": "advisory",
+    # An Acronis advisory has its own SEC-<n> identifier, its own page and its
+    # own `published` date, which is the shape 4.5.1.4 and 4.5.1.6 mean by
+    # Publicly Disclosing. It is the vendor's own publication of the flaw and
+    # not a note that someone is aware of an id, which is the line between the
+    # two halves of this map.
+    #
+    # NOT in OWNER_FEEDS below, on the reasoning that excluded `ghsa` and `zdi`:
+    # treating it as the assigner's own channel would make these rows MUST, and
+    # `owning_cna` is REDACTED for exactly the reserved population, so the
+    # assignment is an inference. See the block comment on `feeds.feed_acronis`.
+    "acronis": "advisory",
     # A JVN advisory is coordinated disclosure with its own JVNDB identifier, its
     # own page and its own `dcterms:issued` date, which is the shape 4.5.1.4 and
     # 4.5.1.6 mean by Publicly Disclosing. It is NOT the iPedia mirror: the

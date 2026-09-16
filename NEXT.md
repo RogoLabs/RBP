@@ -60,12 +60,13 @@ drains, not what the site can see. SUSE, Red Hat's CSAF endpoint and CERT-Bund
 each hold more than one budget reads, so their counts climb over several runs
 rather than jumping. That is the drain working, and it needs nothing.
 
-**Seventeen feeds, and two of them are there for a different reason.** `zdi` and
-`certcc` were both merged 2026-09-08, and they are the first sources admitted on
-DETECTION rather than on coverage. Coverage stopped being the binding constraint:
-the gate stands at 49 of 50, the one miss (`huawei`) publishes a CSAF catalogue no
-unauthenticated client can read, and the 120 reachable CNAs still short of the
-floor are all sub-160-volume, one parser each. What the site is short of is rows.
+**Eighteen feeds, and three of them are there for a different reason.** `zdi` and
+`certcc` were both merged 2026-09-08 and `acronis` on 2026-09-16, and they are the
+sources admitted on DETECTION rather than on coverage. Coverage stopped being the
+binding constraint: the gate stands at 49 of 50, the one miss (`huawei`) publishes
+a CSAF catalogue no unauthenticated client can read, and the 120 reachable CNAs
+still short of the floor are all sub-160-volume, one parser each. What the site is
+short of is rows.
 
 - **`zdi`** supplies 24 reserved ids no other merged feed references, off four
   requests. 55% of its dated references lead publication, median 33 days.
@@ -73,11 +74,33 @@ floor are all sub-160-volume, one parser each. What the site is short of is rows
   disclosure lead alone, which is the first time section 2's `redundant` verdict
   has carried a merge. By RATE it is the best detector in the profile: 13
   sole-source rows off 299 ids, 4.3%, against `zdi`'s 0.6%.
+- **`acronis`** is one vendor's own advisory database, 147 in-window ids for 2.4
+  seconds and 0.1 MB, 21 of 144 dated references leading publication. Zero
+  marginal CNAs, so `redundant` again. It is the first feed here merged because a
+  READER reported an id the site could not see, rather than because the harness
+  surfaced it: FEEDS.md had the CNA in its residual-gap table at tenth by volume
+  since 2026-09-06.
 
-The general rule both produced, in FEEDS.md's two "MEASURED AND MERGED 2026-09-08"
-blocks: **ask what makes a source publish.** EUVD publishes because a record was
-published, so it can never lead. ZDI publishes because a disclosure clock ran out;
-CERT/CC publishes because coordination concluded. Neither waits for a record.
+The general rule the first two produced, in FEEDS.md's two "MEASURED AND MERGED
+2026-09-08" blocks: **ask what makes a source publish.** EUVD publishes because a
+record was published, so it can never lead. ZDI publishes because a disclosure
+clock ran out; CERT/CC publishes because coordination concluded. Neither waits for
+a record. `acronis` is the third answer and the most ordinary one: a vendor
+publishes when it ships the fix, which does not wait for a record either.
+
+**What `acronis` should change about how the tail gets ordered.** The gap table
+ranks by volume, and volume said tenth. What it could not say is that this CNA was
+reachable ONLY through a republisher. The obvious worry about a republisher is
+lag, and measuring it says the opposite: CERT-Bund carried the two ids the site
+already had 2 days and 0 days after the vendor's own advisory. It is prompt and it
+is PARTIAL. 88 of this feed's 147 in-window ids were in no merged feed, so the
+route covered roughly 40% of the vendor and nothing visible said which 40%.
+
+**So the measurement worth building is per-CNA sole-route coverage**, not lag: for
+each roster CNA, what fraction of its advisories reach the site only through
+someone else republishing them. A CNA at 40% through one third party is a coin
+flip per id and reads as covered today, because `cnas_effective` asks whether we
+have sighted it at all. That is the metric that would have ranked this first.
 
 Two things about them to look at first if either goes wrong. `zdi` is the only
 feed whose evidence is an HTML table on someone else's marketing site, and that
