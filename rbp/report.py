@@ -79,6 +79,14 @@ def _derive_meta(row):
             parts = ref.split("\t")
             return (f"https://github.com/{parts[0]}/security/advisories/{parts[1]}"
                     if len(parts) > 1 and parts[0] and parts[1] else "")
+        if s == "acronis":
+            # The advisory's own page. refs carry "acronis:SEC-<n>" and the id
+            # is the whole path, so an empty ref means no link rather than a
+            # link to the index, which is F3's dead chip.
+            sec = next((r.split(":", 1)[1] for r in refs
+                        if r.startswith("acronis:")), "")
+            return (f"https://security-advisory.acronis.com/advisories/{sec}"
+                    if sec.startswith("SEC-") else "")
         if s == "samsung":
             # F3. `samsung` was the only adapter with rows and no branch here,
             # so 65 of 1,691 rows on the 2026-08-27 snapshot carried

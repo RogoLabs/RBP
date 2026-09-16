@@ -730,12 +730,46 @@ def _stream_zip(url):
 # have noticed: 41.7 MB passes it with two decimal orders to spare.
 #
 # So the ceiling that matters here is on decompressed bytes, and it is the reason
-# this helper exists instead of a second call to `_stream_zip`. The in-window
-# read is 4.77 GB of that 9.77 (2025 at 1.70 and 2026 at 3.07), so 8 GB leaves
-# 68% headroom over the measured cost while still stopping an archive that has
-# decided to be infinite. It is a REFUSAL, not a truncation, for the same reason
-# the zip ceiling is: half an archive read as a whole one is the silent shrink.
-MAX_UNPACKED_BYTES = 8_000_000_000
+# this helper exists instead of a second call to `_stream_zip`. It is a REFUSAL,
+# not a truncation, for the same reason the zip ceiling is: half an archive read
+# as a whole one is the silent shrink.
+#
+# RAISED 2026-09-16, 8 GB -> 16 GB, and the archive growing is NOT why. THE
+# WINDOW GREW. The 8 GB was measured on 2026-08-31 against a TWO-year window
+# (2025-2026 at 4.77 GB) and left 68% headroom. `WINDOW_YEARS` went to four on
+# 2026-09-05 (a6332c0), which added the 2023 and 2024 shards to what `want`
+# selects and took the in-window read past a ceiling nobody re-measured. It ran
+# marginal for nine days and crossed on 2026-09-14, after which every run
+# refused the archive and the feed was TRUNCATED on all of them.
+#
+# THE COUPLING WAS THE BUG, not the number: a constant here, sized against a
+# window defined in `coverage.WINDOW_YEARS`, with nothing connecting the two.
+# `test_the_ceiling_is_sized_for_the_current_window` is that connection now, and
+# the health detail carries the headroom on EVERY run, so the next squeeze shows
+# up in the snapshot history while it is still headroom rather than after it has
+# become a refusal.
+#
+# Measured 2026-09-16 over the real tarball, decompressed bytes per year shard.
+# Whole archive 10.59 GB across 66,776 members, 43.6 MB on the wire:
+#
+#     window     shards        in-window read
+#     2 years    2025-2026           5.60 GB
+#     3 years    2024-2026           7.31 GB
+#     4 years    2023-2026           8.33 GB   <- current
+#     5 years    2022-2026           9.54 GB
+#
+# 16 GB is 92% headroom over the current four-year read and clears a five-year
+# window as well, while still stopping an archive that has decided to be
+# infinite: a real bomb is orders of magnitude past this, not 2x.
+#
+# WHAT THE REFUSAL COST, measured rather than assumed, because the count fell
+# over the same days and the two looked connected. The shards stream 2026, 2023,
+# 2025, 2024, so the cut landed in 2024 and never touched 2026. It hid 1,037 ids,
+# of which 1,019 are PUBLISHED, 17 REJECTED and exactly one RESERVED
+# (CVE-2024-52948), and that one is already sighted through `debian`. The
+# published count lost NOTHING. The fall from 2,315 to 2,123 over the same window
+# was records being published: 92 of the 94 rows that left are PUBLISHED today.
+MAX_UNPACKED_BYTES = 16_000_000_000
 
 
 def _stream_tar_xz(url, want, stats):
@@ -775,12 +809,16 @@ def _stream_tar_xz(url, want, stats):
         tmp.close()
         _count_bytes(total)
         stats["bytes"] = total
-        unpacked = 0
+        # Reported on every run, not only when it trips. The ceiling above went
+        # nine days marginal before it refused, and nothing in the health line
+        # would have shown the squeeze building.
+        stats["unpacked"] = unpacked = 0
         with tarfile.open(tmp.name, "r|xz") as tf:
             for m in tf:
                 if not m.isfile() or not want(m.name):
                     continue
                 unpacked += m.size
+                stats["unpacked"] = unpacked
                 if unpacked > MAX_UNPACKED_BYTES:
                     raise RuntimeError(
                         f"decompressed {unpacked:,} bytes, past the "
@@ -1593,7 +1631,15 @@ def feed_ubuntu_osv(years):
                     rows=len(out))
         return out
 
-    detail = f"{len(out)} ids from {stats['bytes'] / 1e6:.0f}MB"
+    # THE HEADROOM IS PART OF THE HEALTH LINE. `MAX_UNPACKED_BYTES` is sized
+    # against a window this module does not own, so the run that reports "ok"
+    # is the only place the squeeze is visible before it becomes a refusal.
+    # summary.json keeps this, so the trend is readable across snapshots.
+    used = stats.get("unpacked") or 0
+    detail = (f"{len(out)} ids from {stats['bytes'] / 1e6:.0f}MB"
+              f"; unpacked {used / 1e9:.2f}GB of the "
+              f"{MAX_UNPACKED_BYTES / 1e9:.0f}GB ceiling "
+              f"({100 * used / MAX_UNPACKED_BYTES:.0f}%)")
     if withdrawn:
         detail += f"; skipped {withdrawn} withdrawn record(s)"
     # A read that downloaded the tarball and matched nothing is NOT ok. `want`
@@ -4222,6 +4268,140 @@ def feed_oss_security(years, months_cap=60, today=None):
     return list(out.values())
 
 
+ACRONIS_API = "https://security-advisory.acronis.com/api/v1/advisories"
+# The API caps `limit` somewhere under 250: 100 is accepted, 250 answers 400.
+ACRONIS_PAGE = 100
+# A page walk needs a stop that is not "until the server stops". 40 pages is
+# 4,000 advisories against a catalogue of 248, so this is a runaway guard and
+# never a cap the site has to disclose. If it ever fires, that is a shape change
+# and the health line says TRUNCATED rather than ok.
+ACRONIS_MAX_PAGES = 40
+
+
+# FOUND BY A READER, not by a probe, and that is the part worth recording.
+# CVE-2026-87886 was reported to us on 2026-09-16 as an RBP the site could not
+# see: reserved, no record, and carried by Acronis's own advisory SEC-10986
+# since 2026-09-15. It was in no feed. FEEDS.md had already measured `Acronis`
+# into the residual gap and nothing had been done about it.
+#
+# WHY THERE WAS NO ROUTE. Acronis serves no CSAF: `.well-known/csaf/` 404s on
+# security-advisory.acronis.com and redirects on both apex and www (probed
+# 2026-09-16). The only way an Acronis advisory reached this site was CERT-Bund
+# republishing it into CSAF.
+#
+# AND THE DEFECT IS COVERAGE, NOT LATENCY, which is worth stating because the
+# latency guess was the obvious one and it is wrong. CERT-Bund is PROMPT on what
+# it carries: the two reserved Acronis ids the site already lists reached it 2
+# days and 0 days after the vendor's own advisory (CVE-2023-48675, advisory
+# 2023-11-17, sighted 2023-11-19; CVE-2026-33090, advisory and sighting both
+# 2026-04-29). What it is not is COMPLETE. 88 of this feed's 147 in-window ids
+# were in no merged feed at all, so the republisher route covers roughly 40% of
+# this vendor's advisories, and which 40% is not predictable from anything the
+# site can see. SEC-10986 landed in the other 60%. A source read only through a
+# third party that carries some of it is a coin flip per id, and no latency
+# measurement would have shown that.
+#
+# WHAT IT YIELDS, measured 2026-09-16 over the whole catalogue: 248 advisories,
+# of which 215 carry a CVE id and 147 fall in the four-year window. Three ids
+# are RESERVED and all three are in window: CVE-2023-48675 (advisory 2023-11-17),
+# CVE-2026-33090 (2026-04-29) and CVE-2026-87886 (2026-09-15). The first two are
+# already sighted through `csaf`; the third is this feed's alone, and it is the
+# admissibility test 2 lead reference.
+#
+# THE TRAP, and it is the `upstream` trap in a new costume: `description` is
+# EMPTY on 231 of the 248 advisories. The human-readable line is `summary`. An
+# adapter that reads the field named `description`, which is the obvious one,
+# returns a feed of blank descriptions that looks like it works. Read the data
+# before the field name.
+#
+# 33 advisories carry no CVE id at all and are skipped rather than counted.
+# `cve` is a single string on all 248 and never a list, so there is no fan-out
+# here today. The loop below normalises one into the other anyway, because the
+# alternative is `startswith` on a list, which raises on some shapes and
+# silently matches nothing on others.
+#
+# NOT IN `clock.OWNER_FEEDS`, deliberately, on the reasoning that keeps `ghsa`
+# and `zdi` out. Acronis publishing an advisory for an id Acronis assigned would
+# be an owner channel and would make these rows MUST rather than SHOULD, which
+# is a strictly stronger claim on a live page. `owning_cna` is REDACTED for
+# exactly the reserved population, so the assignment is an INFERENCE here and
+# not an observation, and the site publishes 0 MUST rows today. Adding the first
+# one on an inference is the wrong way to acquire one. That is a separate change
+# with its own measurement, not a line in this adapter.
+def feed_acronis(years):
+    """Acronis's own advisory database, read through its JSON API.
+
+    One request per 100 advisories, three pages as of 2026-09-16. See the block
+    comment above for why this feed exists, what it yields and the field trap.
+
+    `published` is present on all 248 and is the advisory's own date, so unlike
+    the trackers this is a real disclosure date and `clock` classifies the feed
+    as an advisory.
+    """
+    out, seen, page = [], set(), 1
+    total = None
+    try:
+        while page <= ACRONIS_MAX_PAGES:
+            data, status, _ = _get(
+                f"{ACRONIS_API}?page={page}&limit={ACRONIS_PAGE}", timeout=60)
+            if data is None:
+                raise RuntimeError(f"page {page} answered {status}")
+            items = data.get("items") or []
+            total = data.get("total") if total is None else total
+            for it in items:
+                cid = it.get("cve") or ""
+                # A single string on all 248, but a list would be silently
+                # dropped by `startswith`, so normalise rather than assume.
+                cids = cid if isinstance(cid, list) else [cid]
+                for c in cids:
+                    if not isinstance(c, str) or not c.startswith("CVE-"):
+                        continue
+                    if _year(c) not in years or c in seen:
+                        continue
+                    seen.add(c)
+                    prods = it.get("products") or []
+                    pkg = (prods[0].get("name") or "")[:120] if prods else ""
+                    out.append({
+                        "cve_id": c, "source": "acronis",
+                        "source_ref": it.get("id") or c,
+                        "public_date": _d(it.get("published")),
+                        "product": pkg,
+                        # `summary`, NOT `description`. See the block comment.
+                        "description": (it.get("summary") or "")[:400]})
+            if not items or (total is not None and page * ACRONIS_PAGE >= total):
+                break
+            page += 1
+        else:
+            # Loop exhausted without breaking: the catalogue is sixteen times
+            # bigger than measured, or pagination stopped terminating.
+            record_feed("acronis", TRUNCATED,
+                        f"stopped at {ACRONIS_MAX_PAGES} pages with "
+                        f"{len(out)} ids; total reported {total}", rows=len(out))
+            return out
+    # Broad on purpose: keep what was read, and say it was partial. A page walk
+    # that dies on page 2 of 3 returns a plausible number of plausible rows,
+    # which is the silent-shrink shape.
+    except Exception as e:
+        print(f"  [acronis] page walk stopped: {e}", file=sys.stderr)
+        record_feed("acronis", FAILED if not out else TRUNCATED,
+                    f"stopped after {len(out)} ids on page {page}: {str(e)[:90]}",
+                    rows=len(out))
+        return out
+
+    # A walk that reached the API and matched nothing is NOT ok. `cve` and
+    # `items` are a shape the publisher controls, and this is the one place a
+    # renamed field turns into a silently empty feed.
+    if not out:
+        record_feed("acronis", FAILED,
+                    f"{total} advisories read and no CVE id matched; the "
+                    f"API shape may have changed", rows=0)
+        return out
+    record_feed("acronis", OK,
+                f"{len(out)} ids from {total} advisories over {page} page(s)",
+                rows=len(out))
+    return out
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
@@ -4239,7 +4419,11 @@ ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             # `test_the_profile_names_only_feeds_that_have_adapters` pins the
             # other. Merging it means adding it to `_WEEKLY` with its scorecard
             # in the same diff.
-            "oss-security": feed_oss_security}
+            "oss-security": feed_oss_security,
+            # Same standing as `oss-security` above: in the table so
+            # `feedlab.fetch` can measure it, out of `cli._WEEKLY` until its
+            # scorecard says it clears. See the block comment on `feed_acronis`.
+            "acronis": feed_acronis}
 
 
 # How many adapters download at once. A ceiling on concurrent fetches, not a

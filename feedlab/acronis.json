@@ -1,0 +1,97 @@
+{
+ "baseline": {
+  "effective_n": 261,
+  "feeds": [
+   "alas",
+   "alpine",
+   "arch",
+   "certcc",
+   "csaf",
+   "debian",
+   "ghsa",
+   "ghsa-repos",
+   "jvn",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu",
+   "ubuntu-osv",
+   "zdi"
+  ],
+  "scored_at": "2026-09-08T18:58:56+00:00"
+ },
+ "bytes": 139951,
+ "cnas_effective_alone": 1,
+ "cnas_new_effective": 0,
+ "cnas_new_effective_names": [],
+ "cnas_reached": 1,
+ "combine": "union",
+ "disclosure": {
+  "dated_n": 144,
+  "lead_examples": [
+   "CVE-2025-30411",
+   "CVE-2025-30416",
+   "CVE-2025-30412",
+   "CVE-2025-30410",
+   "CVE-2025-30413"
+  ],
+  "lead_max_days": 261,
+  "lead_median_days": 6,
+  "lead_n": 21,
+  "lead_pct": 14.58,
+  "mirror_n": 123,
+  "undated_n": 0,
+  "unpublished_examples": [
+   "CVE-2023-48675",
+   "CVE-2026-33090",
+   "CVE-2026-87886"
+  ],
+  "unpublished_n": 3
+ },
+ "feed": "acronis",
+ "health": {
+  "capped": false,
+  "detail": "147 ids from 248 advisories over 3 page(s)",
+  "ok": true,
+  "rows": 147,
+  "status": "ok",
+  "truncated": false
+ },
+ "ids": 147,
+ "ids_new": 88,
+ "live": {
+  "already_merged": false,
+  "cnas_new_effective": 0,
+  "cnas_new_effective_names": [],
+  "effective_n": 267,
+  "fetched": "2026-09-08",
+  "generated_at": "2026-09-08T21:53:02+00:00",
+  "ids_not_in_baseline": 88,
+  "ids_short": 11689,
+  "pinned": true,
+  "reason": "an upper bound: this baseline is 11,689 rows colder than the live run at alas, csaf, debian, ghsa, ghsa-repos, osv",
+  "rows_short": {
+   "alas": 26,
+   "csaf": 11537,
+   "debian": 3,
+   "ghsa": 72,
+   "ghsa-repos": 1,
+   "osv": 50
+  },
+  "source_commit": "546576015a48",
+  "upper_bound": true
+ },
+ "scored_at": "2026-09-16T16:18:43+00:00",
+ "stability": null,
+ "verdict": "redundant",
+ "verdict_reason": "no marginal CNA, but it references ids that were unpublished at the time, so it clears admissibility test 2 and STAYS IN THE NUMERATOR: redundant on coverage, not a publication mirror",
+ "wall_seconds": 2.4,
+ "years": [
+  2023,
+  2024,
+  2025,
+  2026
+ ]
+}

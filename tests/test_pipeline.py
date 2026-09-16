@@ -469,6 +469,10 @@ def test_every_adapter_either_builds_a_link_or_declares_it_cannot():
         # Same shape again: the archive path IS the ref, so a generic
         # `oss-security:somepackage` correctly builds no link.
         "oss-security": "oss-security:2026/09/08/2",
+        # And again: the SEC-<n> id is the whole path, so `_u` requires
+        # that prefix and a generic `acronis:somepackage` correctly
+        # builds no link.
+        "acronis": "acronis:SEC-10986",
     }
     handled = set()
     for slug in feeds.ADAPTERS:

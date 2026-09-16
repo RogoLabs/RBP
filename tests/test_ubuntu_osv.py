@@ -344,3 +344,74 @@ def test_the_link_goes_to_the_publisher_not_to_osv_dev():
                                "refs": "ubuntu-osv:UBUNTU-CVE-2026-1111"})[2]
     assert urls["ubuntu-osv"] == "https://ubuntu.com/security/CVE-2026-1111"
     assert "osv.dev" not in urls["ubuntu-osv"]
+
+
+# --------------------------------------------------------------------------
+# the ceiling is sized against a window this module does not own
+# --------------------------------------------------------------------------
+
+# Decompressed bytes per year shard, measured 2026-09-16 by walking the real
+# tarball's headers. Whole archive 10.59 GB across 66,776 members. These only
+# ever grow, so asserting that today's window fits with headroom is the cheap
+# standing version of re-measuring.
+MEASURED_SHARD_BYTES = {
+    2019: 80_035_297,
+    2020: 95_892_316,
+    2021: 362_871_327,
+    2022: 1_208_855_021,
+    2023: 1_019_045_314,
+    2024: 1_711_375_935,
+    2025: 1_700_346_354,
+    2026: 3_898_808_952,
+}
+
+# How much of the ceiling the widest supported window may occupy. A ceiling the
+# window merely fits under is one that refuses the archive within weeks: the
+# 2026 shard alone put on 0.83 GB in the sixteen days before this was written.
+CEILING_BUDGET = 0.75
+
+
+def test_the_ceiling_is_sized_for_the_current_window():
+    """`MAX_UNPACKED_BYTES` lives in feeds.py and the window that decides how much
+    it has to cover lives in `coverage.WINDOW_YEARS`. Nothing connected them, so
+    when the window went from two years to four on 2026-09-05 the 8 GB sized
+    against the two-year read survived untouched, went marginal the same day, and
+    started refusing the archive on 2026-09-14. Every run between was TRUNCATED.
+
+    This is that connection. It fails on the commit that widens the window rather
+    than nine days into production.
+    """
+    from rbp import coverage
+
+    years = coverage.window(2026)
+    missing = [y for y in years if y not in MEASURED_SHARD_BYTES]
+    assert not missing, (
+        f"no measurement for shard(s) {missing}; a window that reaches back "
+        f"past 2019 needs the tarball re-walked before the ceiling can be "
+        f"trusted")
+
+    projected = sum(MEASURED_SHARD_BYTES[y] for y in years)
+    budget = feeds.MAX_UNPACKED_BYTES * CEILING_BUDGET
+    assert projected < budget, (
+        f"a {len(years)}-year window ({min(years)}-{max(years)}) reads "
+        f"{projected / 1e9:.2f}GB, over {CEILING_BUDGET:.0%} of the "
+        f"{feeds.MAX_UNPACKED_BYTES / 1e9:.0f}GB ceiling. Re-measure the "
+        f"tarball and raise MAX_UNPACKED_BYTES before this ships.")
+
+
+def test_a_healthy_run_reports_its_headroom_not_only_its_id_count(monkeypatch):
+    """The squeeze was invisible for nine days because a healthy run's health line
+    said only how many ids it got. A run that is fine still has to say how close
+    to the ceiling it came, because that is the number whose trend is the warning.
+    """
+    rows = _rows(monkeypatch, {
+        "osv/cve/2026/UBUNTU-CVE-2026-1111.json": _rec("CVE-2026-1111"),
+        "osv/cve/2026/UBUNTU-CVE-2026-2222.json": _rec("CVE-2026-2222"),
+    })
+    assert len(rows) == 2
+    health = feeds.FEED_HEALTH["ubuntu-osv"]
+    assert health["status"] == feeds.OK
+    detail = health["detail"]
+    assert "ceiling" in detail, f"no headroom reported in {detail!r}"
+    assert "%" in detail, f"no percentage reported in {detail!r}"
+    assert "unpacked" in detail, f"no decompressed figure in {detail!r}"

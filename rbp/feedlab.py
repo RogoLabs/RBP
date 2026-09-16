@@ -131,7 +131,8 @@ LIVE_MAX_AGE_DAYS = 14
 #
 # `zdi` is the first feed merged since the pin test was written (#33), so it is
 # the first to hit this, and the honest fix is a declaration rather than a
-# loosened assertion. `certcc` followed within the hour and is the second. A test that accepted any profile/pin difference would stop
+# loosened assertion. `certcc` followed within the hour and is the second, and
+# `acronis` is the third. A test that accepted any profile/pin difference would stop
 # noticing the case it exists for: a feed REMOVED from the live run while the
 # repo still scores against it, which is the same-direction error as a cold
 # baseline and makes a candidate look better than it is.
@@ -145,7 +146,7 @@ LIVE_MAX_AGE_DAYS = 14
 # Anything in here is scored against a pin that does not contain it, which is the
 # `live.upper_bound` case every card already records: the candidate looks better
 # than it is, by at most `live.rows_short`.
-PENDING_FIRST_RUN = frozenset()
+PENDING_FIRST_RUN = frozenset({"acronis"})
 
 # Advisory dates more than this far before the CVE's publication are treated as
 # a data error rather than as evidence of lead. Feeds carry wrong dates: a
@@ -876,7 +877,7 @@ def write_refusal(base, explicit_sources):
     """Why this baseline must not be written, or None.
 
     Separated from `main` so the rule can be read and tested without a corpus and
-    seventeen fetches. It is one sentence with one exception:
+    eighteen fetches. It is one sentence with one exception:
 
       A baseline whose feed set is not the running profile is not written, unless
       the caller named the sources itself.
@@ -908,7 +909,7 @@ def load_baseline(path=None, require_profile=False):
     It is opt-in for one reason, and the reason is a real workflow rather than
     caution. `baseline --add` exists to repair exactly the mismatch this refuses,
     by splicing a missing feed into the recorded rows instead of refetching all
-    seventeen, so a guard that fired on every load would make the cheap repair
+    eighteen, so a guard that fired on every load would make the cheap repair
     path unreachable and leave a 32-minute rebuild as the only way out. So the
     reads that PRODUCE A NUMBER require the profile (`score`, `audit`, a rescore)
     and the read that REPAIRS the file does not. `main` checks the spliced result
