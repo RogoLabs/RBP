@@ -446,40 +446,6 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-52056",
-  "state": "RESERVED",
-  "public_date": "",
-  "sources": "debian",
-  "feed_count": 1,
-  "dates": {},
-  "refs": "debian:mongoose",
-  "description": "mongoose",
-  "state_verified_this_run": true,
-  "public_date_origin": "none",
-  "days_public": null,
-  "clock_known": false,
-  "hours_public": null,
-  "clock_origin": "tracker",
-  "advisory_date": null,
-  "advisory_days_public": null,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "mongoose",
-  "ecosystem": "",
-  "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52056"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "undated"
- },
- {
   "cve_id": "CVE-2026-63374",
   "state": "RESERVED",
   "public_date": "2026-09-18",
@@ -1339,42 +1305,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/warp-tech/warpgate/security/advisories/GHSA-hrfx-fm67-gv64"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-92099",
-  "state": "RESERVED",
-  "public_date": "2026-09-15",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-15"
-  },
-  "refs": "ghsa-repos:wp-graphql/wp-graphql\tGHSA-r844-6gqh-59qj",
-  "description": "wp-graphql/wp-graphql repository advisory GHSA-r844-6gqh-59qj",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 4,
-  "clock_known": true,
-  "hours_public": 96,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-15",
-  "advisory_days_public": 4,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/wp-graphql/wp-graphql/security/advisories/GHSA-r844-6gqh-59qj"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
