@@ -5754,9 +5754,6 @@
   "CVE-2025-71416": {
    "first_public": "2026-09-10"
   },
-  "CVE-2026-78030": {
-   "first_public": "2026-09-11"
-  },
   "CVE-2026-56828": {
    "first_public": "2026-09-11"
   },
@@ -15372,6 +15369,15 @@
    "transferred": false,
    "first_public": "2026-09-10",
    "published": "2026-09-18",
+   "days_to_publish": 8,
+   "closed_on": "2026-09-19"
+  },
+  {
+   "cve_id": "CVE-2026-78030",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-11",
+   "published": "2026-09-19",
    "days_to_publish": 8,
    "closed_on": "2026-09-19"
   }

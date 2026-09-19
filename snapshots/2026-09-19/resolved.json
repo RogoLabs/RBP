@@ -1,1 +1,11 @@
-[]
+[
+ {
+  "cve_id": "CVE-2026-78030",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-09-11",
+  "published": "2026-09-19",
+  "days_to_publish": 8,
+  "closed_on": "2026-09-19"
+ }
+]
