@@ -591,12 +591,6 @@
   "CVE-2026-35511": {
    "first_public": "2026-08-14"
   },
-  "CVE-2026-55074": {
-   "first_public": "2026-08-12"
-  },
-  "CVE-2026-55071": {
-   "first_public": "2026-08-12"
-  },
   "CVE-2026-47132": {
    "first_public": "2026-08-12"
   },
@@ -1662,18 +1656,6 @@
   "CVE-2026-77509": {
    "first_public": "2026-07-14"
   },
-  "CVE-2026-54915": {
-   "first_public": "2026-06-16"
-  },
-  "CVE-2026-52835": {
-   "first_public": "2026-06-16"
-  },
-  "CVE-2026-49995": {
-   "first_public": "2026-06-16"
-  },
-  "CVE-2026-45381": {
-   "first_public": "2026-06-16"
-  },
   "CVE-2026-79758": {
    "first_public": "2026-07-27"
   },
@@ -1757,9 +1739,6 @@
   },
   "CVE-2026-67532": {
    "first_public": "2026-07-18"
-  },
-  "CVE-2026-79920": {
-   "first_public": "2026-07-15"
   },
   "CVE-2026-77624": {
    "first_public": "2026-07-15"
@@ -1937,9 +1916,6 @@
   },
   "CVE-2026-75607": {
    "first_public": "2026-06-28"
-  },
-  "CVE-2026-55567": {
-   "first_public": "2026-06-13"
   },
   "CVE-2026-62162": {
    "first_public": "2026-06-25"
@@ -2126,9 +2102,6 @@
   },
   "CVE-2026-55422": {
    "first_public": "2026-06-17"
-  },
-  "CVE-2026-53940": {
-   "first_public": "2026-07-01"
   },
   "CVE-2026-63348": {
    "first_public": "2026-07-15"
@@ -2502,34 +2475,10 @@
   "CVE-2026-62367": {
    "first_public": "2026-07-19"
   },
-  "CVE-2026-68919": {
-   "first_public": "2026-07-26"
-  },
-  "CVE-2026-55870": {
-   "first_public": "2026-07-26"
-  },
   "CVE-2026-55632": {
    "first_public": "2026-07-26"
   },
-  "CVE-2026-55625": {
-   "first_public": "2026-07-26"
-  },
-  "CVE-2026-55060": {
-   "first_public": "2026-07-26"
-  },
-  "CVE-2026-52743": {
-   "first_public": "2026-07-26"
-  },
   "CVE-2026-52744": {
-   "first_public": "2026-07-26"
-  },
-  "CVE-2026-52742": {
-   "first_public": "2026-07-26"
-  },
-  "CVE-2026-52740": {
-   "first_public": "2026-07-26"
-  },
-  "CVE-2026-52741": {
    "first_public": "2026-07-26"
   },
   "CVE-2026-59993": {
@@ -2583,38 +2532,8 @@
   "CVE-2026-46346": {
    "first_public": "2026-06-18"
   },
-  "CVE-2026-61749": {
-   "first_public": "2026-06-24"
-  },
-  "CVE-2026-61748": {
-   "first_public": "2026-06-24"
-  },
-  "CVE-2026-61746": {
-   "first_public": "2026-06-24"
-  },
-  "CVE-2026-61747": {
-   "first_public": "2026-06-24"
-  },
-  "CVE-2026-61745": {
-   "first_public": "2026-06-24"
-  },
-  "CVE-2026-61744": {
-   "first_public": "2026-06-24"
-  },
   "CVE-2026-77300": {
    "first_public": "2026-07-10"
-  },
-  "CVE-2026-63416": {
-   "first_public": "2026-06-30"
-  },
-  "CVE-2026-63373": {
-   "first_public": "2026-06-30"
-  },
-  "CVE-2026-63334": {
-   "first_public": "2026-06-30"
-  },
-  "CVE-2026-58504": {
-   "first_public": "2026-06-19"
   },
   "CVE-2026-58255": {
    "first_public": "2026-06-19"
@@ -2760,9 +2679,6 @@
   "CVE-2026-76813": {
    "first_public": "2026-07-09"
   },
-  "CVE-2026-61612": {
-   "first_public": "2026-06-22"
-  },
   "CVE-2026-75524": {
    "first_public": "2026-07-08"
   },
@@ -2819,12 +2735,6 @@
   },
   "CVE-2026-62335": {
    "first_public": "2026-06-26"
-  },
-  "CVE-2026-55897": {
-   "first_public": "2026-06-16"
-  },
-  "CVE-2026-55159": {
-   "first_public": "2026-06-15"
   },
   "CVE-2026-53918": {
    "first_public": "2026-06-18"
@@ -3282,26 +3192,8 @@
   "CVE-2026-63386": {
    "first_public": "2026-06-30"
   },
-  "CVE-2026-62247": {
-   "first_public": "2026-06-25"
-  },
   "CVE-2026-54238": {
    "first_public": "2026-06-16"
-  },
-  "CVE-2026-48975": {
-   "first_public": "2026-06-13"
-  },
-  "CVE-2026-48974": {
-   "first_public": "2026-06-13"
-  },
-  "CVE-2026-48826": {
-   "first_public": "2026-06-13"
-  },
-  "CVE-2026-55473": {
-   "first_public": "2026-06-13"
-  },
-  "CVE-2026-48976": {
-   "first_public": "2026-06-13"
   },
   "CVE-2026-58496": {
    "first_public": "2026-06-19"
@@ -3326,15 +3218,6 @@
   },
   "CVE-2026-77572": {
    "first_public": "2026-07-14"
-  },
-  "CVE-2026-63330": {
-   "first_public": "2026-06-30"
-  },
-  "CVE-2026-63329": {
-   "first_public": "2026-06-30"
-  },
-  "CVE-2026-58491": {
-   "first_public": "2026-06-18"
   },
   "CVE-2026-62365": {
    "first_public": "2026-08-18"
@@ -3476,9 +3359,6 @@
   },
   "CVE-2026-12521": {
    "first_public": "2026-08-19"
-  },
-  "CVE-2026-76898": {
-   "first_public": "2026-08-20"
   },
   "CVE-2026-81502": {
    "first_public": "2026-07-15"
@@ -4392,45 +4272,6 @@
   "CVE-2026-44701": {
    "first_public": "2026-08-26"
   },
-  "CVE-2026-73513": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73552": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73512": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73547": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73549": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-50572": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73546": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-48521": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73551": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73511": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73548": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73550": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-73553": {
-   "first_public": "2026-08-26"
-  },
   "CVE-2026-69132": {
    "first_public": "2026-08-26"
   },
@@ -4537,9 +4378,6 @@
    "first_public": "2026-07-18"
   },
   "CVE-2026-85990": {
-   "first_public": "2026-07-18"
-  },
-  "CVE-2026-85751": {
    "first_public": "2026-07-18"
   },
   "CVE-2026-86020": {
@@ -5139,39 +4977,6 @@
   "CVE-2026-10797": {
    "first_public": "2026-06-09"
   },
-  "CVE-2026-77520": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-79917": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-79916": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77521": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77523": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77522": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77525": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77519": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77518": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77517": {
-   "first_public": "2026-09-02"
-  },
-  "CVE-2026-77516": {
-   "first_public": "2026-09-02"
-  },
   "CVE-2026-39372": {
    "first_public": "2026-09-02"
   },
@@ -5290,12 +5095,6 @@
    "first_public": "2026-09-03"
   },
   "CVE-2026-65107": {
-   "first_public": "2026-09-03"
-  },
-  "CVE-2026-79918": {
-   "first_public": "2026-09-03"
-  },
-  "CVE-2026-79919": {
    "first_public": "2026-09-03"
   },
   "CVE-2026-77276": {
@@ -5550,18 +5349,6 @@
   "CVE-2026-91133": {
    "first_public": "2026-08-25"
   },
-  "CVE-2026-91167": {
-   "first_public": "2026-08-26"
-  },
-  "CVE-2026-91166": {
-   "first_public": "2026-08-14"
-  },
-  "CVE-2026-91165": {
-   "first_public": "2026-08-14"
-  },
-  "CVE-2026-91164": {
-   "first_public": "2026-08-05"
-  },
   "CVE-2026-91131": {
    "first_public": "2026-08-12"
   },
@@ -5598,19 +5385,7 @@
   "CVE-2026-55752": {
    "first_public": "2026-09-09"
   },
-  "CVE-2026-46649": {
-   "first_public": "2026-09-09"
-  },
   "CVE-2026-46650": {
-   "first_public": "2026-09-09"
-  },
-  "CVE-2026-49450": {
-   "first_public": "2026-09-09"
-  },
-  "CVE-2026-49449": {
-   "first_public": "2026-09-09"
-  },
-  "CVE-2026-49453": {
    "first_public": "2026-09-09"
   },
   "CVE-2026-55105": {
@@ -5619,16 +5394,10 @@
   "CVE-2026-55210": {
    "first_public": "2026-09-09"
   },
-  "CVE-2026-55179": {
-   "first_public": "2026-09-09"
-  },
   "CVE-2026-55456": {
    "first_public": "2026-09-09"
   },
   "CVE-2026-59814": {
-   "first_public": "2026-09-09"
-  },
-  "CVE-2026-59816": {
    "first_public": "2026-09-09"
   },
   "CVE-2026-59815": {
@@ -5810,6 +5579,96 @@
   },
   "CVE-2026-94292": {
    "first_public": "2026-09-08"
+  },
+  "CVE-2026-94476": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-94480": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-94481": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-94479": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-94475": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-94478": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-94477": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-94474": {
+   "first_public": "2026-08-10"
+  },
+  "CVE-2026-94473": {
+   "first_public": "2026-08-10"
+  },
+  "CVE-2026-94472": {
+   "first_public": "2026-08-10"
+  },
+  "CVE-2026-94471": {
+   "first_public": "2026-08-10"
+  },
+  "CVE-2026-94470": {
+   "first_public": "2026-08-10"
+  },
+  "CVE-2026-94466": {
+   "first_public": "2026-07-18"
+  },
+  "CVE-2026-94468": {
+   "first_public": "2026-07-18"
+  },
+  "CVE-2026-94469": {
+   "first_public": "2026-07-18"
+  },
+  "CVE-2026-94465": {
+   "first_public": "2026-07-18"
+  },
+  "CVE-2026-94467": {
+   "first_public": "2026-07-18"
+  },
+  "CVE-2026-94464": {
+   "first_public": "2026-07-18"
+  },
+  "CVE-2026-94463": {
+   "first_public": "2026-07-18"
+  },
+  "CVE-2026-93425": {
+   "first_public": "2026-07-21"
+  },
+  "CVE-2026-93414": {
+   "first_public": "2026-08-19"
+  },
+  "CVE-2026-93413": {
+   "first_public": "2026-08-19"
+  },
+  "CVE-2026-93412": {
+   "first_public": "2026-08-19"
+  },
+  "CVE-2026-93411": {
+   "first_public": "2026-08-19"
+  },
+  "CVE-2026-93410": {
+   "first_public": "2026-08-17"
+  },
+  "CVE-2026-93409": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-93408": {
+   "first_public": "2026-08-14"
+  },
+  "CVE-2026-93407": {
+   "first_public": "2026-07-20"
+  },
+  "CVE-2026-93417": {
+   "first_public": "2026-07-21"
+  },
+  "CVE-2026-92709": {
+   "first_public": "2026-08-20"
   }
  },
  "resolved": [
@@ -15412,6 +15271,699 @@
    "first_public": "",
    "published": "2026-09-21",
    "days_to_publish": null,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55074",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-12",
+   "published": "2026-09-21",
+   "days_to_publish": 40,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55071",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-12",
+   "published": "2026-09-21",
+   "days_to_publish": 40,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-54915",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-16",
+   "published": "2026-09-21",
+   "days_to_publish": 97,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-52835",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-16",
+   "published": "2026-09-21",
+   "days_to_publish": 97,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-49995",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-16",
+   "published": "2026-09-21",
+   "days_to_publish": 97,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-45381",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-16",
+   "published": "2026-09-21",
+   "days_to_publish": 97,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-79920",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-15",
+   "published": "2026-09-21",
+   "days_to_publish": 68,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55567",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-13",
+   "published": "2026-09-21",
+   "days_to_publish": 100,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-53940",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-01",
+   "published": "2026-09-21",
+   "days_to_publish": 82,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-68919",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55870",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55625",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55060",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-52743",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-52742",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-52740",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-52741",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-26",
+   "published": "2026-09-21",
+   "days_to_publish": 57,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-61749",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-24",
+   "published": "2026-09-21",
+   "days_to_publish": 89,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-61748",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-24",
+   "published": "2026-09-21",
+   "days_to_publish": 89,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-61746",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-24",
+   "published": "2026-09-21",
+   "days_to_publish": 89,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-61747",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-24",
+   "published": "2026-09-21",
+   "days_to_publish": 89,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-61745",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-24",
+   "published": "2026-09-21",
+   "days_to_publish": 89,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-61744",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-24",
+   "published": "2026-09-21",
+   "days_to_publish": 89,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-63416",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-30",
+   "published": "2026-09-21",
+   "days_to_publish": 83,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-63373",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-30",
+   "published": "2026-09-21",
+   "days_to_publish": 83,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-63334",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-30",
+   "published": "2026-09-21",
+   "days_to_publish": 83,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-58504",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-19",
+   "published": "2026-09-21",
+   "days_to_publish": 94,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-61612",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-22",
+   "published": "2026-09-21",
+   "days_to_publish": 91,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55897",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-16",
+   "published": "2026-09-21",
+   "days_to_publish": 97,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55159",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-15",
+   "published": "2026-09-21",
+   "days_to_publish": 98,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-62247",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-25",
+   "published": "2026-09-21",
+   "days_to_publish": 88,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-48975",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-13",
+   "published": "2026-09-21",
+   "days_to_publish": 100,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-48974",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-13",
+   "published": "2026-09-21",
+   "days_to_publish": 100,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-48826",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-13",
+   "published": "2026-09-21",
+   "days_to_publish": 100,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55473",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-13",
+   "published": "2026-09-21",
+   "days_to_publish": 100,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-48976",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-13",
+   "published": "2026-09-21",
+   "days_to_publish": 100,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-63330",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-30",
+   "published": "2026-09-21",
+   "days_to_publish": 83,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-63329",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-30",
+   "published": "2026-09-21",
+   "days_to_publish": 83,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-58491",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-18",
+   "published": "2026-09-21",
+   "days_to_publish": 95,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-76898",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-20",
+   "published": "2026-09-21",
+   "days_to_publish": 32,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73513",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73552",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73512",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73547",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73549",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-50572",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73546",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-48521",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73551",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73511",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73548",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73550",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-73553",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-85751",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-07-18",
+   "published": "2026-09-21",
+   "days_to_publish": 65,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77520",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-79917",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-79916",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77521",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77523",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77522",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77525",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77519",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77518",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77517",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-77516",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-02",
+   "published": "2026-09-21",
+   "days_to_publish": 19,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-79918",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-03",
+   "published": "2026-09-21",
+   "days_to_publish": 18,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-79919",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-03",
+   "published": "2026-09-21",
+   "days_to_publish": 18,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-91167",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-26",
+   "published": "2026-09-21",
+   "days_to_publish": 26,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-91166",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-14",
+   "published": "2026-09-21",
+   "days_to_publish": 38,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-91165",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-14",
+   "published": "2026-09-21",
+   "days_to_publish": 38,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-91164",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-05",
+   "published": "2026-09-21",
+   "days_to_publish": 47,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-46649",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-09",
+   "published": "2026-09-21",
+   "days_to_publish": 12,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-49450",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-09",
+   "published": "2026-09-21",
+   "days_to_publish": 12,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-49449",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-09",
+   "published": "2026-09-21",
+   "days_to_publish": 12,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-49453",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-09",
+   "published": "2026-09-21",
+   "days_to_publish": 12,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-55179",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-09",
+   "published": "2026-09-21",
+   "days_to_publish": 12,
+   "closed_on": "2026-09-21"
+  },
+  {
+   "cve_id": "CVE-2026-59816",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-09",
+   "published": "2026-09-21",
+   "days_to_publish": 12,
    "closed_on": "2026-09-21"
   }
  ]
