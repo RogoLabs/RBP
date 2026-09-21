@@ -1,1 +1,11 @@
-[]
+[
+ {
+  "cve_id": "CVE-2026-47321",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "",
+  "published": "2026-09-21",
+  "days_to_publish": null,
+  "closed_on": "2026-09-21"
+ }
+]
