@@ -127,7 +127,26 @@ jobs:
       # and a cron tick cannot rebuild a baseline. ci.yml runs the suite
       # unfiltered on every pull request and every push to main, so all four are
       # still enforced where somebody is present to act on them.
-      - run: python -m pytest tests/ -q --ignore=tests/render -m "not harness_artefact"
+      #
+      # AND `hand_verified` IS DESELECTED, 2026-09-24, which is the third case of
+      # the same rule and the one that had already cost something.
+      # `test_declared_statuses_match_what_is_actually_built` pins the launch
+      # checklist's declared statuses, and conditions 5 to 9 carry `verified_on`
+      # and expire after launch.VERIFIED_MAX_AGE_DAYS by design. The five verified
+      # on 2026-08-22 and 2026-08-23 aged past 30 days, `_expire` flipped them to
+      # UNMET on schedule, and the test failed on schedule with them. It gated
+      # this job, `build` needs this job, so NINE consecutive scheduled runs
+      # published nothing and the site served a 56-hour-old snapshot until the
+      # failure mail was read.
+      #
+      # No page was wrong for any of it. `/method` renders whatever `checklist()`
+      # derives, so the expired conditions read UNMET there correctly throughout,
+      # which is the behaviour the expiry was built for. The defect is only that
+      # the assertion sat on the publish path: a cron tick cannot re-verify a
+      # hand-checked condition any more than it can rebuild a baseline, so the
+      # only thing this test could do here was stop the site until a person
+      # intervened. Enforced unfiltered in ci.yml, where that person is.
+      - run: python -m pytest tests/ -q --ignore=tests/render -m "not harness_artefact and not hand_verified"
 
   build:
     needs: test

@@ -69,4 +69,5 @@ select = ["F", "E9", "E741", "B007", "B002", "B018"]
 [tool.pytest.ini_options]
 markers = [
     "harness_artefact: asserts a committed feedlab artefact is in step with the code. Enforced on the commit path by ci.yml; deselected in deploy.yml so it cannot stop a publication.",
+    "hand_verified: asserts a HAND-verified declaration still matches what the code derives. Only a person can clear one, so a scheduled run can only ever fail on it. Enforced on the commit path by ci.yml; deselected in deploy.yml so it cannot stop a publication.",
 ]

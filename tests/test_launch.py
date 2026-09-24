@@ -176,6 +176,25 @@ def test_plan_and_site_publish_the_same_number_of_conditions():
 # about two days by prune_snapshots(keep=2). Condition 5 stays MET because its
 # mechanism, the 4-day floor, is real; only its stated doctrine was wrong, and
 # the title changed instead.
+# MARKED `hand_verified`, so ci.yml enforces this and deploy.yml does not.
+#
+# Conditions 5 to 9 carry `verified_on` and expire after VERIFIED_MAX_AGE_DAYS,
+# which is the whole point of them. The five verified on 2026-08-22 and
+# 2026-08-23 aged past 30 days on 2026-09-21 and 2026-09-22, `_expire` flipped
+# them to UNMET on schedule, and this test failed on schedule alongside them.
+# It gated the `test` job in deploy.yml and `build` needs that job, so nine
+# consecutive scheduled runs published nothing and the site served a 56-hour-old
+# snapshot until somebody read the failure mail.
+#
+# NO PAGE WAS EVER WRONG. `/method` renders whatever `checklist()` derives, so an
+# expired condition read UNMET there exactly as it should have, the whole time.
+# What was wrong is that a cron tick cannot clear this: only a person re-checking
+# the condition by hand can. So on the publish path it could do nothing but fail,
+# four times a day, for as long as it took someone to look.
+#
+# That is the rule deploy.yml already states for `harness_artefact`: "a cron tick
+# cannot rebuild a baseline". A cron tick cannot re-verify a condition either.
+@pytest.mark.hand_verified
 @pytest.mark.parametrize("n,expect_met", [(2, True), (3, True), (5, True),
                                           (6, True), (7, True),
                                           (8, True), (9, True)])
