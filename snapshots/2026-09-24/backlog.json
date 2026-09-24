@@ -9004,7 +9004,7 @@
    "redhat": "2026-01-20",
    "csaf": "2026-02-17"
   },
-  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:2800\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2800.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
+  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:2769\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
   "description": "A vulnerability was found in how Ceph uses Pybind, which does not implement correct certificate checking.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -9025,7 +9025,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2024-31884.html",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2800.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2024-31884",
    "ghsa-repos": "https://github.com/ceph/ceph/security/advisories/GHSA-xj9f-7g59-m4jx",
    "redhat": "https://access.redhat.com/security/cve/CVE-2024-31884",
@@ -11224,13 +11224,14 @@
   "cve_id": "CVE-2026-96284",
   "state": "RESERVED",
   "public_date": "2026-04-07",
-  "sources": "debian,ghsa-repos,ubuntu",
-  "feed_count": 3,
+  "sources": "csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "ghsa-repos": "2026-04-07"
+   "ghsa-repos": "2026-04-07",
+   "csaf": "2026-09-23"
   },
-  "refs": "debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-2fxp-43j9-pwvc;ubuntu:CVE-2026-96284",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2026-96284\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96284.json;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-2fxp-43j9-pwvc;ubuntu:CVE-2026-96284",
   "description": "flatpak",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -11250,6 +11251,7 @@
   "package": "flatpak",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96284.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-96284",
    "ghsa-repos": "https://github.com/flatpak/flatpak/security/advisories/GHSA-2fxp-43j9-pwvc",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-96284"
@@ -11261,13 +11263,14 @@
   "cve_id": "CVE-2026-96283",
   "state": "RESERVED",
   "public_date": "2026-04-07",
-  "sources": "debian,ghsa-repos,ubuntu",
-  "feed_count": 3,
+  "sources": "csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "ghsa-repos": "2026-04-07"
+   "ghsa-repos": "2026-04-07",
+   "csaf": "2026-09-23"
   },
-  "refs": "debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-89xm-3m96-w3jg;ubuntu:CVE-2026-96283",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2026-96283\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96283.json;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-89xm-3m96-w3jg;ubuntu:CVE-2026-96283",
   "description": "flatpak",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -11287,6 +11290,7 @@
   "package": "flatpak",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96283.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-96283",
    "ghsa-repos": "https://github.com/flatpak/flatpak/security/advisories/GHSA-89xm-3m96-w3jg",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-96283"
@@ -16462,9 +16466,9 @@
    "ubuntu-osv": "2026-06-18",
    "ghsa-repos": "2026-06-16",
    "redhat": "2026-06-16",
-   "csaf": "2026-08-21"
+   "csaf": "2026-06-25"
   },
-  "refs": "alas:CVE-2026-53613;csaf:SUSE Product Security Team\tSUSE-SU-2026:23250-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23250-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-8gj5-72r3-428g;redhat:CVE-2026-53613;ubuntu-osv",
+  "refs": "alas:CVE-2026-53613;csaf:SUSE Product Security Team\tCVE-2026-53613\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53613.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-8gj5-72r3-428g;redhat:CVE-2026-53613;ubuntu-osv:UBUNTU-",
   "description": "Local Privilege Escalation via TOCTOU in mount(8) - Target Path Redirection",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16485,7 +16489,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-53613.html",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23250-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53613.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53613",
    "ghsa-repos": "https://github.com/util-linux/util-linux/security/advisories/GHSA-8gj5-72r3-428g",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-53613",
@@ -28595,40 +28599,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-13465",
-  "state": "RESERVED",
-  "public_date": "2026-07-07",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-07-07"
-  },
-  "refs": "csaf:SUSE Product Security Team\tESEA-2026:0136\thttps://ftp.suse.com/pub/projects/security/csaf/esea-2026_0136.json",
-  "description": "CVE-2026-13465",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 79,
-  "clock_known": true,
-  "hours_public": 1896,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-07",
-  "advisory_days_public": 79,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/esea-2026_0136.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-8408",
   "state": "RESERVED",
   "public_date": "2026-07-07",
@@ -30592,40 +30562,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-6v53-r759-jrvx"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-67233",
-  "state": "RESERVED",
-  "public_date": "2026-07-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-09"
-  },
-  "refs": "ghsa-repos:rabbitmq/rabbitmq-server\tGHSA-7jc3-73v6-rjvc",
-  "description": "rabbitmq/rabbitmq-server repository advisory GHSA-7jc3-73v6-rjvc",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 77,
-  "clock_known": true,
-  "hours_public": 1848,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-09",
-  "advisory_days_public": 77,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/rabbitmq/rabbitmq-server/security/advisories/GHSA-7jc3-73v6-rjvc"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -37708,6 +37644,176 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-96781",
+  "state": "RESERVED",
+  "public_date": "2026-07-20",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-07-20"
+  },
+  "refs": "ghsa-repos:dromara/MaxKey\tGHSA-frgp-wv26-8g4m",
+  "description": "dromara/MaxKey repository advisory GHSA-frgp-wv26-8g4m",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 66,
+  "clock_known": true,
+  "hours_public": 1584,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-20",
+  "advisory_days_public": 66,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/dromara/MaxKey/security/advisories/GHSA-frgp-wv26-8g4m"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-96783",
+  "state": "RESERVED",
+  "public_date": "2026-07-20",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-07-20"
+  },
+  "refs": "ghsa-repos:dromara/MaxKey\tGHSA-98j5-7h45-7gj9",
+  "description": "dromara/MaxKey repository advisory GHSA-98j5-7h45-7gj9",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 66,
+  "clock_known": true,
+  "hours_public": 1584,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-20",
+  "advisory_days_public": 66,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/dromara/MaxKey/security/advisories/GHSA-98j5-7h45-7gj9"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-96782",
+  "state": "RESERVED",
+  "public_date": "2026-07-20",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-07-20"
+  },
+  "refs": "ghsa-repos:dromara/MaxKey\tGHSA-h822-h3qf-x45g",
+  "description": "dromara/MaxKey repository advisory GHSA-h822-h3qf-x45g",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 66,
+  "clock_known": true,
+  "hours_public": 1584,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-20",
+  "advisory_days_public": 66,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/dromara/MaxKey/security/advisories/GHSA-h822-h3qf-x45g"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-96784",
+  "state": "RESERVED",
+  "public_date": "2026-07-20",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-07-20"
+  },
+  "refs": "ghsa-repos:dromara/MaxKey\tGHSA-q2xr-792r-2r22",
+  "description": "dromara/MaxKey repository advisory GHSA-q2xr-792r-2r22",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 66,
+  "clock_known": true,
+  "hours_public": 1584,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-20",
+  "advisory_days_public": 66,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/dromara/MaxKey/security/advisories/GHSA-q2xr-792r-2r22"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-96785",
+  "state": "RESERVED",
+  "public_date": "2026-07-20",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-07-20"
+  },
+  "refs": "ghsa-repos:dromara/MaxKey\tGHSA-923q-pfgg-g74r",
+  "description": "dromara/MaxKey repository advisory GHSA-923q-pfgg-g74r",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 66,
+  "clock_known": true,
+  "hours_public": 1584,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-20",
+  "advisory_days_public": 66,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/dromara/MaxKey/security/advisories/GHSA-923q-pfgg-g74r"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-77476",
   "state": "RESERVED",
   "public_date": "2026-07-20",
@@ -38064,40 +38170,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63347",
    "ghsa-repos": "https://github.com/OISF/suricata-update/security/advisories/GHSA-6v4p-4w5x-9fp2",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-63347"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-93425",
-  "state": "RESERVED",
-  "public_date": "2026-07-21",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-21"
-  },
-  "refs": "ghsa-repos:Dokploy/dokploy\tGHSA-56g6-wjr4-5q7p",
-  "description": "Dokploy/dokploy repository advisory GHSA-56g6-wjr4-5q7p",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 65,
-  "clock_known": true,
-  "hours_public": 1560,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-21",
-  "advisory_days_public": 65,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Dokploy/dokploy/security/advisories/GHSA-56g6-wjr4-5q7p"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -40500,108 +40572,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-79758",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-372w-6f3h-vcm4",
-  "description": "Termix-SSH/Termix repository advisory GHSA-372w-6f3h-vcm4",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-372w-6f3h-vcm4"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-79759",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-w4cf-69fj-g96f",
-  "description": "Termix-SSH/Termix repository advisory GHSA-w4cf-69fj-g96f",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-w4cf-69fj-g96f"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-79766",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-pr55-25gf-5f9v",
-  "description": "Termix-SSH/Termix repository advisory GHSA-pr55-25gf-5f9v",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-pr55-25gf-5f9v"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-79765",
   "state": "RESERVED",
   "public_date": "2026-07-27",
@@ -40631,176 +40601,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-vx7c-4gxw-vr2h"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-79764",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-mwr3-35ph-pjqg",
-  "description": "Termix-SSH/Termix repository advisory GHSA-mwr3-35ph-pjqg",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-mwr3-35ph-pjqg"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-79763",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-x9h9-f7jc-8jwj",
-  "description": "Termix-SSH/Termix repository advisory GHSA-x9h9-f7jc-8jwj",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-x9h9-f7jc-8jwj"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-79762",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-685g-ccvv-6p8m",
-  "description": "Termix-SSH/Termix repository advisory GHSA-685g-ccvv-6p8m",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-685g-ccvv-6p8m"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-79761",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-p2g3-2xq3-23gx",
-  "description": "Termix-SSH/Termix repository advisory GHSA-p2g3-2xq3-23gx",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-p2g3-2xq3-23gx"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-79760",
-  "state": "RESERVED",
-  "public_date": "2026-07-27",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-27"
-  },
-  "refs": "ghsa-repos:Termix-SSH/Termix\tGHSA-6hx3-9mgq-h9fj",
-  "description": "Termix-SSH/Termix repository advisory GHSA-6hx3-9mgq-h9fj",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 59,
-  "clock_known": true,
-  "hours_public": 1416,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-27",
-  "advisory_days_public": 59,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/Termix-SSH/Termix/security/advisories/GHSA-6hx3-9mgq-h9fj"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -41909,40 +41709,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/FOSSBilling/FOSSBilling/security/advisories/GHSA-pfm5-728g-h32p"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-84302",
-  "state": "RESERVED",
-  "public_date": "2026-07-28",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-28"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-3rx9-fqgh-wfpc",
-  "description": "discourse/discourse repository advisory GHSA-3rx9-fqgh-wfpc",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 58,
-  "clock_known": true,
-  "hours_public": 1392,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-28",
-  "advisory_days_public": 58,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-3rx9-fqgh-wfpc"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -43849,109 +43615,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-0022",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 54,
-  "clock_known": true,
-  "hours_public": 1296,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 54,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-45513",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 54,
-  "clock_known": true,
-  "hours_public": 1296,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 54,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-49880",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 54,
-  "clock_known": true,
-  "hours_public": 1296,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 54,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28645",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -44019,7 +43683,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28667",
+  "cve_id": "CVE-2026-49885",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -44053,7 +43717,75 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49885",
+  "cve_id": "CVE-2026-28645",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 54,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-45522",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 54,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-0022",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -44121,7 +43853,41 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-45522",
+  "cve_id": "CVE-2026-45513",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 54,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28667",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -47422,52 +47188,19 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-64953",
-  "state": "RESERVED",
-  "public_date": "2026-08-10",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-08-10"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2728\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2728.json",
-  "description": "CVE-2026-64953",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 45,
-  "clock_known": true,
-  "hours_public": 1080,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-10",
-  "advisory_days_public": 45,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2728.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-92162",
   "state": "RESERVED",
   "public_date": "2026-08-11",
-  "sources": "alas,debian,ghsa-repos,ubuntu,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-23",
    "ubuntu": "2026-09-22",
    "ubuntu-osv": "2026-09-22",
-   "ghsa-repos": "2026-08-11"
+   "ghsa-repos": "2026-08-11",
+   "csaf": "2026-09-23"
   },
-  "refs": "alas:CVE-2026-92162;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-v2gw-v9h5-9q4x;ubuntu-osv:UBUNTU-CVE-2026-92162;ubuntu:CVE-2026-92162",
+  "refs": "alas:CVE-2026-92162;csaf:SUSE Product Security Team\tCVE-2026-92162\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-92162.json;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-v2gw-v9h5-9q4x;ubuntu-osv:UBUNTU-CVE-2026-92162;ubuntu:CVE-2026-",
   "description": "On systems where at least one OCI remote is configured (most common on Fedora systems), a malicious local user in an active local session could use a crafted architecture name to trick the flatpak-system-helper process into creating a root-owned directory tree with contents determined by the OCI remote, plus a root-owned lock file and icons directory, outside the intended root directory.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -47488,6 +47221,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-92162.html",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-92162.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92162",
    "ghsa-repos": "https://github.com/flatpak/flatpak/security/advisories/GHSA-v2gw-v9h5-9q4x",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-92162",
@@ -47500,13 +47234,14 @@
   "cve_id": "CVE-2026-96282",
   "state": "RESERVED",
   "public_date": "2026-08-11",
-  "sources": "debian,ghsa-repos,ubuntu",
-  "feed_count": 3,
+  "sources": "csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "ghsa-repos": "2026-08-11"
+   "ghsa-repos": "2026-08-11",
+   "csaf": "2026-09-23"
   },
-  "refs": "debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-w69g-9x8j-7p8f;ubuntu:CVE-2026-96282",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2026-96282\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96282.json;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-w69g-9x8j-7p8f;ubuntu:CVE-2026-96282",
   "description": "flatpak",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -47526,6 +47261,7 @@
   "package": "flatpak",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96282.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-96282",
    "ghsa-repos": "https://github.com/flatpak/flatpak/security/advisories/GHSA-w69g-9x8j-7p8f",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-96282"
@@ -47537,13 +47273,14 @@
   "cve_id": "CVE-2026-96281",
   "state": "RESERVED",
   "public_date": "2026-08-11",
-  "sources": "debian,ghsa-repos,ubuntu",
-  "feed_count": 3,
+  "sources": "csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "ghsa-repos": "2026-08-11"
+   "ghsa-repos": "2026-08-11",
+   "csaf": "2026-09-23"
   },
-  "refs": "debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-q4gr-vc25-57m5;ubuntu:CVE-2026-96281",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2026-96281\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96281.json;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-q4gr-vc25-57m5;ubuntu:CVE-2026-96281",
   "description": "flatpak",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -47563,6 +47300,7 @@
   "package": "flatpak",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96281.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-96281",
    "ghsa-repos": "https://github.com/flatpak/flatpak/security/advisories/GHSA-q4gr-vc25-57m5",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-96281"
@@ -47574,13 +47312,14 @@
   "cve_id": "CVE-2026-96280",
   "state": "RESERVED",
   "public_date": "2026-08-11",
-  "sources": "debian,ghsa-repos,ubuntu",
-  "feed_count": 3,
+  "sources": "csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "ghsa-repos": "2026-08-11"
+   "ghsa-repos": "2026-08-11",
+   "csaf": "2026-09-23"
   },
-  "refs": "debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-jr92-2v97-wgvc;ubuntu:CVE-2026-96280",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2026-96280\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96280.json;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-jr92-2v97-wgvc;ubuntu:CVE-2026-96280",
   "description": "flatpak",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -47600,6 +47339,7 @@
   "package": "flatpak",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96280.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-96280",
    "ghsa-repos": "https://github.com/flatpak/flatpak/security/advisories/GHSA-jr92-2v97-wgvc",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-96280"
@@ -47611,13 +47351,14 @@
   "cve_id": "CVE-2026-96279",
   "state": "RESERVED",
   "public_date": "2026-08-11",
-  "sources": "debian,ghsa-repos,ubuntu",
-  "feed_count": 3,
+  "sources": "csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "ghsa-repos": "2026-08-11"
+   "ghsa-repos": "2026-08-11",
+   "csaf": "2026-09-23"
   },
-  "refs": "debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-9rww-v4mm-x4jg;ubuntu:CVE-2026-96279",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2026-96279\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96279.json;debian:flatpak;ghsa-repos:flatpak/flatpak\tGHSA-9rww-v4mm-x4jg;ubuntu:CVE-2026-96279",
   "description": "[GHSA-9rww-v4mm-x4jg]",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -47637,6 +47378,7 @@
   "package": "flatpak",
   "ecosystem": "",
   "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-96279.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-96279",
    "ghsa-repos": "https://github.com/flatpak/flatpak/security/advisories/GHSA-9rww-v4mm-x4jg",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-96279"
@@ -48314,42 +48056,6 @@
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-73261",
    "ghsa-repos": "https://github.com/cesanta/mongoose/security/advisories/GHSA-3fmr-92g4-wchx"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-47132",
-  "state": "RESERVED",
-  "public_date": "2026-08-12",
-  "sources": "ghsa,osv",
-  "feed_count": 2,
-  "dates": {
-   "ghsa": "2026-08-12",
-   "osv": "2026-08-12"
-  },
-  "refs": "ghsa:GHSA-6pvm-2vjj-rx4w;osv:Packagist:thorsten/phpmyfaq",
-  "description": "phpMyFAQ: SQL LIKE Wildcard Injection in Chat User Search Allows Authenticated User Enumeration",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 43,
-  "clock_known": true,
-  "hours_public": 1032,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-12",
-  "advisory_days_public": 43,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "thorsten/phpmyfaq",
-  "ecosystem": "Packagist",
-  "source_urls": {
-   "ghsa": "https://github.com/advisories/GHSA-6pvm-2vjj-rx4w",
-   "osv": "https://osv.dev/list?q=CVE-2026-47132"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -52542,40 +52248,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-76907",
-  "state": "RESERVED",
-  "public_date": "2026-08-21",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-21"
-  },
-  "refs": "ghsa-repos:suitenumerique/docs\tGHSA-p8v2-wjj3-3j9w",
-  "description": "suitenumerique/docs repository advisory GHSA-p8v2-wjj3-3j9w",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 34,
-  "clock_known": true,
-  "hours_public": 816,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-21",
-  "advisory_days_public": 34,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/suitenumerique/docs/security/advisories/GHSA-p8v2-wjj3-3j9w"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-77679",
   "state": "RESERVED",
   "public_date": "2026-08-21",
@@ -52687,74 +52359,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-63630",
-  "state": "RESERVED",
-  "public_date": "2026-08-23",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-23"
-  },
-  "refs": "ghsa-repos:alam00000/bentopdf\tGHSA-cx8x-7rrr-r9x8",
-  "description": "alam00000/bentopdf repository advisory GHSA-cx8x-7rrr-r9x8",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 32,
-  "clock_known": true,
-  "hours_public": 768,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-23",
-  "advisory_days_public": 32,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/alam00000/bentopdf/security/advisories/GHSA-cx8x-7rrr-r9x8"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-77581",
-  "state": "RESERVED",
-  "public_date": "2026-08-23",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-23"
-  },
-  "refs": "ghsa-repos:alam00000/bentopdf\tGHSA-5xjf-rr5x-pcfj",
-  "description": "alam00000/bentopdf repository advisory GHSA-5xjf-rr5x-pcfj",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 32,
-  "clock_known": true,
-  "hours_public": 768,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-23",
-  "advisory_days_public": 32,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/alam00000/bentopdf/security/advisories/GHSA-5xjf-rr5x-pcfj"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-46381",
   "state": "RESERVED",
   "public_date": "2026-08-24",
@@ -52784,386 +52388,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/CloudburstMC/Network/security/advisories/GHSA-f43c-g459-93vr"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-63498",
-  "state": "RESERVED",
-  "public_date": "2026-08-24",
-  "sources": "csaf,ghsa-repos",
-  "feed_count": 2,
-  "dates": {
-   "ghsa-repos": "2026-08-24",
-   "csaf": "2026-08-24"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2981\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2981.json;ghsa-repos:grokability/snipe-it\tGHSA-396x-xmvh-p563",
-  "description": "grokability/snipe-it repository advisory GHSA-396x-xmvh-p563",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 31,
-  "clock_known": true,
-  "hours_public": 744,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-24",
-  "advisory_days_public": 31,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2981.json",
-   "ghsa-repos": "https://github.com/grokability/snipe-it/security/advisories/GHSA-396x-xmvh-p563"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-63493",
-  "state": "RESERVED",
-  "public_date": "2026-08-24",
-  "sources": "csaf,ghsa-repos",
-  "feed_count": 2,
-  "dates": {
-   "ghsa-repos": "2026-08-24",
-   "csaf": "2026-08-24"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2981\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2981.json;ghsa-repos:grokability/snipe-it\tGHSA-hxcx-9h4f-42xx",
-  "description": "grokability/snipe-it repository advisory GHSA-hxcx-9h4f-42xx",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 31,
-  "clock_known": true,
-  "hours_public": 744,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-24",
-  "advisory_days_public": 31,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2981.json",
-   "ghsa-repos": "https://github.com/grokability/snipe-it/security/advisories/GHSA-hxcx-9h4f-42xx"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-62368",
-  "state": "RESERVED",
-  "public_date": "2026-08-24",
-  "sources": "csaf,ghsa-repos",
-  "feed_count": 2,
-  "dates": {
-   "ghsa-repos": "2026-08-24",
-   "csaf": "2026-08-24"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2981\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2981.json;ghsa-repos:grokability/snipe-it\tGHSA-p9h3-gvpq-5539",
-  "description": "grokability/snipe-it repository advisory GHSA-p9h3-gvpq-5539",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 31,
-  "clock_known": true,
-  "hours_public": 744,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-24",
-  "advisory_days_public": 31,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2981.json",
-   "ghsa-repos": "https://github.com/grokability/snipe-it/security/advisories/GHSA-p9h3-gvpq-5539"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91120",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-h7cg-2vww-m45c",
-  "description": "discourse/discourse repository advisory GHSA-h7cg-2vww-m45c",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-h7cg-2vww-m45c"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91122",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-8m44-f6g9-7cg7",
-  "description": "discourse/discourse repository advisory GHSA-8m44-f6g9-7cg7",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-8m44-f6g9-7cg7"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91121",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-34rh-wjfv-65gq",
-  "description": "discourse/discourse repository advisory GHSA-34rh-wjfv-65gq",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-34rh-wjfv-65gq"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91123",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-6pwj-wgg8-4rjc",
-  "description": "discourse/discourse repository advisory GHSA-6pwj-wgg8-4rjc",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-6pwj-wgg8-4rjc"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91132",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-4q3q-hph3-3rvp",
-  "description": "discourse/discourse repository advisory GHSA-4q3q-hph3-3rvp",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-4q3q-hph3-3rvp"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91119",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-pv3p-p3m9-v8v3",
-  "description": "discourse/discourse repository advisory GHSA-pv3p-p3m9-v8v3",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-pv3p-p3m9-v8v3"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91134",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-54vw-chv3-wjpv",
-  "description": "discourse/discourse repository advisory GHSA-54vw-chv3-wjpv",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-54vw-chv3-wjpv"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-91133",
-  "state": "RESERVED",
-  "public_date": "2026-08-25",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-25"
-  },
-  "refs": "ghsa-repos:discourse/discourse\tGHSA-8hxh-573g-52gx",
-  "description": "discourse/discourse repository advisory GHSA-8hxh-573g-52gx",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 30,
-  "clock_known": true,
-  "hours_public": 720,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-25",
-  "advisory_days_public": 30,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/discourse/discourse/security/advisories/GHSA-8hxh-573g-52gx"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -56438,74 +55662,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-63203",
-  "state": "RESERVED",
-  "public_date": "2026-09-01",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-01"
-  },
-  "refs": "ghsa-repos:logto-io/logto\tGHSA-6g9q-qrx7-3jxf",
-  "description": "logto-io/logto repository advisory GHSA-6g9q-qrx7-3jxf",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 23,
-  "clock_known": true,
-  "hours_public": 552,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-01",
-  "advisory_days_public": 23,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/logto-io/logto/security/advisories/GHSA-6g9q-qrx7-3jxf"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-56739",
-  "state": "RESERVED",
-  "public_date": "2026-09-01",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-01"
-  },
-  "refs": "ghsa-repos:logto-io/logto\tGHSA-3556-624q-c5w3",
-  "description": "logto-io/logto repository advisory GHSA-3556-624q-c5w3",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 23,
-  "clock_known": true,
-  "hours_public": 552,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-01",
-  "advisory_days_public": 23,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/logto-io/logto/security/advisories/GHSA-3556-624q-c5w3"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-48057",
   "state": "RESERVED",
   "public_date": "2026-09-01",
@@ -57160,7 +56316,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28605",
+  "cve_id": "CVE-2026-20499",
   "state": "RESERVED",
   "public_date": "2026-09-01",
   "sources": "samsung",
@@ -57194,7 +56350,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-20499",
+  "cve_id": "CVE-2026-28605",
   "state": "RESERVED",
   "public_date": "2026-09-01",
   "sources": "samsung",
@@ -61422,176 +60578,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-94613",
-  "state": "RESERVED",
-  "public_date": "2026-09-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-09"
-  },
-  "refs": "ghsa-repos:goauthentik/authentik\tGHSA-cxwx-9x59-28qm",
-  "description": "goauthentik/authentik repository advisory GHSA-cxwx-9x59-28qm",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-09",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/goauthentik/authentik/security/advisories/GHSA-cxwx-9x59-28qm"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-94611",
-  "state": "RESERVED",
-  "public_date": "2026-09-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-09"
-  },
-  "refs": "ghsa-repos:goauthentik/authentik\tGHSA-m9h4-7j9c-55x9",
-  "description": "goauthentik/authentik repository advisory GHSA-m9h4-7j9c-55x9",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-09",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/goauthentik/authentik/security/advisories/GHSA-m9h4-7j9c-55x9"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-94612",
-  "state": "RESERVED",
-  "public_date": "2026-09-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-09"
-  },
-  "refs": "ghsa-repos:goauthentik/authentik\tGHSA-cqj8-fxxf-9pg7",
-  "description": "goauthentik/authentik repository advisory GHSA-cqj8-fxxf-9pg7",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-09",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/goauthentik/authentik/security/advisories/GHSA-cqj8-fxxf-9pg7"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-94609",
-  "state": "RESERVED",
-  "public_date": "2026-09-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-09"
-  },
-  "refs": "ghsa-repos:goauthentik/authentik\tGHSA-h6c5-mpvq-j4jc",
-  "description": "goauthentik/authentik repository advisory GHSA-h6c5-mpvq-j4jc",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-09",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/goauthentik/authentik/security/advisories/GHSA-h6c5-mpvq-j4jc"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-94606",
-  "state": "RESERVED",
-  "public_date": "2026-09-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-09"
-  },
-  "refs": "ghsa-repos:goauthentik/authentik\tGHSA-qgqp-xh8r-v73r",
-  "description": "goauthentik/authentik repository advisory GHSA-qgqp-xh8r-v73r",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-09",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/goauthentik/authentik/security/advisories/GHSA-qgqp-xh8r-v73r"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-87936",
   "state": "RESERVED",
   "public_date": "2026-09-09",
@@ -63343,40 +62329,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-26054",
-  "state": "RESERVED",
-  "public_date": "2026-09-16",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-16"
-  },
-  "refs": "ghsa-repos:sumatrapdfreader/sumatrapdf\tGHSA-27p6-wrfp-pgm8",
-  "description": "sumatrapdfreader/sumatrapdf repository advisory GHSA-27p6-wrfp-pgm8",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 8,
-  "clock_known": true,
-  "hours_public": 192,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-16",
-  "advisory_days_public": 8,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/sumatrapdfreader/sumatrapdf/security/advisories/GHSA-27p6-wrfp-pgm8"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-92218",
   "state": "RESERVED",
   "public_date": "2026-09-16",
@@ -63550,6 +62502,108 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3424.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-75762",
+  "state": "RESERVED",
+  "public_date": "2026-09-16",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-09-16"
+  },
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:67842\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_67842.json",
+  "description": "multicluster-global-hub: Manager trusts self-asserted evt.Source() for leaf-hub identity in all status handlers",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 8,
+  "clock_known": true,
+  "hours_public": 192,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-16",
+  "advisory_days_public": 8,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_67842.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-77849",
+  "state": "RESERVED",
+  "public_date": "2026-09-16",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-09-16"
+  },
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:67842\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_67842.json",
+  "description": "grafana-global-hub: grafana-global-hub: Hardcoded Grafana admin credentials (admin / admin) in `pkg/specsyncer`",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 8,
+  "clock_known": true,
+  "hours_public": 192,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-16",
+  "advisory_days_public": 8,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_67842.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-80221",
+  "state": "RESERVED",
+  "public_date": "2026-09-16",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-09-16"
+  },
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:67842\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_67842.json",
+  "description": "grafana-global-hub: grafana-global-hub: Direct database connection string with embedded credentials passed as environment variable",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 8,
+  "clock_known": true,
+  "hours_public": 192,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-16",
+  "advisory_days_public": 8,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_67842.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -63832,44 +62886,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-77874",
-  "state": "RESERVED",
-  "public_date": "2026-09-17",
-  "sources": "alas,csaf,redhat",
-  "feed_count": 3,
-  "dates": {
-   "alas": "2026-09-18",
-   "redhat": "2026-09-17",
-   "csaf": "2026-09-17"
-  },
-  "refs": "alas:CVE-2026-77874;csaf:Red Hat Product Security\tCVE-2026-77874\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-77874.json;redhat:CVE-2026-77874",
-  "description": "A flaw was found in Hibernate ORM. This vulnerability allows an authenticated attacker to inject arbitrary SQL commands into the underlying database by manipulating the JSON path argument.",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 7,
-  "clock_known": true,
-  "hours_public": 168,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-17",
-  "advisory_days_public": 7,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "CVE-2026-77874",
-  "ecosystem": "",
-  "source_urls": {
-   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-77874.html",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-77874.json",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-77874"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-89085",
   "state": "RESERVED",
   "public_date": "2026-09-17",
@@ -64046,108 +63062,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/Part-DB/Part-DB-server/security/advisories/GHSA-m9rf-69wp-c56r"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-75762",
-  "state": "RESERVED",
-  "public_date": "2026-09-17",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-09-17"
-  },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:68515\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_68515.json",
-  "description": "multicluster-global-hub: Manager trusts self-asserted evt.Source() for leaf-hub identity in all status handlers",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 7,
-  "clock_known": true,
-  "hours_public": 168,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-17",
-  "advisory_days_public": 7,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_68515.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-77849",
-  "state": "RESERVED",
-  "public_date": "2026-09-17",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-09-17"
-  },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:68515\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_68515.json",
-  "description": "grafana-global-hub: grafana-global-hub: Hardcoded Grafana admin credentials (admin / admin) in `pkg/specsyncer`",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 7,
-  "clock_known": true,
-  "hours_public": 168,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-17",
-  "advisory_days_public": 7,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_68515.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-80221",
-  "state": "RESERVED",
-  "public_date": "2026-09-17",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-09-17"
-  },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:68515\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_68515.json",
-  "description": "grafana-global-hub: grafana-global-hub: Direct database connection string with embedded credentials passed as environment variable",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 7,
-  "clock_known": true,
-  "hours_public": 168,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-17",
-  "advisory_days_public": 7,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_68515.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false
