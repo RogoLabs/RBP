@@ -4456,6 +4456,481 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-2270",
+  "state": "RESERVED",
+  "public_date": "",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:kubernetes",
+  "description": "kubernetes",
+  "state_verified_this_run": true,
+  "public_date_origin": "none",
+  "days_public": null,
+  "clock_known": false,
+  "hours_public": null,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "kubernetes",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-2270"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "undated"
+ },
+ {
+  "cve_id": "CVE-2026-76654",
+  "state": "RESERVED",
+  "public_date": "",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:kubernetes",
+  "description": "kubernetes",
+  "state_verified_this_run": true,
+  "public_date_origin": "none",
+  "days_public": null,
+  "clock_known": false,
+  "hours_public": null,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "kubernetes",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-76654"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "undated"
+ },
+ {
+  "cve_id": "CVE-2025-1218",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-r6x9-5r99-36j7",
+  "description": "php/php-src repository advisory GHSA-r6x9-5r99-36j7",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2025-1218",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-r6x9-5r99-36j7"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2025-14181",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-cj93-vc83-wgqv",
+  "description": "php/php-src repository advisory GHSA-cj93-vc83-wgqv",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2025-14181",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-cj93-vc83-wgqv"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-17545",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-9f67-6fw4-hpfp",
+  "description": "php/php-src repository advisory GHSA-9f67-6fw4-hpfp",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-17545",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-9f67-6fw4-hpfp"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-6103",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-j3wh-g957-2m85",
+  "description": "php/php-src repository advisory GHSA-j3wh-g957-2m85",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-6103",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-j3wh-g957-2m85"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-91765",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-rgrp-mwpx-f6rm",
+  "description": "php/php-src repository advisory GHSA-rgrp-mwpx-f6rm",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-91765",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-rgrp-mwpx-f6rm"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-91766",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-fpwc-w8rq-cr92",
+  "description": "php/php-src repository advisory GHSA-fpwc-w8rq-cr92",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-91766",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-fpwc-w8rq-cr92"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-91767",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-xr7j-rvgx-xq5p",
+  "description": "php/php-src repository advisory GHSA-xr7j-rvgx-xq5p",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-91767",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-xr7j-rvgx-xq5p"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-91768",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-62xp-839h-2637",
+  "description": "php/php-src repository advisory GHSA-62xp-839h-2637",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-91768",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-62xp-839h-2637"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-91769",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-vvx9-73fr-5jjx",
+  "description": "php/php-src repository advisory GHSA-vvx9-73fr-5jjx",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-91769",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-vvx9-73fr-5jjx"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-92842",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-88hq-2827-7pg6",
+  "description": "php/php-src repository advisory GHSA-88hq-2827-7pg6",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92842",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-88hq-2827-7pg6"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-93682",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "debian,ghsa-repos",
+  "feed_count": 2,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "debian:php8.2;ghsa-repos:php/php-src\tGHSA-7875-c8px-7q5f",
+  "description": "php/php-src repository advisory GHSA-7875-c8px-7q5f",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "php8.2",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-93682",
+   "ghsa-repos": "https://github.com/php/php-src/security/advisories/GHSA-7875-c8px-7q5f"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-50547",
   "state": "RESERVED",
   "public_date": "2026-09-21",
@@ -5356,6 +5831,114 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-76083",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "ghsa-repos:getredash/redash\tGHSA-m723-r867-wfgw",
+  "description": "getredash/redash repository advisory GHSA-m723-r867-wfgw",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/getredash/redash/security/advisories/GHSA-m723-r867-wfgw"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-77371",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "ghsa-repos:getredash/redash\tGHSA-cr68-3xxj-cg9f",
+  "description": "getredash/redash repository advisory GHSA-cr68-3xxj-cg9f",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/getredash/redash/security/advisories/GHSA-cr68-3xxj-cg9f"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-42093",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-09-24"
+  },
+  "refs": "ghsa-repos:getredash/redash\tGHSA-v43x-rgcc-wh77",
+  "description": "getredash/redash repository advisory GHSA-v43x-rgcc-wh77",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/getredash/redash/security/advisories/GHSA-v43x-rgcc-wh77"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-78231",
   "state": "RESERVED",
   "public_date": "2026-09-23",
@@ -5581,7 +6164,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84679",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84679",
   "description": "automation-controller: automation-controller-container: automation-controller: the AWX_TASK_ENV setting applies arbitrary environment variables to the control-plane web and task processes, enabling TLS interception of external credentials",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5601,7 +6184,7 @@
   "package": "CVE-2026-84679",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84679"
   },
   "veto_evaluated": false,
@@ -5695,7 +6278,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71115\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71115.json;redhat:CVE-2026-84638",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84638",
   "description": "automation-controller: automation-controller-container: automation-controller: instance group attachment to schedules and workflow job template nodes checks only read permission, allowing use of restricted (controlplane / other-tenant)",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5715,7 +6298,7 @@
   "package": "CVE-2026-84638",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71115.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84638"
   },
   "veto_evaluated": false,
@@ -5733,7 +6316,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84643",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84643",
   "description": "automation-controller: automation-controller-container: automation-controller: missing use_role authorization on the project signature validation credential foreign key allows a project administrator to bind and use another organization's",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5753,7 +6336,7 @@
   "package": "CVE-2026-84643",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84643"
   },
   "veto_evaluated": false,
@@ -5771,7 +6354,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84644",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84644",
   "description": "automation-controller-container: automation-controller: automation-controller: server-side request forgery via the Thycotic Secret Server external credential plugin test endpoint (caller-controlled server_url, backend executed in the",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5791,7 +6374,7 @@
   "package": "CVE-2026-84644",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84644"
   },
   "veto_evaluated": false,
@@ -5809,7 +6392,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84678",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71177\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71177.json;redhat:CVE-2026-84678",
   "description": "automation-controller: automation-controller-container: automation-controller: GALAXY_TASK_ENV setting is not filtered for dynamic-linker / interpreter environment variables, allowing a system administrator to achieve code execution in the",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5829,7 +6412,7 @@
   "package": "CVE-2026-84678",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71177.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84678"
   },
   "veto_evaluated": false,
@@ -5847,7 +6430,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84680",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84680",
   "description": "automation-controller: automation-controller-container: automation-controller: organization galaxy credential attachment checks only read permission on the credential, allowing an organization admin with read-only visibility to bind and",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5867,7 +6450,7 @@
   "package": "CVE-2026-84680",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84680"
   },
   "veto_evaluated": false,
@@ -5885,7 +6468,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71115\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71115.json;redhat:CVE-2026-84684",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84684",
   "description": "automation-controller: automation-controller-container: automation-controller: constructed inventory input inventory attachment checks only read permission on the source inventory, allowing a read-only user to clone another tenant's hosts",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5905,7 +6488,7 @@
   "package": "CVE-2026-84684",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71115.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84684"
   },
   "veto_evaluated": false,
@@ -5923,7 +6506,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84686",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84686",
   "description": "automation-controller: automation-controller-container: automation-controller: notification template password fields can be decrypted by a notification-template administrator by replaying encrypted values across subfields, exposing",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5943,7 +6526,7 @@
   "package": "CVE-2026-84686",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84686"
   },
   "veto_evaluated": false,
@@ -5961,7 +6544,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84689",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84689",
   "description": "automation-controller: automation-controller-container: automation-controller: bulk job launch allows setting a workflow node's job reference to an arbitrary unified job, enabling a low-privileged user to cancel and read metadata of jobs",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -5981,7 +6564,7 @@
   "package": "CVE-2026-84689",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84689"
   },
   "veto_evaluated": false,
@@ -5999,7 +6582,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84692",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84692",
   "description": "automation-controller: automation-controller-container: automation-controller: workflow job template node execute permission check bypassed by creating a node with a null unified_job_template and then patching it, allowing a single",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -6019,7 +6602,7 @@
   "package": "CVE-2026-84692",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84692"
   },
   "veto_evaluated": false,
@@ -6037,7 +6620,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84703",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84703",
   "description": "automation-controller: automation-controller-container: automation-controller: execution environment credential foreign key is not use-permission checked, allowing an organization execution-environment admin to bind and disclose another",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -6057,7 +6640,7 @@
   "package": "CVE-2026-84703",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84703"
   },
   "veto_evaluated": false,
@@ -6075,7 +6658,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84707",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84707",
   "description": "automation-controller: automation-controller-container: automation-controller: host_filter SmartFilter ORM traversal exposes JobEvent/AdHocCommandEvent event_data and stdout to users without permission on the job, enabling blind",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -6095,7 +6678,7 @@
   "package": "CVE-2026-84707",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84707"
   },
   "veto_evaluated": false,
@@ -6113,7 +6696,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84708",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84708",
   "description": "automation-controller: automation-controller-container: automation-controller: container group pod_spec_override mints the automation-controller ServiceAccount token and mounts control-plane namespace secrets into job pods, bypassing",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -6133,7 +6716,7 @@
   "package": "CVE-2026-84708",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84708"
   },
   "veto_evaluated": false,
@@ -6151,7 +6734,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71114\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json;redhat:CVE-2026-84709",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84709",
   "description": "automation-controller: automation-controller: CredentialType injector validation renders attacker-supplied Jinja2 templates synchronously in the web worker, allowing uncontrolled resource consumption (denial of service) and an",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -6171,7 +6754,7 @@
   "package": "CVE-2026-84709",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71114.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84709"
   },
   "veto_evaluated": false,
@@ -6189,7 +6772,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71115\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71115.json;redhat:CVE-2026-84711",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84711",
   "description": "automation-controller: automation-controller: Project scm_branch/scm_refspec argument injection into git during project sync allows arbitrary file read on the sync host (control-plane ServiceAccount token, SECRET_KEY, and DB credentials on",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -6209,7 +6792,7 @@
   "package": "CVE-2026-84711",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71115.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84711"
   },
   "veto_evaluated": false,
@@ -8052,6 +8635,42 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-88841",
+  "state": "RESERVED",
+  "public_date": "2026-09-23",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-09-23"
+  },
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-88841\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-88841.json",
+  "description": "busybox: busybox: dpkg write_status_file() stale cursor causes out-of-bounds read and status file corruption",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-23",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-88841.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-94291",
   "state": "RESERVED",
   "public_date": "2026-09-18",
@@ -8081,6 +8700,78 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94291.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-95622",
+  "state": "RESERVED",
+  "public_date": "2026-09-24",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-09-24"
+  },
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-95622\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-95622.json",
+  "description": "ModemManager: ModemManager: Reachable assertion in Cell Broadcast encoding parse causes denial of service",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-24",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-95622.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-96577",
+  "state": "RESERVED",
+  "public_date": "2026-09-23",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-09-23"
+  },
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-96577\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-96577.json",
+  "description": "oc-mirror__release-4.21: Embedded local cache registry listens on all interfaces without authentication, with delete enabled",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-23",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-96577.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
