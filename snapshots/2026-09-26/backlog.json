@@ -24778,7 +24778,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28632",
+  "cve_id": "CVE-2026-28585",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -24812,7 +24812,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28585",
+  "cve_id": "CVE-2026-28632",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -41397,109 +41397,41 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-28591",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-28665",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-49885",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28667",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-49880",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -41567,7 +41499,109 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-45522",
+  "cve_id": "CVE-2026-28667",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-0022",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-49885",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-49880",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -41635,41 +41669,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28591",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-0022",
+  "cve_id": "CVE-2026-45522",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -62246,10 +62246,11 @@
   "cve_id": "CVE-2026-61642",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "alas,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17",
    "ghsa-repos": "2026-09-12",
    "csaf": "2026-09-13"
@@ -62278,6 +62279,7 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61642",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-537g-4gfh-w7m6",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61642",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61642"
   },
   "veto_evaluated": false,
@@ -62287,10 +62289,11 @@
   "cve_id": "CVE-2026-62846",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "alas,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17",
    "ghsa-repos": "2026-09-12",
    "csaf": "2026-09-13"
@@ -62319,6 +62322,7 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-62846",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-9vhr-vcrv-x837",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-62846",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-62846"
   },
   "veto_evaluated": false,
@@ -63238,13 +63242,14 @@
   "cve_id": "CVE-2026-89085",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "alas:CVE-2026-89085;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89085",
+  "refs": "alas:CVE-2026-89085;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89085;ubuntu:CVE-2026-89085",
   "description": "heap buffer overflow in _init_fats / fat_table_read",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63266,6 +63271,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-89085.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-89085",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-89085",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-89085"
   },
   "veto_evaluated": false,
@@ -63275,13 +63281,14 @@
   "cve_id": "CVE-2026-89088",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "alas:CVE-2026-89088;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89088",
+  "refs": "alas:CVE-2026-89088;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89088;ubuntu:CVE-2026-89088",
   "description": "heap buffer overflow in duplicate_legacy_root_dir",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63303,6 +63310,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-89088.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-89088",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-89088",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-89088"
   },
   "veto_evaluated": false,
@@ -63312,12 +63320,13 @@
   "cve_id": "CVE-2026-82374",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82374",
+  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82374;ubuntu:CVE-2026-82374",
   "description": "znc",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63338,6 +63347,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82374",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-82374",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-82374"
   },
   "veto_evaluated": false,
@@ -63347,12 +63357,13 @@
   "cve_id": "CVE-2026-82373",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82373",
+  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82373;ubuntu:CVE-2026-82373",
   "description": "znc",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63373,6 +63384,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82373",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-82373",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-82373"
   },
   "veto_evaluated": false,
