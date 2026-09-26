@@ -16440,9 +16440,9 @@
    "ubuntu-osv": "2026-06-18",
    "ghsa-repos": "2026-06-16",
    "redhat": "2026-06-16",
-   "csaf": "2026-06-25"
+   "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-53612;csaf:SUSE Product Security Team\tCVE-2026-53612\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53612.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-g8wm-75wr-g2vh;redhat:CVE-2026-53612;ubuntu-osv:UBUNTU-",
+  "refs": "alas:CVE-2026-53612;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21905-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-g8wm-75wr-g2vh;redhat:CVE-2026-53612;ub",
   "description": "Local Privilege Escalation via TOCTOU in mount(8) hook_owner.c chmod/chown",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16463,7 +16463,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-53612.html",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53612.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53612",
    "ghsa-repos": "https://github.com/util-linux/util-linux/security/advisories/GHSA-g8wm-75wr-g2vh",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-53612",
@@ -16483,9 +16483,9 @@
    "ubuntu-osv": "2026-06-18",
    "ghsa-repos": "2026-06-16",
    "redhat": "2026-06-16",
-   "csaf": "2026-06-25"
+   "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-53614;csaf:SUSE Product Security Team\tCVE-2026-53614\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53614.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-67r7-8m5w-22wx;redhat:CVE-2026-53614;ubuntu-osv:UBUNTU-",
+  "refs": "alas:CVE-2026-53614;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21905-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-67r7-8m5w-22wx;redhat:CVE-2026-53614;ub",
   "description": "Local Privilege Escalation via LIBMOUNT_FORCE_MOUNT2 Environment Variable - nosuid/noexec Bypass in SUID mount(8)",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16506,7 +16506,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-53614.html",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53614.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53614",
    "ghsa-repos": "https://github.com/util-linux/util-linux/security/advisories/GHSA-67r7-8m5w-22wx",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-53614",
@@ -16526,9 +16526,9 @@
    "ubuntu-osv": "2026-06-18",
    "ghsa-repos": "2026-06-16",
    "redhat": "2026-06-16",
-   "csaf": "2026-06-25"
+   "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-53613;csaf:SUSE Product Security Team\tCVE-2026-53613\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53613.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-8gj5-72r3-428g;redhat:CVE-2026-53613;ubuntu-osv:UBUNTU-",
+  "refs": "alas:CVE-2026-53613;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21905-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-8gj5-72r3-428g;redhat:CVE-2026-53613;ub",
   "description": "Local Privilege Escalation via TOCTOU in mount(8) - Target Path Redirection",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16549,7 +16549,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-53613.html",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-53613.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53613",
    "ghsa-repos": "https://github.com/util-linux/util-linux/security/advisories/GHSA-8gj5-72r3-428g",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-53613",
@@ -40162,90 +40162,17 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-81496",
-  "state": "RESERVED",
-  "public_date": "2026-07-30",
-  "sources": "debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 3,
-  "dates": {
-   "ubuntu-osv": "2026-08-31",
-   "ghsa-repos": "2026-07-30"
-  },
-  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-26gp-p5fw-3r2h;ubuntu-osv:UBUNTU-CVE-2026-81496",
-  "description": "incus",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 58,
-  "clock_known": true,
-  "hours_public": 1392,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-30",
-  "advisory_days_public": 58,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "incus",
-  "ecosystem": "",
-  "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81496",
-   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-26gp-p5fw-3r2h",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81496"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-81494",
-  "state": "RESERVED",
-  "public_date": "2026-07-30",
-  "sources": "debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 3,
-  "dates": {
-   "ubuntu-osv": "2026-08-31",
-   "ghsa-repos": "2026-07-30"
-  },
-  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-7fj9-65v4-rp7h;ubuntu-osv:UBUNTU-CVE-2026-81494",
-  "description": "[GHSA-7fj9-65v4-rp7h: Arbitrary file write on host via image-planted symlinks and oci.dns.* newline injection]",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 58,
-  "clock_known": true,
-  "hours_public": 1392,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-30",
-  "advisory_days_public": 58,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "incus",
-  "ecosystem": "",
-  "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81494",
-   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-7fj9-65v4-rp7h",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81494"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-81499",
   "state": "RESERVED",
   "public_date": "2026-07-30",
-  "sources": "debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31",
    "ghsa-repos": "2026-07-30"
   },
-  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-6v6x-387m-rj4w;ubuntu-osv:UBUNTU-CVE-2026-81499",
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-6v6x-387m-rj4w;ubuntu-osv:UBUNTU-CVE-2026-81499;ubuntu:CVE-2026-81499",
   "description": "[GHSA-6v6x-387m-rj4w: Project restriction bypass on network address sets]",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -40267,6 +40194,7 @@
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81499",
    "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-6v6x-387m-rj4w",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81499",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81499"
   },
   "veto_evaluated": false,
@@ -40276,13 +40204,14 @@
   "cve_id": "CVE-2026-81498",
   "state": "RESERVED",
   "public_date": "2026-07-30",
-  "sources": "debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31",
    "ghsa-repos": "2026-07-30"
   },
-  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-m3j6-p3v3-qmjv;ubuntu-osv:UBUNTU-CVE-2026-81498",
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-m3j6-p3v3-qmjv;ubuntu-osv:UBUNTU-CVE-2026-81498;ubuntu:CVE-2026-81498",
   "description": "incus",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -40304,44 +40233,8 @@
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81498",
    "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-m3j6-p3v3-qmjv",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81498",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81498"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-81493",
-  "state": "RESERVED",
-  "public_date": "2026-07-30",
-  "sources": "debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 3,
-  "dates": {
-   "ubuntu-osv": "2026-08-31",
-   "ghsa-repos": "2026-07-30"
-  },
-  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-p2v3-6wvc-cv3p;ubuntu-osv:UBUNTU-CVE-2026-81493",
-  "description": "incus",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 58,
-  "clock_known": true,
-  "hours_public": 1392,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-30",
-  "advisory_days_public": 58,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "incus",
-  "ecosystem": "",
-  "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81493",
-   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-p2v3-6wvc-cv3p",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81493"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -40350,13 +40243,14 @@
   "cve_id": "CVE-2026-81497",
   "state": "RESERVED",
   "public_date": "2026-07-30",
-  "sources": "debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31",
    "ghsa-repos": "2026-07-30"
   },
-  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-4qxq-p5hm-3q3p;ubuntu-osv:UBUNTU-CVE-2026-81497",
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-4qxq-p5hm-3q3p;ubuntu-osv:UBUNTU-CVE-2026-81497;ubuntu:CVE-2026-81497",
   "description": "incus",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -40378,7 +40272,47 @@
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81497",
    "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-4qxq-p5hm-3q3p",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81497",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81497"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-81496",
+  "state": "RESERVED",
+  "public_date": "2026-07-30",
+  "sources": "debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 4,
+  "dates": {
+   "ubuntu": "2026-08-31",
+   "ubuntu-osv": "2026-08-31",
+   "ghsa-repos": "2026-07-30"
+  },
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-26gp-p5fw-3r2h;ubuntu-osv:UBUNTU-CVE-2026-81496;ubuntu:CVE-2026-81496",
+  "description": "incus",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 58,
+  "clock_known": true,
+  "hours_public": 1392,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-30",
+  "advisory_days_public": 58,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "incus",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81496",
+   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-26gp-p5fw-3r2h",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81496",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81496"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -40387,13 +40321,14 @@
   "cve_id": "CVE-2026-81495",
   "state": "RESERVED",
   "public_date": "2026-07-30",
-  "sources": "debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31",
    "ghsa-repos": "2026-07-30"
   },
-  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-67qw-68v3-36h6;ubuntu-osv:UBUNTU-CVE-2026-81495",
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-67qw-68v3-36h6;ubuntu-osv:UBUNTU-CVE-2026-81495;ubuntu:CVE-2026-81495",
   "description": "incus",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -40415,7 +40350,86 @@
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81495",
    "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-67qw-68v3-36h6",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81495",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81495"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-81494",
+  "state": "RESERVED",
+  "public_date": "2026-07-30",
+  "sources": "debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 4,
+  "dates": {
+   "ubuntu": "2026-08-31",
+   "ubuntu-osv": "2026-08-31",
+   "ghsa-repos": "2026-07-30"
+  },
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-7fj9-65v4-rp7h;ubuntu-osv:UBUNTU-CVE-2026-81494;ubuntu:CVE-2026-81494",
+  "description": "[GHSA-7fj9-65v4-rp7h: Arbitrary file write on host via image-planted symlinks and oci.dns.* newline injection]",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 58,
+  "clock_known": true,
+  "hours_public": 1392,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-30",
+  "advisory_days_public": 58,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "incus",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81494",
+   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-7fj9-65v4-rp7h",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81494",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81494"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-81493",
+  "state": "RESERVED",
+  "public_date": "2026-07-30",
+  "sources": "debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 4,
+  "dates": {
+   "ubuntu": "2026-08-31",
+   "ubuntu-osv": "2026-08-31",
+   "ghsa-repos": "2026-07-30"
+  },
+  "refs": "debian:incus;ghsa-repos:lxc/incus\tGHSA-p2v3-6wvc-cv3p;ubuntu-osv:UBUNTU-CVE-2026-81493;ubuntu:CVE-2026-81493",
+  "description": "incus",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 58,
+  "clock_known": true,
+  "hours_public": 1392,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-30",
+  "advisory_days_public": 58,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "incus",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81493",
+   "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-p2v3-6wvc-cv3p",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81493",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81493"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -41397,177 +41411,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49885",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28591",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28667",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-49880",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28665",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 56,
-  "clock_known": true,
-  "hours_public": 1344,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 56,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-45522",
+  "cve_id": "CVE-2026-0022",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -41635,7 +41479,177 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-0022",
+  "cve_id": "CVE-2026-49885",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-49880",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28667",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-45522",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28591",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 56,
+  "clock_known": true,
+  "hours_public": 1344,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 56,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28665",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -45705,6 +45719,70 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-52047",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 44,
+  "clock_known": true,
+  "hours_public": 1056,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52047"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-52048",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 44,
+  "clock_known": true,
+  "hours_public": 1056,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52048"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-52050",
   "state": "RESERVED",
   "public_date": "2026-08-13",
@@ -49313,15 +49391,16 @@
   "cve_id": "CVE-2026-16658",
   "state": "RESERVED",
   "public_date": "2026-08-22",
-  "sources": "alas,csaf,debian,redhat,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-02",
+   "ubuntu": "2026-09-02",
    "ubuntu-osv": "2026-09-02",
    "redhat": "2026-08-22",
    "csaf": "2026-08-22"
   },
-  "refs": "alas:CVE-2026-16658;csaf:Red Hat Product Security\tCVE-2026-16658\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-16658.json;debian:ansible;redhat:CVE-2026-16658;ubuntu-osv:UBUNTU-CVE-2026-16658",
+  "refs": "alas:CVE-2026-16658;csaf:Red Hat Product Security\tCVE-2026-16658\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-16658.json;debian:ansible;redhat:CVE-2026-16658;ubuntu-osv:UBUNTU-CVE-2026-16658;ubuntu:CVE-2026-16658",
   "description": "A flaw was found in the community.proxmox Ansible collection's proxmox_pct_remote connection plugin.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -49345,6 +49424,7 @@
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-16658.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-16658",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-16658",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-16658",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-16658"
   },
   "veto_evaluated": false,
@@ -49598,13 +49678,14 @@
   "cve_id": "CVE-2026-81501",
   "state": "RESERVED",
   "public_date": "2026-08-27",
-  "sources": "alpine,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alpine,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31",
    "ghsa-repos": "2026-08-27"
   },
-  "refs": "alpine:incus-feature;debian:incus;ghsa-repos:lxc/incus\tGHSA-c6wx-8679-hpr9;ubuntu-osv:UBUNTU-CVE-2026-81501",
+  "refs": "alpine:incus-feature;debian:incus;ghsa-repos:lxc/incus\tGHSA-c6wx-8679-hpr9;ubuntu-osv:UBUNTU-CVE-2026-81501;ubuntu:CVE-2026-81501",
   "description": "incus-feature",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -49627,6 +49708,7 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-81501",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81501",
    "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-c6wx-8679-hpr9",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81501",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81501"
   },
   "veto_evaluated": false,
@@ -49636,13 +49718,14 @@
   "cve_id": "CVE-2026-81500",
   "state": "RESERVED",
   "public_date": "2026-08-27",
-  "sources": "alpine,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alpine,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31",
    "ghsa-repos": "2026-08-27"
   },
-  "refs": "alpine:incus-feature;debian:incus;ghsa-repos:lxc/incus\tGHSA-9pqw-c7m4-xvg7;ubuntu-osv:UBUNTU-CVE-2026-81500",
+  "refs": "alpine:incus-feature;debian:incus;ghsa-repos:lxc/incus\tGHSA-9pqw-c7m4-xvg7;ubuntu-osv:UBUNTU-CVE-2026-81500;ubuntu:CVE-2026-81500",
   "description": "incus-feature",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -49665,6 +49748,7 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-81500",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-81500",
    "ghsa-repos": "https://github.com/lxc/incus/security/advisories/GHSA-9pqw-c7m4-xvg7",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-81500",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-81500"
   },
   "veto_evaluated": false,
@@ -50905,10 +50989,11 @@
   "cve_id": "CVE-2026-49275",
   "state": "RESERVED",
   "public_date": "2026-08-30",
-  "sources": "alas,alpine,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 6,
+  "sources": "alas,alpine,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 7,
   "dates": {
    "alas": "2026-09-08",
+   "ubuntu": "2026-09-07",
    "ubuntu-osv": "2026-09-07",
    "ghsa-repos": "2026-08-30",
    "csaf": "2026-09-22"
@@ -50938,6 +51023,7 @@
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-49275",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-hxph-pv7w-8649",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-49275",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-49275"
   },
   "veto_evaluated": false,
@@ -50947,10 +51033,11 @@
   "cve_id": "CVE-2026-68547",
   "state": "RESERVED",
   "public_date": "2026-08-30",
-  "sources": "alas,alpine,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 6,
+  "sources": "alas,alpine,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 7,
   "dates": {
    "alas": "2026-09-08",
+   "ubuntu": "2026-09-07",
    "ubuntu-osv": "2026-09-07",
    "ghsa-repos": "2026-08-30",
    "csaf": "2026-09-22"
@@ -50980,6 +51067,7 @@
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-68547",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-jcgh-p9v3-pw6j",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-68547",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-68547"
   },
   "veto_evaluated": false,
@@ -50989,10 +51077,11 @@
   "cve_id": "CVE-2026-68546",
   "state": "RESERVED",
   "public_date": "2026-08-30",
-  "sources": "alas,alpine,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 6,
+  "sources": "alas,alpine,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 7,
   "dates": {
    "alas": "2026-09-08",
+   "ubuntu": "2026-09-07",
    "ubuntu-osv": "2026-09-07",
    "ghsa-repos": "2026-08-30",
    "csaf": "2026-09-22"
@@ -51022,6 +51111,7 @@
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-68546",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-3695-mjv8-3r52",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-68546",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-68546"
   },
   "veto_evaluated": false,
@@ -51306,13 +51396,14 @@
   "cve_id": "CVE-2026-17516",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-02",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-17516;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-17516",
+  "refs": "alas:CVE-2026-17516;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-17516;ubuntu:CVE-2026-17516",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51334,6 +51425,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-17516.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-17516",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-17516",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-17516"
   },
   "veto_evaluated": false,
@@ -51343,13 +51435,14 @@
   "cve_id": "CVE-2026-63321",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-63321;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63321",
+  "refs": "alas:CVE-2026-63321;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63321;ubuntu:CVE-2026-63321",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51371,6 +51464,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63321.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63321",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-63321",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-63321"
   },
   "veto_evaluated": false,
@@ -51380,13 +51474,14 @@
   "cve_id": "CVE-2026-61405",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-61405;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61405",
+  "refs": "alas:CVE-2026-61405;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61405;ubuntu:CVE-2026-61405",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51408,6 +51503,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-61405.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61405",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61405",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61405"
   },
   "veto_evaluated": false,
@@ -51417,13 +51513,14 @@
   "cve_id": "CVE-2026-61406",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-61406;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61406",
+  "refs": "alas:CVE-2026-61406;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61406;ubuntu:CVE-2026-61406",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51445,6 +51542,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-61406.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61406",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61406",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61406"
   },
   "veto_evaluated": false,
@@ -51454,13 +51552,14 @@
   "cve_id": "CVE-2026-66022",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-66022;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-66022",
+  "refs": "alas:CVE-2026-66022;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-66022;ubuntu:CVE-2026-66022",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51482,6 +51581,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-66022.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-66022",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-66022",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-66022"
   },
   "veto_evaluated": false,
@@ -51491,13 +51591,14 @@
   "cve_id": "CVE-2026-18054",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-18054;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-18054",
+  "refs": "alas:CVE-2026-18054;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-18054;ubuntu:CVE-2026-18054",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51519,6 +51620,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-18054.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-18054",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-18054",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-18054"
   },
   "veto_evaluated": false,
@@ -51528,13 +51630,14 @@
   "cve_id": "CVE-2026-63320",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-63320;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63320",
+  "refs": "alas:CVE-2026-63320;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63320;ubuntu:CVE-2026-63320",
   "description": "Host-side AddressSanitizer heap-buffer-overflow READ in current QEMU master through the virtio-net-pci receive filtering path on q35.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51556,6 +51659,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63320.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63320",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-63320",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-63320"
   },
   "veto_evaluated": false,
@@ -51565,13 +51669,14 @@
   "cve_id": "CVE-2026-50624",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-50624;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-50624",
+  "refs": "alas:CVE-2026-50624;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-50624;ubuntu:CVE-2026-50624",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51593,6 +51698,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-50624.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-50624",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-50624",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-50624"
   },
   "veto_evaluated": false,
@@ -51602,13 +51708,14 @@
   "cve_id": "CVE-2026-65929",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-65929;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-65929",
+  "refs": "alas:CVE-2026-65929;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-65929;ubuntu:CVE-2026-65929",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51630,6 +51737,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65929.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65929",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65929",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65929"
   },
   "veto_evaluated": false,
@@ -51639,13 +51747,14 @@
   "cve_id": "CVE-2026-63323",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-63323;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63323",
+  "refs": "alas:CVE-2026-63323;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63323;ubuntu:CVE-2026-63323",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51667,6 +51776,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63323.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63323",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-63323",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-63323"
   },
   "veto_evaluated": false,
@@ -51676,13 +51786,14 @@
   "cve_id": "CVE-2026-63110",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-63110;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63110",
+  "refs": "alas:CVE-2026-63110;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63110;ubuntu:CVE-2026-63110",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51704,6 +51815,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63110.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63110",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-63110",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-63110"
   },
   "veto_evaluated": false,
@@ -51713,13 +51825,14 @@
   "cve_id": "CVE-2026-61476",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-61476;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61476",
+  "refs": "alas:CVE-2026-61476;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61476;ubuntu:CVE-2026-61476",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51741,6 +51854,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-61476.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61476",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61476",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61476"
   },
   "veto_evaluated": false,
@@ -51750,13 +51864,14 @@
   "cve_id": "CVE-2026-16288",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-16288;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-16288",
+  "refs": "alas:CVE-2026-16288;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-16288;ubuntu:CVE-2026-16288",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51778,6 +51893,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-16288.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-16288",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-16288",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-16288"
   },
   "veto_evaluated": false,
@@ -51787,13 +51903,14 @@
   "cve_id": "CVE-2026-61404",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-61404;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61404",
+  "refs": "alas:CVE-2026-61404;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61404;ubuntu:CVE-2026-61404",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51815,6 +51932,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-61404.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61404",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61404",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61404"
   },
   "veto_evaluated": false,
@@ -51824,13 +51942,14 @@
   "cve_id": "CVE-2026-15264",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-15264;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-15264",
+  "refs": "alas:CVE-2026-15264;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-15264;ubuntu:CVE-2026-15264",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51852,6 +51971,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-15264.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-15264",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-15264",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-15264"
   },
   "veto_evaluated": false,
@@ -51861,13 +51981,14 @@
   "cve_id": "CVE-2026-61402",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-61402;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61402",
+  "refs": "alas:CVE-2026-61402;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-61402;ubuntu:CVE-2026-61402",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51889,6 +52010,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-61402.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61402",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61402",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61402"
   },
   "veto_evaluated": false,
@@ -51898,13 +52020,14 @@
   "cve_id": "CVE-2026-63322",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-63322;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63322",
+  "refs": "alas:CVE-2026-63322;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63322;ubuntu:CVE-2026-63322",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51926,6 +52049,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63322.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63322",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-63322",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-63322"
   },
   "veto_evaluated": false,
@@ -51935,13 +52059,14 @@
   "cve_id": "CVE-2026-65928",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-65928;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-65928",
+  "refs": "alas:CVE-2026-65928;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-65928;ubuntu:CVE-2026-65928",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51963,6 +52088,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65928.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65928",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65928",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65928"
   },
   "veto_evaluated": false,
@@ -51972,13 +52098,14 @@
   "cve_id": "CVE-2026-58581",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-58581;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-58581",
+  "refs": "alas:CVE-2026-58581;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-58581;ubuntu:CVE-2026-58581",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -52000,6 +52127,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-58581.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-58581",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-58581",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-58581"
   },
   "veto_evaluated": false,
@@ -52009,13 +52137,14 @@
   "cve_id": "CVE-2026-63109",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-63109;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63109",
+  "refs": "alas:CVE-2026-63109;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-63109;ubuntu:CVE-2026-63109",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -52037,6 +52166,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-63109.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-63109",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-63109",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-63109"
   },
   "veto_evaluated": false,
@@ -52046,13 +52176,14 @@
   "cve_id": "CVE-2026-58582",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-01",
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31"
   },
-  "refs": "alas:CVE-2026-58582;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-58582",
+  "refs": "alas:CVE-2026-58582;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-58582;ubuntu:CVE-2026-58582",
   "description": "qemu",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -52074,44 +52205,8 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-58582.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-58582",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-58582",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-58582"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2025-70291",
-  "state": "RESERVED",
-  "public_date": "2026-08-31",
-  "sources": "csaf,debian,ubuntu-osv",
-  "feed_count": 3,
-  "dates": {
-   "ubuntu-osv": "2026-08-31",
-   "csaf": "2026-09-01"
-  },
-  "refs": "csaf:SUSE Product Security Team\tCVE-2025-70291\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2025-70291.json;debian:u-boot;ubuntu-osv:UBUNTU-CVE-2025-70291",
-  "description": "u-boot",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 26,
-  "clock_known": true,
-  "hours_public": 624,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-01",
-  "advisory_days_public": 25,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "u-boot",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2025-70291.json",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2025-70291",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2025-70291"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -52120,13 +52215,14 @@
   "cve_id": "CVE-2025-70292",
   "state": "RESERVED",
   "public_date": "2026-08-31",
-  "sources": "csaf,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "csaf,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
+   "ubuntu": "2026-08-31",
    "ubuntu-osv": "2026-08-31",
    "csaf": "2026-09-01"
   },
-  "refs": "csaf:SUSE Product Security Team\tCVE-2025-70292\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2025-70292.json;debian:u-boot;ubuntu-osv:UBUNTU-CVE-2025-70292",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2025-70292\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2025-70292.json;debian:u-boot;ubuntu-osv:UBUNTU-CVE-2025-70292;ubuntu:CVE-2025-70292",
   "description": "u-boot",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -52148,7 +52244,47 @@
   "source_urls": {
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2025-70292.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2025-70292",
+   "ubuntu": "https://ubuntu.com/security/CVE-2025-70292",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2025-70292"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2025-70291",
+  "state": "RESERVED",
+  "public_date": "2026-08-31",
+  "sources": "csaf,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
+  "dates": {
+   "ubuntu": "2026-08-31",
+   "ubuntu-osv": "2026-08-31",
+   "csaf": "2026-09-01"
+  },
+  "refs": "csaf:SUSE Product Security Team\tCVE-2025-70291\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2025-70291.json;debian:u-boot;ubuntu-osv:UBUNTU-CVE-2025-70291;ubuntu:CVE-2025-70291",
+  "description": "u-boot",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 26,
+  "clock_known": true,
+  "hours_public": 624,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-01",
+  "advisory_days_public": 25,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "u-boot",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2025-70291.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2025-70291",
+   "ubuntu": "https://ubuntu.com/security/CVE-2025-70291",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2025-70291"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -53289,13 +53425,14 @@
   "cve_id": "CVE-2026-80220",
   "state": "RESERVED",
   "public_date": "2026-09-02",
-  "sources": "csaf,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "csaf,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
+   "ubuntu": "2026-09-02",
    "ubuntu-osv": "2026-09-02",
    "csaf": "2026-09-03"
   },
-  "refs": "csaf:SUSE Product Security Team\tCVE-2026-80220\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-80220.json;debian:prometheus-postgres-exporter;ubuntu-osv:UBUNTU-CVE-2026-80220",
+  "refs": "csaf:SUSE Product Security Team\tCVE-2026-80220\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-80220.json;debian:prometheus-postgres-exporter;ubuntu-osv:UBUNTU-CVE-2026-80220;ubuntu:CVE-2026-80220",
   "description": "prometheus-postgres-exporter",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -53317,6 +53454,7 @@
   "source_urls": {
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-80220.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-80220",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-80220",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-80220"
   },
   "veto_evaluated": false,
@@ -54044,13 +54182,14 @@
   "cve_id": "CVE-2026-65165",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-05",
+   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65165;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65165",
+  "refs": "alas:CVE-2026-65165;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65165;ubuntu:CVE-2026-65165",
   "description": "Fix various issues around job steps and node count discrepancies",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54072,6 +54211,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65165.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65165",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65165",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65165"
   },
   "veto_evaluated": false,
@@ -54081,13 +54221,14 @@
   "cve_id": "CVE-2026-65139",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65139;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65139",
+  "refs": "alas:CVE-2026-65139;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65139;ubuntu:CVE-2026-65139",
   "description": "Fix various issues in unsafe operation/queries to the slurmdbd",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54109,6 +54250,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65139.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65139",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65139",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65139"
   },
   "veto_evaluated": false,
@@ -54118,15 +54260,16 @@
   "cve_id": "CVE-2026-71223",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,csaf,debian,redhat,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-07",
    "ubuntu-osv": "2026-09-07",
    "redhat": "2026-09-03",
    "csaf": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-71223;csaf:SUSE Product Security Team\tCVE-2026-71223\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-71223.json;debian:gfs2-utils;redhat:CVE-2026-71223;ubuntu-osv:UBUNTU-CVE-2026-71223",
+  "refs": "alas:CVE-2026-71223;csaf:SUSE Product Security Team\tCVE-2026-71223\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-71223.json;debian:gfs2-utils;redhat:CVE-2026-71223;ubuntu-osv:UBUNTU-CVE-2026-71223;ubuntu:CVE-2026-71223",
   "description": "An integer overflow vulnerability was found in gfs2-utils.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54150,6 +54293,7 @@
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-71223.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-71223",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-71223",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-71223",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-71223"
   },
   "veto_evaluated": false,
@@ -54159,13 +54303,14 @@
   "cve_id": "CVE-2026-65109",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65109;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65109",
+  "refs": "alas:CVE-2026-65109;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65109;ubuntu:CVE-2026-65109",
   "description": "Fix slurmstepd removing files outside the container spool directory when cleaning up an OCI containe, Fix slurmstepd leaving OCI container spool directories behind when ContainerPath contains a task id pattern",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54187,6 +54332,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65109.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65109",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65109",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65109"
   },
   "veto_evaluated": false,
@@ -54196,13 +54342,14 @@
   "cve_id": "CVE-2026-65108",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65108;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65108",
+  "refs": "alas:CVE-2026-65108;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65108;ubuntu:CVE-2026-65108",
   "description": "Fix a slurmstepd stack overflow when a job environment contains an oversized SPANK option variable",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54224,6 +54371,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65108.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65108",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65108",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65108"
   },
   "veto_evaluated": false,
@@ -54233,16 +54381,17 @@
   "cve_id": "CVE-2026-85218",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,csaf,debian,ghsa-repos,redhat,ubuntu-osv",
-  "feed_count": 6,
+  "sources": "alas,csaf,debian,ghsa-repos,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 7,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-07",
    "ubuntu-osv": "2026-09-07",
    "ghsa-repos": "2026-09-03",
    "redhat": "2026-09-03",
    "csaf": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-85218;csaf:SUSE Product Security Team\tCVE-2026-85218\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85218.json;debian:bluez;ghsa-repos:bluez/bluez\tGHSA-m2vx-pw5f-rc8v;redhat:CVE-2026-85218;ubuntu-osv:UBUNTU-CVE-2026-85218",
+  "refs": "alas:CVE-2026-85218;csaf:SUSE Product Security Team\tCVE-2026-85218\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85218.json;debian:bluez;ghsa-repos:bluez/bluez\tGHSA-m2vx-pw5f-rc8v;redhat:CVE-2026-85218;ubuntu-osv:UBUNTU-CVE-2026-85218;",
   "description": "A double stack-based buffer overflow was found in the BlueZ AVRCP controller implementation.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54267,6 +54416,7 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-85218",
    "ghsa-repos": "https://github.com/bluez/bluez/security/advisories/GHSA-m2vx-pw5f-rc8v",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-85218",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-85218",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-85218"
   },
   "veto_evaluated": false,
@@ -54276,13 +54426,14 @@
   "cve_id": "CVE-2026-65138",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-04",
+   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "alas:CVE-2026-65138;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65138",
+  "refs": "alas:CVE-2026-65138;debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65138;ubuntu:CVE-2026-65138",
   "description": "Fix heap over-read when unpacking a malformed forward data RPC in slurmd.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54304,6 +54455,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-65138.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65138",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65138",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65138"
   },
   "veto_evaluated": false,
@@ -54313,12 +54465,13 @@
   "cve_id": "CVE-2026-65140",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65140",
+  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65140;ubuntu:CVE-2026-65140",
   "description": "[Fix a privilege escalation where an operator could alter Administrator accounts through the accounting database]",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54339,6 +54492,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65140",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65140",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65140"
   },
   "veto_evaluated": false,
@@ -54348,12 +54502,13 @@
   "cve_id": "CVE-2026-65107",
   "state": "RESERVED",
   "public_date": "2026-09-03",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-03",
    "ubuntu-osv": "2026-09-03"
   },
-  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65107",
+  "refs": "debian:slurm-wlm;ubuntu-osv:UBUNTU-CVE-2026-65107;ubuntu:CVE-2026-65107",
   "description": "[Fix sbcast shared objects skipping credential verification, Fix possible slurmd crash on invalid sbcast filenames]",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54374,6 +54529,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-65107",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-65107",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-65107"
   },
   "veto_evaluated": false,
@@ -54588,15 +54744,16 @@
   "cve_id": "CVE-2026-85498",
   "state": "RESERVED",
   "public_date": "2026-09-04",
-  "sources": "alas,csaf,debian,redhat,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-05",
+   "ubuntu": "2026-09-07",
    "ubuntu-osv": "2026-09-07",
    "redhat": "2026-09-04",
    "csaf": "2026-09-05"
   },
-  "refs": "alas:CVE-2026-85498;csaf:SUSE Product Security Team\tCVE-2026-85498\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85498.json;debian:policykit-1;redhat:CVE-2026-85498;ubuntu-osv:UBUNTU-CVE-2026-85498",
+  "refs": "alas:CVE-2026-85498;csaf:SUSE Product Security Team\tCVE-2026-85498\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85498.json;debian:policykit-1;redhat:CVE-2026-85498;ubuntu-osv:UBUNTU-CVE-2026-85498;ubuntu:CVE-2026-85498",
   "description": "A flaw was found in polkit.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54620,6 +54777,7 @@
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-85498.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-85498",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-85498",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-85498",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-85498"
   },
   "veto_evaluated": false,
@@ -54629,13 +54787,14 @@
   "cve_id": "CVE-2026-84471",
   "state": "RESERVED",
   "public_date": "2026-09-04",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-05",
+   "ubuntu": "2026-09-04",
    "ubuntu-osv": "2026-09-04"
   },
-  "refs": "alas:CVE-2026-84471;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-84471",
+  "refs": "alas:CVE-2026-84471;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-84471;ubuntu:CVE-2026-84471",
   "description": "openvpn",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54657,46 +54816,8 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-84471.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84471",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-84471",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-84471"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-71196",
-  "state": "RESERVED",
-  "public_date": "2026-09-04",
-  "sources": "csaf,debian,redhat,ubuntu-osv",
-  "feed_count": 4,
-  "dates": {
-   "ubuntu-osv": "2026-09-04",
-   "redhat": "2026-09-04",
-   "csaf": "2026-09-04"
-  },
-  "refs": "csaf:Red Hat Product Security\tCVE-2026-71196\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-71196.json;debian:glance;redhat:CVE-2026-71196;ubuntu-osv:UBUNTU-CVE-2026-71196",
-  "description": "glance",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 22,
-  "clock_known": true,
-  "hours_public": 528,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-04",
-  "advisory_days_public": 22,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "glance",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-71196.json",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-71196",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-71196",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-71196"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -54705,14 +54826,15 @@
   "cve_id": "CVE-2026-71197",
   "state": "RESERVED",
   "public_date": "2026-09-04",
-  "sources": "csaf,debian,redhat,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "csaf,debian,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
+   "ubuntu": "2026-09-04",
    "ubuntu-osv": "2026-09-04",
    "redhat": "2026-09-04",
    "csaf": "2026-09-04"
   },
-  "refs": "csaf:Red Hat Product Security\tCVE-2026-71197\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-71197.json;debian:glance;redhat:CVE-2026-71197;ubuntu-osv:UBUNTU-CVE-2026-71197",
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-71197\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-71197.json;debian:glance;redhat:CVE-2026-71197;ubuntu-osv:UBUNTU-CVE-2026-71197;ubuntu:CVE-2026-71197",
   "description": "glance",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54735,7 +54857,49 @@
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-71197.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-71197",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-71197",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-71197",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-71197"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-71196",
+  "state": "RESERVED",
+  "public_date": "2026-09-04",
+  "sources": "csaf,debian,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 5,
+  "dates": {
+   "ubuntu": "2026-09-04",
+   "ubuntu-osv": "2026-09-04",
+   "redhat": "2026-09-04",
+   "csaf": "2026-09-04"
+  },
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-71196\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-71196.json;debian:glance;redhat:CVE-2026-71196;ubuntu-osv:UBUNTU-CVE-2026-71196;ubuntu:CVE-2026-71196",
+  "description": "glance",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 22,
+  "clock_known": true,
+  "hours_public": 528,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-04",
+  "advisory_days_public": 22,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "glance",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-71196.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-71196",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-71196",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-71196",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-71196"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -59704,13 +59868,14 @@
   "cve_id": "CVE-2026-79604",
   "state": "RESERVED",
   "public_date": "2026-09-08",
-  "sources": "alpine,csaf,debian,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alpine,csaf,debian,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
+   "ubuntu": "2026-09-08",
    "ubuntu-osv": "2026-09-08",
    "csaf": "2026-09-08"
   },
-  "refs": "alpine:xen;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3248\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json;debian:xen;ubuntu-osv:UBUNTU-CVE-2026-79604",
+  "refs": "alpine:xen;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3248\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json;debian:xen;ubuntu-osv:UBUNTU-CVE-2026-79604;ubuntu:CVE-2026-79604",
   "description": "oxenstored: Unbounded accumulation of watches: Oxenstored maintains two datastructures about watches; one global trie, and one hashtable tracked per domain.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59733,6 +59898,7 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-79604",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-79604",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-79604",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-79604"
   },
   "veto_evaluated": false,
@@ -61058,7 +61224,7 @@
   },
   "refs": "ghsa:GHSA-pqqc-8v73-9gg2;osv:Go:github.com/lf-edge/ekuiper/v2",
   "description": "LF Edge eKuiper: SSRF in External Service",
-  "state_verified_this_run": true,
+  "state_verified_this_run": false,
   "public_date_origin": "feed",
   "days_public": 17,
   "clock_known": true,
