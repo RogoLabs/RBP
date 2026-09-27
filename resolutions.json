@@ -4974,9 +4974,6 @@
   "CVE-2026-96280": {
    "first_public": "2026-08-11"
   },
-  "CVE-2026-96279": {
-   "first_public": "2026-08-11"
-  },
   "CVE-2026-82374": {
    "first_public": "2026-09-17"
   },
@@ -18065,6 +18062,15 @@
    "published": "2026-09-25",
    "days_to_publish": 66,
    "closed_on": "2026-09-26"
+  },
+  {
+   "cve_id": "CVE-2026-96279",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-11",
+   "published": "2026-09-27",
+   "days_to_publish": 47,
+   "closed_on": "2026-09-27"
   }
  ]
 }
