@@ -16442,7 +16442,7 @@
    "redhat": "2026-06-16",
    "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-53612;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21905-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-g8wm-75wr-g2vh;redhat:CVE-2026-53612;ub",
+  "refs": "alas:CVE-2026-53612;csaf:SUSE Product Security Team\tSUSE-SU-2026:23870-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23870-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-g8wm-75wr-g2vh;redhat:CVE-2026-53612;ubuntu-osv",
   "description": "Local Privilege Escalation via TOCTOU in mount(8) hook_owner.c chmod/chown",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16463,7 +16463,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-53612.html",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23870-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53612",
    "ghsa-repos": "https://github.com/util-linux/util-linux/security/advisories/GHSA-g8wm-75wr-g2vh",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-53612",
@@ -16485,7 +16485,7 @@
    "redhat": "2026-06-16",
    "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-53614;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21905-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-67r7-8m5w-22wx;redhat:CVE-2026-53614;ub",
+  "refs": "alas:CVE-2026-53614;csaf:SUSE Product Security Team\tSUSE-SU-2026:23870-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23870-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-67r7-8m5w-22wx;redhat:CVE-2026-53614;ubuntu-osv",
   "description": "Local Privilege Escalation via LIBMOUNT_FORCE_MOUNT2 Environment Variable - nosuid/noexec Bypass in SUID mount(8)",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16506,7 +16506,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-53614.html",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23870-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53614",
    "ghsa-repos": "https://github.com/util-linux/util-linux/security/advisories/GHSA-67r7-8m5w-22wx",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-53614",
@@ -16528,7 +16528,7 @@
    "redhat": "2026-06-16",
    "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-53613;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21905-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-8gj5-72r3-428g;redhat:CVE-2026-53613;ub",
+  "refs": "alas:CVE-2026-53613;csaf:SUSE Product Security Team\tSUSE-SU-2026:23870-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23870-1.json;debian:util-linux;ghsa-repos:util-linux/util-linux\tGHSA-8gj5-72r3-428g;redhat:CVE-2026-53613;ubuntu-osv",
   "description": "Local Privilege Escalation via TOCTOU in mount(8) - Target Path Redirection",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16549,7 +16549,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-53613.html",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21905-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23870-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-53613",
    "ghsa-repos": "https://github.com/util-linux/util-linux/security/advisories/GHSA-8gj5-72r3-428g",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-53613",
@@ -24778,7 +24778,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28632",
+  "cve_id": "CVE-2026-28585",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -24812,7 +24812,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28585",
+  "cve_id": "CVE-2026-28632",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -41397,6 +41397,176 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-45513",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 57,
+  "clock_known": true,
+  "hours_public": 1368,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 57,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28665",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 57,
+  "clock_known": true,
+  "hours_public": 1368,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 57,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28591",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 57,
+  "clock_known": true,
+  "hours_public": 1368,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 57,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28667",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 57,
+  "clock_known": true,
+  "hours_public": 1368,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 57,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-49885",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 57,
+  "clock_known": true,
+  "hours_public": 1368,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 57,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-28645",
   "state": "RESERVED",
   "public_date": "2026-08-01",
@@ -41465,40 +41635,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49880",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 57,
-  "clock_known": true,
-  "hours_public": 1368,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 57,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-0022",
   "state": "RESERVED",
   "public_date": "2026-08-01",
@@ -41533,143 +41669,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-45513",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 57,
-  "clock_known": true,
-  "hours_public": 1368,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 57,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28591",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 57,
-  "clock_known": true,
-  "hours_public": 1368,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 57,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28665",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 57,
-  "clock_known": true,
-  "hours_public": 1368,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 57,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-49885",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 57,
-  "clock_known": true,
-  "hours_public": 1368,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 57,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28667",
+  "cve_id": "CVE-2026-49880",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -50977,7 +50977,7 @@
    "ghsa-repos": "2026-08-30",
    "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-49275;alpine:exiv2;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21904-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json;debian:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-hxph-pv7w-8649;ubuntu-osv:UBUNTU-CVE-2026",
+  "refs": "alas:CVE-2026-49275;alpine:exiv2;csaf:SUSE Product Security Team\tSUSE-SU-2026:23871-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23871-1.json;debian:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-hxph-pv7w-8649;ubuntu-osv:UBUNTU-CVE-2026-49275",
   "description": "Out of bounds read in CrwMap::decodeBasic",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -50999,7 +50999,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-49275.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-49275",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23871-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-49275",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-hxph-pv7w-8649",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-49275"
@@ -51019,7 +51019,7 @@
    "ghsa-repos": "2026-08-30",
    "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-68547;alpine:exiv2;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21904-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json;debian:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-jcgh-p9v3-pw6j;ubuntu-osv:UBUNTU-CVE-2026",
+  "refs": "alas:CVE-2026-68547;alpine:exiv2;csaf:SUSE Product Security Team\tSUSE-SU-2026:23871-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23871-1.json;debian:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-jcgh-p9v3-pw6j;ubuntu-osv:UBUNTU-CVE-2026-68547",
   "description": "Heap out-of-bounds read in RemoteIo when reading block-aligned remote CRW files",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51041,7 +51041,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-68547.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-68547",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23871-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-68547",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-jcgh-p9v3-pw6j",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-68547"
@@ -51061,7 +51061,7 @@
    "ghsa-repos": "2026-08-30",
    "csaf": "2026-09-22"
   },
-  "refs": "alas:CVE-2026-68546;alpine:exiv2;csaf:SUSE Product Security Team\topenSUSE-SU-2026:21904-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json;debian:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-3695-mjv8-3r52;ubuntu-osv:UBUNTU-CVE-2026",
+  "refs": "alas:CVE-2026-68546;alpine:exiv2;csaf:SUSE Product Security Team\tSUSE-SU-2026:23871-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23871-1.json;debian:exiv2;ghsa-repos:Exiv2/exiv2\tGHSA-3695-mjv8-3r52;ubuntu-osv:UBUNTU-CVE-2026-68546",
   "description": "Heap out-of-bounds write in RemoteIo when reading from a malicious remote server (WebReady/Curl builds)",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -51083,7 +51083,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-68546.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-68546",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_21904-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_23871-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-68546",
    "ghsa-repos": "https://github.com/Exiv2/exiv2/security/advisories/GHSA-3695-mjv8-3r52",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-68546"
@@ -53282,7 +53282,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28605",
+  "cve_id": "CVE-2026-20499",
   "state": "RESERVED",
   "public_date": "2026-09-01",
   "sources": "samsung",
@@ -53316,7 +53316,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-20499",
+  "cve_id": "CVE-2026-28605",
   "state": "RESERVED",
   "public_date": "2026-09-01",
   "sources": "samsung",
@@ -55560,10 +55560,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95385",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95385",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55583,7 +55583,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95385",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95385",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95385"
@@ -55599,10 +55599,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95384",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95384",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55622,7 +55622,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95384",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95384",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95384"
@@ -55638,10 +55638,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95382",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95382",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55661,7 +55661,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95382",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95382",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95382"
@@ -55677,10 +55677,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95381",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95381",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55700,7 +55700,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95381",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95381",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95381"
@@ -55716,10 +55716,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95380",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95380",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55739,7 +55739,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95380",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95380",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95380"
@@ -55755,10 +55755,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95376",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95376",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55778,7 +55778,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95376",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95376",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95376"
@@ -55794,10 +55794,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95375",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95375",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55817,7 +55817,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95375",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95375",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95375"
@@ -55833,10 +55833,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95374",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95374",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55856,7 +55856,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95374",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95374",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95374"
@@ -55872,10 +55872,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95373",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95373",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55895,7 +55895,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95373",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95373",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95373"
@@ -55911,10 +55911,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95372",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95372",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55934,7 +55934,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95372",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95372",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95372"
@@ -55950,10 +55950,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95371",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95371",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55973,7 +55973,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95371",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95371",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95371"
@@ -55989,10 +55989,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95370",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95370",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56012,7 +56012,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95370",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95370",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95370"
@@ -56028,10 +56028,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95369",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95369",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56051,7 +56051,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95369",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95369",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95369"
@@ -56067,10 +56067,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95368",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95368",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56090,7 +56090,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95368",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95368",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95368"
@@ -56106,10 +56106,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95367",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95367",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56129,7 +56129,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95367",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95367",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95367"
@@ -56145,10 +56145,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95366",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95366",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56168,7 +56168,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95366",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95366",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95366"
@@ -56184,10 +56184,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95365",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95365",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56207,7 +56207,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95365",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95365",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95365"
@@ -56223,10 +56223,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95364",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95364",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56246,7 +56246,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95364",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95364",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95364"
@@ -56262,10 +56262,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95363",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95363",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56285,7 +56285,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95363",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95363",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95363"
@@ -56301,10 +56301,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95362",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95362",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56324,7 +56324,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95362",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95362",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95362"
@@ -56340,10 +56340,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95361",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95361",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56363,7 +56363,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95361",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95361",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95361"
@@ -56379,10 +56379,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95360",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95360",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56402,7 +56402,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95360",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95360",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95360"
@@ -56418,10 +56418,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95359",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95359",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56441,7 +56441,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95359",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95359",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95359"
@@ -56457,10 +56457,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95358",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95358",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56480,7 +56480,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95358",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95358",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95358"
@@ -56496,10 +56496,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95357",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95357",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56519,7 +56519,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95357",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95357",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95357"
@@ -56535,10 +56535,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95356",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95356",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56558,7 +56558,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95356",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95356",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95356"
@@ -56574,10 +56574,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95355",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95355",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56597,7 +56597,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95355",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95355",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95355"
@@ -56613,10 +56613,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95354",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95354",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56636,7 +56636,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95354",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95354",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95354"
@@ -56652,10 +56652,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95353",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95353",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56675,7 +56675,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95353",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95353",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95353"
@@ -56691,10 +56691,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95352",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95352",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56714,7 +56714,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95352",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95352",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95352"
@@ -56730,10 +56730,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95351",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95351",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56753,7 +56753,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95351",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95351",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95351"
@@ -56769,10 +56769,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95350",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95350",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56792,7 +56792,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95350",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95350",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95350"
@@ -56808,10 +56808,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95349",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95349",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56831,7 +56831,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95349",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95349",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95349"
@@ -56847,10 +56847,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95348",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95348",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56870,7 +56870,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95348",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95348",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95348"
@@ -56886,10 +56886,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95347",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95347",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56909,7 +56909,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95347",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95347",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95347"
@@ -56925,10 +56925,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95346",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95346",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56948,7 +56948,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95346",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95346",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95346"
@@ -56964,10 +56964,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95345",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95345",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56987,7 +56987,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95345",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95345",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95345"
@@ -57003,10 +57003,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95344",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95344",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57026,7 +57026,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95344",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95344",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95344"
@@ -57042,10 +57042,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95343",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95343",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57065,7 +57065,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95343",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95343",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95343"
@@ -57081,10 +57081,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95342",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95342",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57104,7 +57104,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95342",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95342",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95342"
@@ -57120,10 +57120,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95341",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95341",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57143,7 +57143,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95341",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95341",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95341"
@@ -57159,10 +57159,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95340",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95340",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57182,7 +57182,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95340",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95340",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95340"
@@ -57198,10 +57198,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95339",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95339",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57221,7 +57221,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95339",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95339",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95339"
@@ -57237,10 +57237,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95338",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95338",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57260,7 +57260,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95338",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95338",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95338"
@@ -57276,10 +57276,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95337",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95337",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57299,7 +57299,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95337",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95337",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95337"
@@ -57315,10 +57315,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95336",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95336",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57338,7 +57338,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95336",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95336",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95336"
@@ -57354,10 +57354,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95335",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95335",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57377,7 +57377,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95335",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95335",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95335"
@@ -57393,10 +57393,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95334",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95334",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57416,7 +57416,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95334",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95334",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95334"
@@ -57432,10 +57432,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95333",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95333",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57455,7 +57455,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95333",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95333",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95333"
@@ -57471,10 +57471,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95332",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95332",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57494,7 +57494,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95332",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95332",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95332"
@@ -57510,10 +57510,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95331",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95331",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57533,7 +57533,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95331",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95331",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95331"
@@ -57549,10 +57549,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95330",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95330",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57572,7 +57572,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95330",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95330",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95330"
@@ -57588,10 +57588,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95329",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95329",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57611,7 +57611,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95329",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95329",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95329"
@@ -57627,10 +57627,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95328",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95328",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57650,7 +57650,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95328",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95328",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95328"
@@ -57666,10 +57666,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95327",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95327",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57689,7 +57689,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95327",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95327",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95327"
@@ -57705,10 +57705,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95326",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95326",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57728,7 +57728,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95326",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95326",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95326"
@@ -57744,10 +57744,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95325",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95325",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57767,7 +57767,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95325",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95325",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95325"
@@ -57783,10 +57783,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95324",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95324",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57806,7 +57806,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95324",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95324",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95324"
@@ -57822,10 +57822,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95323",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95323",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57845,7 +57845,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95323",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95323",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95323"
@@ -57861,10 +57861,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95322",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95322",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57884,7 +57884,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95322",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95322",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95322"
@@ -57900,10 +57900,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95321",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95321",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57923,7 +57923,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95321",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95321",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95321"
@@ -57939,10 +57939,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95320",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95320",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -57962,7 +57962,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95320",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95320",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95320"
@@ -57978,10 +57978,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95319",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95319",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58001,7 +58001,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95319",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95319",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95319"
@@ -58017,10 +58017,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95318",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95318",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58040,7 +58040,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95318",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95318",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95318"
@@ -58056,10 +58056,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95317",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95317",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58079,7 +58079,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95317",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95317",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95317"
@@ -58095,10 +58095,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95316",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95316",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58118,7 +58118,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95316",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95316",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95316"
@@ -58134,10 +58134,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95315",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95315",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58157,7 +58157,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95315",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95315",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95315"
@@ -58173,10 +58173,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95314",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95314",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58196,7 +58196,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95314",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95314",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95314"
@@ -58212,10 +58212,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95313",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95313",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58235,7 +58235,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95313",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95313",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95313"
@@ -58251,10 +58251,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95312",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95312",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58274,7 +58274,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95312",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95312",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95312"
@@ -58290,10 +58290,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95311",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95311",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58313,7 +58313,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95311",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95311",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95311"
@@ -58329,10 +58329,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95310",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95310",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58352,7 +58352,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95310",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95310",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95310"
@@ -58368,10 +58368,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95309",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95309",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58391,7 +58391,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95309",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95309",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95309"
@@ -58407,10 +58407,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95308",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95308",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58430,7 +58430,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95308",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95308",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95308"
@@ -58446,10 +58446,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95307",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95307",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58469,7 +58469,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95307",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95307",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95307"
@@ -58485,10 +58485,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95306",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95306",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58508,7 +58508,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95306",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95306",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95306"
@@ -58524,10 +58524,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95305",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95305",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58547,7 +58547,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95305",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95305",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95305"
@@ -58563,10 +58563,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95304",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95304",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58586,7 +58586,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95304",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95304",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95304"
@@ -58602,10 +58602,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95303",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95303",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58625,7 +58625,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95303",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95303",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95303"
@@ -58641,10 +58641,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95302",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95302",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58664,7 +58664,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95302",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95302",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95302"
@@ -58680,10 +58680,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95301",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95301",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58703,7 +58703,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95301",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95301",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95301"
@@ -58719,10 +58719,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95300",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95300",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58742,7 +58742,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95300",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95300",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95300"
@@ -58758,10 +58758,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95299",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95299",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58781,7 +58781,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95299",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95299",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95299"
@@ -58797,10 +58797,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95298",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95298",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58820,7 +58820,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95298",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95298",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95298"
@@ -58836,10 +58836,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95297",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95297",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58859,7 +58859,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95297",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95297",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95297"
@@ -58875,10 +58875,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95296",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95296",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58898,7 +58898,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95296",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95296",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95296"
@@ -58914,10 +58914,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95295",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95295",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58937,7 +58937,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95295",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95295",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95295"
@@ -58953,10 +58953,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95294",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95294",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58976,7 +58976,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95294",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95294",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95294"
@@ -58992,10 +58992,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95293",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95293",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59015,7 +59015,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95293",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95293",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95293"
@@ -59031,10 +59031,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95292",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95292",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59054,7 +59054,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95292",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95292",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95292"
@@ -59070,10 +59070,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95291",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95291",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59093,7 +59093,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95291",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95291",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95291"
@@ -59109,10 +59109,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95290",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95290",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59132,7 +59132,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95290",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95290",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95290"
@@ -59148,10 +59148,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95289",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95289",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59171,7 +59171,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95289",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95289",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95289"
@@ -59187,10 +59187,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95288",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95288",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59210,7 +59210,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95288",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95288",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95288"
@@ -59226,10 +59226,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95287",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95287",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59249,7 +59249,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95287",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95287",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95287"
@@ -59265,10 +59265,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95286",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95286",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59288,7 +59288,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95286",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95286",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95286"
@@ -59304,10 +59304,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95285",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95285",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59327,7 +59327,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95285",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95285",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95285"
@@ -59343,10 +59343,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95284",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95284",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59366,7 +59366,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95284",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95284",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95284"
@@ -59382,10 +59382,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95283",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95283",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59405,7 +59405,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95283",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95283",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95283"
@@ -59421,10 +59421,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95282",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95282",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59444,7 +59444,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95282",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95282",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95282"
@@ -59460,10 +59460,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95281",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95281",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59483,7 +59483,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95281",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95281",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95281"
@@ -59499,10 +59499,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95280",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95280",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59522,7 +59522,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95280",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95280",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95280"
@@ -59538,10 +59538,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95279",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95279",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59561,7 +59561,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95279",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95279",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95279"
@@ -59577,10 +59577,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95278",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95278",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59600,7 +59600,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95278",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95278",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95278"
@@ -59616,10 +59616,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95277",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95277",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59639,7 +59639,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95277",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95277",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95277"
@@ -59655,10 +59655,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95276",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95276",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59678,7 +59678,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95276",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95276",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95276"
@@ -59694,10 +59694,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95275",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95275",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59717,7 +59717,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95275",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95275",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95275"
@@ -59733,10 +59733,10 @@
   "feed_count": 4,
   "dates": {
    "ubuntu": "2026-09-23",
-   "csaf": "2026-09-22",
+   "csaf": "2026-09-26",
    "msrc": "2026-09-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3514\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95274",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11888-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json;debian:chromium;msrc:msrc:2026-Sep;ubuntu:CVE-2026-95274",
   "description": "chromium",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -59756,7 +59756,7 @@
   "package": "chromium",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3514.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11888-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95274",
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-95274",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-95274"
@@ -62246,10 +62246,11 @@
   "cve_id": "CVE-2026-61642",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "alas,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17",
    "ghsa-repos": "2026-09-12",
    "csaf": "2026-09-13"
@@ -62278,6 +62279,7 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61642",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-537g-4gfh-w7m6",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61642",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61642"
   },
   "veto_evaluated": false,
@@ -62287,10 +62289,11 @@
   "cve_id": "CVE-2026-62846",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "alas,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17",
    "ghsa-repos": "2026-09-12",
    "csaf": "2026-09-13"
@@ -62319,6 +62322,7 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-62846",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-9vhr-vcrv-x837",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-62846",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-62846"
   },
   "veto_evaluated": false,
@@ -63238,13 +63242,14 @@
   "cve_id": "CVE-2026-89085",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "alas:CVE-2026-89085;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89085",
+  "refs": "alas:CVE-2026-89085;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89085;ubuntu:CVE-2026-89085",
   "description": "heap buffer overflow in _init_fats / fat_table_read",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63266,6 +63271,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-89085.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-89085",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-89085",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-89085"
   },
   "veto_evaluated": false,
@@ -63275,13 +63281,14 @@
   "cve_id": "CVE-2026-89088",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "alas:CVE-2026-89088;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89088",
+  "refs": "alas:CVE-2026-89088;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89088;ubuntu:CVE-2026-89088",
   "description": "heap buffer overflow in duplicate_legacy_root_dir",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63303,6 +63310,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-89088.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-89088",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-89088",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-89088"
   },
   "veto_evaluated": false,
@@ -63312,12 +63320,13 @@
   "cve_id": "CVE-2026-82374",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82374",
+  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82374;ubuntu:CVE-2026-82374",
   "description": "znc",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63338,6 +63347,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82374",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-82374",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-82374"
   },
   "veto_evaluated": false,
@@ -63347,12 +63357,13 @@
   "cve_id": "CVE-2026-82373",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82373",
+  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82373;ubuntu:CVE-2026-82373",
   "description": "znc",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63373,6 +63384,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82373",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-82373",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-82373"
   },
   "veto_evaluated": false,
