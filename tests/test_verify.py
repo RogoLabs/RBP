@@ -441,3 +441,47 @@ def test_the_mark_does_not_leak_to_a_cap_we_chose(tmp_path):
     chose does not, because that one fires on every run by design."""
     site, snaps = _unreachable(tmp_path, accounted=False)
     assert any("suse" in p and "goes dark" in p for p in verify.check(site, snaps))
+
+
+# --------------------------------------------------------------------------
+# an epoch change is not a collapse
+# --------------------------------------------------------------------------
+
+def _epoch_snap(tmp_path, name, total, epoch, excluded):
+    d = tmp_path / "snaps" / name
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "summary.json").write_text(json.dumps(
+        {"total": total, "epoch": epoch, "epoch_excluded": excluded,
+         "feeds": {"detail": {}}}))
+    return str(tmp_path / "snaps")
+
+
+def test_an_epoch_flip_is_compared_before_the_epoch_filter(tmp_path):
+    """The 2026-09-28 rehearsal of epoch 2026-08-01 held back 1,176 of 1,813
+    rows and verify failed it at 65%. That is the epoch working, and the same
+    check would have stopped the real flip on launch day."""
+    site = _site(tmp_path, [_row(i) for i in range(50)])
+    snaps = _epoch_snap(tmp_path, "2026-09-27", 1813, None, 0)
+    _epoch_snap(tmp_path, "2026-09-28", 637, "2026-08-01", 1176)
+    problems = verify.check(site, snaps)
+    assert not any("count fell" in p for p in problems), problems
+
+
+def test_a_real_collapse_under_a_new_epoch_still_alarms(tmp_path):
+    site = _site(tmp_path, [_row(i) for i in range(50)])
+    snaps = _epoch_snap(tmp_path, "2026-09-27", 1813, None, 0)
+    _epoch_snap(tmp_path, "2026-09-28", 300, "2026-08-01", 400)
+    problems = verify.check(site, snaps)
+    assert any("count fell" in p and "epoch having moved" in p
+               for p in problems), problems
+
+
+def test_an_unchanged_epoch_still_compares_the_published_totals(tmp_path):
+    """Adding the excluded rows back is only for a MOVED epoch. Under a fixed
+    one, a feed losing rows can present as rows moving behind the epoch, and
+    the published total is the number a reader saw."""
+    site = _site(tmp_path, [_row(i) for i in range(50)])
+    snaps = _epoch_snap(tmp_path, "2026-09-27", 1000, "2026-08-01", 0)
+    _epoch_snap(tmp_path, "2026-09-28", 500, "2026-08-01", 500)
+    problems = verify.check(site, snaps)
+    assert any("count fell 1,000 -> 500" in p for p in problems), problems

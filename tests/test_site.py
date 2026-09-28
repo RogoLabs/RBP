@@ -835,6 +835,21 @@ def test_production_precision_is_withheld_below_the_floor(tmp_path):
     assert ok["grader"]["below_floor"] is False
 
 
+def test_precision_history_is_floored_where_it_is_published():
+    """The live precision.json read `precision: null, below_floor: true` at the
+    top and `cumulative_precision: 1.0` on n=1 in its own history, an entry
+    written before the floor moved into summarise_state and republished on every
+    run since. Found re-verifying launch condition 6 on 2026-09-28."""
+    hist = [{"date": "2026-08-20", "newly_graded": 1, "cumulative_precision": 1.0},
+            {"date": "2026-08-21", "newly_graded": site.MIN_GRADED - 2,
+             "cumulative_precision": 0.9},
+            {"date": "2026-08-22", "newly_graded": 1, "cumulative_precision": 0.95}]
+    out = site._floored_history({"precision": 0.95, "history": hist})
+    assert [h["cumulative_precision"] for h in out["history"]] == [None, None, 0.95]
+    assert hist[0]["cumulative_precision"] == 1.0, "the ledger itself was mutated"
+    assert site._floored_history({"graded": []}) == {"graded": []}
+
+
 def test_a_published_and_a_rejected_closure_stay_distinguishable(built):
     """Both states shared one list that the templates sorted on days_to_publish,
     which is null for a rejection, so a single rejected closure crashed the

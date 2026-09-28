@@ -152,7 +152,10 @@ _DECLARED = [
     {
         "n": 5,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
-        "verified_on": "2026-08-23",
+        # Re-verified 2026-09-28: validate_min_age(3) refuses, 4 and 7 pass,
+        # cmd_run calls it before anything is read, and deploy.yml's only
+        # route to the value is MIN_AGE_DAYS, which goes through it.
+        "verified_on": "2026-09-28",
         "title": "A self-imposed naming floor, bound in code",
         "detail": ("CNA Rule 4.5.1.7 lets the Secretariat name a reserving CNA only "
                    "24 hours after public disclosure. report.validate_min_age "
@@ -173,7 +176,14 @@ _DECLARED = [
     {
         "n": 6,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
-        "verified_on": "2026-08-22",
+        # Re-verified 2026-09-28, and FALSIFIED FIRST. The live precision.json
+        # read `precision: null, below_floor: true` at the top and
+        # `cumulative_precision: 1.0` on n=1 in its own history, an entry
+        # written before the floor moved into summarise_state. Fixed by
+        # site._floored_history at the writer. In v1 inference is not run, so
+        # summary.json carries `not_run` and no page publishes a figure; the
+        # composition figures below are from the last run that had one.
+        "verified_on": "2026-09-28",
         "title": "One precision figure, stratified, with its sample composition",
         "detail": ("One floored figure, computed in one place, stratified by CNA with "
                    "the floor applied per stratum, and published with its composition "
@@ -201,7 +211,11 @@ _DECLARED = [
     {
         "n": 7,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
-        "verified_on": "2026-08-23",
+        # Re-verified 2026-09-28: /data/archive.json indexes 36 snapshots from
+        # 2026-08-22, and 08-22, 09-01, 09-15 and 09-28 each resolve to their
+        # own day's rows. The two absent days, 09-22 and 09-23, are the outage
+        # in which nothing published, not retention.
+        "verified_on": "2026-09-28",
         "title": "A dated immutable archive, resolvable after the epoch flip",
         "detail": ("Anything cited before launch stays resolvable afterwards at "
                    "/data/archive/<date>/rbp.json, with /data/archive.json as the "
@@ -242,7 +256,10 @@ _DECLARED = [
     {
         "n": 8,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
-        "verified_on": "2026-08-22",
+        # Re-verified 2026-09-28 on a real episode: RogoLabs/RBP#58 opened on
+        # the first failed run of 2026-09-22, took one comment per later
+        # failure, and closed itself on the 2026-09-24 success.
+        "verified_on": "2026-09-28",
         "title": "A failure notification exists, and has been exercised once",
         "detail": ("One issue per failure episode, opened on the first failure, "
                    "commented on subsequent ones so the duration is visible, and "
@@ -264,7 +281,13 @@ _DECLARED = [
     {
         "n": 9,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
-        "verified_on": "2026-08-22",
+        # Re-verified 2026-09-28, on the second attempt. The first
+        # (run 36437867488) built the launched posture and the epoch flip and
+        # then rbp.verify failed it on the count, 1,813 -> 637: the check was
+        # comparing across the epoch, so no rehearsal could pass and neither
+        # could launch day. Fixed in verify; run 36440211278 then passed with
+        # 1,165 held back, 644 counted, no findings, deploy and persist skipped.
+        "verified_on": "2026-09-28",
         "title": "The launch state rehearsed via dry_run against real data",
         "detail": ("dry_run plus rehearse_launch and rehearse_epoch build the "
                    "launched posture and an epoch flip against live data while "
