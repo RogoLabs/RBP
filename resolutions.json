@@ -4959,21 +4959,6 @@
   "CVE-2026-89085": {
    "first_public": "2026-09-17"
   },
-  "CVE-2026-96284": {
-   "first_public": "2026-04-07"
-  },
-  "CVE-2026-96283": {
-   "first_public": "2026-04-07"
-  },
-  "CVE-2026-96282": {
-   "first_public": "2026-08-11"
-  },
-  "CVE-2026-96281": {
-   "first_public": "2026-08-11"
-  },
-  "CVE-2026-96280": {
-   "first_public": "2026-08-11"
-  },
   "CVE-2026-82374": {
    "first_public": "2026-09-17"
   },
@@ -5489,6 +5474,27 @@
   },
   "CVE-2026-92004": {
    "first_public": "2026-09-20"
+  },
+  "CVE-2026-85495": {
+   "first_public": "2026-09-21"
+  },
+  "CVE-2026-94283": {
+   "first_public": "2026-09-21"
+  },
+  "CVE-2026-94284": {
+   "first_public": "2026-09-21"
+  },
+  "CVE-2026-94285": {
+   "first_public": "2026-09-21"
+  },
+  "CVE-2026-94286": {
+   "first_public": "2026-09-21"
+  },
+  "CVE-2026-94287": {
+   "first_public": "2026-09-21"
+  },
+  "CVE-2026-84112": {
+   "first_public": "2026-09-21"
   }
  },
  "resolved": [
@@ -18071,6 +18077,51 @@
    "published": "2026-09-27",
    "days_to_publish": 47,
    "closed_on": "2026-09-27"
+  },
+  {
+   "cve_id": "CVE-2026-96284",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-04-07",
+   "published": "2026-09-27",
+   "days_to_publish": 173,
+   "closed_on": "2026-09-28"
+  },
+  {
+   "cve_id": "CVE-2026-96283",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-04-07",
+   "published": "2026-09-27",
+   "days_to_publish": 173,
+   "closed_on": "2026-09-28"
+  },
+  {
+   "cve_id": "CVE-2026-96282",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-11",
+   "published": "2026-09-27",
+   "days_to_publish": 47,
+   "closed_on": "2026-09-28"
+  },
+  {
+   "cve_id": "CVE-2026-96281",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-11",
+   "published": "2026-09-27",
+   "days_to_publish": 47,
+   "closed_on": "2026-09-28"
+  },
+  {
+   "cve_id": "CVE-2026-96280",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-11",
+   "published": "2026-09-27",
+   "days_to_publish": 47,
+   "closed_on": "2026-09-28"
   }
  ]
 }
