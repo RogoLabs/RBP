@@ -497,6 +497,19 @@ def cmd_run(args):
         print(f"  dated {len(dated)} of {len(undated_rows)} undated row(s) "
               "by name against Ubuntu")
 
+    # WHICH MSRC PAGE TO LINK. The Update Guide does not show every id the CVRF
+    # document carries, and the rows here are mostly the ones it does not; see
+    # feeds.resolve_msrc_listed. `msrc_listed` is read and removed by
+    # report._derive_meta, so it never reaches a published row.
+    msrc_rows = [r for r in backlog if "msrc" in (r.get("sources") or "").split(",")]
+    if msrc_rows and "msrc" in sources:
+        listed = feeds.resolve_msrc_listed([r["cve_id"] for r in msrc_rows])
+        for r in msrc_rows:
+            r["msrc_listed"] = listed.get(r["cve_id"])
+        print(f"  msrc links: {sum(listed.values())} of {len(msrc_rows)} row(s) "
+              f"on the Update Guide, {len(msrc_rows) - len(listed)} unanswered; "
+              "the rest link the CVRF document")
+
     # The covered set has to exist before inference, because inference refuses
     # to name a CNA outside it. It needs only the corpus and the refs, both of
     # which are already in hand.

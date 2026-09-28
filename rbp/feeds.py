@@ -2425,6 +2425,33 @@ def _save_msrc_months(path, months):
               file=sys.stderr)
 
 
+def _msrc_entry_date(v):
+    """When Microsoft first published this entry, or "" if the entry cannot say.
+
+    THE MONTH'S DATE IS NOT THE ENTRY'S DATE. `ReleaseDate` is the placeholder
+    `0001-01-01` with `ReleaseDateSpecified: false` on every one of the 2,574
+    entries in the 2026-Sep document, so this feed dated each of them to the
+    month's InitialReleaseDate, 2026-09-08. That is right for a Patch Tuesday
+    CVE and wrong for everything Microsoft appends mid-month.
+
+    Measured 2026-09-28: 108 Chromium CVEs that Edge ingested were added to that
+    document on 2026-09-25, per their own revision history, and were published
+    as 20 days public. The earliest date from any other feed was Ubuntu's
+    2026-09-23, five days, under the 7-day buffer. All 108 were on the count
+    because of a date this feed borrowed from the month.
+
+    The first revision is the entry's own "Information published" date, so it
+    is the fallback. The month's date is used only when neither exists.
+    """
+    vdate = _d(v.get("ReleaseDate"))
+    if _date_year(vdate) and _date_year(vdate) >= 2000:
+        return vdate
+    revs = [_d(r.get("Date")) for r in v.get("RevisionHistory") or []
+            if isinstance(r, dict)]
+    revs = [d for d in revs if _date_year(d) and _date_year(d) >= 2000]
+    return min(revs) if revs else ""
+
+
 def feed_msrc(years, state_path=None):
     """Microsoft MSRC CVRF API: monthly Patch-Tuesday docs. Microsoft is its own
     CNA, so an RBP here is self-disclosure (the stronger §4.5.1.4 MUST). Also bundles
@@ -2493,8 +2520,7 @@ def feed_msrc(years, state_path=None):
                 continue
             title = v.get("Title")
             title = title.get("Value", "") if isinstance(title, dict) else (title or "")
-            vdate = _d(v.get("ReleaseDate"))
-            pub = vdate if _date_year(vdate) and _date_year(vdate) >= 2000 else mdate  # skip 0001 placeholder
+            pub = _msrc_entry_date(v) or mdate
             rows.append({"cve_id": cid, "source": "msrc", "source_ref": f"msrc:{mid}",
                          "public_date": pub, "product": "", "description": title[:400]})
         return rows
@@ -2515,6 +2541,64 @@ def feed_msrc(years, state_path=None):
     if read_ok:
         _save_msrc_months(state_path, read_ok)
     return out
+
+
+MSRC_SUG = ("https://api.msrc.microsoft.com/sug/v2.0/en-US/vulnerability"
+            "?$filter=cveNumber%20eq%20%27{}%27")
+MSRC_SUG_BUDGET_S = 300
+MSRC_SUG_WORKERS = 4
+
+
+def resolve_msrc_listed(cve_ids, budget_s=MSRC_SUG_BUDGET_S,
+                        workers=MSRC_SUG_WORKERS, timeout=30):
+    """Which of these ids the Security Update Guide will show, asked by name.
+
+    Returns {cve_id: True|False} for every id that got an answer. An id missing
+    from the result was not answered, and the caller must not read that as
+    either value.
+
+    THE CVRF DOCUMENT AND THE UPDATE GUIDE ARE TWO INDEXES, AND THEY DISAGREE.
+    `feed_msrc` reads CVRF. The link it produced was the Update Guide page,
+    which is a different index over the same data. On 2026-09-28 the 2026-Sep
+    CVRF document carried 2,574 ids and the Update Guide listed 2,555 for that
+    release, with 139 in CVRF and not in the Guide. The rows this site
+    publishes are selected from that gap, because a CVE Microsoft already shows
+    to people has usually reached cve.org too: 108 of 111 msrc rows linked to
+    a page that rendered "Not found".
+
+    So the Guide is asked for each msrc row by name, the same shape as
+    `resolve_dates_ubuntu`. The population is msrc's share of the backlog,
+    around a hundred ids, rather than the Guide's 500-per-page listing across
+    every month in the window.
+
+    It changes a link and nothing else, so it records no feed health. A failed
+    lookup gets the CVRF document link, which is where `feed_msrc` actually
+    found the id, so it can never produce a dead link and never touches a
+    count.
+    """
+    ids = list(dict.fromkeys(cve_ids))
+    started = time.monotonic()
+    listed, lock = {}, threading.Lock()
+
+    def one(cid):
+        if time.monotonic() - started > budget_s:
+            return
+        try:
+            data, code, _ = _get(MSRC_SUG.format(cid), timeout=timeout, retries=2,
+                                 headers={"Accept": "application/json"})
+        except Exception:
+            return
+        if code != 200 or not isinstance(data, dict) or "value" not in data:
+            return
+        hit = any(isinstance(x, dict) and x.get("cveNumber") == cid
+                  for x in data.get("value") or [])
+        with lock:
+            listed[cid] = hit
+
+    if ids:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+            list(ex.map(one, ids))
+    return listed
 
 
 CSAF_PROVIDERS = (
