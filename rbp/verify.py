@@ -254,14 +254,30 @@ def review(site_dir, snapshots_dir=None):
 
     # 4. THE COUNT DID NOT COLLAPSE. Compared against the previous PUBLISHED
     #    artefact, which is the number a reader saw last.
-    was = (prev.get("summary") or prev).get("total") or prev.get("total")
-    is_ = (now.get("summary") or now).get("total") or now.get("total")
+    #
+    #    ACROSS AN EPOCH CHANGE, BEFORE THE EPOCH FILTER. Moving the epoch holds
+    #    rows back on purpose, so comparing the totals compares two different
+    #    populations. The 2026-09-28 rehearsal of epoch 2026-08-01 held back
+    #    1,176 of 1,813 and this check failed it at 65%, which means no epoch
+    #    rehearsal could pass, and neither could the real flip on launch day.
+    #    Each summary records what its epoch excluded, so the like-for-like
+    #    figure is `total + epoch_excluded` on both sides, and a real collapse
+    #    under a new epoch still alarms.
+    ps, ns = (prev.get("summary") or prev), (now.get("summary") or now)
+    was = ps.get("total") or prev.get("total")
+    is_ = ns.get("total") or now.get("total")
+    moved = ps.get("epoch") != ns.get("epoch")
+    if moved and isinstance(was, int) and isinstance(is_, int):
+        was += ps.get("epoch_excluded") or 0
+        is_ += ns.get("epoch_excluded") or 0
     if isinstance(was, int) and isinstance(is_, int) and was > 0:
         if is_ < was * (1 - MAX_ROW_DROP):
             problems.append(
                 f"the published count fell {was:,} -> {is_:,} "
-                f"({round(100 * (was - is_) / was)}%), past the "
-                f"{round(MAX_ROW_DROP * 100)}% alarm threshold")
+                f"({round(100 * (was - is_) / was)}%)"
+                + (" before the epoch filter, the epoch having moved "
+                   f"{ps.get('epoch')} -> {ns.get('epoch')}" if moved else "")
+                + f", past the {round(MAX_ROW_DROP * 100)}% alarm threshold")
 
     # 5. NO SOURCE WENT DARK. A feed or provider that returned ids last run and
     #    returns none now, without failing or truncating, is the silent-shrink

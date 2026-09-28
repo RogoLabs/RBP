@@ -1,6 +1,15 @@
 {
  "baseline_scored_at": "2026-09-08T18:58:56+00:00",
  "feeds": {
+  "acronis": {
+   "cnas_new_effective": 0,
+   "cnas_new_effective_names": [],
+   "combine": "union",
+   "lead_n": 21,
+   "unpublished_n": 3,
+   "verdict": "redundant",
+   "wall_seconds": 2.9
+  },
   "alas": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
@@ -38,11 +47,10 @@
    "wall_seconds": 15.2
   },
   "csaf": {
-   "cnas_new_effective": 68,
+   "cnas_new_effective": 67,
    "cnas_new_effective_names": [
     "AMI",
     "Absolute",
-    "Acronis",
     "Axis",
     "BD",
     "BT",
@@ -245,21 +253,29 @@
   }
  },
  "live": {
-  "effective_n": 267,
-  "fetched": "2026-09-08",
-  "generated_at": "2026-09-08T21:53:02+00:00",
-  "ids_short": 11689,
+  "effective_n": 271,
+  "fetched": "2026-09-28",
+  "generated_at": "2026-09-28T14:16:52+00:00",
+  "ids_short": 32337,
   "pinned": true,
   "rows_short": {
-   "alas": 26,
-   "csaf": 11537,
-   "debian": 3,
-   "ghsa": 72,
-   "ghsa-repos": 1,
-   "osv": 50
+   "alas": 1874,
+   "alpine": 78,
+   "certcc": 13,
+   "csaf": 18827,
+   "debian": 3224,
+   "ghsa": 614,
+   "ghsa-repos": 380,
+   "jvn": 395,
+   "mozilla": 78,
+   "msrc": 1436,
+   "osv": 861,
+   "redhat": 1606,
+   "ubuntu-osv": 2838,
+   "zdi": 113
   },
-  "source_commit": "546576015a48"
+  "source_commit": "84e62c07b2e6"
  },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-09-08T23:14:49+00:00"
+ "scored_at": "2026-09-28T14:38:32+00:00"
 }

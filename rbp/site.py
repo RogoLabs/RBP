@@ -1254,6 +1254,34 @@ def _denamed_grader(grader):
     return _strip_keys(grader, set(_LEDGER_NAMES) | set(_PER_CNA_KEYS))
 
 
+def _floored_history(grader):
+    """The ledger with every `history[].cumulative_precision` under the floor
+    set to null.
+
+    `summarise_state` floors the headline, and every history entry written
+    since the floor moved there is floored at birth. The entries written before
+    it are not: the published precision.json carried `precision: null,
+    below_floor: true` at the top and `cumulative_precision: 1.0` on n=1 in its
+    own history, found re-verifying launch condition 6 on 2026-09-28. That is
+    the two-answers bug from summary.json again, inside one file, and the
+    ledger republishes it on every run because history is append-only.
+
+    So the floor is applied where the file is written, over a running count of
+    `newly_graded`, and holds however old the entry is.
+    """
+    hist = grader.get("history") if isinstance(grader, dict) else None
+    if not isinstance(hist, list):
+        return grader
+    out, n = [], 0
+    for h in hist:
+        if isinstance(h, dict):
+            n += int(h.get("newly_graded") or 0)
+            if n < MIN_GRADED and h.get("cumulative_precision") is not None:
+                h = {**h, "cumulative_precision": None}
+        out.append(h)
+    return {**grader, "history": out}
+
+
 def _write_data(out, ctx):
     launched = ctx["launched"]
     # Every published row set, not only the one the old test looked at.
@@ -1285,7 +1313,8 @@ def _write_data(out, ctx):
     _schema.write_json(os.path.join(d, "cnas.json"), ctx["cnas"] if NAMING_ENABLED else [])
     _schema.write_json(
         os.path.join(d, "precision.json"),
-        ctx["grader"] if NAMING_ENABLED else _denamed_grader(ctx["grader"]))
+        _floored_history(ctx["grader"] if NAMING_ENABLED
+                         else _denamed_grader(ctx["grader"])))
 
     # The closure record. resolved.json and held_back.json were computed, rendered
     # and then withheld from consumers entirely: neither reached the data branch or
