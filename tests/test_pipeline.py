@@ -473,6 +473,9 @@ def test_every_adapter_either_builds_a_link_or_declares_it_cannot():
         # that prefix and a generic `acronis:somepackage` correctly
         # builds no link.
         "acronis": "acronis:SEC-10986",
+        # The CVRF month is the path segment of the fallback link, so a generic
+        # `msrc:somepackage` correctly builds no link.
+        "msrc": "msrc:msrc:2026-Sep",
     }
     handled = set()
     for slug in feeds.ADAPTERS:

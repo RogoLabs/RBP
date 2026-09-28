@@ -42,6 +42,7 @@ def _derive_meta(row):
     advisory the id appears in."""
     cid = row["cve_id"]
     pkg = eco = ""
+    listed = row.pop("msrc_listed", None)   # transient, set by cli.cmd_run
     refs = [r for r in row.get("refs", "").split(";") if r]
     for rf in refs:
         parts = rf.split(":")
@@ -64,7 +65,18 @@ def _derive_meta(row):
         if s == "alpine":
             return f"https://security.alpinelinux.org/vuln/{cid}"
         if s == "msrc":
-            return f"https://msrc.microsoft.com/update-guide/vulnerability/{cid}"
+            # The Update Guide page only when the Guide was asked and said it
+            # has the id. It rendered "Not found" for 108 of 111 rows on
+            # 2026-09-28, because it lags the CVRF document this feed reads;
+            # see feeds.resolve_msrc_listed. Otherwise the month's CVRF
+            # document, which is where the id was actually found. refs carry
+            # "msrc:msrc:<YYYY-Mon>".
+            if listed:
+                return f"https://msrc.microsoft.com/update-guide/vulnerability/{cid}"
+            mid = next((r.rsplit(":", 1)[1] for r in refs
+                        if r.startswith("msrc:")), "")
+            return (f"https://api.msrc.microsoft.com/cvrf/v3.0/cvrf/{mid}"
+                    if re.fullmatch(r"\d{4}-[A-Z][a-z]{2}", mid) else "")
         if s == "mozilla":
             mfsa = next((r.split(":", 1)[1] for r in refs if r.startswith("mozilla:")), "")
             return f"https://www.mozilla.org/en-US/security/advisories/{mfsa}/" if mfsa else ""

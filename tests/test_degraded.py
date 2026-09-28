@@ -2879,6 +2879,89 @@ def test_msrc_retention_is_bounded_by_the_year_window(tmp_path, monkeypatch):
     assert F.MSRC_CVRF.format("2019-Jan") not in asked
 
 
+def test_msrc_dates_a_mid_month_entry_by_its_own_revision_not_the_month(
+        tmp_path, monkeypatch):
+    """THE 2026-09-28 OVERCOUNT, as a test.
+
+    Every entry in the 2026-Sep document carries `ReleaseDate: 0001-01-01`, so
+    each was dated to the month, 2026-09-08. 108 Chromium CVEs appended on
+    2026-09-25 were published as 20 days public and put on the count, when the
+    earliest date from any feed made them five days old, under the buffer.
+    """
+    from rbp import feeds as F
+
+    index = {"value": [{"ID": "2026-Sep", "InitialReleaseDate": "2026-09-08T07:00:00Z",
+                        "CvrfUrl": "https://x.invalid/cvrf/2026-Sep"}]}
+    placeholder = {"ReleaseDate": "0001-01-01T00:00:00", "ReleaseDateSpecified": False}
+    doc = {"Vulnerability": [
+        # Patch Tuesday: first revision is the month's date, nothing changes.
+        {"CVE": "CVE-2026-1", **placeholder,
+         "RevisionHistory": [{"Number": "1.0", "Date": "2026-09-08T07:00:00"}]},
+        # Appended mid-month, then revised: the FIRST revision is the date.
+        {"CVE": "CVE-2026-2", **placeholder,
+         "RevisionHistory": [{"Number": "1.1", "Date": "2026-09-27T07:00:00"},
+                             {"Number": "1.0", "Date": "2026-09-25T07:00:00"}]},
+        # No usable date of its own: the month is the only thing left.
+        {"CVE": "CVE-2026-3", **placeholder, "RevisionHistory": []},
+        # A real ReleaseDate still wins.
+        {"CVE": "CVE-2026-4", "ReleaseDate": "2026-09-10T00:00:00Z",
+         "RevisionHistory": [{"Date": "2026-09-12T00:00:00"}]},
+    ]}
+
+    def fake_get(url, **kw):
+        return (index if url.endswith("/updates") else doc), 200, {}
+
+    monkeypatch.setattr(F, "_get", fake_get)
+    got = {r["cve_id"]: r["public_date"]
+           for r in F.feed_msrc([2026], state_path=str(tmp_path / "s.json"))}
+    assert got == {"CVE-2026-1": "2026-09-08", "CVE-2026-2": "2026-09-25",
+                   "CVE-2026-3": "2026-09-08", "CVE-2026-4": "2026-09-10"}, got
+
+
+def test_msrc_listed_answers_only_for_ids_it_actually_heard_about(monkeypatch):
+    """True when the Guide returns the id, False when it answers with none, and
+    ABSENT when it did not answer, so a failed lookup is never read as either."""
+    from rbp import feeds as F
+
+    def fake_get(url, **kw):
+        if "CVE-2026-1" in url:
+            return {"value": [{"cveNumber": "CVE-2026-1"}]}, 200, {}
+        if "CVE-2026-2" in url:
+            return {"@odata.count": 0, "value": []}, 200, {}
+        if "CVE-2026-3" in url:
+            return None, 404, {}
+        raise RuntimeError("403")
+
+    monkeypatch.setattr(F, "_get", fake_get)
+    got = F.resolve_msrc_listed(["CVE-2026-1", "CVE-2026-2", "CVE-2026-3",
+                                 "CVE-2026-4"])
+    assert got == {"CVE-2026-1": True, "CVE-2026-2": False}, got
+
+
+def test_an_msrc_row_links_the_guide_only_when_the_guide_has_it():
+    """The Update Guide rendered "Not found" for 108 of 111 msrc rows on
+    2026-09-28. A row links it only when the Guide said yes; otherwise, and when
+    it was never asked, the row links the CVRF month it was found in. The
+    transient flag must not survive into the published row."""
+    from rbp import report
+
+    def urls(listed):
+        row = {"cve_id": "CVE-2026-9", "sources": "msrc",
+               "refs": "msrc:msrc:2026-Sep"}
+        if listed is not ...:
+            row["msrc_listed"] = listed
+        u = report._derive_meta(row)[2]["msrc"]
+        assert "msrc_listed" not in row
+        return u
+
+    guide = "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-9"
+    cvrf = "https://api.msrc.microsoft.com/cvrf/v3.0/cvrf/2026-Sep"
+    assert urls(True) == guide
+    assert urls(False) == cvrf
+    assert urls(None) == cvrf
+    assert urls(...) == cvrf
+
+
 def test_the_stale_line_states_the_observation_and_not_a_cause():
     """It ended "the feed has likely stopped". On 2026-09-02 msrc was flagged and
     Microsoft's API was live: the index had dropped a month whose document was

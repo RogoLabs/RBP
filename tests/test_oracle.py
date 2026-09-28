@@ -101,8 +101,14 @@ def test_live_endpoint_semantics():
 
 @live_only
 def test_live_backlog_only_ever_shrinks():
-    """RESERVED -> PUBLISHED is one-way. Today's reserved count must never
-    exceed the 2026-08-20 measurement; if it does, the oracle is misreading."""
+    """A reserved id only ever leaves RESERVED. Today's reserved count must never
+    exceed the 2026-08-20 measurement; if it does, the oracle is misreading.
+
+    IT LEAVES TO PUBLISHED OR TO REJECTED. This asserted RESERVED + PUBLISHED
+    == TOTAL, which read a CNA rejecting an id as the oracle misreading. On
+    2026-09-28 CVE-2026-57168 went RESERVED -> REJECTED and failed the push to
+    main. Both are terminal (classify._IMMUTABLE), so an id in any third state
+    is still the misreading this exists to catch."""
     import concurrent.futures as cf
 
     ids = BACKLOG["cve_ids"]
@@ -111,7 +117,7 @@ def test_live_backlog_only_ever_shrinks():
     tally = collections.Counter(states)
     assert tally["RESERVED"] <= EXPECT_RESERVED
     assert tally["PUBLISHED"] >= EXPECT_PUBLISHED
-    assert tally["RESERVED"] + tally["PUBLISHED"] == TOTAL
+    assert tally["RESERVED"] + tally["PUBLISHED"] + tally["REJECTED"] == TOTAL, tally
 
 
 @live_only
