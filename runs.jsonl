@@ -194,3 +194,4 @@
 {"at": "2026-09-28T14:17:31+00:00", "run_id": "36432324386", "run_attempt": "1", "event": "schedule", "cron": "17 */6 * * *", "sha": "84e62c07b2e6", "conclusion": "success", "page_url": "https://rbptracker.org/"}
 {"at": "2026-09-28T15:40:54+00:00", "run_id": "36443360134", "run_attempt": "1", "event": "push", "cron": "", "sha": "bde387ff4ab1", "conclusion": "success", "page_url": "https://rbptracker.org/"}
 {"at": "2026-09-28T16:01:18+00:00", "run_id": "36444275806", "run_attempt": "1", "event": "push", "cron": "", "sha": "e015ed636abb", "conclusion": "success", "page_url": "https://rbptracker.org/"}
+{"at": "2026-09-28T16:25:55+00:00", "run_id": "36448640668", "run_attempt": "1", "event": "workflow_dispatch", "cron": "", "sha": "e015ed636abb", "conclusion": "success", "page_url": "https://rbptracker.org/"}
