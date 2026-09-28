@@ -281,7 +281,13 @@ _DECLARED = [
     {
         "n": 9,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
-        "verified_on": "2026-08-22",
+        # Re-verified 2026-09-28, on the second attempt. The first
+        # (run 36437867488) built the launched posture and the epoch flip and
+        # then rbp.verify failed it on the count, 1,813 -> 637: the check was
+        # comparing across the epoch, so no rehearsal could pass and neither
+        # could launch day. Fixed in verify; run 36440211278 then passed with
+        # 1,165 held back, 644 counted, no findings, deploy and persist skipped.
+        "verified_on": "2026-09-28",
         "title": "The launch state rehearsed via dry_run against real data",
         "detail": ("dry_run plus rehearse_launch and rehearse_epoch build the "
                    "launched posture and an epoch flip against live data while "
