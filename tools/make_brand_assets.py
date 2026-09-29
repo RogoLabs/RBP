@@ -50,9 +50,11 @@ IMG = os.path.join(ROOT, "static", "img")
 #                          --color-text-primary
 #   static/css/rbp.css     --rbp-age (the days-public signal) / --rbp-text-muted
 BG = "#0f1117"
+TRACK = "#1a1d27"      # --color-bg-secondary: a distribution bar's empty track
 SURFACE = "#1e2130"
 BORDER = "#2d3348"
 INK = "#e1e4ea"
+SECOND = "#b6bece"     # --rbp-text-secondary
 MUTED = "#9aa3b2"
 AMBER = "#D9A05B"
 
@@ -63,13 +65,56 @@ _FACES = {
     "regular": ["/System/Library/Fonts/HelveticaNeue.ttc",
                 "/System/Library/Fonts/Supplemental/Arial.ttf",
                 "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"],
-    "mono": ["/System/Library/Fonts/Menlo.ttc",
+    # SF Mono first: it is what the site's ui-monospace stack resolves to on
+    # the machine this is authored on.
+    "mono": ["/System/Library/Fonts/SFNSMono.ttf",
+             "/System/Library/Fonts/Menlo.ttc",
              "/System/Library/Fonts/Supplemental/Courier New Bold.ttf",
              "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf"],
 }
 # HelveticaNeue.ttc is a collection; index 0 is Regular and 1 is Bold.
 _INDEX = {"bold": 1, "regular": 0, "mono": 0}
 _warned = set()
+
+
+# THE SITE'S OWN FACE. static/fonts/inter-latin.woff2 is what every page loads,
+# so the card is set in it rather than in whatever sans the authoring machine
+# has. It is a variable WOFF2, which FreeType only opens when it was built with
+# brotli, so on a Pillow that cannot read it directly it is unwrapped to a TTF in
+# memory with fontTools (`pip install fonttools brotli`). Neither is on the
+# publish path; see the module docstring.
+INTER = os.path.join(ROOT, "static", "fonts", "inter-latin.woff2")
+_inter_bytes = None
+
+
+def inter(size, weight):
+    global _inter_bytes
+    import io
+    try:
+        f = ImageFont.truetype(INTER, size)
+    except OSError:
+        if _inter_bytes is None:
+            try:
+                from fontTools.ttLib import TTFont
+                tt = TTFont(INTER)
+                tt.flavor = None
+                buf = io.BytesIO()
+                tt.save(buf)
+                _inter_bytes = buf.getvalue()
+            except Exception as exc:  # pragma: no cover - authoring tool
+                sys.exit(f"cannot read {os.path.relpath(INTER, ROOT)} ({exc}).\n"
+                         "pip install fonttools brotli, then re-run. The card is "
+                         "set in the site's face and has no substitute.")
+        f = ImageFont.truetype(io.BytesIO(_inter_bytes), size)
+    f.set_variation_by_axes([weight])
+    return f
+
+
+def _mix(a, b, t):
+    """`b` at opacity `t` over `a`, which is how the site draws a dimmed bar."""
+    a = [int(a[i:i + 2], 16) for i in (1, 3, 5)]
+    b = [int(b[i:i + 2], 16) for i in (1, 3, 5)]
+    return tuple(round(x + (y - x) * t) for x, y in zip(a, b))
 
 
 def font(kind, size):
@@ -87,16 +132,6 @@ def font(kind, size):
     return ImageFont.load_default()
 
 
-def tracked(d, xy, text, font_, fill, tracking=0):
-    """Draw text with real letter-spacing. PIL has no tracking, and an uppercase
-    label without it reads as a cramped word rather than as a label."""
-    x, y = xy
-    for ch in text:
-        d.text((x, y), ch, font=font_, fill=fill)
-        x += d.textlength(ch, font=font_) + tracking
-    return x
-
-
 def social_card(path):
     """1200x630, the one size every unfurler crops from.
 
@@ -104,59 +139,57 @@ def social_card(path):
     render an SVG og:image, which is why this is a PNG and not the vector the rest
     of the site's marks are.
 
-    FULL-BLEED, and not a rounded card with an accent rail down one side. The
-    first attempt was exactly that, which is both the most generic layout
-    available and a misuse of the site's own device: on the site the amber bar is
-    a row's days-public reading, so one bar framing a poster says nothing. Here
-    the bars are what they are on the site -- many rows, each a different age --
-    used as the texture along the base rather than as a frame.
+    DRAWN FROM THE FRONT PAGE AS IT IS, redrawn 2026-09-29. The first card used
+    vertical amber rails along its base, the per-row days-public device, and set
+    everything in Helvetica. The rails left the site and the lead became a count
+    beside a distribution of horizontal age bars, set in Inter, so a card pasted
+    beside a link to the site looked like a different product.
+
+    So this is the site's lead: the header bar, the name where the count sits,
+    and the distribution panel's shape beside it, older buckets dimmed as the
+    default view dims them. The name stands in for the count because the count
+    is in og:title, which every unfurler renders as text beside this image; see
+    the module docstring.
+
+    The bars are a fixed pattern with no labels and no figures, so they read as
+    the site's vocabulary rather than as a data claim, and re-running this script
+    reproduces the asset byte for byte.
     """
     W, H = 1200, 630
-    M = 96                       # one margin, used on both sides and reused below
+    M = 80                       # one margin, used on both sides and reused below
     im = Image.new("RGB", (W, H), BG)
     d = ImageDraw.Draw(im)
 
-    # THE RAILS, drawn FIRST and confined to a band along the base.
-    #
-    # On the site every row carries a vertical track in the surface colour with an
-    # amber fill whose height is how long that ID has been public, so a band of
-    # them is "many rows, each a different age" in the site's own vocabulary.
-    #
-    # A band rather than a full-height field: the first attempt let them span the
-    # card and drew them over the type, which was illegible. They are texture, so
-    # they sit under the words and out of their way.
-    #
-    # Deliberately not a chart. No axis, no labels, no figure anywhere near it, so
-    # nothing here can be read as a data claim the way a sample CVE ID or a baked
-    # in count could. The heights are a fixed pattern rather than a random source,
-    # so re-running this script reproduces the asset byte for byte and a
-    # regenerated card is never a spurious diff.
-    band_top, band_base = 452.0, 548.0
-    pattern = [7, 12, 9, 22, 15, 11, 31, 18, 13, 44, 9, 26, 16, 60, 21, 12, 35,
-               19, 14, 52, 11, 28, 17, 41, 23, 13, 68, 15]
-    span = W - 2 * M
-    step = span / len(pattern)
-    bw = step * 0.36
-    for i, v in enumerate(pattern):
-        bx = M + i * step
-        h = (v / 68.0) * (band_base - band_top)
-        d.rectangle([bx, band_top, bx + bw, band_base], fill=SURFACE)
-        d.rectangle([bx, band_base - h, bx + bw, band_base], fill=AMBER)
+    # The header bar, as every page has it.
+    d.rectangle([0, 0, W, 64], fill=SURFACE)
+    d.line([0, 64, W, 64], fill=BORDER, width=1)
+    d.text((M, 32), "RBP Tracker", font=inter(26, 700), fill=INK, anchor="lm")
 
-    tracked(d, (M, 84), "RBP TRACKER", font("mono", 22), MUTED, tracking=3.2)
-
-    d.text((M, 138), "Reserved", font=font("bold", 92), fill=INK)
-    d.text((M, 230), "but Public", font=font("bold", 92), fill=AMBER)
-
+    # The lead. Weight 650 is .cmd-count b's.
+    d.text((M, 118), "Reserved", font=inter(92, 650), fill=INK)
+    d.text((M, 218), "but Public", font=inter(92, 650), fill=AMBER)
     d.multiline_text(
-        (M, 348),
-        "CVE IDs that are reserved, referenced in a public\nadvisory, and still unpublished.",
-        font=font("regular", 31), fill=MUTED, spacing=13)
+        (M, 350),
+        "CVE IDs that are reserved,\nreferenced in a public advisory,\nand still unpublished.",
+        font=inter(28, 400), fill=SECOND, spacing=12)
 
-    d.line([M, 578, W - M, 578], fill=BORDER, width=1)
-    d.text((M, 592), "rbptracker.org", font=font("mono", 25), fill=INK)
-    d.text((W - M, 596), "A count of a state, not of violations.",
-           font=font("regular", 21), fill=MUTED, anchor="ra")
+    # The distribution panel: a rule over five bars on their tracks, oldest
+    # bucket first as the default sort has it. The three the default window
+    # holds back are drawn at .distbar.out's 0.4 opacity.
+    px0, px1 = 690, W - M
+    d.line([px0, 126, px1, 126], fill=INK, width=2)
+    buckets = [(0.30, True), (0.13, True), (0.50, True), (1.00, False), (0.34, False)]
+    y = 162
+    for frac, out in buckets:
+        d.rounded_rectangle([px0, y, px1, y + 22], radius=4, fill=TRACK)
+        d.rounded_rectangle([px0, y, px0 + (px1 - px0) * frac, y + 22], radius=4,
+                            fill=_mix(TRACK, AMBER, 0.4) if out else AMBER)
+        y += 52
+
+    d.line([M, 548, W - M, 548], fill=BORDER, width=1)
+    d.text((M, 588), "rbptracker.org", font=font("mono", 26), fill=INK, anchor="lm")
+    d.text((W - M, 588), "A count of a state, not of violations.",
+           font=inter(22, 400), fill=MUTED, anchor="rm")
 
     im.save(path, "PNG", optimize=True)
     return path
