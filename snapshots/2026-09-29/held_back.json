@@ -1,46 +1,5 @@
 [
  {
-  "cve_id": "CVE-2026-42394",
-  "state": "RESERVED",
-  "public_date": "2026-09-25",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
-  "dates": {
-   "alas": "2026-09-25",
-   "ubuntu": "2026-09-25",
-   "ubuntu-osv": "2026-09-25"
-  },
-  "refs": "alas:CVE-2026-42394;debian:dovecot;ubuntu-osv:UBUNTU-CVE-2026-42394;ubuntu:CVE-2026-42394",
-  "description": "Pigeonhole's file storage followed any symlink encountered while resolving a script path, including symlinks in personal (user-writable) storage whose target lay outside the storage directory.",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 4,
-  "clock_known": true,
-  "hours_public": 96,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-25",
-  "advisory_days_public": 4,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "dovecot",
-  "ecosystem": "",
-  "source_urls": {
-   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-42394.html",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-42394",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-42394",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-42394"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
   "cve_id": "CVE-2026-95622",
   "state": "RESERVED",
   "public_date": "2026-09-24",
@@ -75,6 +34,47 @@
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-95622.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-95622",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-95622"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-42394",
+  "state": "RESERVED",
+  "public_date": "2026-09-25",
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
+  "dates": {
+   "alas": "2026-09-25",
+   "ubuntu": "2026-09-25",
+   "ubuntu-osv": "2026-09-25"
+  },
+  "refs": "alas:CVE-2026-42394;debian:dovecot;ubuntu-osv:UBUNTU-CVE-2026-42394;ubuntu:CVE-2026-42394",
+  "description": "Pigeonhole's file storage followed any symlink encountered while resolving a script path, including symlinks in personal (user-writable) storage whose target lay outside the storage directory.",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 4,
+  "clock_known": true,
+  "hours_public": 96,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-25",
+  "advisory_days_public": 4,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "dovecot",
+  "ecosystem": "",
+  "source_urls": {
+   "alas": "https://explore.alas.aws.amazon.com/CVE-2026-42394.html",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-42394",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-42394",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-42394"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -123,6 +123,48 @@
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-94422",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-94422",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-94422"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-46675",
+  "state": "RESERVED",
+  "public_date": "2026-09-28",
+  "sources": "alpine,csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 5,
+  "dates": {
+   "ubuntu": "2026-09-29",
+   "ghsa-repos": "2026-09-29",
+   "csaf": "2026-09-28"
+  },
+  "refs": "alpine:libpng;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3619\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3619.json;debian:libpng1.6;ghsa-repos:pnggroup/libpng\tGHSA-qvg3-h654-xq3j;ubuntu:CVE-2026-4",
+  "description": "[Use-after-free of zlib input in `png_read_end` after incomplete zTXt, iTXt or iCCP decompression]",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-09-28",
+  "advisory_days_public": 1,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "libpng",
+  "ecosystem": "",
+  "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-46675",
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3619.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-46675",
+   "ghsa-repos": "https://github.com/pnggroup/libpng/security/advisories/GHSA-qvg3-h654-xq3j",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-46675"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -201,46 +243,6 @@
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "undated"
- },
- {
-  "cve_id": "CVE-2026-46675",
-  "state": "RESERVED",
-  "public_date": "2026-09-28",
-  "sources": "alpine,csaf,debian,ghsa-repos",
-  "feed_count": 4,
-  "dates": {
-   "ghsa-repos": "2026-09-29",
-   "csaf": "2026-09-28"
-  },
-  "refs": "alpine:libpng;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3619\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3619.json;debian:libpng1.6;ghsa-repos:pnggroup/libpng\tGHSA-qvg3-h654-xq3j",
-  "description": "pnggroup/libpng repository advisory GHSA-qvg3-h654-xq3j",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 1,
-  "clock_known": true,
-  "hours_public": 24,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-28",
-  "advisory_days_public": 1,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "libpng",
-  "ecosystem": "",
-  "source_urls": {
-   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-46675",
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3619.json",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-46675",
-   "ghsa-repos": "https://github.com/pnggroup/libpng/security/advisories/GHSA-qvg3-h654-xq3j"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
  },
  {
   "cve_id": "CVE-2026-100395",
@@ -2741,7 +2743,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84679",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84679",
   "description": "automation-controller: automation-controller-container: automation-controller: the AWX_TASK_ENV setting applies arbitrary environment variables to the control-plane web and task processes, enabling TLS interception of external credentials",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2761,7 +2763,7 @@
   "package": "CVE-2026-84679",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84679"
   },
   "veto_evaluated": false,
@@ -2893,7 +2895,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84638",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84638",
   "description": "automation-controller: automation-controller-container: automation-controller: instance group attachment to schedules and workflow job template nodes checks only read permission, allowing use of restricted (controlplane / other-tenant)",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2913,7 +2915,7 @@
   "package": "CVE-2026-84638",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84638"
   },
   "veto_evaluated": false,
@@ -2931,7 +2933,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84643",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84643",
   "description": "automation-controller: automation-controller-container: automation-controller: missing use_role authorization on the project signature validation credential foreign key allows a project administrator to bind and use another organization's",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2951,7 +2953,7 @@
   "package": "CVE-2026-84643",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84643"
   },
   "veto_evaluated": false,
@@ -2969,7 +2971,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84644",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84644",
   "description": "automation-controller-container: automation-controller: automation-controller: server-side request forgery via the Thycotic Secret Server external credential plugin test endpoint (caller-controlled server_url, backend executed in the",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -2989,7 +2991,7 @@
   "package": "CVE-2026-84644",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84644"
   },
   "veto_evaluated": false,
@@ -3045,7 +3047,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84680",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84680",
   "description": "automation-controller: automation-controller-container: automation-controller: organization galaxy credential attachment checks only read permission on the credential, allowing an organization admin with read-only visibility to bind and",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3065,7 +3067,7 @@
   "package": "CVE-2026-84680",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84680"
   },
   "veto_evaluated": false,
@@ -3083,7 +3085,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84684",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84684",
   "description": "automation-controller: automation-controller-container: automation-controller: constructed inventory input inventory attachment checks only read permission on the source inventory, allowing a read-only user to clone another tenant's hosts",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3103,7 +3105,7 @@
   "package": "CVE-2026-84684",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84684"
   },
   "veto_evaluated": false,
@@ -3121,7 +3123,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84686",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84686",
   "description": "automation-controller: automation-controller-container: automation-controller: notification template password fields can be decrypted by a notification-template administrator by replaying encrypted values across subfields, exposing",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3141,7 +3143,7 @@
   "package": "CVE-2026-84686",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84686"
   },
   "veto_evaluated": false,
@@ -3159,7 +3161,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84689",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84689",
   "description": "automation-controller: automation-controller-container: automation-controller: bulk job launch allows setting a workflow node's job reference to an arbitrary unified job, enabling a low-privileged user to cancel and read metadata of jobs",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3179,7 +3181,7 @@
   "package": "CVE-2026-84689",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84689"
   },
   "veto_evaluated": false,
@@ -3197,7 +3199,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84692",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84692",
   "description": "automation-controller: automation-controller-container: automation-controller: workflow job template node execute permission check bypassed by creating a node with a null unified_job_template and then patching it, allowing a single",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3217,7 +3219,7 @@
   "package": "CVE-2026-84692",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84692"
   },
   "veto_evaluated": false,
@@ -3235,7 +3237,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84703",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84703",
   "description": "automation-controller: automation-controller-container: automation-controller: execution environment credential foreign key is not use-permission checked, allowing an organization execution-environment admin to bind and disclose another",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3255,7 +3257,7 @@
   "package": "CVE-2026-84703",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84703"
   },
   "veto_evaluated": false,
@@ -3273,7 +3275,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84707",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84707",
   "description": "automation-controller: automation-controller-container: automation-controller: host_filter SmartFilter ORM traversal exposes JobEvent/AdHocCommandEvent event_data and stdout to users without permission on the job, enabling blind",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3293,7 +3295,7 @@
   "package": "CVE-2026-84707",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84707"
   },
   "veto_evaluated": false,
@@ -3311,7 +3313,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84708",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84708",
   "description": "automation-controller: automation-controller-container: automation-controller: container group pod_spec_override mints the automation-controller ServiceAccount token and mounts control-plane namespace secrets into job pods, bypassing",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3331,7 +3333,7 @@
   "package": "CVE-2026-84708",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84708"
   },
   "veto_evaluated": false,
@@ -3349,7 +3351,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84709",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84709",
   "description": "automation-controller: automation-controller: CredentialType injector validation renders attacker-supplied Jinja2 templates synchronously in the web worker, allowing uncontrolled resource consumption (denial of service) and an",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3369,7 +3371,7 @@
   "package": "CVE-2026-84709",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84709"
   },
   "veto_evaluated": false,
@@ -3387,7 +3389,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84711",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84711",
   "description": "automation-controller: automation-controller: Project scm_branch/scm_refspec argument injection into git during project sync allows arbitrary file read on the sync host (control-plane ServiceAccount token, SECRET_KEY, and DB credentials on",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -3407,7 +3409,7 @@
   "package": "CVE-2026-84711",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84711"
   },
   "veto_evaluated": false,
