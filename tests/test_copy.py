@@ -513,24 +513,30 @@ def test_the_unfurl_and_the_heading_carry_the_same_count(built):
     og_title = re.search(r'{% block og_title %}(.*?){% endblock %}', lst, re.S)
     assert og_title, "list.html has no og_title block"
 
-    def figure(expr):
-        """Which summary key the expression renders."""
-        keys = set(re.findall(r"summary\.(\w+)", expr))
-        keys |= set(re.findall(r"summary\.get\('(\w+)'\)", expr))
-        keys |= set(re.findall(r'summary\.get\("(\w+)"\)', expr))
-        return keys - {"get", "coverage"}
+    # THE FIRST FIGURE, not the set of figures. Since 2026-09-29 the heading is
+    # the count inside the front page's default window (`lead.count`), and
+    # og:description names the total as well, after it, the way the lead's own
+    # scope line does. What must agree is the number each one LEADS with.
+    fig = re.compile(r"\b(summary|lead)\.(?:get\(['\"])?(\w+)")
 
-    heading = figure(h1.group(1))
-    assert heading == {"total"}, f"the h1 renders {heading}, expected summary.total"
+    def first(expr):
+        for m in fig.finditer(expr):
+            if m.group(2) not in {"get", "coverage", "days"}:
+                return f"{m.group(1)}.{m.group(2)}"
+        return None
+
+    heading = first(h1.group(1))
+    assert heading == "lead.count", (
+        f"the h1 renders {heading}, expected lead.count: the page opens on the "
+        "default window, so that is the number a visitor sees first")
 
     for name, expr in (("og:title", og_title.group(1)),
                        ("og:description", launched_og)):
-        used = figure(expr)
-        count_keys = used - {"coverage", "pct_effective"}
-        assert count_keys == heading, (
-            f"{name} renders {sorted(count_keys)} while the h1 renders "
-            f"{sorted(heading)}. A preview and the page it previews must not "
-            "carry two different counts of the same thing.")
+        used = first(expr)
+        assert used == heading, (
+            f"{name} leads with {used} while the h1 renders {heading}. A "
+            "preview and the page it previews must not lead with two different "
+            "counts of the same thing.")
 
 
 def test_the_heading_count_is_never_rewritten_without_its_scope():
@@ -993,3 +999,38 @@ def test_a_must_row_never_ships_without_the_evidence_must_requires(built):
            and r.get("disclosure_order") in (None, "", "unmeasurable")]
     assert not bad, (
         f"{len(bad)} row(s) claim MUST on an ordering nobody measured: {bad[:3]}")
+
+
+def test_the_built_unfurl_leads_with_the_number_the_page_opens_on(built_site_launched):
+    """THE BUILT BYTES, because the template test above is where this broke.
+
+    It read the templates and was satisfied that og:title and the h1 both named
+    `summary.total`, while the page opened filtered to the last 90 days and the
+    browser rewrote the heading. A Slack unfurl on 2026-09-29 read "1,713" above a
+    page that painted "1,013".
+
+    So: the served heading, og:title and og:description all carry the count of
+    rows the default window admits, computed here from the row island the client
+    filters, and the window really does hide rows in the fixture, or this would
+    pass with the two numbers equal.
+    """
+    import json
+    html = (built_site_launched / "index.html").read_text()
+    rows = json.loads(re.search(r'<script[^>]*id="rows"[^>]*>(.*?)</script>',
+                                html, re.S).group(1))
+    window = int(re.search(r'var DEFAULT_AGE = "(\d+)-"', html).group(1))
+    shown = sum(1 for r in rows if (r.get("days_public") or 0) < window)
+    assert 0 < shown < len(rows), (
+        f"the fixture's rows are all on one side of the {window}-day window "
+        f"({shown} of {len(rows)}), so this test cannot tell the two counts apart")
+
+    want = f"{shown:,}"
+    h1 = re.search(r'<b id="n"[^>]*>([^<]*)</b>', html).group(1).strip()
+    assert h1 == want, f"the served heading reads {h1}, the default view counts {want}"
+    for prop in ("og:title", "og:description"):
+        content = re.search(rf'property="{prop}" content="([^"]*)"', html).group(1)
+        assert content.startswith(want + " "), (
+            f"{prop} opens {content[:40]!r}, not the {want} the page paints first")
+    lead = re.search(r'id="leadwindow"[^>]*>([^<]*)<', html).group(1)
+    assert f"{len(rows):,} in total" in lead, (
+        f"the served scope line {lead!r} does not name the total")

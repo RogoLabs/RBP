@@ -800,6 +800,24 @@ def _publish_keep():
     return KEEP_SNAPSHOTS
 
 
+# THE FRONT PAGE'S WINDOW, in days. The page opens filtered to IDs public for
+# under this many days, so the number a visitor sees first is the count inside
+# it, not `summary.total`. The heading, og:title and og:description all lead with
+# that count, and list.html's DEFAULT_AGE is rendered from this constant, so the
+# unfurl and the first paint are one number computed once.
+#
+# Until 2026-09-29 the unfurl led with the total: a Slack paste read "1,713"
+# above a page that opened on "1,013".
+LEAD_WINDOW_DAYS = 90
+
+
+def _lead(rows):
+    """The count the front page opens on. Same predicate as the client's
+    "Under N Days" bound: days_public < N, a missing age counted as 0."""
+    n = sum(1 for r in rows if (r.get("days_public") or 0) < LEAD_WINDOW_DAYS)
+    return {"days": LEAD_WINDOW_DAYS, "count": n, "total": len(rows)}
+
+
 def load(snap_root, data_dir):
     """Assemble the render context from the newest snapshot and the ledgers."""
     snaps = _snapshots(snap_root)
@@ -914,6 +932,7 @@ def load(snap_root, data_dir):
         "archive": None,          # filled by _write_data, read by /data
         "rows": rows,
         "summary": summary,
+        "lead": _lead(rows),
         "cnas": cnas,
         "changes": changes,
         # _gate_status' own docstring said "reported whether or not the flag is

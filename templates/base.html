@@ -90,8 +90,12 @@
    comment at the top of rbp/report.py.
 
    tests/test_copy.py asserts that this string and the h1 carry the same count
-   expression, so the two cannot drift apart again. #}
-<meta property="og:description" content="{{ summary.total | commafy }} CVE IDs are in the state the CVE Program calls Reserved but Public: reserved, referenced publicly, still unpublished. A count of a state, not of violations, and a floor: feeds reach {{ summary.coverage.pct_effective if summary.coverage and summary.coverage.get('pct_effective') is not none else 'a minority of' }}% of CNAs.">
+   expression, so the two cannot drift apart again.
+
+   AND THAT COUNT IS `lead.count` SINCE 2026-09-29, not `summary.total`: the
+   front page opens on its default window, so the total was never the number a
+   visitor saw first. The total follows it here, as it does in the lead. #}
+<meta property="og:description" content="{{ lead.count | commafy }} CVE IDs that went public in the last {{ lead.days }} days are in the state the CVE Program calls Reserved but Public: reserved, referenced publicly, still unpublished. {{ lead.total | commafy }} in all. A count of a state, not of violations, and a floor: feeds reach {{ summary.coverage.pct_effective if summary.coverage and summary.coverage.get('pct_effective') is not none else 'a minority of' }}% of CNAs.">
 {% else %}
 {# Pre-launch a paste must not carry the count at all. The gate is on promotion,
    and an unfurl in someone else's channel is promotion by any reading. #}
