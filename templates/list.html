@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% block title %}Reserved but Public CVE IDs{% endblock %}
-{% block og_title %}{{ summary.total | commafy }} reserved CVE IDs are public and unpublished{% endblock %}
+{% block og_title %}{{ lead.count | commafy }} reserved CVE IDs went public in the last {{ lead.days }} days and are still unpublished{% endblock %}
 
 {% block content %}
 {# ONE ROUTE. The lead, the source inventory, the control bar and the list are
@@ -25,7 +25,7 @@
   <div class="lead-say">
     <p class="lead-eyebrow">Reserved but Public &middot; {{ snapshot_date }}</p>
     <h1 class="cmd-count">
-      <b id="n" class="mono">{{ summary.total | commafy }}</b>
+      <b id="n" class="mono">{{ lead.count | commafy }}</b>
       <span>reserved, public, unpublished</span>
     </h1>
     {# THE SCOPE OF THE NUMBER, BESIDE THE NUMBER.
@@ -47,7 +47,9 @@
 
        Empty and hidden when nothing is hidden, so an unfiltered page carries no
        qualifier it does not need. #}
-    <p class="lead-window" id="leadwindow" hidden></p>
+    {# Served with the scope already written, so the first paint and a no-script
+       read carry the same number and the same sentence the client writes. #}
+    <p class="lead-window" id="leadwindow"{% if lead.count == lead.total %} hidden{% endif %}>{% if lead.count != lead.total %}The last {{ lead.days }} days, of {{ lead.total | commafy }} in total.{% endif %}</p>
     {# THE FLOOR, BACK ABOVE THE ROWS. The standing hedge was removed on
        2026-08-27 and NEXT.md records the cost: a reader who copies the rows
        carries them with no qualification. This is the same claim in the same
@@ -526,7 +528,9 @@
   // as well as the ones it admits, and the excluded ones are marked as excluded,
   // so the shape of what is being held back is on the page rather than described
   // by it. Clicking one clears the bound to reach those rows.
-  var DEFAULT_AGE = "90-";
+  // Rendered from site.LEAD_WINDOW_DAYS, which is also what the heading and the
+  // unfurl count, so the three cannot disagree about the window.
+  var DEFAULT_AGE = "{{ lead.days }}-";
 
   // DID THE READER CHOOSE AN AGE, or did they just arrive?
   //
@@ -1109,7 +1113,7 @@
     if (hiddenCount > 0) {
       scope.textContent = (els.age.value === DEFAULT_AGE && !els.q.value.trim()
                            && !els.src.value)
-        ? "The last 90 days, of " + num(ROWS.length) + " in total."
+        ? "The last {{ lead.days }} days, of " + num(ROWS.length) + " in total."
         : "Filtered, from " + num(ROWS.length) + " in total.";
       scope.hidden = false;
     } else {
@@ -1128,7 +1132,7 @@
     var note = $("viewnote"), hiddenN = ROWS.length - filtered.length;
     if (els.age.value === DEFAULT_AGE && !els.q.value.trim() && !els.src.value
         && hiddenN > 0) {
-      note.innerHTML = "Showing the last 90 days. <b>" +
+      note.innerHTML = "Showing the last {{ lead.days }} days. <b>" +
         num(hiddenN) + "</b> older row" + (hiddenN === 1 ? "" : "s") +
         " are not in this view, including the oldest. " +
         '<button type="button" class="linkbtn" id="showall">Show All ' +
