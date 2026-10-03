@@ -1177,9 +1177,9 @@
   "dates": {
    "ghsa": "2026-09-29",
    "osv": "2026-09-29",
-   "csaf": "2026-10-01"
+   "csaf": "2026-10-02"
   },
-  "refs": "csaf:SUSE Product Security Team\tCVE-2026-49264\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-49264.json;ghsa:GHSA-hj66-6f7g-4r5v;osv:PyPI:oauthlib",
+  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:11973-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11973-1.json;ghsa:GHSA-hj66-6f7g-4r5v;osv:PyPI:oauthlib",
   "description": "Oauthlib : Unsafe JSONP callback injection in RevocationEndpoint allows arbitrary JavaScript response generation",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1199,7 +1199,7 @@
   "package": "oauthlib",
   "ecosystem": "PyPI",
   "source_urls": {
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-49264.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11973-1.json",
    "ghsa": "https://github.com/advisories/GHSA-hj66-6f7g-4r5v",
    "osv": "https://osv.dev/list?q=CVE-2026-49264"
   },
