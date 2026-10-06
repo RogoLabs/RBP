@@ -9036,9 +9036,9 @@
    "ubuntu-osv": "2026-01-21",
    "ghsa-repos": "2026-01-21",
    "redhat": "2026-01-20",
-   "csaf": "2026-02-17"
+   "csaf": "2026-02-16"
   },
-  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:2769\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
+  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:2737\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2737.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
   "description": "A vulnerability was found in how Ceph uses Pybind, which does not implement correct certificate checking.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -9059,7 +9059,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2024-31884.html",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2737.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2024-31884",
    "ghsa-repos": "https://github.com/ceph/ceph/security/advisories/GHSA-xj9f-7g59-m4jx",
    "redhat": "https://access.redhat.com/security/cve/CVE-2024-31884",
@@ -16173,14 +16173,15 @@
   "cve_id": "CVE-2026-55480",
   "state": "RESERVED",
   "public_date": "2026-06-16",
-  "sources": "csaf,debian,ghsa-repos,ubuntu",
-  "feed_count": 4,
+  "sources": "csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
    "ubuntu": "2026-10-06",
+   "ubuntu-osv": "2026-10-06",
    "ghsa-repos": "2026-06-17",
    "csaf": "2026-06-16"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-jj94-x3qh-ffp9;ubuntu:CVE-2026-55480",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-jj94-x3qh-ffp9;ubuntu-osv:UBUNTU-CVE-2026-55480;u",
   "description": "cups",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16203,7 +16204,8 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-55480",
    "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-jj94-x3qh-ffp9",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-55480"
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-55480",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-55480"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -16212,14 +16214,15 @@
   "cve_id": "CVE-2026-55453",
   "state": "RESERVED",
   "public_date": "2026-06-16",
-  "sources": "alpine,csaf,debian,ghsa-repos,ubuntu",
-  "feed_count": 5,
+  "sources": "alpine,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "ubuntu": "2026-10-06",
+   "ubuntu-osv": "2026-10-06",
    "ghsa-repos": "2026-06-17",
    "csaf": "2026-06-16"
   },
-  "refs": "alpine:cups;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-7hqf-mfhx-7r3v;ubuntu:CVE-2026-55453",
+  "refs": "alpine:cups;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-7hqf-mfhx-7r3v;ubuntu-osv:UBUNTU-CVE-",
   "description": "cups",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -16243,7 +16246,8 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-55453",
    "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-7hqf-mfhx-7r3v",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-55453"
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-55453",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-55453"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -24322,7 +24326,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28585",
+  "cve_id": "CVE-2026-28632",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -24356,7 +24360,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28632",
+  "cve_id": "CVE-2026-28585",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -29474,14 +29478,15 @@
   "cve_id": "CVE-2026-61702",
   "state": "RESERVED",
   "public_date": "2026-07-10",
-  "sources": "alpine,csaf,debian,ghsa-repos,ubuntu",
-  "feed_count": 5,
+  "sources": "alpine,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "ubuntu": "2026-10-06",
+   "ubuntu-osv": "2026-10-06",
    "ghsa-repos": "2026-07-10",
    "csaf": "2026-07-12"
   },
-  "refs": "alpine:cups;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2282\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2282.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-gq9p-4w7m-2f5g;ubuntu:CVE-2026-61702",
+  "refs": "alpine:cups;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2282\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2282.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-gq9p-4w7m-2f5g;ubuntu-osv:UBUNTU-CVE-",
   "description": "cups",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -29505,7 +29510,8 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2282.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61702",
    "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-gq9p-4w7m-2f5g",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-61702"
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61702",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61702"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -37856,9 +37862,9 @@
    "alas": "2026-07-31",
    "ubuntu-osv": "2026-07-31",
    "redhat": "2026-07-26",
-   "csaf": "2026-07-31"
+   "csaf": "2026-10-05"
   },
-  "refs": "alas:CVE-2026-9672;alpine:php83;csaf:SUSE Product Security Team\tCVE-2026-9672\thttps://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-9672.json;debian:libgd2;redhat:CVE-2026-9672;ubuntu-osv:UBUNTU-CVE-2026-9672",
+  "refs": "alas:CVE-2026-9672;alpine:php83;csaf:SUSE Product Security Team\tRHSA-2026:75680\thttps://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_75680.json;debian:libgd2;redhat:CVE-2026-9672;ubuntu-osv:UBUNTU-CVE-2026-9672",
   "description": "php83",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -37880,7 +37886,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-9672.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-9672",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/cve-2026-9672.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_75680.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-9672",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-9672",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-9672"
@@ -42579,75 +42585,75 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28591",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 66,
-  "clock_known": true,
-  "hours_public": 1584,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 66,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28645",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 66,
-  "clock_known": true,
-  "hours_public": 1584,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 66,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-45522",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 66,
+  "clock_known": true,
+  "hours_public": 1584,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 66,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-0022",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 66,
+  "clock_known": true,
+  "hours_public": 1584,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 66,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-28591",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -42715,7 +42721,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-0022",
+  "cve_id": "CVE-2026-28645",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -58343,13 +58349,14 @@
   "cve_id": "CVE-2026-79604",
   "state": "RESERVED",
   "public_date": "2026-09-08",
-  "sources": "alpine,csaf,debian,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alpine,csaf,debian,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
+   "ubuntu": "2026-09-08",
    "ubuntu-osv": "2026-09-08",
    "csaf": "2026-09-08"
   },
-  "refs": "alpine:xen;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3248\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json;debian:xen;ubuntu-osv:UBUNTU-CVE-2026-79604",
+  "refs": "alpine:xen;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3248\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json;debian:xen;ubuntu-osv:UBUNTU-CVE-2026-79604;ubuntu:CVE-2026-79604",
   "description": "oxenstored: Unbounded accumulation of watches: Oxenstored maintains two datastructures about watches; one global trie, and one hashtable tracked per domain.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58372,6 +58379,7 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-79604",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3248.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-79604",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-79604",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-79604"
   },
   "veto_evaluated": false,
