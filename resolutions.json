@@ -5427,12 +5427,6 @@
   "CVE-2026-82987": {
    "first_public": "2026-09-24"
   },
-  "CVE-2026-82988": {
-   "first_public": "2026-09-24"
-  },
-  "CVE-2026-82989": {
-   "first_public": "2026-09-24"
-  },
   "CVE-2026-104102": {
    "first_public": "2026-07-27"
   },
@@ -20068,6 +20062,24 @@
    "first_public": "2026-09-13",
    "published": "2026-10-05",
    "days_to_publish": 22,
+   "closed_on": "2026-10-06"
+  },
+  {
+   "cve_id": "CVE-2026-82988",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-24",
+   "published": "2026-10-05",
+   "days_to_publish": 11,
+   "closed_on": "2026-10-06"
+  },
+  {
+   "cve_id": "CVE-2026-82989",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-24",
+   "published": "2026-10-05",
+   "days_to_publish": 11,
    "closed_on": "2026-10-06"
   }
  ]
