@@ -670,6 +670,74 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2023-5649",
+  "state": "RESERVED",
+  "public_date": "2023-11-07",
+  "sources": "broadcom",
+  "feed_count": 1,
+  "dates": {
+   "broadcom": "2023-11-07"
+  },
+  "refs": "broadcom:22716",
+  "description": "An Improper Input Validation vulnerability for the registered case credentials (CVE-2023-5649)",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1064,
+  "clock_known": true,
+  "hours_public": 25536,
+  "clock_origin": "advisory",
+  "advisory_date": "2023-11-07",
+  "advisory_days_public": 1064,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/22716"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2023-5648",
+  "state": "RESERVED",
+  "public_date": "2023-11-07",
+  "sources": "broadcom",
+  "feed_count": 1,
+  "dates": {
+   "broadcom": "2023-11-07"
+  },
+  "refs": "broadcom:22715",
+  "description": "Several security-related HTTP Headers were missing (CVE-2023-5648)",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 1064,
+  "clock_known": true,
+  "hours_public": 25536,
+  "clock_origin": "advisory",
+  "advisory_date": "2023-11-07",
+  "advisory_days_public": 1064,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/22715"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2023-48675",
   "state": "RESERVED",
   "public_date": "2023-11-17",
@@ -8970,7 +9038,7 @@
    "redhat": "2026-01-20",
    "csaf": "2026-02-17"
   },
-  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:2800\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2800.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
+  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:2769\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
   "description": "A vulnerability was found in how Ceph uses Pybind, which does not implement correct certificate checking.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -8991,7 +9059,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2024-31884.html",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2800.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2024-31884",
    "ghsa-repos": "https://github.com/ceph/ceph/security/advisories/GHSA-xj9f-7g59-m4jx",
    "redhat": "https://access.redhat.com/security/cve/CVE-2024-31884",
@@ -9030,6 +9098,40 @@
   "ecosystem": "",
   "source_urls": {
    "certcc": "https://www.kb.cert.org/vuls/id/481830"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2024-36297",
+  "state": "RESERVED",
+  "public_date": "2026-01-27",
+  "sources": "broadcom",
+  "feed_count": 1,
+  "dates": {
+   "broadcom": "2026-01-27"
+  },
+  "refs": "broadcom:36820",
+  "description": "Multiple Linux Security Updates applied to Brocade Fabric OS 10.0",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 252,
+  "clock_known": true,
+  "hours_public": 6048,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-01-27",
+  "advisory_days_public": 252,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/36820"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -16068,54 +16170,18 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-55453",
-  "state": "RESERVED",
-  "public_date": "2026-06-16",
-  "sources": "csaf,debian,ghsa-repos",
-  "feed_count": 3,
-  "dates": {
-   "ghsa-repos": "2026-06-17",
-   "csaf": "2026-06-16"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-7hqf-mfhx-7r3v",
-  "description": "OpenPrinting/cups repository advisory GHSA-7hqf-mfhx-7r3v",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 112,
-  "clock_known": true,
-  "hours_public": 2688,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-16",
-  "advisory_days_public": 112,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "cups",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-55453",
-   "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-7hqf-mfhx-7r3v"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-55480",
   "state": "RESERVED",
   "public_date": "2026-06-16",
-  "sources": "csaf,debian,ghsa-repos",
-  "feed_count": 3,
+  "sources": "csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 4,
   "dates": {
+   "ubuntu": "2026-10-06",
    "ghsa-repos": "2026-06-17",
    "csaf": "2026-06-16"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-jj94-x3qh-ffp9",
-  "description": "OpenPrinting/cups repository advisory GHSA-jj94-x3qh-ffp9",
+  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-jj94-x3qh-ffp9;ubuntu:CVE-2026-55480",
+  "description": "cups",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
   "days_public": 112,
@@ -16136,7 +16202,48 @@
   "source_urls": {
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-55480",
-   "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-jj94-x3qh-ffp9"
+   "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-jj94-x3qh-ffp9",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-55480"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-55453",
+  "state": "RESERVED",
+  "public_date": "2026-06-16",
+  "sources": "alpine,csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 5,
+  "dates": {
+   "ubuntu": "2026-10-06",
+   "ghsa-repos": "2026-06-17",
+   "csaf": "2026-06-16"
+  },
+  "refs": "alpine:cups;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-1968\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-7hqf-mfhx-7r3v;ubuntu:CVE-2026-55453",
+  "description": "cups",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 112,
+  "clock_known": true,
+  "hours_public": 2688,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-06-16",
+  "advisory_days_public": 112,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "cups",
+  "ecosystem": "",
+  "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-55453",
+   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-1968.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-55453",
+   "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-7hqf-mfhx-7r3v",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-55453"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -17343,12 +17450,12 @@
   "cve_id": "CVE-2026-55467",
   "state": "RESERVED",
   "public_date": "2026-06-17",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
+  "sources": "alpine,ghsa-repos",
+  "feed_count": 2,
   "dates": {
    "ghsa-repos": "2026-06-17"
   },
-  "refs": "ghsa-repos:OpenPrinting/cups\tGHSA-69qc-prxg-h2c7",
+  "refs": "alpine:cups;ghsa-repos:OpenPrinting/cups\tGHSA-69qc-prxg-h2c7",
   "description": "OpenPrinting/cups repository advisory GHSA-69qc-prxg-h2c7",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -17365,9 +17472,10 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "package": "",
+  "package": "cups",
   "ecosystem": "",
   "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-55467",
    "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-69qc-prxg-h2c7"
   },
   "veto_evaluated": false,
@@ -24214,7 +24322,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28632",
+  "cve_id": "CVE-2026-28585",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -24248,7 +24356,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28585",
+  "cve_id": "CVE-2026-28632",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -29366,14 +29474,15 @@
   "cve_id": "CVE-2026-61702",
   "state": "RESERVED",
   "public_date": "2026-07-10",
-  "sources": "csaf,debian,ghsa-repos",
-  "feed_count": 3,
+  "sources": "alpine,csaf,debian,ghsa-repos,ubuntu",
+  "feed_count": 5,
   "dates": {
+   "ubuntu": "2026-10-06",
    "ghsa-repos": "2026-07-10",
    "csaf": "2026-07-12"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2282\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2282.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-gq9p-4w7m-2f5g",
-  "description": "OpenPrinting/cups repository advisory GHSA-gq9p-4w7m-2f5g",
+  "refs": "alpine:cups;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2282\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2282.json;debian:cups;ghsa-repos:OpenPrinting/cups\tGHSA-gq9p-4w7m-2f5g;ubuntu:CVE-2026-61702",
+  "description": "cups",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
   "days_public": 88,
@@ -29392,9 +29501,11 @@
   "package": "cups",
   "ecosystem": "",
   "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-61702",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2282.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61702",
-   "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-gq9p-4w7m-2f5g"
+   "ghsa-repos": "https://github.com/OpenPrinting/cups/security/advisories/GHSA-gq9p-4w7m-2f5g",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61702"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -40068,12 +40179,13 @@
   "cve_id": "CVE-2026-5047",
   "state": "RESERVED",
   "public_date": "2026-07-28",
-  "sources": "csaf",
-  "feed_count": 1,
+  "sources": "broadcom,csaf",
+  "feed_count": 2,
   "dates": {
-   "csaf": "2026-07-28"
+   "csaf": "2026-07-28",
+   "broadcom": "2026-07-28"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2562\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json",
+  "refs": "broadcom:37933;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2562\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json",
   "description": "CVE-2026-5047",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -40093,6 +40205,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/37933",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json"
   },
   "veto_evaluated": false,
@@ -40102,12 +40215,13 @@
   "cve_id": "CVE-2026-5048",
   "state": "RESERVED",
   "public_date": "2026-07-28",
-  "sources": "csaf",
-  "feed_count": 1,
+  "sources": "broadcom,csaf",
+  "feed_count": 2,
   "dates": {
-   "csaf": "2026-07-28"
+   "csaf": "2026-07-28",
+   "broadcom": "2026-07-28"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2562\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json",
+  "refs": "broadcom:37932;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2562\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json",
   "description": "CVE-2026-5048",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -40127,6 +40241,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/37932",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json"
   },
   "veto_evaluated": false,
@@ -40136,12 +40251,13 @@
   "cve_id": "CVE-2026-5049",
   "state": "RESERVED",
   "public_date": "2026-07-28",
-  "sources": "csaf",
-  "feed_count": 1,
+  "sources": "broadcom,csaf",
+  "feed_count": 2,
   "dates": {
-   "csaf": "2026-07-28"
+   "csaf": "2026-07-28",
+   "broadcom": "2026-07-28"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2562\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json",
+  "refs": "broadcom:37931;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-2562\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json",
   "description": "CVE-2026-5049",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -40161,6 +40277,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/37931",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-2562.json"
   },
   "veto_evaluated": false,
@@ -40366,6 +40483,40 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-58348.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-5769",
+  "state": "RESERVED",
+  "public_date": "2026-07-28",
+  "sources": "broadcom",
+  "feed_count": 1,
+  "dates": {
+   "broadcom": "2026-07-28"
+  },
+  "refs": "broadcom:37934",
+  "description": "Switch discovery credentials can be seen in plain text inside sannavswapfie",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 70,
+  "clock_known": true,
+  "hours_public": 1680,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-28",
+  "advisory_days_public": 70,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/37934"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -42462,7 +42613,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-45522",
+  "cve_id": "CVE-2026-28645",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -42496,7 +42647,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28645",
+  "cve_id": "CVE-2026-45522",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -45721,9 +45872,9 @@
   "feed_count": 2,
   "dates": {
    "redhat": "2026-08-10",
-   "csaf": "2026-08-17"
+   "csaf": "2026-08-11"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:55810\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_55810.json;redhat:CVE-2026-66801",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:53530\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_53530.json;redhat:CVE-2026-66801",
   "description": "multicluster-global-hub: Cross-hub lateral movement via shared spec-topic Write ACL and spoofable CloudEvent identity",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -45743,7 +45894,7 @@
   "package": "CVE-2026-66801",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_55810.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_53530.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-66801"
   },
   "veto_evaluated": false,
@@ -47141,6 +47292,38 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-52051",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52051"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-52052",
   "state": "RESERVED",
   "public_date": "2026-08-13",
@@ -47168,6 +47351,38 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52052"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-52055",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52055"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -47333,6 +47548,70 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-52062",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52062"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-52064",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52064"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-52065",
   "state": "RESERVED",
   "public_date": "2026-08-13",
@@ -47365,6 +47644,38 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-52066",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52066"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-52067",
   "state": "RESERVED",
   "public_date": "2026-08-13",
@@ -47392,6 +47703,38 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52067"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-52069",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52069"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -47456,6 +47799,102 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52071"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-52072",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52072"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-52073",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52073"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-52075",
+  "state": "RESERVED",
+  "public_date": "2026-08-13",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:mongoose",
+  "description": "mongoose",
+  "state_verified_this_run": true,
+  "public_date_origin": "lookup",
+  "days_public": 54,
+  "clock_known": true,
+  "hours_public": 1296,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "mongoose",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52075"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -55490,7 +55929,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28605",
+  "cve_id": "CVE-2026-20499",
   "state": "RESERVED",
   "public_date": "2026-09-01",
   "sources": "samsung",
@@ -55524,7 +55963,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-20499",
+  "cve_id": "CVE-2026-28605",
   "state": "RESERVED",
   "public_date": "2026-09-01",
   "sources": "samsung",
@@ -56246,13 +56685,14 @@
   "cve_id": "CVE-2026-59346",
   "state": "RESERVED",
   "public_date": "2026-09-02",
-  "sources": "csaf,zdi",
-  "feed_count": 2,
+  "sources": "broadcom,csaf,zdi",
+  "feed_count": 3,
   "dates": {
    "csaf": "2026-09-02",
-   "zdi": "2026-09-09"
+   "zdi": "2026-09-09",
+   "broadcom": "2026-09-03"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3169\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3169.json;zdi:ZDI-26-647",
+  "refs": "broadcom:38288;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3169\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3169.json;zdi:ZDI-26-647",
   "description": "CVE-2026-59346",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56272,6 +56712,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/38288",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3169.json",
    "zdi": "https://www.zerodayinitiative.com/advisories/ZDI-26-647/"
   },
@@ -56282,12 +56723,13 @@
   "cve_id": "CVE-2026-59347",
   "state": "RESERVED",
   "public_date": "2026-09-02",
-  "sources": "csaf",
-  "feed_count": 1,
+  "sources": "broadcom,csaf",
+  "feed_count": 2,
   "dates": {
-   "csaf": "2026-09-02"
+   "csaf": "2026-09-02",
+   "broadcom": "2026-09-03"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3169\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3169.json",
+  "refs": "broadcom:38288;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-3169\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3169.json",
   "description": "CVE-2026-59347",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -56307,6 +56749,7 @@
   "package": "",
   "ecosystem": "",
   "source_urls": {
+   "broadcom": "https://support.broadcom.com/web/ecx/support-content-notification/-/external/content/SecurityAdvisories/0/38288",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3169.json"
   },
   "veto_evaluated": false,
@@ -60525,10 +60968,11 @@
   "cve_id": "CVE-2026-61642",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "alas,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17",
    "ghsa-repos": "2026-09-12",
    "csaf": "2026-09-13"
@@ -60557,6 +61001,7 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-61642",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-537g-4gfh-w7m6",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-61642",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-61642"
   },
   "veto_evaluated": false,
@@ -60566,10 +61011,11 @@
   "cve_id": "CVE-2026-62846",
   "state": "RESERVED",
   "public_date": "2026-09-12",
-  "sources": "alas,csaf,debian,ghsa-repos,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,csaf,debian,ghsa-repos,ubuntu,ubuntu-osv",
+  "feed_count": 6,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17",
    "ghsa-repos": "2026-09-12",
    "csaf": "2026-09-13"
@@ -60598,6 +61044,7 @@
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-3329.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-62846",
    "ghsa-repos": "https://github.com/squid-cache/squid/security/advisories/GHSA-9vhr-vcrv-x837",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-62846",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-62846"
   },
   "veto_evaluated": false,
@@ -61627,14 +62074,15 @@
   "cve_id": "CVE-2026-89085",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "alas,csaf,debian,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,csaf,debian,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17",
    "csaf": "2026-09-29"
   },
-  "refs": "alas:CVE-2026-89085;csaf:SUSE Product Security Team\topenSUSE-SU-2026:11924-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11924-1.json;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89085",
+  "refs": "alas:CVE-2026-89085;csaf:SUSE Product Security Team\topenSUSE-SU-2026:11924-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11924-1.json;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89085;ubuntu:CVE-2026-89085",
   "description": "heap buffer overflow in _init_fats / fat_table_read",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -61657,6 +62105,7 @@
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-89085.html",
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_11924-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-89085",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-89085",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-89085"
   },
   "veto_evaluated": false,
@@ -61666,13 +62115,14 @@
   "cve_id": "CVE-2026-89088",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-09-18",
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "alas:CVE-2026-89088;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89088",
+  "refs": "alas:CVE-2026-89088;debian:parted;ubuntu-osv:UBUNTU-CVE-2026-89088;ubuntu:CVE-2026-89088",
   "description": "heap buffer overflow in duplicate_legacy_root_dir",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -61694,6 +62144,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-89088.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-89088",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-89088",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-89088"
   },
   "veto_evaluated": false,
@@ -61703,12 +62154,13 @@
   "cve_id": "CVE-2026-82374",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82374",
+  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82374;ubuntu:CVE-2026-82374",
   "description": "znc",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -61729,6 +62181,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82374",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-82374",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-82374"
   },
   "veto_evaluated": false,
@@ -61738,12 +62191,13 @@
   "cve_id": "CVE-2026-82373",
   "state": "RESERVED",
   "public_date": "2026-09-17",
-  "sources": "debian,ubuntu-osv",
-  "feed_count": 2,
+  "sources": "debian,ubuntu,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
+   "ubuntu": "2026-09-17",
    "ubuntu-osv": "2026-09-17"
   },
-  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82373",
+  "refs": "debian:znc;ubuntu-osv:UBUNTU-CVE-2026-82373;ubuntu:CVE-2026-82373",
   "description": "znc",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -61764,6 +62218,7 @@
   "ecosystem": "",
   "source_urls": {
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-82373",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-82373",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-82373"
   },
   "veto_evaluated": false,
@@ -63384,7 +63839,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84679",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84679",
   "description": "automation-controller: automation-controller-container: automation-controller: the AWX_TASK_ENV setting applies arbitrary environment variables to the control-plane web and task processes, enabling TLS interception of external credentials",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -63404,7 +63859,7 @@
   "package": "CVE-2026-84679",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84679"
   },
   "veto_evaluated": false,
