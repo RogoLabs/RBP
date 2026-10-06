@@ -1,0 +1,112 @@
+{
+ "baseline": {
+  "effective_n": 261,
+  "feeds": [
+   "acronis",
+   "alas",
+   "alpine",
+   "arch",
+   "certcc",
+   "csaf",
+   "debian",
+   "ghsa",
+   "ghsa-repos",
+   "jvn",
+   "mozilla",
+   "msrc",
+   "osv",
+   "redhat",
+   "samsung",
+   "ubuntu",
+   "ubuntu-osv",
+   "zdi"
+  ],
+  "scored_at": "2026-09-08T18:58:56+00:00"
+ },
+ "bytes": 2441306,
+ "cnas_effective_alone": 29,
+ "cnas_new_effective": 1,
+ "cnas_new_effective_names": [
+  "ca"
+ ],
+ "cnas_reached": 53,
+ "combine": "union",
+ "disclosure": {
+  "dated_n": 1256,
+  "lead_examples": [
+   "CVE-2024-5461",
+   "CVE-2024-5462",
+   "CVE-2023-40289",
+   "CVE-2023-40284",
+   "CVE-2023-40287"
+  ],
+  "lead_max_days": 200,
+  "lead_median_days": 2,
+  "lead_n": 152,
+  "lead_pct": 12.1,
+  "mirror_n": 1104,
+  "undated_n": 5,
+  "unpublished_examples": [
+   "CVE-2023-5648",
+   "CVE-2023-5649",
+   "CVE-2024-36297",
+   "CVE-2025-228869",
+   "CVE-2025-228870"
+  ],
+  "unpublished_n": 36
+ },
+ "feed": "broadcom",
+ "health": {
+  "capped": false,
+  "detail": "1297 ids from 4907 advisories; 2833 of 4907 advisories list no id inline (floor)",
+  "ok": true,
+  "rows": 1297,
+  "status": "ok",
+  "truncated": false
+ },
+ "ids": 1297,
+ "ids_new": 162,
+ "live": {
+  "already_merged": false,
+  "cnas_new_effective": 1,
+  "cnas_new_effective_names": [
+   "ca"
+  ],
+  "effective_n": 271,
+  "fetched": "2026-09-28",
+  "generated_at": "2026-09-28T14:16:52+00:00",
+  "ids_not_in_baseline": 162,
+  "ids_short": 32337,
+  "pinned": true,
+  "reason": "an upper bound: this baseline is 32,337 rows colder than the live run at alas, alpine, certcc, csaf, debian, ghsa, ghsa-repos, jvn, mozilla, msrc, osv, redhat, ubuntu-osv, zdi",
+  "rows_short": {
+   "alas": 1874,
+   "alpine": 78,
+   "certcc": 13,
+   "csaf": 18827,
+   "debian": 3224,
+   "ghsa": 614,
+   "ghsa-repos": 380,
+   "jvn": 395,
+   "mozilla": 78,
+   "msrc": 1436,
+   "osv": 861,
+   "redhat": 1606,
+   "ubuntu-osv": 2838,
+   "zdi": 113
+  },
+  "source_commit": "84e62c07b2e6",
+  "upper_bound": true
+ },
+ "scored_at": "2026-10-06T16:03:51+00:00",
+ "stability": null,
+ "verdict": "detecting",
+ "verdict_reason": "1 marginal CNA(s) and 152 lead / 36 unpublished references",
+ "wall_seconds": 1.0,
+ "years": [
+  2023,
+  2024,
+  2025,
+  2026
+ ]
+}

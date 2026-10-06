@@ -60,9 +60,9 @@ drains, not what the site can see. SUSE, Red Hat's CSAF endpoint and CERT-Bund
 each hold more than one budget reads, so their counts climb over several runs
 rather than jumping. That is the drain working, and it needs nothing.
 
-**Eighteen feeds, and three of them are there for a different reason.** `zdi` and
-`certcc` were both merged 2026-09-08 and `acronis` on 2026-09-16, and they are the
-sources admitted on DETECTION rather than on coverage. Coverage stopped being the
+**Nineteen feeds, and four of them are there for a different reason.** `zdi` and
+`certcc` were both merged 2026-09-08, `acronis` on 2026-09-16 and `broadcom` on
+2026-10-06, and they are the sources admitted on DETECTION rather than on coverage. Coverage stopped being the
 binding constraint: the gate stands at 49 of 50, the one miss (`huawei`) publishes
 a CSAF catalogue no unauthenticated client can read, and the 120 reachable CNAs
 still short of the floor are all sub-160-volume, one parser each. What the site is
@@ -80,6 +80,14 @@ short of is rows.
   READER reported an id the site could not see, rather than because the harness
   surfaced it: FEEDS.md had the CNA in its residual-gap table at tenth by volume
   since 2026-09-06.
+- **`broadcom`** is the second reader report. One POST returns the whole
+  support-portal list (4,907 advisories, 2.4 MB, about a second) for VMware,
+  Brocade, Symantec and the CA mainframe line. 1,297 in-window ids, ONE marginal
+  CNA (`ca`), 152 of 1,256 dated references leading publication: `detecting`.
+  21 of its ids were RESERVED on 2026-10-06 and 16 of those were in no feed,
+  twelve of them Brocade ASCG ids from 2026-10-02. It reads only the ids listed
+  inline: 2,833 advisories say "See CVE list in advisory" or nothing, and their
+  pages are unread. The health line carries that count on every run.
 
 The general rule the first two produced, in FEEDS.md's two "MEASURED AND MERGED
 2026-09-08" blocks: **ask what makes a source publish.** EUVD publishes because a

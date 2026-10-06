@@ -278,6 +278,12 @@ _ORIGIN_KIND = {
     # `owning_cna` is REDACTED for exactly the reserved population, so the
     # assignment is an inference. See the block comment on `feeds.feed_acronis`.
     "acronis": "advisory",
+    # A Broadcom support-portal advisory has its own notification id, its own
+    # page and its own `published` date, the same shape as `acronis` above and
+    # classified the same way. NOT in OWNER_FEEDS, for the `acronis` reason and
+    # one more: most ids it lists are third-party ids a Broadcom product ships,
+    # so the vendor is not the assigner for most rows. See `feeds.feed_broadcom`.
+    "broadcom": "advisory",
     # A JVN advisory is coordinated disclosure with its own JVNDB identifier, its
     # own page and its own `dcterms:issued` date, which is the shape 4.5.1.4 and
     # 4.5.1.6 mean by Publicly Disclosing. It is NOT the iPedia mirror: the

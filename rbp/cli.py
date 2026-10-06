@@ -94,8 +94,15 @@ from . import (cvelist, feeds, classify, report, coverage,
 # it reached the site only through a national CERT republishing it, and that
 # republisher is prompt on what it carries (0 and 2 days on the two ids we had)
 # and carries only part of it: 88 of 147 in-window ids were in no merged feed.
+#
+# `broadcom` added 2026-10-06 on `feedlab/broadcom.json`: 1,297 in-window ids,
+# ONE marginal CNA (`ca`), 152 lead references (12.1%), in 1 request, 2.4 MB and
+# ~1s. Verdict DETECTING. Reported by a reader, like `acronis`, and for the same
+# reason: no CSAF, so the vendor reached the site only through CERT-Bund. 16 of
+# its 21 reserved ids were in no feed on the day it was added. One request
+# reaches four CNAs (`vmware`, `brocade`, `ca`, `symantec`).
 _WEEKLY = ("alas,ubuntu,ubuntu-osv,debian,ghsa,ghsa-repos,redhat,alpine,osv,"
-           "mozilla,arch,csaf,msrc,samsung,jvn,zdi,certcc,acronis")
+           "mozilla,arch,csaf,msrc,samsung,jvn,zdi,certcc,acronis,broadcom")
 PROFILES = {
     "weekly": _WEEKLY,
     # ONE STRING, REFERENCED TWICE, not two identical literals.
