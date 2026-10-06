@@ -939,16 +939,27 @@ def _count_bytes(n):
         FETCH_BYTES["total"] += n
 
 
-def _get(url, timeout=90, retries=3, headers=None):
+def _get(url, timeout=90, retries=3, headers=None, body=None):
+    """GET a JSON document, or POST `body` as JSON and read one back.
+
+    `body` exists for `broadcom`, whose advisory list answers only a POST. It
+    goes through here rather than a fourth helper so the byte count and the URL
+    guard stay in one place.
+    """
     if not _url_ok(url):
         raise ValueError(f"blocked non-https/internal URL: {url}")
     h = dict(UA)
     if headers:
         h.update(headers)
+    data = None
+    if body is not None:
+        data = json.dumps(body).encode()
+        h["Content-Type"] = "application/json"
     last = None
     for i in range(retries):
         try:
-            with _OPENER.open(urllib.request.Request(url, headers=h), timeout=timeout) as r:
+            with _OPENER.open(urllib.request.Request(url, data=data, headers=h),
+                              timeout=timeout) as r:
                 raw = r.read(MAX_BYTES)
                 _count_bytes(len(raw))
                 return json.loads(raw), getattr(r, "status", 200), dict(r.headers)
@@ -4486,6 +4497,147 @@ def feed_acronis(years):
     return out
 
 
+BROADCOM_API = ("https://support.broadcom.com/web/ecx/security-advisory/-/"
+                "securityadvisory/getSecurityAdvisoryList")
+BROADCOM_PAGE_URL = ("https://support.broadcom.com/web/ecx/support-content-"
+                     "notification/-/external/content/SecurityAdvisories/0/{}")
+# One page, asked for whole. The catalogue was 4,907 advisories on 2026-10-06
+# and the endpoint answered pageSize 5000 in under a second, so 10,000 is a
+# runaway guard: a full page back means the catalogue outgrew the request and
+# the health line says TRUNCATED rather than ok.
+BROADCOM_PAGE = 10_000
+_BROADCOM_CVE_RE = re.compile(r"CVE-\d{4}-\d{4,}")
+
+
+def _broadcom_date(s):
+    """'06 October 2026' to '2026-10-06', locale-independently. '' on failure."""
+    m = re.match(r"(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})", s or "")
+    if not m:
+        return ""
+    mon = _MONTHS.get(m.group(2).lower())
+    if not mon:
+        return ""
+    try:
+        return dt.date(int(m.group(3)), mon, int(m.group(1))).isoformat()
+    except ValueError:
+        return ""
+
+
+# ADDED 2026-10-06 on a reader's report of VMSA-2026-0007 (CVE-2026-59346 and
+# CVE-2026-59347), the same route `acronis` arrived by. Both ids were already on
+# the site, but only through CERT-Bund's CSAF, and Broadcom serves no CSAF of
+# its own: `support.broadcom.com/.well-known/csaf/provider-metadata.json` 404s
+# (feedlab `_candidates.json`, and again 2026-10-06).
+#
+# ONE VENDOR, FOUR CNAS. The portal carries VMware (`VCDSA`, `VTDSA`, ...),
+# Brocade (`BSNSA`), the mainframe line that was CA (`MFDSA`) and Symantec
+# (`SYMSA`), so one request reaches four roster entries: `vmware`, `brocade`,
+# `ca` and `symantec`. That is the difference from `acronis`, which reached one.
+#
+# WHAT THE LIST CARRIES, measured 2026-10-06: 4,907 advisories naming 4,100
+# distinct ids in `affectedCve`, 1,297 of them in the four-year window. 21 of
+# those were RESERVED at CVE.org that day. 5 were already on the site through
+# `csaf` (VMSA-2026-0007's two, and SANnav CVE-2026-5047 to 5049); 16 were in
+# no feed: twelve Brocade ASCG ids from 2026-10-02, SANnav CVE-2026-5769
+# (2026-07-28), CVE-2024-36297 (a Fabric OS update, 2026-01-27) and
+# CVE-2023-5648 and 5649 (2023-11-07). A first count that checked only 2025 and
+# 2026 ids found 13, and missed the three oldest.
+#
+# AND WHAT IT DOES NOT, which is a floor and is said so on every run. 2,833 of
+# the 4,907 list no id inline: 1,093 say "See CVE list in advisory", 1,466 are
+# null or empty, and the rest are "N/A", "None", "Multiple", misspellings of
+# those, and one truncated id. By prefix that is 1,353 VMware Tanzu (`VTDSA`,
+# mostly product-release notices listing the third-party ids a build picked
+# up), 801 mainframe (`MFDSA`), 460 Symantec (`SYMSA`) and 41 Brocade. The ids
+# are on each advisory's own page, which is server-rendered, so a later change
+# can read them. This one does not: all 13 ids above are listed inline, and a
+# page fetch per advisory is 2,833 requests where this is one. The count goes
+# in the health detail so the gap stays visible.
+#
+# A ROLLING ADVISORY IS THE TRAP. `BSNSA24998`, "Brocade ASCG Vulnerability
+# Disclosures", was first published 2025-01-08, updated 2026-10-05, and lists
+# its ids as "Multiple". The twelve ASCG ids are on its page, but each also has
+# an advisory of its own (38378 to 38393) with the id inline and its own
+# 2026-10-02 date. Reading the rolling page would date all twelve 2025-01-08,
+# twenty months before they were public.
+#
+# An id listed by several advisories is kept at its EARLIEST `published`, which
+# is when it was first public here. The list is ordered by `updated`, so
+# first-seen would date a third-party id by whichever product last shipped it.
+#
+# NOT in `clock.OWNER_FEEDS`, on the reasoning in the block comment on
+# `feed_acronis`, and with more reason: most ids here are third-party (OpenSSL,
+# curl, the kernel) that a Broadcom product ships, so the vendor is not the
+# assigner for most rows.
+def feed_broadcom(years):
+    """Broadcom's support-portal advisory list, read through its JSON endpoint.
+
+    One POST for the whole catalogue, ~2.4 MB, about a second as of 2026-10-06.
+    See the block comment above for why, what it yields, and what it misses.
+
+    `published` is the advisory's own date, so `clock` classifies the feed as an
+    advisory, like `acronis`.
+    """
+    body = {"pageNumber": 0, "pageSize": BROADCOM_PAGE, "searchVal": "",
+            "segment": "", "sortInfo": {"column": "", "order": ""}}
+    try:
+        data, status, _ = _get(BROADCOM_API, timeout=120, body=body)
+        if data is None:
+            raise RuntimeError(f"list answered {status}")
+        if not data.get("success"):
+            raise RuntimeError("list answered success=false")
+        items = (data.get("data") or {}).get("list")
+        if not isinstance(items, list):
+            raise RuntimeError("no data.list in the response")
+    except Exception as e:
+        print(f"  [broadcom] list fetch failed: {e}", file=sys.stderr)
+        record_feed("broadcom", FAILED, f"list fetch failed: {str(e)[:120]}",
+                    rows=0)
+        return []
+
+    best, no_ids = {}, 0
+    for it in items:
+        cids = _BROADCOM_CVE_RE.findall(it.get("affectedCve") or "")
+        if not cids:
+            no_ids += 1
+            continue
+        date = _broadcom_date(it.get("published"))
+        nid = it.get("notificationId")
+        prod = (it.get("supportProducts") or "").rstrip(". ")[:120]
+        for c in cids:
+            if _year(c) not in years:
+                continue
+            row = {"cve_id": c, "source": "broadcom",
+                   "source_ref": str(nid) if nid is not None else c,
+                   "public_date": date, "product": prod,
+                   "description": (it.get("title") or "")[:400]}
+            have = best.get(c)
+            # Earliest dated advisory wins; an undated one never displaces a
+            # dated one. See the block comment.
+            if (have is None or (date and (not have["public_date"]
+                                           or date < have["public_date"]))):
+                best[c] = row
+    out = list(best.values())
+
+    floor = f"; {no_ids} of {len(items)} advisories list no id inline (floor)"
+    if len(items) >= BROADCOM_PAGE:
+        record_feed("broadcom", TRUNCATED,
+                    f"a full page of {BROADCOM_PAGE} came back, so the catalogue "
+                    f"may be larger; {len(out)} ids{floor}", rows=len(out))
+        return out
+    # Advisories read and nothing matched is a shape change, not a quiet week:
+    # 2,075 of 4,907 carried an id on the day this was written.
+    if not out:
+        record_feed("broadcom", FAILED,
+                    f"{len(items)} advisories read and no CVE id matched; the "
+                    f"`affectedCve` field may have changed{floor}", rows=0)
+        return out
+    record_feed("broadcom", OK,
+                f"{len(out)} ids from {len(items)} advisories{floor}",
+                rows=len(out))
+    return out
+
+
 ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             "ghsa": feed_ghsa, "ghsa-repos": feed_ghsa_repos,
             "redhat": feed_redhat, "alpine": feed_alpine,
@@ -4507,7 +4659,9 @@ ADAPTERS = {"alas": feed_alas, "ubuntu": feed_ubuntu, "debian": feed_debian,
             # Same standing as `oss-security` above: in the table so
             # `feedlab.fetch` can measure it, out of `cli._WEEKLY` until its
             # scorecard says it clears. See the block comment on `feed_acronis`.
-            "acronis": feed_acronis}
+            "acronis": feed_acronis,
+            # Merged 2026-10-06, in `cli._WEEKLY`. See `feed_broadcom`.
+            "broadcom": feed_broadcom}
 
 
 # How many adapters download at once. A ceiling on concurrent fetches, not a

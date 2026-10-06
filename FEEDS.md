@@ -1763,6 +1763,68 @@ Each carries multiple CNAs per fetch, which is what makes them worth writing.
 > the first one on an inference is the wrong way to acquire one. That is a separate
 > change with its own measurement.
 
+> ### MERGED 2026-10-06. `broadcom`, the second reader report, and four CNAs off one request.
+>
+> `broadcom` is in the profile. `feedlab/broadcom.json` written by `feedlab score`
+> against the eighteen-feed baseline, which then went to nineteen by
+> `baseline --add broadcom`. `feedlab.PENDING_FIRST_RUN` carries the name until the
+> first live run puts it in the pin.
+>
+> **How it arrived.** A reader pointed at VMSA-2026-0007 (CVE-2026-59346 and
+> CVE-2026-59347). Both ids were already on the site, through `csaf` only, which is
+> CERT-Bund republishing the vendor. Broadcom serves no CSAF:
+> `support.broadcom.com/.well-known/csaf/provider-metadata.json` is a 404 in
+> `_candidates.json` and was again on 2026-10-06. That is the `acronis` shape, and
+> the `acronis` lesson held: the republisher was prompt on what it carried and did
+> not carry all of it.
+>
+> **The source.** The portal's advisory search is backed by an unauthenticated JSON
+> endpoint (`POST .../securityadvisory/getSecurityAdvisoryList`) that answers the
+> whole catalogue in one page: 4,907 advisories, 2.4 MB, about a second. It covers
+> VMware, Brocade, Symantec and the mainframe line that was CA, so one request
+> reaches four roster CNAs (`vmware`, `brocade`, `ca`, `symantec`).
+>
+> **The scorecard, and it is `DETECTING`:**
+>
+> | | |
+> |---|---:|
+> | ids, in window | 1,297 (162 not already seen) |
+> | `cnas_reached` | 53 |
+> | `cnas_new_effective` | **1** (`ca`), local and live, an upper bound |
+> | disclosure lead | **152 of 1,256 dated refs (12.1%)**, median 2d, max 200d |
+> | unpublished, per the card | 36, against the 2026-09-06 corpus |
+> | wall / bytes | 1.0s / 2.4 MB |
+>
+> **The card's 36 is not the number of reserved ids.** `unpublished` is measured
+> against the local corpus, which was a month old. Checked at CVE Services on
+> 2026-10-06: 21 RESERVED, 12 published since the corpus, and 3
+> (`CVE-2025-228869` to `228871`) unknown to CVE Services. Of the 21, **5 were
+> already on the site** through `csaf` and **16 were in no feed**: twelve Brocade
+> ASCG ids published 2026-10-02, SANnav CVE-2026-5769 (2026-07-28), CVE-2024-36297
+> (2026-01-27) and CVE-2023-5648 and 5649 (2023-11-07). A first pass that checked
+> only 2025 and 2026 ids found 13 and missed the three oldest.
+>
+> **The rolling-advisory trap.** `BSNSA24998`, "Brocade ASCG Vulnerability
+> Disclosures", was first published 2025-01-08 and updated 2026-10-05. Its list row
+> says only "Multiple". The twelve ASCG ids are on its page, and each also has an
+> advisory of its own with the id inline and a 2026-10-02 date. Reading the rolling
+> page would have dated all twelve twenty months before they were public. The
+> adapter reads the per-id advisories, and an id listed by several advisories keeps
+> its EARLIEST date, because the list is ordered by `updated` and first-seen would
+> date a third-party id by the last product to ship it.
+>
+> **What it does not read, and it is a floor.** 2,833 of the 4,907 advisories list
+> no id inline: 1,093 say "See CVE list in advisory" and 1,466 are null or empty.
+> By prefix that is 1,353 VMware Tanzu, 801 mainframe, 460 Symantec and 41 Brocade.
+> The ids are on each advisory's server-rendered page. Reading them is 2,833
+> requests where this is one, and all 16 ids above were listed inline, so it is
+> left for a separate change with its own scorecard. The count is in the health
+> detail on every run so the gap stays visible.
+>
+> **NOT in `clock.OWNER_FEEDS`**, for the `acronis` reason and a stronger one: most
+> ids this vendor lists are third-party ids its products ship (OpenSSL, curl, the
+> kernel), so it is not the assigner for most rows.
+
 **The Android bulletin parser was cancelled by measurement, and that is the whole argument
 for the harness.** It was the top row of this table on the first draft, worth an estimated
 4 to 6 CNAs, and it needed an HTML scraper walking a monthly index whose dated URL already

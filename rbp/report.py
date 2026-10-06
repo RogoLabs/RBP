@@ -99,6 +99,15 @@ def _derive_meta(row):
                         if r.startswith("acronis:")), "")
             return (f"https://security-advisory.acronis.com/advisories/{sec}"
                     if sec.startswith("SEC-") else "")
+        if s == "broadcom":
+            # The advisory's own page. refs carry "broadcom:<notificationId>",
+            # all digits, and anything else builds no link rather than a link
+            # to the portal's search page.
+            nid = next((r.split(":", 1)[1] for r in refs
+                        if r.startswith("broadcom:")), "")
+            return ("https://support.broadcom.com/web/ecx/support-content-"
+                    "notification/-/external/content/SecurityAdvisories/0/"
+                    f"{nid}" if nid.isdigit() else "")
         if s == "samsung":
             # F3. `samsung` was the only adapter with rows and no branch here,
             # so 65 of 1,691 rows on the 2026-08-27 snapshot carried

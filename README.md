@@ -42,10 +42,10 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
 1. **Corpus.** The full CVE List (`cvelistV5`, ~365k records) is downloaded and
    indexed to parquet. It contains zero `RESERVED` records, which is the whole
    problem: the reserved population is invisible in the bulk data.
-2. **Feeds.** 18 public advisory sources are read for CVE IDs
-   (`acronis`, `alas`, `alpine`, `arch`, `certcc`, `csaf`, `debian`, `ghsa`,
-   `ghsa-repos`, `jvn`, `mozilla`, `msrc`, `osv`, `redhat`, `samsung`, `ubuntu`,
-   `ubuntu-osv`, `zdi`). `ghsa-repos` polls
+2. **Feeds.** 19 public advisory sources are read for CVE IDs
+   (`acronis`, `alas`, `alpine`, `arch`, `broadcom`, `certcc`, `csaf`, `debian`,
+   `ghsa`, `ghsa-repos`, `jvn`, `mozilla`, `msrc`, `osv`, `redhat`, `samsung`,
+   `ubuntu`, `ubuntu-osv`, `zdi`). `ghsa-repos` polls
    repository security advisories one repo at a time, because an advisory with no
    package ecosystem never enters GitHub's advisory database and no page of the
    global endpoint can return it. `ubuntu-osv` reads Canonical's OSV tarball on
@@ -62,7 +62,10 @@ ensure corpus  ->  gather feeds  ->  classify  ->  report  ->  build site  ->  p
    reader reported an ID the site could not see: the vendor publishes no CSAF, so
    the only prior route to its advisories was a national CERT republishing them,
    which is prompt on what it carries and carries only part of it. 88 of the
-   feed's 147 in-window IDs were in no other source.
+   feed's 147 in-window IDs were in no other source. `broadcom` arrived the same
+   way on 2026-10-06: one request reads the support-portal list for VMware,
+   Brocade, Symantec and the CA mainframe line, and 16 of the 21 reserved IDs it
+   listed that day were in no other feed.
 3. **Classify.** Every referenced ID is checked against the CVE Services
    reservation endpoint, which returns the true state for any ID. `RESERVED` plus
    a public reference is an RBP.
