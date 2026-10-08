@@ -1,0 +1,20 @@
+[
+ {
+  "cve_id": "CVE-2026-102488",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-09-29",
+  "published": "2026-10-08",
+  "days_to_publish": 9,
+  "closed_on": "2026-10-08"
+ },
+ {
+  "cve_id": "CVE-2023-5648",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2023-11-07",
+  "published": "2026-10-08",
+  "days_to_publish": 1066,
+  "closed_on": "2026-10-08"
+ }
+]
