@@ -353,13 +353,14 @@
   "cve_id": "CVE-2026-84790",
   "state": "RESERVED",
   "public_date": "2026-10-08",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-10-09",
+   "ubuntu": "2026-10-08",
    "ubuntu-osv": "2026-10-08"
   },
-  "refs": "alas:CVE-2026-84790;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-84790",
+  "refs": "alas:CVE-2026-84790;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-84790;ubuntu:CVE-2026-84790",
   "description": "When using the OpenSSL library, we escaped embedded null-bytes in a certificate's subject in x509_get_subject(), but in extract_x509_field_ssl(), we copied any null-bytes that are contained in the field value.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -381,6 +382,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-84790.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-84790",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-84790",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-84790"
   },
   "veto_evaluated": false,
@@ -568,13 +570,14 @@
   "cve_id": "CVE-2026-88964",
   "state": "RESERVED",
   "public_date": "2026-10-08",
-  "sources": "alas,debian,ubuntu-osv",
-  "feed_count": 3,
+  "sources": "alas,debian,ubuntu,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-10-09",
+   "ubuntu": "2026-10-08",
    "ubuntu-osv": "2026-10-08"
   },
-  "refs": "alas:CVE-2026-88964;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-88964",
+  "refs": "alas:CVE-2026-88964;debian:openvpn;ubuntu-osv:UBUNTU-CVE-2026-88964;ubuntu:CVE-2026-88964",
   "description": "domain_search_list_len is unsigned, and the post-decrement runs on the final test too.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -596,6 +599,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-88964.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-88964",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-88964",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-88964"
   },
   "veto_evaluated": false,
@@ -607,14 +611,13 @@
   "cve_id": "CVE-2026-66020",
   "state": "RESERVED",
   "public_date": "2026-10-05",
-  "sources": "alas,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alas,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
    "alas": "2026-10-07",
-   "ubuntu": "2026-10-05",
    "ubuntu-osv": "2026-10-05"
   },
-  "refs": "alas:CVE-2026-66020;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-66020;ubuntu:CVE-2026-66020",
+  "refs": "alas:CVE-2026-66020;debian:qemu;ubuntu-osv:UBUNTU-CVE-2026-66020",
   "description": "virtio-gpu: disable blob scanouts on mapping cleanup",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -636,7 +639,6 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-66020.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-66020",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-66020",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-66020"
   },
   "veto_evaluated": false,
@@ -1022,6 +1024,42 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/anthropics/claude-code/security/advisories/GHSA-pq7j-f95f-qfcv"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-86006",
+  "state": "RESERVED",
+  "public_date": "2026-10-11",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-10-11"
+  },
+  "refs": "ghsa-repos:apolloconfig/apollo\tGHSA-hc48-gfrw-vp96",
+  "description": "apolloconfig/apollo repository advisory GHSA-hc48-gfrw-vp96",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-11",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/apolloconfig/apollo/security/advisories/GHSA-hc48-gfrw-vp96"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
