@@ -90,16 +90,6 @@
    "k": 3,
    "on": "2026-08-22"
   },
-  "CVE-2026-55786": {
-   "tier": "block-corroborated",
-   "k": 3,
-   "on": "2026-08-22"
-  },
-  "CVE-2026-55787": {
-   "tier": "block-corroborated",
-   "k": 3,
-   "on": "2026-08-22"
-  },
   "CVE-2026-46487": {
    "tier": "block",
    "k": 3,
