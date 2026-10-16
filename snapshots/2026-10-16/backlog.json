@@ -8886,9 +8886,9 @@
    "ubuntu-osv": "2026-01-21",
    "ghsa-repos": "2026-01-21",
    "redhat": "2026-01-20",
-   "csaf": "2026-01-29"
+   "csaf": "2026-02-17"
   },
-  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:1536\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_1536.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
+  "refs": "alas:CVE-2024-31884;csaf:Red Hat Product Security\tRHSA-2026:2769\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json;debian:ceph;ghsa-repos:ceph/ceph\tGHSA-xj9f-7g59-m4jx;redhat:CVE-2024-31884;ubuntu-osv:UBUNTU-CVE-2024",
   "description": "A vulnerability was found in how Ceph uses Pybind, which does not implement correct certificate checking.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -8909,7 +8909,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2024-31884.html",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_1536.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_2769.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2024-31884",
    "ghsa-repos": "https://github.com/ceph/ceph/security/advisories/GHSA-xj9f-7g59-m4jx",
    "redhat": "https://access.redhat.com/security/cve/CVE-2024-31884",
@@ -15115,40 +15115,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-55796",
-  "state": "RESERVED",
-  "public_date": "2026-06-16",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-06-16"
-  },
-  "refs": "ghsa-repos:frappe/hrms\tGHSA-c32r-q985-64xr",
-  "description": "frappe/hrms repository advisory GHSA-c32r-q985-64xr",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 122,
-  "clock_known": true,
-  "hours_public": 2928,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-16",
-  "advisory_days_public": 122,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/frappe/hrms/security/advisories/GHSA-c32r-q985-64xr"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-54238",
   "state": "RESERVED",
   "public_date": "2026-06-16",
@@ -16860,176 +16826,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/HappySeaFox/sail/security/advisories/GHSA-5g8g-g347-84m8"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-59967",
-  "state": "RESERVED",
-  "public_date": "2026-06-21",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-06-21"
-  },
-  "refs": "ghsa-repos:TandoorRecipes/recipes\tGHSA-4vw7-c646-g23w",
-  "description": "TandoorRecipes/recipes repository advisory GHSA-4vw7-c646-g23w",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 117,
-  "clock_known": true,
-  "hours_public": 2808,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-21",
-  "advisory_days_public": 117,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/TandoorRecipes/recipes/security/advisories/GHSA-4vw7-c646-g23w"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-59970",
-  "state": "RESERVED",
-  "public_date": "2026-06-21",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-06-21"
-  },
-  "refs": "ghsa-repos:TandoorRecipes/recipes\tGHSA-wq4h-2r8x-cv65",
-  "description": "TandoorRecipes/recipes repository advisory GHSA-wq4h-2r8x-cv65",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 117,
-  "clock_known": true,
-  "hours_public": 2808,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-21",
-  "advisory_days_public": 117,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/TandoorRecipes/recipes/security/advisories/GHSA-wq4h-2r8x-cv65"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-59962",
-  "state": "RESERVED",
-  "public_date": "2026-06-21",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-06-21"
-  },
-  "refs": "ghsa-repos:TandoorRecipes/recipes\tGHSA-4x57-2q4q-xwpp",
-  "description": "TandoorRecipes/recipes repository advisory GHSA-4x57-2q4q-xwpp",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 117,
-  "clock_known": true,
-  "hours_public": 2808,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-21",
-  "advisory_days_public": 117,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/TandoorRecipes/recipes/security/advisories/GHSA-4x57-2q4q-xwpp"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-59963",
-  "state": "RESERVED",
-  "public_date": "2026-06-21",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-06-21"
-  },
-  "refs": "ghsa-repos:TandoorRecipes/recipes\tGHSA-cqj3-64qw-4w52",
-  "description": "TandoorRecipes/recipes repository advisory GHSA-cqj3-64qw-4w52",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 117,
-  "clock_known": true,
-  "hours_public": 2808,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-21",
-  "advisory_days_public": 117,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/TandoorRecipes/recipes/security/advisories/GHSA-cqj3-64qw-4w52"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-59966",
-  "state": "RESERVED",
-  "public_date": "2026-06-21",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-06-21"
-  },
-  "refs": "ghsa-repos:TandoorRecipes/recipes\tGHSA-f2gw-c2c7-59v7",
-  "description": "TandoorRecipes/recipes repository advisory GHSA-f2gw-c2c7-59v7",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 117,
-  "clock_known": true,
-  "hours_public": 2808,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-21",
-  "advisory_days_public": 117,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/TandoorRecipes/recipes/security/advisories/GHSA-f2gw-c2c7-59v7"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -20397,40 +20193,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-61726",
-  "state": "RESERVED",
-  "public_date": "2026-06-30",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-06-30"
-  },
-  "refs": "ghsa-repos:TandoorRecipes/recipes\tGHSA-wjf3-fq5w-7j7w",
-  "description": "TandoorRecipes/recipes repository advisory GHSA-wjf3-fq5w-7j7w",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 108,
-  "clock_known": true,
-  "hours_public": 2592,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-06-30",
-  "advisory_days_public": 108,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/TandoorRecipes/recipes/security/advisories/GHSA-wjf3-fq5w-7j7w"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-63393",
   "state": "RESERVED",
   "public_date": "2026-06-30",
@@ -21223,7 +20985,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28585",
+  "cve_id": "CVE-2026-28632",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -21257,7 +21019,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28632",
+  "cve_id": "CVE-2026-28585",
   "state": "RESERVED",
   "public_date": "2026-07-01",
   "sources": "samsung",
@@ -25276,6 +25038,44 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-76894",
+  "state": "RESERVED",
+  "public_date": "2026-07-09",
+  "sources": "ghsa,ghsa-repos,osv",
+  "feed_count": 3,
+  "dates": {
+   "ghsa": "2026-10-16",
+   "ghsa-repos": "2026-07-09",
+   "osv": "2026-10-16"
+  },
+  "refs": "ghsa-repos:ondata/ckan-mcp-server\tGHSA-vqff-r82h-9crc;ghsa:GHSA-vqff-r82h-9crc;osv:npm:@aborruso/ckan-mcp-server",
+  "description": "ckan-mcp-server: DataStore Table UI resource does not validate postMessage origin (in) and posts to targetOrigin \"*\" (out)",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 99,
+  "clock_known": true,
+  "hours_public": 2376,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-09",
+  "advisory_days_public": 99,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "@aborruso/ckan-mcp-server",
+  "ecosystem": "npm",
+  "source_urls": {
+   "ghsa": "https://github.com/advisories/GHSA-vqff-r82h-9crc",
+   "ghsa-repos": "https://github.com/ondata/ckan-mcp-server/security/advisories/GHSA-vqff-r82h-9crc",
+   "osv": "https://osv.dev/list?q=CVE-2026-76894"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-76099",
   "state": "RESERVED",
   "public_date": "2026-07-09",
@@ -25577,40 +25377,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/ondata/ckan-mcp-server/security/advisories/GHSA-3369-fmrv-vh4j"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-76894",
-  "state": "RESERVED",
-  "public_date": "2026-07-09",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-09"
-  },
-  "refs": "ghsa-repos:ondata/ckan-mcp-server\tGHSA-vqff-r82h-9crc",
-  "description": "ondata/ckan-mcp-server repository advisory GHSA-vqff-r82h-9crc",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 99,
-  "clock_known": true,
-  "hours_public": 2376,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-09",
-  "advisory_days_public": 99,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/ondata/ckan-mcp-server/security/advisories/GHSA-vqff-r82h-9crc"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -29411,40 +29177,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49868",
-  "state": "RESERVED",
-  "public_date": "2026-07-16",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-16"
-  },
-  "refs": "ghsa-repos:RIOT-OS/RIOT\tGHSA-p3fx-9qcg-jmcf",
-  "description": "RIOT-OS/RIOT repository advisory GHSA-p3fx-9qcg-jmcf",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 92,
-  "clock_known": true,
-  "hours_public": 2208,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-16",
-  "advisory_days_public": 92,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/RIOT-OS/RIOT/security/advisories/GHSA-p3fx-9qcg-jmcf"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-62972",
   "state": "RESERVED",
   "public_date": "2026-07-16",
@@ -30889,40 +30621,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-96626",
-  "state": "RESERVED",
-  "public_date": "2026-07-20",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-20"
-  },
-  "refs": "ghsa-repos:getarcaneapp/arcane\tGHSA-9pxc-cxp5-qp54",
-  "description": "getarcaneapp/arcane repository advisory GHSA-9pxc-cxp5-qp54",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 88,
-  "clock_known": true,
-  "hours_public": 2112,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-20",
-  "advisory_days_public": 88,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/getarcaneapp/arcane/security/advisories/GHSA-9pxc-cxp5-qp54"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-63676",
   "state": "RESERVED",
   "public_date": "2026-07-21",
@@ -31572,40 +31270,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-102607",
-  "state": "RESERVED",
-  "public_date": "2026-07-22",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-22"
-  },
-  "refs": "ghsa-repos:ZoneMinder/zoneminder\tGHSA-7j62-cjxp-3cj5",
-  "description": "ZoneMinder/zoneminder repository advisory GHSA-7j62-cjxp-3cj5",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 86,
-  "clock_known": true,
-  "hours_public": 2064,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-22",
-  "advisory_days_public": 86,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/ZoneMinder/zoneminder/security/advisories/GHSA-7j62-cjxp-3cj5"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-67441",
   "state": "RESERVED",
   "public_date": "2026-07-22",
@@ -31941,40 +31605,6 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-18025.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-102692",
-  "state": "RESERVED",
-  "public_date": "2026-07-23",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-23"
-  },
-  "refs": "ghsa-repos:RIOT-OS/RIOT\tGHSA-8365-gj33-rgpf",
-  "description": "RIOT-OS/RIOT repository advisory GHSA-8365-gj33-rgpf",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 85,
-  "clock_known": true,
-  "hours_public": 2040,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-23",
-  "advisory_days_public": 85,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/RIOT-OS/RIOT/security/advisories/GHSA-8365-gj33-rgpf"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -32631,40 +32261,6 @@
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-9672",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-9672",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-9672"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-30971",
-  "state": "RESERVED",
-  "public_date": "2026-07-26",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-26"
-  },
-  "refs": "ghsa-repos:ZoneMinder/zoneminder\tGHSA-g66m-77fq-79v9",
-  "description": "ZoneMinder/zoneminder repository advisory GHSA-g66m-77fq-79v9",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 82,
-  "clock_known": true,
-  "hours_public": 1968,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-26",
-  "advisory_days_public": 82,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/ZoneMinder/zoneminder/security/advisories/GHSA-g66m-77fq-79v9"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -34959,40 +34555,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-96627",
-  "state": "RESERVED",
-  "public_date": "2026-07-29",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-07-29"
-  },
-  "refs": "ghsa-repos:getarcaneapp/arcane\tGHSA-pw5q-rjx4-7f7p",
-  "description": "getarcaneapp/arcane repository advisory GHSA-pw5q-rjx4-7f7p",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 79,
-  "clock_known": true,
-  "hours_public": 1896,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-07-29",
-  "advisory_days_public": 79,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/getarcaneapp/arcane/security/advisories/GHSA-pw5q-rjx4-7f7p"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-97702",
   "state": "RESERVED",
   "public_date": "2026-07-29",
@@ -35061,6 +34623,40 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-110800",
+  "state": "RESERVED",
+  "public_date": "2026-07-29",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-07-29"
+  },
+  "refs": "ghsa-repos:zitadel/zitadel\tGHSA-93hm-8q29-c8cr",
+  "description": "zitadel/zitadel repository advisory GHSA-93hm-8q29-c8cr",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 79,
+  "clock_known": true,
+  "hours_public": 1896,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-29",
+  "advisory_days_public": 79,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/zitadel/zitadel/security/advisories/GHSA-93hm-8q29-c8cr"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-110796",
   "state": "RESERVED",
   "public_date": "2026-07-29",
@@ -35090,6 +34686,40 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/zitadel/zitadel/security/advisories/GHSA-45f2-5q3r-xgg6"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-110801",
+  "state": "RESERVED",
+  "public_date": "2026-07-29",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-07-29"
+  },
+  "refs": "ghsa-repos:zitadel/zitadel\tGHSA-738m-7888-jfv8",
+  "description": "zitadel/zitadel repository advisory GHSA-738m-7888-jfv8",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 79,
+  "clock_known": true,
+  "hours_public": 1896,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-07-29",
+  "advisory_days_public": 79,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/zitadel/zitadel/security/advisories/GHSA-738m-7888-jfv8"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -36421,7 +36051,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28665",
+  "cve_id": "CVE-2026-28591",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -36489,7 +36119,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28591",
+  "cve_id": "CVE-2026-28665",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -36620,40 +36250,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/mdjnelson/moodle-mod_customcert/security/advisories/GHSA-r86f-x9v9-g8j7"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-102693",
-  "state": "RESERVED",
-  "public_date": "2026-08-03",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-03"
-  },
-  "refs": "ghsa-repos:RIOT-OS/RIOT\tGHSA-gwgv-6976-hxrg",
-  "description": "RIOT-OS/RIOT repository advisory GHSA-gwgv-6976-hxrg",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 74,
-  "clock_known": true,
-  "hours_public": 1776,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-03",
-  "advisory_days_public": 74,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/RIOT-OS/RIOT/security/advisories/GHSA-gwgv-6976-hxrg"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -41448,40 +41044,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/dzikoysk/reposilite/security/advisories/GHSA-7944-89x5-52q9"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-108373",
-  "state": "RESERVED",
-  "public_date": "2026-08-13",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-08-13"
-  },
-  "refs": "ghsa-repos:frappe/erpnext\tGHSA-rgrq-243c-c4g6",
-  "description": "frappe/erpnext repository advisory GHSA-rgrq-243c-c4g6",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 64,
-  "clock_known": true,
-  "hours_public": 1536,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-13",
-  "advisory_days_public": 64,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/frappe/erpnext/security/advisories/GHSA-rgrq-243c-c4g6"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -48754,40 +48316,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-64862",
-  "state": "RESERVED",
-  "public_date": "2026-09-04",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-04"
-  },
-  "refs": "ghsa-repos:frappe/hrms\tGHSA-wfc6-cw72-cvhx",
-  "description": "frappe/hrms repository advisory GHSA-wfc6-cw72-cvhx",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 42,
-  "clock_known": true,
-  "hours_public": 1008,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-04",
-  "advisory_days_public": 42,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/frappe/hrms/security/advisories/GHSA-wfc6-cw72-cvhx"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-85076",
   "state": "RESERVED",
   "public_date": "2026-09-04",
@@ -51786,40 +51314,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-96628",
-  "state": "RESERVED",
-  "public_date": "2026-09-12",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-12"
-  },
-  "refs": "ghsa-repos:getarcaneapp/arcane\tGHSA-mp22-58ff-6fhr",
-  "description": "getarcaneapp/arcane repository advisory GHSA-mp22-58ff-6fhr",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 34,
-  "clock_known": true,
-  "hours_public": 816,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-12",
-  "advisory_days_public": 34,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/getarcaneapp/arcane/security/advisories/GHSA-mp22-58ff-6fhr"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2024-28178",
   "state": "RESERVED",
   "public_date": "2026-09-12",
@@ -52909,14 +52403,13 @@
   "cve_id": "CVE-2026-94291",
   "state": "RESERVED",
   "public_date": "2026-09-18",
-  "sources": "csaf,debian,ubuntu,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "csaf,debian,ubuntu-osv",
+  "feed_count": 3,
   "dates": {
-   "ubuntu": "2026-10-05",
    "ubuntu-osv": "2026-10-05",
    "csaf": "2026-09-18"
   },
-  "refs": "csaf:Red Hat Product Security\tCVE-2026-94291\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94291.json;debian:epiphany-browser;ubuntu-osv:UBUNTU-CVE-2026-94291;ubuntu:CVE-2026-94291",
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-94291\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94291.json;debian:epiphany-browser;ubuntu-osv:UBUNTU-CVE-2026-94291",
   "description": "epiphany-browser",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -52938,7 +52431,6 @@
   "source_urls": {
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94291.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-94291",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-94291",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-94291"
   },
   "veto_evaluated": false,
@@ -53144,40 +52636,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/alfio-event/alf.io/security/advisories/GHSA-gr52-5qp2-v2ww"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-108374",
-  "state": "RESERVED",
-  "public_date": "2026-09-18",
-  "sources": "ghsa-repos",
-  "feed_count": 1,
-  "dates": {
-   "ghsa-repos": "2026-09-18"
-  },
-  "refs": "ghsa-repos:frappe/erpnext\tGHSA-5wpj-6rvp-9ff7",
-  "description": "frappe/erpnext repository advisory GHSA-5wpj-6rvp-9ff7",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 28,
-  "clock_known": true,
-  "hours_public": 672,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-09-18",
-  "advisory_days_public": 28,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "ghsa-repos": "https://github.com/frappe/erpnext/security/advisories/GHSA-5wpj-6rvp-9ff7"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -53956,7 +53414,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84679",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84679",
   "description": "automation-controller: automation-controller-container: automation-controller: the AWX_TASK_ENV setting applies arbitrary environment variables to the control-plane web and task processes, enabling TLS interception of external credentials",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -53976,7 +53434,7 @@
   "package": "CVE-2026-84679",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84679"
   },
   "veto_evaluated": false,
@@ -54064,7 +53522,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84638",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84638",
   "description": "automation-controller: automation-controller-container: automation-controller: instance group attachment to schedules and workflow job template nodes checks only read permission, allowing use of restricted (controlplane / other-tenant)",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54084,7 +53542,7 @@
   "package": "CVE-2026-84638",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84638"
   },
   "veto_evaluated": false,
@@ -54100,7 +53558,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84643",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84643",
   "description": "automation-controller: automation-controller-container: automation-controller: missing use_role authorization on the project signature validation credential foreign key allows a project administrator to bind and use another organization's",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54120,7 +53578,7 @@
   "package": "CVE-2026-84643",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84643"
   },
   "veto_evaluated": false,
@@ -54136,7 +53594,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84644",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84644",
   "description": "automation-controller-container: automation-controller: automation-controller: server-side request forgery via the Thycotic Secret Server external credential plugin test endpoint (caller-controlled server_url, backend executed in the",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54156,7 +53614,7 @@
   "package": "CVE-2026-84644",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84644"
   },
   "veto_evaluated": false,
@@ -54208,7 +53666,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84680",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84680",
   "description": "automation-controller: automation-controller-container: automation-controller: organization galaxy credential attachment checks only read permission on the credential, allowing an organization admin with read-only visibility to bind and",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54228,7 +53686,7 @@
   "package": "CVE-2026-84680",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84680"
   },
   "veto_evaluated": false,
@@ -54244,7 +53702,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84684",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84684",
   "description": "automation-controller: automation-controller-container: automation-controller: constructed inventory input inventory attachment checks only read permission on the source inventory, allowing a read-only user to clone another tenant's hosts",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54264,7 +53722,7 @@
   "package": "CVE-2026-84684",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84684"
   },
   "veto_evaluated": false,
@@ -54280,7 +53738,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84686",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84686",
   "description": "automation-controller: automation-controller-container: automation-controller: notification template password fields can be decrypted by a notification-template administrator by replaying encrypted values across subfields, exposing",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54300,7 +53758,7 @@
   "package": "CVE-2026-84686",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84686"
   },
   "veto_evaluated": false,
@@ -54316,7 +53774,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84689",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84689",
   "description": "automation-controller: automation-controller-container: automation-controller: bulk job launch allows setting a workflow node's job reference to an arbitrary unified job, enabling a low-privileged user to cancel and read metadata of jobs",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54336,7 +53794,7 @@
   "package": "CVE-2026-84689",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84689"
   },
   "veto_evaluated": false,
@@ -54352,7 +53810,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84692",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84692",
   "description": "automation-controller: automation-controller-container: automation-controller: workflow job template node execute permission check bypassed by creating a node with a null unified_job_template and then patching it, allowing a single",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54372,7 +53830,7 @@
   "package": "CVE-2026-84692",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84692"
   },
   "veto_evaluated": false,
@@ -54388,7 +53846,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84703",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84703",
   "description": "automation-controller: automation-controller-container: automation-controller: execution environment credential foreign key is not use-permission checked, allowing an organization execution-environment admin to bind and disclose another",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54408,7 +53866,7 @@
   "package": "CVE-2026-84703",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84703"
   },
   "veto_evaluated": false,
@@ -54424,7 +53882,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84707",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84707",
   "description": "automation-controller: automation-controller-container: automation-controller: host_filter SmartFilter ORM traversal exposes JobEvent/AdHocCommandEvent event_data and stdout to users without permission on the job, enabling blind",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54444,7 +53902,7 @@
   "package": "CVE-2026-84707",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84707"
   },
   "veto_evaluated": false,
@@ -54460,7 +53918,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84708",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84708",
   "description": "automation-controller: automation-controller-container: automation-controller: container group pod_spec_override mints the automation-controller ServiceAccount token and mounts control-plane namespace secrets into job pods, bypassing",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54480,7 +53938,7 @@
   "package": "CVE-2026-84708",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84708"
   },
   "veto_evaluated": false,
@@ -54496,7 +53954,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84709",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84709",
   "description": "automation-controller: automation-controller: CredentialType injector validation renders attacker-supplied Jinja2 templates synchronously in the web worker, allowing uncontrolled resource consumption (denial of service) and an",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54516,7 +53974,7 @@
   "package": "CVE-2026-84709",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84709"
   },
   "veto_evaluated": false,
@@ -54532,7 +53990,7 @@
    "redhat": "2026-09-23",
    "csaf": "2026-09-23"
   },
-  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71179\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json;redhat:CVE-2026-84711",
+  "refs": "csaf:Red Hat Product Security\tRHSA-2026:71113\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json;redhat:CVE-2026-84711",
   "description": "automation-controller: automation-controller: Project scm_branch/scm_refspec argument injection into git during project sync allows arbitrary file read on the sync host (control-plane ServiceAccount token, SECRET_KEY, and DB credentials on",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -54552,7 +54010,7 @@
   "package": "CVE-2026-84711",
   "ecosystem": "",
   "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71179.json",
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_71113.json",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-84711"
   },
   "veto_evaluated": false,
@@ -58086,15 +57544,14 @@
   "cve_id": "CVE-2026-104259",
   "state": "RESERVED",
   "public_date": "2026-09-30",
-  "sources": "alas,debian,ghsa-repos,ubuntu,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,debian,ghsa-repos,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-10-08",
-   "ubuntu": "2026-10-06",
    "ubuntu-osv": "2026-10-06",
    "ghsa-repos": "2026-09-30"
   },
-  "refs": "alas:CVE-2026-104259;debian:modsecurity;ghsa-repos:owasp-modsecurity/ModSecurity\tGHSA-qrch-pjfr-9g47;ubuntu-osv:UBUNTU-CVE-2026-104259;ubuntu:CVE-2026-104259",
+  "refs": "alas:CVE-2026-104259;debian:modsecurity;ghsa-repos:owasp-modsecurity/ModSecurity\tGHSA-qrch-pjfr-9g47;ubuntu-osv:UBUNTU-CVE-2026-104259",
   "description": "GHSA-qrch-pjfr-9g47: t:removeComments mishandles the character after a comment terminator, bypassing rules",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58117,7 +57574,6 @@
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-104259.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-104259",
    "ghsa-repos": "https://github.com/owasp-modsecurity/ModSecurity/security/advisories/GHSA-qrch-pjfr-9g47",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-104259",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-104259"
   },
   "veto_evaluated": false,
@@ -58127,15 +57583,14 @@
   "cve_id": "CVE-2026-104269",
   "state": "RESERVED",
   "public_date": "2026-09-30",
-  "sources": "alas,debian,ghsa-repos,ubuntu,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,debian,ghsa-repos,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-10-08",
-   "ubuntu": "2026-10-06",
    "ubuntu-osv": "2026-10-06",
    "ghsa-repos": "2026-09-30"
   },
-  "refs": "alas:CVE-2026-104269;debian:modsecurity;ghsa-repos:owasp-modsecurity/ModSecurity\tGHSA-5pww-8rfg-9crf;ubuntu-osv:UBUNTU-CVE-2026-104269;ubuntu:CVE-2026-104269",
+  "refs": "alas:CVE-2026-104269;debian:modsecurity;ghsa-repos:owasp-modsecurity/ModSecurity\tGHSA-5pww-8rfg-9crf;ubuntu-osv:UBUNTU-CVE-2026-104269",
   "description": "GHSA-5pww-8rfg-9crf: RFC 2231 filename* parameter bypasses multipart filename rules",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58158,7 +57613,6 @@
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-104269.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-104269",
    "ghsa-repos": "https://github.com/owasp-modsecurity/ModSecurity/security/advisories/GHSA-5pww-8rfg-9crf",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-104269",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-104269"
   },
   "veto_evaluated": false,
@@ -58168,15 +57622,14 @@
   "cve_id": "CVE-2026-103932",
   "state": "RESERVED",
   "public_date": "2026-09-30",
-  "sources": "alas,debian,ghsa-repos,ubuntu,ubuntu-osv",
-  "feed_count": 5,
+  "sources": "alas,debian,ghsa-repos,ubuntu-osv",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-10-08",
-   "ubuntu": "2026-10-06",
    "ubuntu-osv": "2026-10-06",
    "ghsa-repos": "2026-09-30"
   },
-  "refs": "alas:CVE-2026-103932;debian:modsecurity;ghsa-repos:owasp-modsecurity/ModSecurity\tGHSA-5m93-4h75-3p2w;ubuntu-osv:UBUNTU-CVE-2026-103932;ubuntu:CVE-2026-103932",
+  "refs": "alas:CVE-2026-103932;debian:modsecurity;ghsa-repos:owasp-modsecurity/ModSecurity\tGHSA-5m93-4h75-3p2w;ubuntu-osv:UBUNTU-CVE-2026-103932",
   "description": "GHSA-5m93-4h75-3p2w: @rxGlobal PCRE2 error handling: match-limit fail-open and invalid-pattern crash",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -58199,7 +57652,6 @@
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-103932.html",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-103932",
    "ghsa-repos": "https://github.com/owasp-modsecurity/ModSecurity/security/advisories/GHSA-5m93-4h75-3p2w",
-   "ubuntu": "https://ubuntu.com/security/CVE-2026-103932",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-103932"
   },
   "veto_evaluated": false,
@@ -61539,7 +60991,75 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49896",
+  "cve_id": "CVE-2026-35494",
+  "state": "RESERVED",
+  "public_date": "2026-10-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-10-01"
+  },
+  "refs": "samsung:SMR-Oct-2026",
+  "description": "Samsung SMR Oct 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 15,
+  "clock_known": true,
+  "hours_public": 360,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-01",
+  "advisory_days_public": 15,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-68993",
+  "state": "RESERVED",
+  "public_date": "2026-10-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-10-01"
+  },
+  "refs": "samsung:SMR-Oct-2026",
+  "description": "Samsung SMR Oct 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 15,
+  "clock_known": true,
+  "hours_public": 360,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-01",
+  "advisory_days_public": 15,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-69044",
   "state": "RESERVED",
   "public_date": "2026-10-01",
   "sources": "samsung",
@@ -61641,108 +61161,6 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-68993",
-  "state": "RESERVED",
-  "public_date": "2026-10-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-10-01"
-  },
-  "refs": "samsung:SMR-Oct-2026",
-  "description": "Samsung SMR Oct 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-01",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-57547",
-  "state": "RESERVED",
-  "public_date": "2026-10-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-10-01"
-  },
-  "refs": "samsung:SMR-Oct-2026",
-  "description": "Samsung SMR Oct 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-01",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-69044",
-  "state": "RESERVED",
-  "public_date": "2026-10-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-10-01"
-  },
-  "refs": "samsung:SMR-Oct-2026",
-  "description": "Samsung SMR Oct 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 15,
-  "clock_known": true,
-  "hours_public": 360,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-01",
-  "advisory_days_public": 15,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
   "cve_id": "CVE-2026-6021",
   "state": "RESERVED",
   "public_date": "2026-10-01",
@@ -61777,7 +61195,41 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-35494",
+  "cve_id": "CVE-2026-49896",
+  "state": "RESERVED",
+  "public_date": "2026-10-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-10-01"
+  },
+  "refs": "samsung:SMR-Oct-2026",
+  "description": "Samsung SMR Oct 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 15,
+  "clock_known": true,
+  "hours_public": 360,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-01",
+  "advisory_days_public": 15,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-57547",
   "state": "RESERVED",
   "public_date": "2026-10-01",
   "sources": "samsung",
@@ -62438,40 +61890,6 @@
   "ecosystem": "",
   "source_urls": {
    "ghsa-repos": "https://github.com/open-quantum-safe/liboqs/security/advisories/GHSA-xv6c-h66p-6mfq"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-68498",
-  "state": "RESERVED",
-  "public_date": "2026-10-06",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-10-06"
-  },
-  "refs": "csaf:SUSE Product Security Team\topenSUSE-SU-2026:22034-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_22034-1.json",
-  "description": "CVE-2026-68498",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 10,
-  "clock_known": true,
-  "hours_public": 240,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-06",
-  "advisory_days_public": 10,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_22034-1.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false
