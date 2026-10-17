@@ -3,12 +3,13 @@
   "cve_id": "CVE-2026-109117",
   "state": "RESERVED",
   "public_date": "2026-10-16",
-  "sources": "alas,debian",
-  "feed_count": 2,
+  "sources": "alas,csaf,debian",
+  "feed_count": 3,
   "dates": {
-   "alas": "2026-10-16"
+   "alas": "2026-10-16",
+   "csaf": "2026-10-16"
   },
-  "refs": "alas:CVE-2026-109117;debian:oath-toolkit",
+  "refs": "alas:CVE-2026-109117;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12157-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12157-1.json;debian:oath-toolkit",
   "description": "OATH Toolkit PSKC Signature Verification bypass in libpskc",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -29,6 +30,7 @@
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-109117.html",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12157-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-109117"
   },
   "veto_evaluated": false,
@@ -161,9 +163,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-107928\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-107928.json;debian:curl;redhat:CVE-2026-107928",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-107928",
   "description": "curl: curl: info leak uploading over WebSockets with GnuTLS",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -184,7 +186,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-107928",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-107928.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-107928",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-107928"
   },
@@ -201,9 +203,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-107929\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-107929.json;debian:curl;redhat:CVE-2026-107929",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-107929",
   "description": "curl: curl: local interface connection reuse mixup",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -224,7 +226,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-107929",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-107929.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-107929",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-107929"
   },
@@ -241,9 +243,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-86409\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86409.json;debian:curl;redhat:CVE-2026-86409",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-86409",
   "description": "curl: curl: stale SigV4 headers sent unintended",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -264,7 +266,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-86409",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86409.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-86409",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-86409"
   },
@@ -281,9 +283,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tRHSA-2026:82895\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_82895.json;debian:curl;redhat:CVE-2026-86410",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-86410",
   "description": "curl: curl: redirect to SFTP or SCP bypasses host verification",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -304,7 +306,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-86410",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_82895.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-86410",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-86410"
   },
@@ -321,9 +323,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-86411\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86411.json;debian:curl;redhat:CVE-2026-86411",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-86411",
   "description": "curl: curl: FTP connection reuse inherits client-certificate",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -344,7 +346,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-86411",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86411.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-86411",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-86411"
   },
@@ -361,9 +363,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-86412\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86412.json;debian:curl;redhat:CVE-2026-86412",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-86412",
   "description": "curl: curl: server-set cookie erases cookie jar",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -384,7 +386,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-86412",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86412.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-86412",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-86412"
   },
@@ -401,9 +403,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-86413\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86413.json;debian:curl;redhat:CVE-2026-86413",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-86413",
   "description": "curl: curl: Negotiate credentials sent to redirected origin",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -424,7 +426,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-86413",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-86413.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-86413",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-86413"
   },
@@ -441,9 +443,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tRHSA-2026:82895\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_82895.json;debian:curl;redhat:CVE-2026-86414",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-86414",
   "description": "curl: curl: leaking host credentials to HTTP proxy",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -464,7 +466,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-86414",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_82895.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-86414",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-86414"
   },
@@ -521,9 +523,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-87861\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87861.json;debian:curl;redhat:CVE-2026-87861",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-87861",
   "description": "curl: curl: cross-origin reuse of a Negotiate connection",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -544,7 +546,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-87861",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87861.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-87861",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-87861"
   },
@@ -561,9 +563,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-87862\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87862.json;debian:curl;redhat:CVE-2026-87862",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-87862",
   "description": "curl: curl: HSTS cache import drops longer-lived child",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -584,7 +586,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-87862",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87862.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-87862",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-87862"
   },
@@ -601,9 +603,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-87863\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87863.json;debian:curl;redhat:CVE-2026-87863",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-87863",
   "description": "curl: curl: Hsts Response Erases Persisted Entries",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -624,7 +626,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-87863",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87863.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-87863",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-87863"
   },
@@ -641,9 +643,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-87864\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87864.json;debian:curl;redhat:CVE-2026-87864",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-87864",
   "description": "curl: IMAP APPEND plus CRLF conversion command injection",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -664,7 +666,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-87864",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87864.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-87864",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-87864"
   },
@@ -681,9 +683,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-87865\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87865.json;debian:curl;redhat:CVE-2026-87865",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-87865",
   "description": "curl: curl: knownhost callback mismatches key as missing",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -704,7 +706,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-87865",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87865.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-87865",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-87865"
   },
@@ -721,9 +723,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-87866\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87866.json;debian:curl;redhat:CVE-2026-87866",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-87866",
   "description": "curl: curl: wolfSSL public-key pinning bypass",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -744,7 +746,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-87866",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-87866.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-87866",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-87866"
   },
@@ -761,9 +763,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-92386\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92386.json;debian:curl;redhat:CVE-2026-92386",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-92386",
   "description": "curl: curl: server-set cookie aborts cookie jar load",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -784,7 +786,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-92386",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92386.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92386",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-92386"
   },
@@ -801,9 +803,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-92387\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92387.json;debian:curl;redhat:CVE-2026-92387",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-92387",
   "description": "curl: curl: never-ending loop via server response omission",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -824,7 +826,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-92387",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92387.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92387",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-92387"
   },
@@ -841,9 +843,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tRHSA-2026:82895\thttps://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_82895.json;debian:curl;redhat:CVE-2026-92388",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-92388",
   "description": "curl: curl: FTP wildcard write callback mixup",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -864,7 +866,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-92388",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/advisories/2026/rhsa-2026_82895.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92388",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-92388"
   },
@@ -881,9 +883,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-92389\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92389.json;debian:curl;redhat:CVE-2026-92389",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-92389",
   "description": "curl: curl: TFTP direction confusion",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -904,7 +906,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-92389",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92389.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92389",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-92389"
   },
@@ -921,9 +923,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-92390\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92390.json;debian:curl;redhat:CVE-2026-92390",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-92390",
   "description": "curl: curl: -J no-clobber guarantee bypassed with 103 early hints",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -944,7 +946,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-92390",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92390.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92390",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-92390"
   },
@@ -961,9 +963,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-92391\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92391.json;debian:curl;redhat:CVE-2026-92391",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-92391",
   "description": "curl: curl: curl_mime_free stack overflow by recursion",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -984,7 +986,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-92391",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-92391.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-92391",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-92391"
   },
@@ -1001,9 +1003,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-94265\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94265.json;debian:curl;redhat:CVE-2026-94265",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-94265",
   "description": "curl: curl: Authorization: Negotiate sent to foreign origin",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1024,7 +1026,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-94265",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94265.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-94265",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-94265"
   },
@@ -1041,9 +1043,9 @@
   "feed_count": 4,
   "dates": {
    "redhat": "2026-10-14",
-   "csaf": "2026-10-14"
+   "csaf": "2026-10-16"
   },
-  "refs": "alpine:curl;csaf:Red Hat Product Security\tCVE-2026-94266\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94266.json;debian:curl;redhat:CVE-2026-94266",
+  "refs": "alpine:curl;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12150-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json;debian:curl;redhat:CVE-2026-94266",
   "description": "curl: curl: password leak in CURLINFO_EFFECTIVE_URL",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -1064,7 +1066,7 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-94266",
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-94266.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12150-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-94266",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-94266"
   },
@@ -2074,6 +2076,78 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-104203",
+  "state": "RESERVED",
+  "public_date": "2026-10-17",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-10-17"
+  },
+  "refs": "ghsa-repos:traccar/traccar\tGHSA-w59q-j9pg-pw7x",
+  "description": "traccar/traccar repository advisory GHSA-w59q-j9pg-pw7x",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-17",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/traccar/traccar/security/advisories/GHSA-w59q-j9pg-pw7x"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-77372",
+  "state": "RESERVED",
+  "public_date": "2026-10-17",
+  "sources": "ghsa-repos",
+  "feed_count": 1,
+  "dates": {
+   "ghsa-repos": "2026-10-17"
+  },
+  "refs": "ghsa-repos:veracrypt/VeraCrypt\tGHSA-4j3p-7hp7-xw73",
+  "description": "veracrypt/VeraCrypt repository advisory GHSA-4j3p-7hp7-xw73",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-17",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "ghsa-repos": "https://github.com/veracrypt/VeraCrypt/security/advisories/GHSA-4j3p-7hp7-xw73"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-102701",
   "state": "RESERVED",
   "public_date": "",
@@ -2144,20 +2218,22 @@
  {
   "cve_id": "CVE-2026-109089",
   "state": "RESERVED",
-  "public_date": "",
-  "sources": "alpine",
-  "feed_count": 1,
-  "dates": {},
-  "refs": "alpine:libxi",
-  "description": "libxi",
+  "public_date": "2026-10-16",
+  "sources": "alpine,csaf",
+  "feed_count": 2,
+  "dates": {
+   "csaf": "2026-10-16"
+  },
+  "refs": "alpine:libxi;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12154-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12154-1.json",
+  "description": "CVE-2026-109089",
   "state_verified_this_run": true,
-  "public_date_origin": "none",
-  "days_public": null,
-  "clock_known": false,
-  "hours_public": null,
-  "clock_origin": "tracker",
-  "advisory_date": null,
-  "advisory_days_public": null,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-16",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -2168,30 +2244,33 @@
   "package": "libxi",
   "ecosystem": "",
   "source_urls": {
-   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-109089"
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-109089",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12154-1.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
   "counted": false,
-  "held_back_reason": "undated"
+  "held_back_reason": "within-buffer"
  },
  {
   "cve_id": "CVE-2026-109090",
   "state": "RESERVED",
-  "public_date": "",
-  "sources": "alpine",
-  "feed_count": 1,
-  "dates": {},
-  "refs": "alpine:libxi",
-  "description": "libxi",
+  "public_date": "2026-10-16",
+  "sources": "alpine,csaf",
+  "feed_count": 2,
+  "dates": {
+   "csaf": "2026-10-16"
+  },
+  "refs": "alpine:libxi;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12154-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12154-1.json",
+  "description": "CVE-2026-109090",
   "state_verified_this_run": true,
-  "public_date_origin": "none",
-  "days_public": null,
-  "clock_known": false,
-  "hours_public": null,
-  "clock_origin": "tracker",
-  "advisory_date": null,
-  "advisory_days_public": null,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-16",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -2202,30 +2281,33 @@
   "package": "libxi",
   "ecosystem": "",
   "source_urls": {
-   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-109090"
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-109090",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12154-1.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
   "counted": false,
-  "held_back_reason": "undated"
+  "held_back_reason": "within-buffer"
  },
  {
   "cve_id": "CVE-2026-109088",
   "state": "RESERVED",
-  "public_date": "",
-  "sources": "alpine",
-  "feed_count": 1,
-  "dates": {},
-  "refs": "alpine:libxtst",
-  "description": "libxtst",
+  "public_date": "2026-10-16",
+  "sources": "alpine,csaf",
+  "feed_count": 2,
+  "dates": {
+   "csaf": "2026-10-16"
+  },
+  "refs": "alpine:libxtst;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12155-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12155-1.json",
+  "description": "CVE-2026-109088",
   "state_verified_this_run": true,
-  "public_date_origin": "none",
-  "days_public": null,
-  "clock_known": false,
-  "hours_public": null,
-  "clock_origin": "tracker",
-  "advisory_date": null,
-  "advisory_days_public": null,
+  "public_date_origin": "feed",
+  "days_public": 1,
+  "clock_known": true,
+  "hours_public": 24,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-16",
+  "advisory_days_public": 1,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -2236,12 +2318,13 @@
   "package": "libxtst",
   "ecosystem": "",
   "source_urls": {
-   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-109088"
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-109088",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12155-1.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
   "counted": false,
-  "held_back_reason": "undated"
+  "held_back_reason": "within-buffer"
  },
  {
   "cve_id": "CVE-2026-56158",

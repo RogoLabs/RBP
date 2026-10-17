@@ -32235,7 +32235,7 @@
    "redhat": "2026-07-26",
    "csaf": "2026-10-12"
   },
-  "refs": "alas:CVE-2026-9672;alpine:php83;csaf:SUSE Product Security Team\tRHSA-2026:81518\thttps://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_81518.json;debian:libgd2;redhat:CVE-2026-9672;ubuntu-osv:UBUNTU-CVE-2026-9672",
+  "refs": "alas:CVE-2026-9672;alpine:php83;csaf:SUSE Product Security Team\tRHSA-2026:81517\thttps://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_81517.json;debian:libgd2;redhat:CVE-2026-9672;ubuntu-osv:UBUNTU-CVE-2026-9672",
   "description": "php83",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -32257,7 +32257,7 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-9672.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-9672",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_81518.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_81517.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-9672",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-9672",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-9672"
@@ -36051,41 +36051,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28591",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-08-01"
-  },
-  "refs": "samsung:SMR-Aug-2026",
-  "description": "Samsung SMR Aug 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 77,
-  "clock_known": true,
-  "hours_public": 1848,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 77,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-28645",
+  "cve_id": "CVE-2026-0022",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -36153,7 +36119,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-45522",
+  "cve_id": "CVE-2026-28645",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -36187,7 +36153,41 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-0022",
+  "cve_id": "CVE-2026-28591",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-08-01"
+  },
+  "refs": "samsung:SMR-Aug-2026",
+  "description": "Samsung SMR Aug 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 77,
+  "clock_known": true,
+  "hours_public": 1848,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 77,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
+  "cve_id": "CVE-2026-45522",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -60878,7 +60878,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-49896",
+  "cve_id": "CVE-2026-68993",
   "state": "RESERVED",
   "public_date": "2026-10-01",
   "sources": "samsung",
@@ -60946,6 +60946,40 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-69044",
+  "state": "RESERVED",
+  "public_date": "2026-10-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-10-01"
+  },
+  "refs": "samsung:SMR-Oct-2026",
+  "description": "Samsung SMR Oct 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 16,
+  "clock_known": true,
+  "hours_public": 384,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-01",
+  "advisory_days_public": 16,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-6021",
   "state": "RESERVED",
   "public_date": "2026-10-01",
@@ -60980,41 +61014,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-68993",
-  "state": "RESERVED",
-  "public_date": "2026-10-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-10-01"
-  },
-  "refs": "samsung:SMR-Oct-2026",
-  "description": "Samsung SMR Oct 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 16,
-  "clock_known": true,
-  "hours_public": 384,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-01",
-  "advisory_days_public": 16,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-69044",
+  "cve_id": "CVE-2026-57547",
   "state": "RESERVED",
   "public_date": "2026-10-01",
   "sources": "samsung",
@@ -61082,7 +61082,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-57547",
+  "cve_id": "CVE-2026-49896",
   "state": "RESERVED",
   "public_date": "2026-10-01",
   "sources": "samsung",
@@ -61753,10 +61753,10 @@
    "alas": "2026-10-09",
    "ubuntu-osv": "2026-10-07",
    "redhat": "2026-10-07",
-   "csaf": "2026-10-14",
+   "csaf": "2026-10-13",
    "zdi": "2026-10-15"
   },
-  "refs": "alas:CVE-2026-93523;alpine:xorg-server;csaf:SUSE Product Security Team\tSUSE-SU-2026:4663-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_4663-1.json;debian:xorg-server;redhat:CVE-2026-93523;ubuntu-osv:UBUNTU-CVE-2026-93523;zdi:ZDI-26-7",
+  "refs": "alas:CVE-2026-93523;alpine:xorg-server;csaf:SUSE Product Security Team\tRHSA-2026:82015\thttps://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_82015.json;debian:xorg-server;redhat:CVE-2026-93523;ubuntu-osv:UBUNTU-CVE-2026-93523;zdi:ZDI-26-768",
   "description": "The XI2 passive ungrab path (XIPassiveUngrabDevice) is missing the modifier validation that exists in the grab path and in legacy XI paths.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -61778,10 +61778,11 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-93523.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-93523",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_4663-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_82015.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-93523",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-93523",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-93523"
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-93523",
+   "zdi": "https://www.zerodayinitiative.com/advisories/ZDI-26-768/"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -61968,10 +61969,10 @@
    "alas": "2026-10-09",
    "ubuntu-osv": "2026-10-07",
    "redhat": "2026-10-07",
-   "csaf": "2026-10-14",
+   "csaf": "2026-10-13",
    "zdi": "2026-10-15"
   },
-  "refs": "alas:CVE-2026-88812;alpine:xorg-server;csaf:SUSE Product Security Team\tSUSE-SU-2026:4663-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_4663-1.json;debian:xorg-server;redhat:CVE-2026-88812;ubuntu-osv:UBUNTU-CVE-2026-88812;zdi:ZDI-26-7",
+  "refs": "alas:CVE-2026-88812;alpine:xorg-server;csaf:SUSE Product Security Team\tRHSA-2026:82015\thttps://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_82015.json;debian:xorg-server;redhat:CVE-2026-88812;ubuntu-osv:UBUNTU-CVE-2026-88812;zdi:ZDI-26-759",
   "description": "CheckSetDoodad() in xkb/xkb.c frees doodad->text.text on error but does not NULL the pointer.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -61993,10 +61994,11 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-88812.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-88812",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_4663-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_82015.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-88812",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-88812",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-88812"
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-88812",
+   "zdi": "https://www.zerodayinitiative.com/advisories/ZDI-26-759/"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -62011,10 +62013,10 @@
    "alas": "2026-10-09",
    "ubuntu-osv": "2026-10-07",
    "redhat": "2026-10-07",
-   "csaf": "2026-10-14",
+   "csaf": "2026-10-13",
    "zdi": "2026-10-15"
   },
-  "refs": "alas:CVE-2026-93521;alpine:xorg-server;csaf:SUSE Product Security Team\tSUSE-SU-2026:4663-1\thttps://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_4663-1.json;debian:xorg-server;redhat:CVE-2026-93521;ubuntu-osv:UBUNTU-CVE-2026-93521;zdi:ZDI-26-7",
+  "refs": "alas:CVE-2026-93521;alpine:xorg-server;csaf:SUSE Product Security Team\tRHSA-2026:82015\thttps://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_82015.json;debian:xorg-server;redhat:CVE-2026-93521;ubuntu-osv:UBUNTU-CVE-2026-93521;zdi:ZDI-26-766",
   "description": "In RRChangeProviderProperty() with PrependMode, new_value.size is set to len instead of total_len.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -62036,10 +62038,11 @@
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-93521.html",
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-93521",
-   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/suse-su-2026_4663-1.json",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf/rhsa-2026_82015.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-93521",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-93521",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-93521"
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-93521",
+   "zdi": "https://www.zerodayinitiative.com/advisories/ZDI-26-766/"
   },
   "veto_evaluated": false,
   "owner_nameable": false
