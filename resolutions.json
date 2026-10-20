@@ -1761,9 +1761,6 @@
   "CVE-2026-55080": {
    "first_public": "2026-07-15"
   },
-  "CVE-2026-55644": {
-   "first_public": "2026-06-15"
-  },
   "CVE-2026-55888": {
    "first_public": "2026-06-17"
   },
@@ -2438,9 +2435,6 @@
   },
   "CVE-2026-56618": {
    "first_public": "2026-08-10"
-  },
-  "CVE-2025-13173": {
-   "first_public": "2026-06-25"
   },
   "CVE-2026-2613": {
    "first_public": "2026-06-25"
@@ -5501,6 +5495,54 @@
   },
   "CVE-2026-92878": {
    "first_public": "2026-10-05"
+  },
+  "CVE-2026-111062": {
+   "first_public": "2026-10-04"
+  },
+  "CVE-2026-108386": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-111751": {
+   "first_public": "2026-10-01"
+  },
+  "CVE-2026-111752": {
+   "first_public": "2026-09-30"
+  },
+  "CVE-2026-111754": {
+   "first_public": "2026-09-30"
+  },
+  "CVE-2026-88066": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-55458": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-95839": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-104867": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-102701": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-102230": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-102848": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-85844": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-96205": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-93744": {
+   "first_public": "2026-10-13"
+  },
+  "CVE-2026-96434": {
+   "first_public": "2026-10-13"
   }
  },
  "resolved": [
@@ -23249,6 +23291,24 @@
    "published": "2026-10-16",
    "days_to_publish": 64,
    "closed_on": "2026-10-17"
+  },
+  {
+   "cve_id": "CVE-2026-55644",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-15",
+   "published": "2026-10-19",
+   "days_to_publish": 126,
+   "closed_on": "2026-10-20"
+  },
+  {
+   "cve_id": "CVE-2025-13173",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-06-25",
+   "published": "2026-10-19",
+   "days_to_publish": 116,
+   "closed_on": "2026-10-20"
   }
  ]
 }
