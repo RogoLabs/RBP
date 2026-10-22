@@ -1,1 +1,11 @@
-[]
+[
+ {
+  "cve_id": "CVE-2026-92709",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-08-20",
+  "published": "2026-10-22",
+  "days_to_publish": 63,
+  "closed_on": "2026-10-22"
+ }
+]
