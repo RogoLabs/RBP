@@ -3867,9 +3867,6 @@
   "CVE-2026-96796": {
    "first_public": "2026-07-21"
   },
-  "CVE-2026-76654": {
-   "first_public": "2026-09-15"
-  },
   "CVE-2026-92148": {
    "first_public": "2026-09-18"
   },
@@ -3965,9 +3962,6 @@
   },
   "CVE-2026-95516": {
    "first_public": "2026-09-22"
-  },
-  "CVE-2026-2270": {
-   "first_public": "2026-09-15"
   },
   "CVE-2026-102737": {
    "first_public": "2026-08-09"
@@ -5360,6 +5354,54 @@
   },
   "CVE-2026-90991": {
    "first_public": "2026-10-19"
+  },
+  "CVE-2026-110879": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-85559": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-85558": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-85557": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-85556": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-85555": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-73206": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-73205": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-112899": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-111770": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-111768": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-111771": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-111769": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-61845": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-58401": {
+   "first_public": "2026-10-20"
+  },
+  "CVE-2026-94188": {
+   "first_public": "2026-10-20"
   }
  },
  "resolved": [
@@ -24476,6 +24518,24 @@
    "published": "2026-10-26",
    "days_to_publish": 12,
    "closed_on": "2026-10-26"
+  },
+  {
+   "cve_id": "CVE-2026-76654",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-15",
+   "published": "2026-10-26",
+   "days_to_publish": 41,
+   "closed_on": "2026-10-27"
+  },
+  {
+   "cve_id": "CVE-2026-2270",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-15",
+   "published": "2026-10-26",
+   "days_to_publish": 41,
+   "closed_on": "2026-10-27"
   }
  ]
 }

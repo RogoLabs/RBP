@@ -1,0 +1,20 @@
+[
+ {
+  "cve_id": "CVE-2026-76654",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-09-15",
+  "published": "2026-10-26",
+  "days_to_publish": 41,
+  "closed_on": "2026-10-27"
+ },
+ {
+  "cve_id": "CVE-2026-2270",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-09-15",
+  "published": "2026-10-26",
+  "days_to_publish": 41,
+  "closed_on": "2026-10-27"
+ }
+]
