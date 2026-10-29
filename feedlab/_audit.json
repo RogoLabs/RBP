@@ -37,6 +37,17 @@
    "verdict": "unmeasurable",
    "wall_seconds": 1.5
   },
+  "broadcom": {
+   "cnas_new_effective": 1,
+   "cnas_new_effective_names": [
+    "ca"
+   ],
+   "combine": "union",
+   "lead_n": 152,
+   "unpublished_n": 36,
+   "verdict": "detecting",
+   "wall_seconds": 1.1
+  },
   "certcc": {
    "cnas_new_effective": 0,
    "cnas_new_effective_names": [],
@@ -47,9 +58,8 @@
    "wall_seconds": 15.2
   },
   "csaf": {
-   "cnas_new_effective": 67,
+   "cnas_new_effective": 64,
    "cnas_new_effective_names": [
-    "AMI",
     "Absolute",
     "Axis",
     "BD",
@@ -107,13 +117,11 @@
     "atlassian",
     "avaya",
     "blackberry",
-    "brocade",
     "jci",
     "juniper",
     "krcert",
     "netapp",
     "palo_alto",
-    "symantec",
     "tibco",
     "twcert"
    ],
@@ -253,29 +261,33 @@
   }
  },
  "live": {
-  "effective_n": 271,
-  "fetched": "2026-09-28",
-  "generated_at": "2026-09-28T14:16:52+00:00",
-  "ids_short": 32337,
+  "effective_n": 272,
+  "fetched": "2026-10-29",
+  "generated_at": "2026-10-29T14:03:24+00:00",
+  "ids_short": 65493,
   "pinned": true,
   "rows_short": {
-   "alas": 1874,
-   "alpine": 78,
-   "certcc": 13,
-   "csaf": 18827,
-   "debian": 3224,
-   "ghsa": 614,
-   "ghsa-repos": 380,
-   "jvn": 395,
-   "mozilla": 78,
-   "msrc": 1436,
-   "osv": 861,
-   "redhat": 1606,
-   "ubuntu-osv": 2838,
-   "zdi": 113
+   "acronis": 13,
+   "alas": 4839,
+   "alpine": 518,
+   "arch": 1,
+   "broadcom": 67,
+   "certcc": 39,
+   "csaf": 28060,
+   "debian": 7297,
+   "ghsa": 1756,
+   "ghsa-repos": 1546,
+   "mozilla": 424,
+   "msrc": 5214,
+   "osv": 2328,
+   "redhat": 6681,
+   "samsung": 62,
+   "ubuntu": 3,
+   "ubuntu-osv": 6470,
+   "zdi": 175
   },
-  "source_commit": "84e62c07b2e6"
+  "source_commit": "ad0976ba6f0e"
  },
  "note": "each feed scored against ALL THE OTHERS, so these marginal figures do not sum: two feeds that both uniquely cover the same CNA each score 0",
- "scored_at": "2026-09-28T14:38:32+00:00"
+ "scored_at": "2026-10-29T14:38:05+00:00"
 }
