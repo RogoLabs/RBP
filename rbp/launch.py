@@ -152,10 +152,11 @@ _DECLARED = [
     {
         "n": 5,
         # Hand-verified on this date; _expire flips it to UNMET once stale.
-        # Re-verified 2026-09-28: validate_min_age(3) refuses, 4 and 7 pass,
-        # cmd_run calls it before anything is read, and deploy.yml's only
-        # route to the value is MIN_AGE_DAYS, which goes through it.
-        "verified_on": "2026-09-28",
+        # Re-verified 2026-10-29: validate_min_age refuses 3, 0 and -1 and
+        # passes 4 and 7, cli.py still calls it before the epoch check and
+        # any feed read, and deploy.yml's only route to the value is still
+        # MIN_AGE_DAYS -> --min-age-days. Unchanged since 2026-09-28.
+        "verified_on": "2026-10-29",
         "title": "A self-imposed naming floor, bound in code",
         "detail": ("CNA Rule 4.5.1.7 lets the Secretariat name a reserving CNA only "
                    "24 hours after public disclosure. report.validate_min_age "
@@ -183,7 +184,12 @@ _DECLARED = [
         # site._floored_history at the writer. In v1 inference is not run, so
         # summary.json carries `not_run` and no page publishes a figure; the
         # composition figures below are from the last run that had one.
-        "verified_on": "2026-09-28",
+        # Re-verified 2026-10-29 against the live files: precision.json reads
+        # `precision: null, below_floor: true` at floor 20 on graded 1, and
+        # its one history entry carries `cumulative_precision: null`, so the
+        # 09-28 fix holds. summary.json's inference block is `not_run` on both
+        # leave_one_out and live.
+        "verified_on": "2026-10-29",
         "title": "One precision figure, stratified, with its sample composition",
         "detail": ("One floored figure, computed in one place, stratified by CNA with "
                    "the floor applied per stratum, and published with its composition "
@@ -215,7 +221,12 @@ _DECLARED = [
         # 2026-08-22, and 08-22, 09-01, 09-15 and 09-28 each resolve to their
         # own day's rows. The two absent days, 09-22 and 09-23, are the outage
         # in which nothing published, not retention.
-        "verified_on": "2026-09-28",
+        # Re-verified 2026-10-29: 66 snapshots from 2026-08-22 to 2026-10-29,
+        # and 08-22, 09-15, 10-01, 10-27 and 10-29 each resolve with their
+        # own snapshot_date and row count (522, 2,068, 1,847, 1,776, 1,770).
+        # Absent: 09-22, 09-23 and now 10-28, the 2026-10-27 to 10-29 outage
+        # (RogoLabs/RBP#70), when nothing published. 10-28 returns 404.
+        "verified_on": "2026-10-29",
         "title": "A dated immutable archive, resolvable after the epoch flip",
         "detail": ("Anything cited before launch stays resolvable afterwards at "
                    "/data/archive/<date>/rbp.json, with /data/archive.json as the "
@@ -259,7 +270,12 @@ _DECLARED = [
         # Re-verified 2026-09-28 on a real episode: RogoLabs/RBP#58 opened on
         # the first failed run of 2026-09-22, took one comment per later
         # failure, and closed itself on the 2026-09-24 success.
-        "verified_on": "2026-09-28",
+        # Re-verified 2026-10-29 on another real episode: RogoLabs/RBP#70
+        # opened on the first failed run of 2026-10-27 22:14Z, took one comment
+        # for each of the five failures after it, and closed itself on the
+        # 2026-10-29 13:47Z success. #66 to #69, one-run verify failures in
+        # October, each opened and closed the same way.
+        "verified_on": "2026-10-29",
         "title": "A failure notification exists, and has been exercised once",
         "detail": ("One issue per failure episode, opened on the first failure, "
                    "commented on subsequent ones so the duration is visible, and "
@@ -287,7 +303,13 @@ _DECLARED = [
         # comparing across the epoch, so no rehearsal could pass and neither
         # could launch day. Fixed in verify; run 36440211278 then passed with
         # 1,165 held back, 644 counted, no findings, deploy and persist skipped.
-        "verified_on": "2026-09-28",
+        # Re-verified 2026-10-29, first attempt: dry run 40892893689 on main at
+        # ad0976b built LAUNCHED with / as the dashboard, held back 928 rows
+        # before epoch 2026-08-01 (oldest 1,359 days) and counted 842, the 1,770
+        # the live run published that hour. verify: no findings beyond jvn's
+        # accounted-for outage. Deploy and "Persist durable state" skipped, and
+        # the live site's last-modified did not move.
+        "verified_on": "2026-10-29",
         "title": "The launch state rehearsed via dry_run against real data",
         "detail": ("dry_run plus rehearse_launch and rehearse_epoch build the "
                    "launched posture and an epoch flip against live data while "
