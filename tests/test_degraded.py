@@ -597,6 +597,55 @@ def test_the_ubuntu_retry_budget_is_bounded(monkeypatch):
         f"the budget cut the retries short and the reason does not say so: {h}")
 
 
+def test_ubuntu_retries_an_empty_page_below_the_total(monkeypatch):
+    """Ubuntu returned 40, 60, 0 and 80 ids against a usual 3,998 on four runs
+    in October 2026, recorded healthy each time, and `verify` failed the build on
+    the shrink. A 200 with no rows at an offset below `total_results` was read as
+    the end of the data. It is now retried like a 503, and the walk resumes."""
+    monkeypatch.setattr(feeds.time, "sleep", lambda s: None)
+    pages = {
+        0: {"cves": [{"id": "CVE-2026-1", "published": "2026-08-01T00:00:00Z"}],
+            "total_results": 40},
+        20: {"cves": [{"id": "CVE-2026-2", "published": "2026-08-01T00:00:00Z"}],
+             "total_results": 40},
+    }
+    state = {"blanked": False}
+
+    def fake_get(url, timeout=None):
+        off = int(url.split("offset=")[1])
+        if off == 20 and not state["blanked"]:
+            state["blanked"] = True
+            return {"cves": [], "total_results": 40}, 200, {}
+        return pages.get(off, {"cves": [], "total_results": 40}), 200, {}
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    out = feeds.feed_ubuntu({2026})
+    assert sorted(r["cve_id"] for r in out) == ["CVE-2026-1", "CVE-2026-2"]
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") != feeds.TRUNCATED, h
+    assert "recovered 1 page(s) on retry" in (h.get("detail") or ""), h
+
+
+def test_ubuntu_truncates_when_a_page_stays_empty_below_the_total(monkeypatch):
+    """And if it never fills, the run says so instead of looking exhausted."""
+    monkeypatch.setattr(feeds.time, "sleep", lambda s: None)
+
+    def fake_get(url, timeout=None):
+        off = int(url.split("offset=")[1])
+        if off == 0:
+            return {"cves": [{"id": "CVE-2026-1",
+                              "published": "2026-08-01T00:00:00Z"}],
+                    "total_results": 85201}, 200, {}
+        return {"cves": [], "total_results": 85201}, 200, {}
+
+    monkeypatch.setattr(feeds, "_get", fake_get)
+    out = feeds.feed_ubuntu({2026})
+    assert len(out) == 1
+    h = feeds.health_detail().get("ubuntu") or {}
+    assert h.get("status") == feeds.TRUNCATED, h
+    assert "empty page at offset 20" in (h.get("detail") or ""), h
+
+
 def test_a_genuine_end_of_data_is_still_recorded_as_healthy(monkeypatch):
     """The guard must not turn every normal run into a degraded one, which is the
     class-2-as-class-1 mistake this project has already made twice."""
