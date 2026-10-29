@@ -1119,6 +1119,21 @@ def _ubuntu_page(offset, limit, retries, waits, budget_s, spent):
     for attempt in range(retries + 1):
         try:
             data, code, _ = _get(url, timeout=60)
+            # A 200 with no rows BELOW `total_results` is not the end of the
+            # data, it is the endpoint failing politely, so it is retried and,
+            # if it never fills, truncates. Read as an empty page it ended the
+            # walk as "exhausted" and recorded nothing. On 2026-10-14, 16, 17
+            # and 19 ubuntu returned 40, 60, 0 and 80 ids against a usual 3,998
+            # with no stop line in the log; `_get` raises on everything but a
+            # 200 or a 404, and a 404 is recorded, so a row-less 200 is the one
+            # path that ends this walk that quietly. `verify` failed each of
+            # those builds on the shrink. Without a total (a genuine end, or a
+            # changed response shape) the walk still decides from the page.
+            total = data.get("total_results") if isinstance(data, dict) else None
+            if (isinstance(total, int) and offset < total and code == 200
+                    and not data.get("cves")):
+                raise RuntimeError(f"empty page at offset {offset} of "
+                                   f"{total:,} results")
             return data, code, None, spent, attempt > 0
         except Exception as e:
             last_err = e
