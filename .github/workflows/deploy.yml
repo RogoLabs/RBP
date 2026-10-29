@@ -146,7 +146,22 @@ jobs:
       # hand-checked condition any more than it can rebuild a baseline, so the
       # only thing this test could do here was stop the site until a person
       # intervened. Enforced unfiltered in ci.yml, where that person is.
-      - run: python -m pytest tests/ -q --ignore=tests/render -m "not harness_artefact and not hand_verified"
+      #
+      # AND `upstream_pin` IS DESELECTED, 2026-10-29, the fourth case.
+      # `test_the_pinned_roster_has_not_drifted_from_the_program` fetches the CVE
+      # Program's live CNA list and fails once the pinned roster is more than
+      # roster.MAX_DRIFT entries behind it. Certification added 26 CNAs and
+      # removed 2 since the 2026-08-22 pin, the drift reached 28 against a
+      # tolerance of 25 on 2026-10-27, and six consecutive scheduled runs
+      # published nothing. Its own docstring calls it "a hygiene check rather
+      # than a correctness one" and says "a build must not depend on a third
+      # party being up", and this job was depending on exactly that. The fix it
+      # asks for is a deliberate refresh commit that moves the published
+      # coverage denominator and the copy on /method that quotes it, which a
+      # cron tick must not make. `test_the_pinned_roster_is_not_stale` is the
+      # same check on a clock (roster.MAX_AGE_DAYS) and would have done the same
+      # thing on 2026-12-20.
+      - run: python -m pytest tests/ -q --ignore=tests/render -m "not harness_artefact and not hand_verified and not upstream_pin"
 
   build:
     needs: test

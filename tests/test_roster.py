@@ -91,6 +91,7 @@ def test_the_off_roster_list_is_not_truncated():
     assert "off_roster[:20]" not in src
 
 
+@pytest.mark.upstream_pin
 @pytest.mark.parametrize("_", [0])
 def test_the_pinned_roster_has_not_drifted_from_the_program(_):
     """A pinned file that silently drifts is a denominator nobody is measuring. This
@@ -116,6 +117,7 @@ def test_the_pinned_roster_has_not_drifted_from_the_program(_):
         f"added {sorted(added)[:8]}, removed {sorted(removed)[:8]}")
 
 
+@pytest.mark.upstream_pin
 def test_the_pinned_roster_is_not_stale():
     age = roster.age_days(roster.load())
     assert age is not None, "the roster carries no fetch date"
