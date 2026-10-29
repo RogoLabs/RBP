@@ -303,7 +303,13 @@ _DECLARED = [
         # comparing across the epoch, so no rehearsal could pass and neither
         # could launch day. Fixed in verify; run 36440211278 then passed with
         # 1,165 held back, 644 counted, no findings, deploy and persist skipped.
-        "verified_on": "2026-09-28",
+        # Re-verified 2026-10-29, first attempt: dry run 40892893689 on main at
+        # ad0976b built LAUNCHED with / as the dashboard, held back 928 rows
+        # before epoch 2026-08-01 (oldest 1,359 days) and counted 842, the 1,770
+        # the live run published that hour. verify: no findings beyond jvn's
+        # accounted-for outage. Deploy and "Persist durable state" skipped, and
+        # the live site's last-modified did not move.
+        "verified_on": "2026-10-29",
         "title": "The launch state rehearsed via dry_run against real data",
         "detail": ("dry_run plus rehearse_launch and rehearse_epoch build the "
                    "launched posture and an epoch flip against live data while "
