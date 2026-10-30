@@ -202,12 +202,13 @@
   "cve_id": "CVE-2026-115642",
   "state": "RESERVED",
   "public_date": "2026-10-29",
-  "sources": "csaf,debian",
-  "feed_count": 2,
+  "sources": "csaf,debian,redhat",
+  "feed_count": 3,
   "dates": {
+   "redhat": "2026-10-29",
    "csaf": "2026-10-29"
   },
-  "refs": "csaf:Red Hat Product Security\tCVE-2026-115642\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-115642.json;debian:python-keystonemiddleware",
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-115642\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-115642.json;debian:python-keystonemiddleware;redhat:CVE-2026-115642",
   "description": "keystonemiddleware: keystonemiddleware: application credential access_rules bypass via X-Service-Token header presence check",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -228,7 +229,8 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-115642.json",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-115642"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-115642",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-115642"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -5209,6 +5211,42 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-90718",
+  "state": "RESERVED",
+  "public_date": "2026-10-30",
+  "sources": "csaf",
+  "feed_count": 1,
+  "dates": {
+   "csaf": "2026-10-30"
+  },
+  "refs": "csaf:Nationaal Cyber Security Centrum\tNCSC-2026-0460\thttps://advisories.ncsc.nl/csaf/v2/2026/ncsc-2026-0460.json",
+  "description": "CVE-2026-90718",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-30",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://advisories.ncsc.nl/csaf/v2/2026/ncsc-2026-0460.json"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-77153",
   "state": "RESERVED",
   "public_date": "2026-10-27",
@@ -5238,42 +5276,6 @@
   "ecosystem": "",
   "source_urls": {
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4197.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-90718",
-  "state": "RESERVED",
-  "public_date": "2026-10-27",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-10-27"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-4218\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4218.json",
-  "description": "CVE-2026-90718",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 3,
-  "clock_known": true,
-  "hours_public": 72,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-27",
-  "advisory_days_public": 3,
-  "past_expectation": false,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4218.json"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
