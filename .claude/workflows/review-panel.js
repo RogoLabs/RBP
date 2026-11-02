@@ -79,10 +79,11 @@ ESTABLISHED EXTERNAL FACTS (verified; do not contradict without new evidence):
   discretionary levers the Program "may" apply. v1.0's 5%/50% arithmetic
   thresholds are WITHDRAWN; third parties still host that PDF and it must not
   be cited.
-- CNA Operational Rules v4.2.0, approved 2026-08-20, superseding v4.1.0
-  (2025-05-14). The six rules this site cites are UNCHANGED between the two
+- CNA Operational Rules v4.2.1, approved 2026-10-14, superseding v4.2.0
+  (2026-08-20), which superseded v4.1.0 (2025-05-14). The six rules this site
+  cites are UNCHANGED across all three
   (4.5.1.3, 4.5.1.4, 4.5.1.5, 4.5.1.6, 4.5.1.7, 4.5.3.5), and the pinned copy
-  with that provenance is tests/fixtures/cna_rules_4-5.json. Cite v4.2.0: the
+  with that provenance is tests/fixtures/cna_rules_4-5.json. Cite v4.2.1: the
   previous panel brief said v4.1.0 and a panellist caught it against
   templates/base.html and rbp/report.py. 4.5.1.4 = MUST publish within 72h
   when the CNA itself disclosed. 4.5.1.6 = SHOULD within 72h when a third party

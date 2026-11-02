@@ -82,23 +82,28 @@ def test_4535_requires_rejecting_unpublished_ids():
 
 
 def test_rules_version_is_pinned():
-    assert RULES["version"] == "4.2.0"
-    assert RULES["approved"] == "August 20, 2026"
+    assert RULES["version"] == "4.2.1"
+    assert RULES["approved"] == "October 14, 2026"
 
 
-def test_the_cited_sections_survived_the_4_2_0_revision():
-    """4.2.0 was approved 2026-08-20 and the live test caught the move.
+def test_the_cited_sections_survived_the_4_2_1_revision():
+    """4.2.1 was approved 2026-10-14 and the live test caught the move.
 
     Every one of the six sections this site quotes is textually IDENTICAL in
-    4.2.0, checked substring-exact against the live document on 2026-08-26. That
-    is why the version bump is a re-capture rather than a re-argument: the
-    citations still say what the site says they say.
+    4.2.1, checked substring-exact against the live document on 2026-11-02, as
+    is 4.2.1.2, which 4.5.1.4 points to. 4.2.1 changed only 4.1 (a sentence on
+    Supplier CNA determination) and 4.2.6 and 4.2.11 (SHOULD to MUST on
+    assigning separate IDs), none of which the site cites. That is why the
+    version bump is a re-capture rather than a re-argument: the citations still
+    say what the site says they say.
+
+    4.2.0 (2026-08-20) was the same kind of bump over 4.1.0 (2025-05-14).
 
     Recorded as an assertion rather than a commit message, because the next
     version bump needs to answer the same question and a reader needs to know
     which sections were checked.
     """
-    assert RULES["prior_version"] == "4.1.0"
+    assert RULES["prior_version"] == "4.2.0"
     assert set(RULES["unchanged_since_prior"]) == set(RULES["rules"])
     assert set(RULES["rules"]) == {"4.5.1.3", "4.5.1.4", "4.5.1.5",
                                    "4.5.1.6", "4.5.1.7", "4.5.3.5"}
