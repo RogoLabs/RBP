@@ -1,7 +1,7 @@
 {
  "source": "https://raw.githubusercontent.com/CVEProject/cve-website/dev/src/assets/data/CNAsList.json",
- "fetched": "2026-08-22",
- "count": 539,
+ "fetched": "2026-11-01",
+ "count": 563,
  "cnas": [
   {
    "short_name": "2N",
@@ -56,8 +56,16 @@
    "organization": "Airlock by Ergon"
   },
   {
+   "short_name": "Airoha",
+   "organization": "Airoha Technology Corp."
+  },
+  {
    "short_name": "AISLE",
    "organization": "AISLE Incorporated"
+  },
+  {
+   "short_name": "Akrites",
+   "organization": "Akrites SIRT"
   },
   {
    "short_name": "AlgoSec",
@@ -348,6 +356,10 @@
    "organization": "CERT@VDE"
   },
   {
+   "short_name": "chainguard",
+   "organization": "Chainguard, Inc."
+  },
+  {
    "short_name": "Checkmarx",
    "organization": "Checkmarx"
   },
@@ -374,6 +386,10 @@
   {
    "short_name": "CIRCL",
    "organization": "Computer Incident Response Center Luxembourg (CIRCL)"
+  },
+  {
+   "short_name": "Circutor",
+   "organization": "Circutor"
   },
   {
    "short_name": "cirosec",
@@ -628,6 +644,10 @@
    "organization": "Ericsson"
   },
   {
+   "short_name": "esaqa",
+   "organization": "esaqa GmbH"
+  },
+  {
    "short_name": "ESET",
    "organization": "ESET, spol. s r.o."
   },
@@ -666,6 +686,10 @@
   {
    "short_name": "flexera",
    "organization": "Flexera Software LLC"
+  },
+  {
+   "short_name": "flock",
+   "organization": "Flock"
   },
   {
    "short_name": "floragunn",
@@ -760,6 +784,10 @@
    "organization": "GNU C Library"
   },
   {
+   "short_name": "gnutls",
+   "organization": "GnuTLS Project"
+  },
+  {
    "short_name": "Go",
    "organization": "Go Project"
   },
@@ -786,6 +814,10 @@
   {
    "short_name": "graphql-java",
    "organization": "GraphQL Java"
+  },
+  {
+   "short_name": "Grayback",
+   "organization": "Grayback Security"
   },
   {
    "short_name": "GreenRocketSecurity",
@@ -884,6 +916,10 @@
    "organization": "Hologic, Inc."
   },
   {
+   "short_name": "HONA",
+   "organization": "Honeywell Aerospace"
+  },
+  {
    "short_name": "Honeywell",
    "organization": "Honeywell International Inc."
   },
@@ -962,6 +998,10 @@
   {
    "short_name": "INCIBE",
    "organization": "Spanish National Cybersecurity Institute, S.A. (INCIBE)"
+  },
+  {
+   "short_name": "Infoblox",
+   "organization": "Infoblox Inc."
   },
   {
    "short_name": "Insyde",
@@ -1098,6 +1138,10 @@
   {
    "short_name": "Liferay",
    "organization": "Liferay, Inc."
+  },
+  {
+   "short_name": "Linaro",
+   "organization": "Linaro"
   },
   {
    "short_name": "linqi",
@@ -1240,6 +1284,10 @@
    "organization": "NetApp, Inc."
   },
   {
+   "short_name": "NetDEF",
+   "organization": "Network Device Education Foundation"
+  },
+  {
    "short_name": "netflix",
    "organization": "Netflix, Inc."
   },
@@ -1270,6 +1318,10 @@
   {
    "short_name": "Nintendo",
    "organization": "Nintendo Co., Ltd."
+  },
+  {
+   "short_name": "Nitro",
+   "organization": "Nitro Software, Inc."
   },
   {
    "short_name": "NLnet_Labs",
@@ -1356,10 +1408,6 @@
    "organization": "OpenAM Consortium"
   },
   {
-   "short_name": "OpenBMC",
-   "organization": "The OpenBMC Project"
-  },
-  {
    "short_name": "openEuler",
    "organization": "openEuler"
   },
@@ -1409,7 +1457,7 @@
   },
   {
    "short_name": "OTRS",
-   "organization": "OTRS AG"
+   "organization": "EasyVista-OTRS GmbH"
   },
   {
    "short_name": "OX",
@@ -1456,6 +1504,10 @@
    "organization": "Pegasystems Inc."
   },
   {
+   "short_name": "Pentaho",
+   "organization": "Pentaho Canada Inc."
+  },
+  {
    "short_name": "Pentraze",
    "organization": "Pentraze Cybersecurity"
   },
@@ -1488,12 +1540,24 @@
    "organization": "PlexTrac, Inc."
   },
   {
+   "short_name": "Pointsharp",
+   "organization": "Pointsharp International AB"
+  },
+  {
+   "short_name": "POSIT",
+   "organization": "Posit, PBC"
+  },
+  {
    "short_name": "PostgreSQL",
    "organization": "PostgreSQL"
   },
   {
    "short_name": "postiz",
    "organization": "Postiz"
+  },
+  {
+   "short_name": "pretix",
+   "organization": "pretix GmbH"
   },
   {
    "short_name": "PRJBLK",
@@ -1552,10 +1616,6 @@
    "organization": "Radiometer Medical ApS"
   },
   {
-   "short_name": "rami.io",
-   "organization": "rami.io GmbH"
-  },
-  {
    "short_name": "rapid7",
    "organization": "Rapid7, Inc."
   },
@@ -1572,6 +1632,10 @@
    "organization": "Replicated, Inc."
   },
   {
+   "short_name": "RES",
+   "organization": "RedEye Security"
+  },
+  {
    "short_name": "Ribose",
    "organization": "Ribose Limited"
   },
@@ -1582,6 +1646,10 @@
   {
    "short_name": "Rockwell",
    "organization": "Rockwell Automation"
+  },
+  {
+   "short_name": "rt-labs",
+   "organization": "RT-Labs AB"
   },
   {
    "short_name": "RTI",
@@ -1600,6 +1668,14 @@
    "organization": "S21sec Cyber Solutions by Thales"
   },
   {
+   "short_name": "S4M",
+   "organization": "Security4Media"
+  },
+  {
+   "short_name": "SafeSource",
+   "organization": "SafeSource Lab"
+  },
+  {
    "short_name": "SailPoint",
    "organization": "SailPoint Technologies"
   },
@@ -1614,6 +1690,10 @@
   {
    "short_name": "Samsung_Mobile",
    "organization": "Samsung Mobile"
+  },
+  {
+   "short_name": "samsungsemiconductor",
+   "organization": "Samsung Semiconductor"
   },
   {
    "short_name": "sap",
@@ -1992,6 +2072,10 @@
    "organization": "Vantive"
   },
   {
+   "short_name": "Velneo",
+   "organization": "Velneo"
+  },
+  {
    "short_name": "Verizon",
    "organization": "Verizon"
   },
@@ -2038,6 +2122,14 @@
   {
    "short_name": "WDC_PSIRT",
    "organization": "Western Digital"
+  },
+  {
+   "short_name": "Westell",
+   "organization": "Westell Technologies, Inc."
+  },
+  {
+   "short_name": "wibu",
+   "organization": "WIBU-SYSTEMS AG"
   },
   {
    "short_name": "wikimedia-foundation",
@@ -2122,6 +2214,10 @@
   {
    "short_name": "zdi",
    "organization": "Zero Day Initiative"
+  },
+  {
+   "short_name": "Zenitel",
+   "organization": "Zenitel Norway AS"
   },
   {
    "short_name": "zephyr",
