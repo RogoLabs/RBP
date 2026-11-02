@@ -5121,42 +5121,6 @@
   "held_back_reason": "within-buffer"
  },
  {
-  "cve_id": "CVE-2026-94290",
-  "state": "RESERVED",
-  "public_date": "2026-10-29",
-  "sources": "csaf",
-  "feed_count": 1,
-  "dates": {
-   "csaf": "2026-10-29"
-  },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-4245\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4245.json",
-  "description": "CVE-2026-94290",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 4,
-  "clock_known": true,
-  "hours_public": 96,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-29",
-  "advisory_days_public": 4,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4245.json"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
   "cve_id": "CVE-2026-120420",
   "state": "RESERVED",
   "public_date": "2026-11-02",
@@ -5474,6 +5438,42 @@
   "ecosystem": "",
   "source_urls": {
    "zdi": "https://www.zerodayinitiative.com/advisories/ZDI-26-810/"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-16305",
+  "state": "RESERVED",
+  "public_date": "2026-11-02",
+  "sources": "certcc",
+  "feed_count": 1,
+  "dates": {
+   "certcc": "2026-11-02"
+  },
+  "refs": "certcc:VU#203719",
+  "description": "INFINITT PACS System Manager Contains Multiple Code Execution Vulnerabilities",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 0,
+  "clock_known": true,
+  "hours_public": 0,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-11-02",
+  "advisory_days_public": 0,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "certcc": "https://www.kb.cert.org/vuls/id/203719"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
