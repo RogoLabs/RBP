@@ -3540,12 +3540,6 @@
   "CVE-2026-97373": {
    "first_public": "2026-07-14"
   },
-  "CVE-2026-91168": {
-   "first_public": "2026-09-18"
-  },
-  "CVE-2026-91163": {
-   "first_public": "2026-09-18"
-  },
   "CVE-2026-85278": {
    "first_public": "2026-09-17"
   },
@@ -3599,9 +3593,6 @@
   },
   "CVE-2026-102337": {
    "first_public": "2026-07-30"
-  },
-  "CVE-2026-102345": {
-   "first_public": "2026-08-04"
   },
   "CVE-2026-93402": {
    "first_public": "2026-09-22"
@@ -4066,12 +4057,6 @@
    "first_public": "2026-09-28"
   },
   "CVE-2026-100402": {
-   "first_public": "2026-09-28"
-  },
-  "CVE-2026-100407": {
-   "first_public": "2026-09-28"
-  },
-  "CVE-2026-100408": {
    "first_public": "2026-09-28"
   },
   "CVE-2026-102987": {
@@ -5090,6 +5075,12 @@
   },
   "CVE-2026-116779": {
    "first_public": "2026-10-28"
+  },
+  "CVE-2026-120698": {
+   "first_public": "2026-09-21"
+  },
+  "CVE-2026-120697": {
+   "first_public": "2026-09-21"
   }
  },
  "resolved": [
@@ -26509,6 +26500,51 @@
    "first_public": "2026-10-27",
    "published": "2026-11-03",
    "days_to_publish": 7,
+   "closed_on": "2026-11-04"
+  },
+  {
+   "cve_id": "CVE-2026-91168",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-18",
+   "published": "2026-11-04",
+   "days_to_publish": 47,
+   "closed_on": "2026-11-04"
+  },
+  {
+   "cve_id": "CVE-2026-91163",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-18",
+   "published": "2026-11-04",
+   "days_to_publish": 47,
+   "closed_on": "2026-11-04"
+  },
+  {
+   "cve_id": "CVE-2026-102345",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-08-04",
+   "published": "2026-11-04",
+   "days_to_publish": 92,
+   "closed_on": "2026-11-04"
+  },
+  {
+   "cve_id": "CVE-2026-100407",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-28",
+   "published": "2026-11-04",
+   "days_to_publish": 37,
+   "closed_on": "2026-11-04"
+  },
+  {
+   "cve_id": "CVE-2026-100408",
+   "state": "PUBLISHED",
+   "transferred": false,
+   "first_public": "2026-09-28",
+   "published": "2026-11-04",
+   "days_to_publish": 37,
    "closed_on": "2026-11-04"
   }
  ]
