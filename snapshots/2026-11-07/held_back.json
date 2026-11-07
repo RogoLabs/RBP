@@ -173,7 +173,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52055",
+  "cve_id": "CVE-2026-52060",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -199,7 +199,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52055"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52060"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -207,7 +207,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52057",
+  "cve_id": "CVE-2026-52064",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -233,7 +233,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52057"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52064"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -241,7 +241,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52058",
+  "cve_id": "CVE-2026-52065",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -267,7 +267,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52058"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52065"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -275,7 +275,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52059",
+  "cve_id": "CVE-2026-52066",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -301,7 +301,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52059"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52066"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -309,7 +309,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52062",
+  "cve_id": "CVE-2026-52067",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -335,7 +335,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52062"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52067"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -343,7 +343,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52071",
+  "cve_id": "CVE-2026-52072",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -369,7 +369,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52071"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52072"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
@@ -377,7 +377,7 @@
   "held_back_reason": "undated"
  },
  {
-  "cve_id": "CVE-2026-52073",
+  "cve_id": "CVE-2026-52075",
   "state": "RESERVED",
   "public_date": "",
   "sources": "debian",
@@ -403,7 +403,7 @@
   "package": "mongoose",
   "ecosystem": "",
   "source_urls": {
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52073"
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-52075"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
