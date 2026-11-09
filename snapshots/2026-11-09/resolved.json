@@ -1,1 +1,11 @@
-[]
+[
+ {
+  "cve_id": "CVE-2026-63497",
+  "state": "PUBLISHED",
+  "transferred": false,
+  "first_public": "2026-07-01",
+  "published": "2026-11-09",
+  "days_to_publish": 131,
+  "closed_on": "2026-11-09"
+ }
+]
