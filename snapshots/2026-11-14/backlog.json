@@ -27184,6 +27184,47 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-115696",
+  "state": "RESERVED",
+  "public_date": "2026-08-01",
+  "sources": "csaf,debian,redhat,ubuntu,ubuntu-osv",
+  "feed_count": 5,
+  "dates": {
+   "ubuntu": "2026-11-04",
+   "ubuntu-osv": "2026-11-04",
+   "redhat": "2026-08-01",
+   "csaf": "2026-08-01"
+  },
+  "refs": "csaf:Red Hat Product Security\tCVE-2026-115696\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-115696.json;debian:iwd;redhat:CVE-2026-115696;ubuntu-osv:UBUNTU-CVE-2026-115696;ubuntu:CVE-2026-115696",
+  "description": "iwd",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 105,
+  "clock_known": true,
+  "hours_public": 2520,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-08-01",
+  "advisory_days_public": 105,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "iwd",
+  "ecosystem": "",
+  "source_urls": {
+   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-115696.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-115696",
+   "redhat": "https://access.redhat.com/security/cve/CVE-2026-115696",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-115696",
+   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-115696"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-115698",
   "state": "RESERVED",
   "public_date": "2026-08-01",
@@ -27220,45 +27261,6 @@
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-115698",
    "ubuntu": "https://ubuntu.com/security/CVE-2026-115698",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-115698"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-115696",
-  "state": "RESERVED",
-  "public_date": "2026-08-01",
-  "sources": "csaf,debian,redhat,ubuntu-osv",
-  "feed_count": 4,
-  "dates": {
-   "ubuntu-osv": "2026-11-04",
-   "redhat": "2026-08-01",
-   "csaf": "2026-08-01"
-  },
-  "refs": "csaf:Red Hat Product Security\tCVE-2026-115696\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-115696.json;debian:iwd;redhat:CVE-2026-115696;ubuntu-osv:UBUNTU-CVE-2026-115696",
-  "description": "iwd",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 105,
-  "clock_known": true,
-  "hours_public": 2520,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-08-01",
-  "advisory_days_public": 105,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "iwd",
-  "ecosystem": "",
-  "source_urls": {
-   "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-115696.json",
-   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-115696",
-   "redhat": "https://access.redhat.com/security/cve/CVE-2026-115696",
-   "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-115696"
   },
   "veto_evaluated": false,
   "owner_nameable": false
@@ -45975,6 +45977,40 @@
   "owner_nameable": false
  },
  {
+  "cve_id": "CVE-2026-49896",
+  "state": "RESERVED",
+  "public_date": "2026-10-01",
+  "sources": "samsung",
+  "feed_count": 1,
+  "dates": {
+   "samsung": "2026-10-01"
+  },
+  "refs": "samsung:SMR-Oct-2026",
+  "description": "Samsung SMR Oct 2026",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 44,
+  "clock_known": true,
+  "hours_public": 1056,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-10-01",
+  "advisory_days_public": 44,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false
+ },
+ {
   "cve_id": "CVE-2026-5945",
   "state": "RESERVED",
   "public_date": "2026-10-01",
@@ -46010,40 +46046,6 @@
  },
  {
   "cve_id": "CVE-2026-6021",
-  "state": "RESERVED",
-  "public_date": "2026-10-01",
-  "sources": "samsung",
-  "feed_count": 1,
-  "dates": {
-   "samsung": "2026-10-01"
-  },
-  "refs": "samsung:SMR-Oct-2026",
-  "description": "Samsung SMR Oct 2026",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 44,
-  "clock_known": true,
-  "hours_public": 1056,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-10-01",
-  "advisory_days_public": 44,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "samsung": "https://security.samsungmobile.com/securityUpdate.smsb"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false
- },
- {
-  "cve_id": "CVE-2026-49896",
   "state": "RESERVED",
   "public_date": "2026-10-01",
   "sources": "samsung",
@@ -48278,13 +48280,14 @@
   "cve_id": "CVE-2026-110332",
   "state": "RESERVED",
   "public_date": "2026-10-23",
-  "sources": "alpine,csaf,debian,ubuntu-osv",
-  "feed_count": 4,
+  "sources": "alpine,csaf,debian,ubuntu,ubuntu-osv",
+  "feed_count": 5,
   "dates": {
+   "ubuntu": "2026-10-23",
    "ubuntu-osv": "2026-10-23",
    "csaf": "2026-10-26"
   },
-  "refs": "alpine:perl-plack;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12275-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12275-1.json;debian:libplack-perl;ubuntu-osv:UBUNTU-CVE-2026-110332",
+  "refs": "alpine:perl-plack;csaf:SUSE Product Security Team\topenSUSE-SU-2026:12275-1\thttps://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12275-1.json;debian:libplack-perl;ubuntu-osv:UBUNTU-CVE-2026-110332;ubuntu:CVE-2026-110332",
   "description": "perl-plack",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -48307,6 +48310,7 @@
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-110332",
    "csaf": "https://ftp.suse.com/pub/projects/security/csaf/opensuse-su-2026_12275-1.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-110332",
+   "ubuntu": "https://ubuntu.com/security/CVE-2026-110332",
    "ubuntu-osv": "https://ubuntu.com/security/CVE-2026-110332"
   },
   "veto_evaluated": false,
@@ -55497,14 +55501,14 @@
   "cve_id": "CVE-2026-126820",
   "state": "RESERVED",
   "public_date": "2026-11-07",
-  "sources": "alas,csaf,redhat",
-  "feed_count": 3,
+  "sources": "alas,csaf,debian,redhat",
+  "feed_count": 4,
   "dates": {
    "alas": "2026-11-14",
    "redhat": "2026-11-07",
    "csaf": "2026-11-07"
   },
-  "refs": "alas:CVE-2026-126820;csaf:Red Hat Product Security\tCVE-2026-126820\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-126820.json;redhat:CVE-2026-126820",
+  "refs": "alas:CVE-2026-126820;csaf:Red Hat Product Security\tCVE-2026-126820\thttps://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-126820.json;debian:cpio;redhat:CVE-2026-126820",
   "description": "A flaw was found in GNU cpio through version 2.15.",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55521,11 +55525,12 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "package": "CVE-2026-126820",
+  "package": "cpio",
   "ecosystem": "",
   "source_urls": {
    "alas": "https://explore.alas.aws.amazon.com/CVE-2026-126820.html",
    "csaf": "https://security.access.redhat.com/data/csaf/v2/vex/2026/cve-2026-126820.json",
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-126820",
    "redhat": "https://access.redhat.com/security/cve/CVE-2026-126820"
   },
   "veto_evaluated": false,
