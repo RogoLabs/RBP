@@ -27372,7 +27372,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-0022",
+  "cve_id": "CVE-2026-28591",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -27406,7 +27406,7 @@
   "owner_nameable": false
  },
  {
-  "cve_id": "CVE-2026-28591",
+  "cve_id": "CVE-2026-0022",
   "state": "RESERVED",
   "public_date": "2026-08-01",
   "sources": "samsung",
@@ -55608,12 +55608,12 @@
   "cve_id": "CVE-2026-116611",
   "state": "RESERVED",
   "public_date": "2026-11-08",
-  "sources": "csaf",
-  "feed_count": 1,
+  "sources": "alpine,csaf",
+  "feed_count": 2,
   "dates": {
    "csaf": "2026-11-08"
   },
-  "refs": "csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-4408\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4408.json",
+  "refs": "alpine:gst-plugins-bad;csaf:Bundesamt f\u00fcr Sicherheit in der Informationstechnik\tWID-SEC-W-2026-4408\thttps://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4408.json",
   "description": "CVE-2026-116611",
   "state_verified_this_run": true,
   "public_date_origin": "feed",
@@ -55630,9 +55630,10 @@
   "rule_strength": "SHOULD",
   "rule_basis": "unattributed",
   "rule_certainty": "unmeasurable",
-  "package": "",
+  "package": "gst-plugins-bad",
   "ecosystem": "",
   "source_urls": {
+   "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-116611",
    "csaf": "https://wid.cert-bund.de/.well-known/csaf/white/2026/wid-sec-w-2026-4408.json"
   },
   "veto_evaluated": false,
