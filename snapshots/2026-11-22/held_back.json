@@ -1788,20 +1788,22 @@
  {
   "cve_id": "CVE-2026-129975",
   "state": "RESERVED",
-  "public_date": "",
-  "sources": "alpine,debian",
-  "feed_count": 2,
-  "dates": {},
-  "refs": "alpine:gpgme;debian:gpgme1.0",
-  "description": "gpgme",
+  "public_date": "2026-11-20",
+  "sources": "alpine,csaf,debian",
+  "feed_count": 3,
+  "dates": {
+   "csaf": "2026-11-20"
+  },
+  "refs": "alpine:gpgme;csaf:SUSE Product Security Team\tCVE-2026-129975\thttps://ftp.suse.com/pub/projects/security/csaf-vex/2026/cve-2026-129975.json;debian:gpgme1.0",
+  "description": "CVE-2026-129975",
   "state_verified_this_run": true,
-  "public_date_origin": "none",
-  "days_public": null,
-  "clock_known": false,
-  "hours_public": null,
-  "clock_origin": "tracker",
-  "advisory_date": null,
-  "advisory_days_public": null,
+  "public_date_origin": "feed",
+  "days_public": 2,
+  "clock_known": true,
+  "hours_public": 48,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-11-20",
+  "advisory_days_public": 2,
   "past_expectation": false,
   "disclosure_order": "unmeasurable",
   "self_disclosed": false,
@@ -1813,12 +1815,13 @@
   "ecosystem": "",
   "source_urls": {
    "alpine": "https://security.alpinelinux.org/vuln/CVE-2026-129975",
+   "csaf": "https://ftp.suse.com/pub/projects/security/csaf-vex/2026/cve-2026-129975.json",
    "debian": "https://security-tracker.debian.org/tracker/CVE-2026-129975"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
   "counted": false,
-  "held_back_reason": "undated"
+  "held_back_reason": "within-buffer"
  },
  {
   "cve_id": "CVE-2026-132177",
@@ -1968,6 +1971,40 @@
   "owner_nameable": false,
   "counted": false,
   "held_back_reason": "within-buffer"
+ },
+ {
+  "cve_id": "CVE-2026-44842",
+  "state": "RESERVED",
+  "public_date": "",
+  "sources": "debian",
+  "feed_count": 1,
+  "dates": {},
+  "refs": "debian:libyaml",
+  "description": "libyaml",
+  "state_verified_this_run": true,
+  "public_date_origin": "none",
+  "days_public": null,
+  "clock_known": false,
+  "hours_public": null,
+  "clock_origin": "tracker",
+  "advisory_date": null,
+  "advisory_days_public": null,
+  "past_expectation": false,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "libyaml",
+  "ecosystem": "",
+  "source_urls": {
+   "debian": "https://security-tracker.debian.org/tracker/CVE-2026-44842"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "undated"
  },
  {
   "cve_id": "CVE-2026-132671",
@@ -6309,6 +6346,42 @@
   "held_back_reason": "within-buffer"
  },
  {
+  "cve_id": "CVE-2026-85280",
+  "state": "RESERVED",
+  "public_date": "2026-11-16",
+  "sources": "msrc",
+  "feed_count": 1,
+  "dates": {
+   "msrc": "2026-11-16"
+  },
+  "refs": "msrc:msrc:2026-Nov",
+  "description": "",
+  "state_verified_this_run": true,
+  "public_date_origin": "feed",
+  "days_public": 6,
+  "clock_known": true,
+  "hours_public": 144,
+  "clock_origin": "advisory",
+  "advisory_date": "2026-11-16",
+  "advisory_days_public": 6,
+  "past_expectation": true,
+  "disclosure_order": "unmeasurable",
+  "self_disclosed": false,
+  "rule": "4.5.1.6",
+  "rule_strength": "SHOULD",
+  "rule_basis": "unattributed",
+  "rule_certainty": "unmeasurable",
+  "package": "",
+  "ecosystem": "",
+  "source_urls": {
+   "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-85280"
+  },
+  "veto_evaluated": false,
+  "owner_nameable": false,
+  "counted": false,
+  "held_back_reason": "within-buffer"
+ },
+ {
   "cve_id": "CVE-2026-109480",
   "state": "RESERVED",
   "public_date": "2026-11-19",
@@ -6878,42 +6951,6 @@
   "ecosystem": "",
   "source_urls": {
    "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-81962"
-  },
-  "veto_evaluated": false,
-  "owner_nameable": false,
-  "counted": false,
-  "held_back_reason": "within-buffer"
- },
- {
-  "cve_id": "CVE-2026-85280",
-  "state": "RESERVED",
-  "public_date": "2026-11-16",
-  "sources": "msrc",
-  "feed_count": 1,
-  "dates": {
-   "msrc": "2026-11-16"
-  },
-  "refs": "msrc:msrc:2026-Nov",
-  "description": "",
-  "state_verified_this_run": true,
-  "public_date_origin": "feed",
-  "days_public": 6,
-  "clock_known": true,
-  "hours_public": 144,
-  "clock_origin": "advisory",
-  "advisory_date": "2026-11-16",
-  "advisory_days_public": 6,
-  "past_expectation": true,
-  "disclosure_order": "unmeasurable",
-  "self_disclosed": false,
-  "rule": "4.5.1.6",
-  "rule_strength": "SHOULD",
-  "rule_basis": "unattributed",
-  "rule_certainty": "unmeasurable",
-  "package": "",
-  "ecosystem": "",
-  "source_urls": {
-   "msrc": "https://msrc.microsoft.com/update-guide/vulnerability/CVE-2026-85280"
   },
   "veto_evaluated": false,
   "owner_nameable": false,
